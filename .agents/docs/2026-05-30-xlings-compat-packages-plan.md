@@ -1,6 +1,6 @@
 # mcpp-index: xlings Native Dependency Packages Plan
 
-> 状态: in progress
+> 状态: complete
 > 分支: `codex/xlings-mcpp-compat-packages`
 > PR: https://github.com/mcpplibs/mcpp-index/pull/17
 > 目标: 把 xlings 当前本地 mcpp index 中的通用 C/C++ 依赖迁移到官方 mcpp-index，使 xlings 可以直接使用默认索引。
@@ -47,7 +47,7 @@ compat.libarchive
 
 ## 验证要求
 
-- [ ] `mcpp search libarchive` 能找到官方索引包。
+- [x] `mcpp search libarchive` 能找到官方索引包。
 - [x] 一个最小项目只声明 `compat.libarchive`，无需根级第三方 C 库宏即可构建。
 - [x] xlings 改用默认 mcpp-index 后 `mcpp build` 通过。
 - [x] musl static target 通过。
@@ -62,3 +62,20 @@ compat.libarchive
 - [x] PR draft 创建: https://github.com/mcpplibs/mcpp-index/pull/17
 - [x] CI lint 通过。
 - [x] 上游 mcpp PR #88 已合入并发布 `v0.0.35`。
+- [x] PR #17 已 squash 合入 main。
+- [x] xlings PR #314 已改用官方 `compat.libarchive` 并通过三平台 CI。
+
+## Final Outcome
+
+- PR: https://github.com/mcpplibs/mcpp-index/pull/17
+- Merge commit: `ea3b7aab5c3804f05569c7b9f7bf9674fcc354fc`
+- Added packages:
+  - `compat.zlib`
+  - `compat.bzip2`
+  - `compat.lz4`
+  - `compat.zstd`
+  - `compat.xz`
+  - `compat.libarchive`
+- Downstream release evidence:
+  - openxlings/xlings PR #314 passed Linux/macOS/Windows CI using the official index.
+  - openxlings/xlings `v0.4.46` was released after the migration.
