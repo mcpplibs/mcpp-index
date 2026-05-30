@@ -49,7 +49,7 @@ compat.libarchive
 
 - [ ] `mcpp search libarchive` 能找到官方索引包。
 - [x] 一个最小项目只声明 `compat.libarchive`，无需根级第三方 C 库宏即可构建。
-- [ ] xlings 改用默认 mcpp-index 后 `mcpp build` 通过。
+- [x] xlings 改用默认 mcpp-index 后 `mcpp build` 通过。
 - [x] musl static target 通过。
 
 ## Checkpoints
@@ -60,4 +60,4 @@ compat.libarchive
   - 临时项目 `compat.libarchive@3.8.7` default target 构建/运行通过。
   - 临时项目 `compat.libarchive@3.8.7` `x86_64-linux-musl` 静态构建/运行通过。
 - [x] PR draft 创建: https://github.com/mcpplibs/mcpp-index/pull/17
-- [ ] 等待 CI。
+- [x] CI lint 通过。
