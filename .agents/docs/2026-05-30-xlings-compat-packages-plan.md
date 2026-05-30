@@ -29,7 +29,7 @@
 
 迁移时需要把配置头和包级 flags 变成包自身资产，而不是要求消费者项目提供。
 
-当前实现依赖 mcpp PR #88 中的两项能力:
+当前实现依赖 mcpp `0.0.35` 中的两项能力:
 
 - package-owned `cflags` / `cxxflags` 只作用到包自身源码。
 - Form B `generated_files` 在包解压目录中写入少量配置头。
@@ -61,3 +61,4 @@ compat.libarchive
   - 临时项目 `compat.libarchive@3.8.7` `x86_64-linux-musl` 静态构建/运行通过。
 - [x] PR draft 创建: https://github.com/mcpplibs/mcpp-index/pull/17
 - [x] CI lint 通过。
+- [x] 上游 mcpp PR #88 已合入并发布 `v0.0.35`。
