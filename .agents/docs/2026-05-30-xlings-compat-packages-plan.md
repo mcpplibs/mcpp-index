@@ -2,6 +2,7 @@
 
 > 状态: in progress
 > 分支: `codex/xlings-mcpp-compat-packages`
+> PR: https://github.com/mcpplibs/mcpp-index/pull/17
 > 目标: 把 xlings 当前本地 mcpp index 中的通用 C/C++ 依赖迁移到官方 mcpp-index，使 xlings 可以直接使用默认索引。
 
 ## 待新增包
@@ -58,4 +59,5 @@ compat.libarchive
 - [x] 增加官方 index smoke test:
   - 临时项目 `compat.libarchive@3.8.7` default target 构建/运行通过。
   - 临时项目 `compat.libarchive@3.8.7` `x86_64-linux-musl` 静态构建/运行通过。
-- [ ] PR draft 创建并等待 CI。
+- [x] PR draft 创建: https://github.com/mcpplibs/mcpp-index/pull/17
+- [ ] 等待 CI。
