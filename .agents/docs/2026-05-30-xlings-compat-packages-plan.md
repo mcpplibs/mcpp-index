@@ -1,17 +1,17 @@
 # mcpp-index: xlings Native Dependency Packages Plan
 
-> 状态: pending on mcpp core support
+> 状态: in progress
 > 分支: `codex/xlings-mcpp-compat-packages`
 > 目标: 把 xlings 当前本地 mcpp index 中的通用 C/C++ 依赖迁移到官方 mcpp-index，使 xlings 可以直接使用默认索引。
 
 ## 待新增包
 
-- [ ] `compat.zlib`
-- [ ] `compat.bzip2`
-- [ ] `compat.lz4`
-- [ ] `compat.zstd`
-- [ ] `compat.xz`
-- [ ] `compat.libarchive`
+- [x] `compat.zlib`
+- [x] `compat.bzip2`
+- [x] `compat.lz4`
+- [x] `compat.zstd`
+- [x] `compat.xz`
+- [x] `compat.libarchive`
 
 ## 命名判断
 
@@ -28,6 +28,11 @@
 
 迁移时需要把配置头和包级 flags 变成包自身资产，而不是要求消费者项目提供。
 
+当前实现依赖 mcpp PR #88 中的两项能力:
+
+- package-owned `cflags` / `cxxflags` 只作用到包自身源码。
+- Form B `generated_files` 在包解压目录中写入少量配置头。
+
 ## 依赖关系
 
 ```text
@@ -42,14 +47,15 @@ compat.libarchive
 ## 验证要求
 
 - [ ] `mcpp search libarchive` 能找到官方索引包。
-- [ ] 一个最小项目只声明 `libarchive`，无需根级第三方 C 库宏即可构建。
+- [x] 一个最小项目只声明 `compat.libarchive`，无需根级第三方 C 库宏即可构建。
 - [ ] xlings 改用默认 mcpp-index 后 `mcpp build` 通过。
-- [ ] musl static target 通过。
+- [x] musl static target 通过。
 
 ## Checkpoints
 
-- [ ] 文档 checkpoint commit。
-- [ ] 等 mcpp 支持 package-owned flags 后迁移包描述。
-- [ ] 增加官方 index smoke test。
+- [x] 文档 checkpoint commit。
+- [x] 等 mcpp 支持 package-owned flags 后迁移包描述。
+- [x] 增加官方 index smoke test:
+  - 临时项目 `compat.libarchive@3.8.7` default target 构建/运行通过。
+  - 临时项目 `compat.libarchive@3.8.7` `x86_64-linux-musl` 静态构建/运行通过。
 - [ ] PR draft 创建并等待 CI。
-

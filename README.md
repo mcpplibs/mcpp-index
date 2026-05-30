@@ -32,6 +32,12 @@ mcpp build                  # 自动拉取源码 + 构建
 | `gtest` | 1.15.2 | Google Test 测试框架 |
 | `mbedtls` | 3.6.1 | TLS/加密库(纯 C) |
 | `lua` | 5.4.7 | Lua 脚本语言(纯 C 嵌入式库) |
+| `zlib` | v1.3.2 | DEFLATE 压缩库 |
+| `bzip2` | 1.0.8 | bzip2 压缩库 |
+| `lz4` | v1.10.0 | LZ4 压缩库 |
+| `zstd` | v1.5.7 | Zstandard 压缩库 |
+| `xz` | 5.8.3 | XZ Utils liblzma 压缩库 |
+| `libarchive` | 3.8.7 | 多格式归档与压缩库 |
 
 ### 依赖关系链
 
@@ -43,6 +49,13 @@ mcpplibs.llmapi
 mcpplibs.xpkg
   └── mcpplibs.capi.lua
         └── lua                  ← 同上
+
+libarchive
+  ├── zlib
+  ├── bzip2
+  ├── lz4
+  ├── zstd
+  └── xz                         ← 压缩后端自动传递
 ```
 
 mcpp 0.0.3+ 的 transitive walker 自动沿链路传播头文件和依赖,消费者只需声明直接依赖。

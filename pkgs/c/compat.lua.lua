@@ -46,7 +46,11 @@ package = {
         language     = "c++23",                   -- top-level [package].standard knob; mcpp drives a c++23 toolchain even for pure-C deps.
         import_std   = false,                     -- pure C — no `import std;`.
         c_standard   = "c99",                     -- Lua's reference build is c99-clean; matches upstream src/Makefile.
-        include_dirs = { "*/src" },                -- public headers (lua.h, lualib.h, lauxlib.h, luaconf.h) live next to .c files.
+        include_dirs = { "*/src", "mcpp_generated/include" }, -- public headers plus package-owned config.
+        cflags       = { "-include mcpp_lua_platform_config.h" },
+        generated_files = {
+            ["mcpp_generated/include/mcpp_lua_platform_config.h"] = "#ifndef MCPP_LUA_PLATFORM_CONFIG_H\n#define MCPP_LUA_PLATFORM_CONFIG_H\n#if !defined(_WIN32) && !defined(LUA_USE_LINUX) && !defined(LUA_USE_MACOSX)\n#if defined(__APPLE__)\n#define LUA_USE_MACOSX\n#else\n#define LUA_USE_LINUX\n#endif\n#endif\n#endif\n",
+        },
         sources = {
             "*/src/lapi.c",
             "*/src/lauxlib.c",
