@@ -29,7 +29,10 @@ mcpp build                  # 自动拉取源码 + 构建
 | 包名 | 版本 | 简介 |
 |------|------|------|
 | `ftxui` | 6.1.9 | C++ 函数式终端 UI 库(screen + dom + component) |
+| `glfw` | 3.4 | GLFW 窗口与输入库(null platform 后端源码构建) |
 | `gtest` | 1.15.2 | Google Test 测试框架 |
+| `imgui` | v1.92.8 | Dear ImGui immediate-mode GUI 核心源码 |
+| `opengl` | 2026.05.31 | Khronos OpenGL API 头文件 |
 | `mbedtls` | 3.6.1 | TLS/加密库(纯 C) |
 | `lua` | 5.4.7 | Lua 脚本语言(纯 C 嵌入式库) |
 | `zlib` | v1.3.2 | DEFLATE 压缩库 |
@@ -56,6 +59,9 @@ libarchive
   ├── lz4
   ├── zstd
   └── xz                         ← 压缩后端自动传递
+
+glfw
+  └── opengl                      ← GLFW/glfw3.h 所需 OpenGL 头文件
 ```
 
 mcpp 0.0.3+ 的 transitive walker 自动沿链路传播头文件和依赖,消费者只需声明直接依赖。
