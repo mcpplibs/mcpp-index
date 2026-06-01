@@ -85,11 +85,11 @@ package = {
                 "src/cocoa_time.c",
                 "src/posix_thread.c",
                 "src/posix_module.c",
-                "src/cocoa_init.m",
-                "src/cocoa_joystick.m",
-                "src/cocoa_monitor.m",
-                "src/cocoa_window.m",
-                "src/nsgl_context.m",
+                "src/cocoa_init_objc.cpp",
+                "src/cocoa_joystick_objc.cpp",
+                "src/cocoa_monitor_objc.cpp",
+                "src/cocoa_window_objc.cpp",
+                "src/nsgl_context_objc.cpp",
             },
             ldflags = {
                 "-framework", "Cocoa",
@@ -116,6 +116,14 @@ package = {
 
 import("xim.libxpkg.pkginfo")
 
+local objc_sources = {
+    "cocoa_init",
+    "cocoa_joystick",
+    "cocoa_monitor",
+    "cocoa_window",
+    "nsgl_context",
+}
+
 local function patch_x11_loader_names(root)
     local file = path.join(root, "src", "x11_init.c")
     local data = io.readfile(file)
@@ -135,6 +143,17 @@ local function patch_x11_loader_names(root)
     io.writefile(file, data)
 end
 
+local function copy_objc_sources_as_cpp(root)
+    local srcdir = path.join(root, "src")
+    for _, name in ipairs(objc_sources) do
+        local from = path.join(srcdir, name .. ".m")
+        local to = path.join(srcdir, name .. "_objc.cpp")
+        if os.isfile(from) then
+            os.cp(from, to)
+        end
+    end
+end
+
 function install()
     local srcdir = pkginfo.install_file():replace(".tar.gz", "")
     if not os.isdir(srcdir) then
@@ -143,6 +162,7 @@ function install()
 
     os.tryrm(pkginfo.install_dir())
     os.mv(srcdir, pkginfo.install_dir())
+    copy_objc_sources_as_cpp(pkginfo.install_dir())
     patch_x11_loader_names(pkginfo.install_dir())
     return true
 end
