@@ -243,6 +243,8 @@ imgui = "1.92.8"
 glfw = "3.4"
 EOF
 cat > src/main.cpp <<'EOF'
+#include <cstdlib>
+
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 #include <imgui.h>
@@ -252,7 +254,32 @@ cat > src/main.cpp <<'EOF'
 #include "imgui_impl_glfw.cpp"
 #include "imgui_impl_opengl3.cpp"
 
+static int run_glfw_window_smoke() {
+    if (!glfwInit()) {
+        return 10;
+    }
+
+    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+
+    GLFWwindow* window = glfwCreateWindow(64, 64, "mcpp compat glfw", nullptr, nullptr);
+    if (!window) {
+        glfwTerminate();
+        return 11;
+    }
+
+    glfwMakeContextCurrent(window);
+    glfwDestroyWindow(window);
+    glfwTerminate();
+    return 0;
+}
+
 int main() {
+    if (std::getenv("MCPP_INDEX_RUN_GLFW_WINDOW_SMOKE")) {
+        return run_glfw_window_smoke();
+    }
+
     const char* glfw = glfwGetVersionString();
     const char* imgui = ImGui::GetVersion();
     return glfw && imgui &&
