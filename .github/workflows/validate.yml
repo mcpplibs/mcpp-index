@@ -51,7 +51,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Download mcpp
         env:
-          MCPP_VERSION: "0.0.40"
+          MCPP_VERSION: "0.0.41"
         run: |
           curl -L -fsS -o mcpp.tar.gz \
             "https://github.com/mcpp-community/mcpp/releases/download/v${MCPP_VERSION}/mcpp-${MCPP_VERSION}-linux-x86_64.tar.gz"
@@ -78,14 +78,14 @@ jobs:
         include:
           - platform: macos
             os: macos-15
-            archive: mcpp-0.0.40-macosx-arm64.tar.gz
-            root: mcpp-0.0.40-macosx-arm64
+            archive: mcpp-0.0.41-macosx-arm64.tar.gz
+            root: mcpp-0.0.41-macosx-arm64
             mcpp: bin/mcpp
             xlings: registry/bin/xlings
           - platform: windows
             os: windows-latest
-            archive: mcpp-0.0.40-windows-x86_64.zip
-            root: mcpp-0.0.40-windows-x86_64
+            archive: mcpp-0.0.41-windows-x86_64.zip
+            root: mcpp-0.0.41-windows-x86_64
             mcpp: bin/mcpp.exe
             xlings: registry/bin/xlings.exe
     steps:
@@ -93,7 +93,7 @@ jobs:
       - name: Download mcpp
         shell: bash
         env:
-          MCPP_VERSION: "0.0.40"
+          MCPP_VERSION: "0.0.41"
           MCPP_ARCHIVE: ${{ matrix.archive }}
           MCPP_ROOT: ${{ matrix.root }}
         run: |
