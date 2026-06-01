@@ -47,5 +47,8 @@ package = {
         c_standard   = "c11",
         targets      = { ["mbedtls"] = { kind = "lib" } },
         deps         = { },
+        windows = {
+            ldflags = { "-lbcrypt" },
+        },
     },
 }
