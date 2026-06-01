@@ -79,7 +79,8 @@ package = {
             },
         },
         macosx = {
-            cflags = { "-D_GLFW_COCOA" },
+            cflags   = { "-D_GLFW_COCOA" },
+            cxxflags = { "-D_GLFW_COCOA", "-x", "objective-c++" },
             sources = {
                 "src/cocoa_time.c",
                 "src/posix_thread.c",
