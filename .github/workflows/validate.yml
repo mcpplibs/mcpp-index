@@ -67,3 +67,61 @@ jobs:
           timeout 1800 bash tests/smoke_compat_imgui.sh
           timeout 1800 bash tests/smoke_compat_archive.sh
           timeout 1800 bash tests/smoke_compat_imgui_window.sh
+
+  smoke-portable:
+    name: smoke-${{ matrix.platform }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macos
+            os: macos-15
+            archive: mcpp-0.0.40-macosx-arm64.tar.gz
+            root: mcpp-0.0.40-macosx-arm64
+            mcpp: bin/mcpp
+            xlings: registry/bin/xlings
+          - platform: windows
+            os: windows-latest
+            archive: mcpp-0.0.40-windows-x86_64.zip
+            root: mcpp-0.0.40-windows-x86_64
+            mcpp: bin/mcpp.exe
+            xlings: registry/bin/xlings.exe
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download mcpp
+        shell: bash
+        env:
+          MCPP_VERSION: "0.0.40"
+          MCPP_ARCHIVE: ${{ matrix.archive }}
+          MCPP_ROOT: ${{ matrix.root }}
+        run: |
+          curl -L -fsS -o "$MCPP_ARCHIVE" \
+            "https://github.com/mcpp-community/mcpp/releases/download/v${MCPP_VERSION}/${MCPP_ARCHIVE}"
+          case "$MCPP_ARCHIVE" in
+            *.zip)
+              powershell -NoProfile -Command "Expand-Archive -Force -Path '${MCPP_ARCHIVE}' -DestinationPath '.'"
+              ;;
+            *)
+              tar -xzf "$MCPP_ARCHIVE"
+              ;;
+          esac
+
+          root="$PWD/$MCPP_ROOT"
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            echo "MCPP=$(cygpath -m "$root/${{ matrix.mcpp }}")" >> "$GITHUB_ENV"
+            echo "MCPP_VENDORED_XLINGS=$(cygpath -m "$root/${{ matrix.xlings }}")" >> "$GITHUB_ENV"
+            echo "$(cygpath -m "$root/bin")" >> "$GITHUB_PATH"
+          else
+            echo "MCPP=$root/${{ matrix.mcpp }}" >> "$GITHUB_ENV"
+            echo "MCPP_VENDORED_XLINGS=$root/${{ matrix.xlings }}" >> "$GITHUB_ENV"
+            echo "$root/bin" >> "$GITHUB_PATH"
+          fi
+      - name: Run portable compat smoke tests
+        shell: bash
+        env:
+          MCPP_INDEX_MIRROR: GLOBAL
+        run: |
+          "$MCPP" --version
+          bash tests/smoke_compat_portable.sh
