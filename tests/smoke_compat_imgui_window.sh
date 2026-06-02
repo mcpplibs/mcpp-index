@@ -14,6 +14,16 @@ if [[ -z "$MCPP_BIN" || ! -x "$MCPP_BIN" ]]; then
     exit 1
 fi
 
+glfw_pkg="$ROOT/pkgs/c/compat.glfw.lua"
+grep -q 'dlopen_libs' "$glfw_pkg" || {
+    echo "FATAL: compat.glfw missing GLX/OpenGL dlopen runtime metadata" >&2
+    exit 1
+}
+grep -q 'opengl.glx.driver' "$glfw_pkg" || {
+    echo "FATAL: compat.glfw missing OpenGL GLX system capability metadata" >&2
+    exit 1
+}
+
 TMP="$(mktemp -d)"
 if [[ "${MCPP_INDEX_KEEP_SMOKE_TMP:-0}" == "1" ]]; then
     echo "KEEP: $TMP"

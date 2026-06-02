@@ -42,7 +42,7 @@ requirements as separate concepts.
     is practical in current mcpp package descriptors.
   - If libglvnd source packaging is not yet practical, keep this task open and
     document the exact blocker rather than replacing it with a host shim.
-- [ ] Update `compat.glfw` runtime metadata.
+- [x] Update `compat.glfw` runtime metadata.
   - Candidate file: `pkgs/c/compat.glfw.lua`.
   - Declare `dlopen_libs = {"libGLX.so.0", "libGL.so.1", "libGL.so"}`.
   - Declare `capabilities = {"x11.display", "opengl.glx.driver"}` for Linux
@@ -53,22 +53,28 @@ requirements as separate concepts.
   - The target behavior is `mcpp run` with package-declared runtime metadata.
   - The existing host shim may remain only as diagnostic evidence until the
     mcpp runtime metadata support lands.
-- [ ] Add README package semantics.
+- [x] Add README package semantics.
   - Candidate file: `README.md`.
   - Document the difference between OpenGL headers, GL runtime dispatch, and
     host display/GPU capabilities.
 
 ## Verification
 
+- [x] `bash -n tests/smoke_compat_imgui_window.sh`
+- [x] Static metadata check: `compat.glfw` contains `dlopen_libs`,
+      `libGLX.so.0`, and `opengl.glx.driver`.
 - [ ] `MCPP=<mcpp> tests/smoke_compat_imgui.sh`
 - [ ] `MCPP=<mcpp> tests/smoke_compat_imgui_window.sh`
+  - Attempted locally on 2026-06-03; the run was stopped after the temporary
+    sandbox stalled in dependency installation. This remains unchecked until a
+    full smoke completes.
 - [ ] `MCPP=<mcpp> MCPP_INDEX_RUN_WINDOW_SMOKE=1 tests/smoke_compat_imgui_window.sh`
 - [ ] A focused GLFW/OpenGL smoke that uses `mcpp run` without script-local
       `LD_LIBRARY_PATH` once mcpp runtime metadata support is available.
 
 ## PR / CI / Merge Notes
 
-- [ ] Commit this plan as the first checkpoint.
+- [x] Commit this plan as the first checkpoint.
 - [ ] Open a PR with sanitized paths and no local machine details.
 - [ ] Include a test plan and note which runtime checks require a display.
 - [ ] Wait for repository validation CI.

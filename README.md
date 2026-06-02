@@ -112,8 +112,9 @@ mcpp 0.0.3+ 的 transitive walker 自动沿链路传播头文件和依赖,消费
 
 > 当前 X11/XCB/Xau/Xdmcp 以及 GLFW 需要的 Xcursor/Xext/Xfixes/Xi/Xinerama/
 > Xrandr/Xrender 都已按上游源码提供 runtime `.so`。`compat.glfw` 仍沿用
-> GLFW 上游的 GLX/OpenGL 动态加载行为,窗口运行时需要宿主环境提供可用的
-> X server/GLX/OpenGL 驱动。
+> GLFW 上游的 GLX/OpenGL 动态加载行为,包描述会声明需要 `dlopen` 的
+> `libGLX.so.0`/`libGL.so.1`/`libGL.so` 以及 `opengl.glx.driver` 能力。
+> 窗口运行时仍需要宿主环境提供可用的 X server/GLX/OpenGL 驱动。
 
 ### 本地 smoke 验证
 
