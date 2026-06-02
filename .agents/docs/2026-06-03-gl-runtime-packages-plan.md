@@ -60,6 +60,9 @@ requirements as separate concepts.
 
 ## Verification
 
+- [x] `lua5.4 -e "assert(loadfile('pkgs/c/compat.glfw.lua', 't'))"`
+- [x] `lua5.4 -e "assert(loadfile('pkgs/c/compat.opengl.lua', 't'))"`
+- [x] Lua syntax check for all `pkgs/**/*.lua`
 - [x] `bash -n tests/smoke_compat_imgui_window.sh`
 - [x] Static metadata check: `compat.glfw` contains `dlopen_libs`,
       `libGLX.so.0`, and `opengl.glx.driver`.
