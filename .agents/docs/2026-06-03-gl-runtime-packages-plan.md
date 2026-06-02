@@ -1,8 +1,8 @@
 # mcpp-index: GL Runtime Packages Plan
 
-> 状态: active
-> 分支: `codex/gl-runtime-closure-index`
-> PR: pending
+> 状态: merged checkpoint; full no-shim runtime smoke remains follow-up after released mcpp support
+> 分支: `codex/gl-runtime-closure-index` (merged via PR #27)
+> PR: https://github.com/mcpplibs/mcpp-index/pull/27
 > Last updated: 2026-06-03
 > 目标: 让 GLFW/OpenGL 相关包描述表达标准运行时需求,而不是依赖 smoke 脚本里的临时 `LD_LIBRARY_PATH` shim。
 
@@ -74,14 +74,17 @@ requirements as separate concepts.
 - [ ] `MCPP=<mcpp> MCPP_INDEX_RUN_WINDOW_SMOKE=1 tests/smoke_compat_imgui_window.sh`
 - [ ] A focused GLFW/OpenGL smoke that uses `mcpp run` without script-local
       `LD_LIBRARY_PATH` once mcpp runtime metadata support is available.
+- [x] GitHub validation CI for PR #27: lint, smoke-linux, smoke-macos, and
+      smoke-windows all passed.
 
 ## PR / CI / Merge Notes
 
 - [x] Commit this plan as the first checkpoint.
-- [ ] Open a PR with sanitized paths and no local machine details.
-- [ ] Include a test plan and note which runtime checks require a display.
-- [ ] Wait for repository validation CI.
-- [ ] Squash merge after required checks pass.
+- [x] Open a PR with sanitized paths and no local machine details.
+- [x] Include a test plan and note which runtime checks require a display.
+- [x] Wait for repository validation CI.
+- [x] Squash merge after required checks pass.
+  - PR #27 merged at commit `997080c06830d89ac805b6422d9484fb73556244`.
 
 ## Cross-Repository Dependencies
 
