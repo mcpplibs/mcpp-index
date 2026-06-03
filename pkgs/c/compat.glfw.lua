@@ -71,6 +71,7 @@ package = {
                 "src/posix_module.c",
             },
             deps = {
+                ["compat.glx-runtime"] = "2026.06.03",
                 ["compat.x11"]       = "1.8.13",
                 ["compat.xcursor"]   = "1.2.3",
                 ["compat.xext"]      = "1.3.7",
@@ -119,25 +120,6 @@ package = {
 
 import("xim.libxpkg.pkginfo")
 
-local function patch_x11_loader_names(root)
-    local file = path.join(root, "src", "x11_init.c")
-    local data = io.readfile(file)
-    local replacements = {
-        ['"libX11.so.6"']      = '"libX11.so"',
-        ['"libXi.so.6"']       = '"libXi.so"',
-        ['"libXrandr.so.2"']   = '"libXrandr.so"',
-        ['"libXcursor.so.1"']  = '"libXcursor.so"',
-        ['"libXinerama.so.1"'] = '"libXinerama.so"',
-        ['"libX11-xcb.so.1"']  = '"libX11-xcb.so"',
-        ['"libXrender.so.1"']  = '"libXrender.so"',
-        ['"libXext.so.6"']     = '"libXext.so"',
-    }
-    for from, to in pairs(replacements) do
-        data = data:gsub(from, to)
-    end
-    io.writefile(file, data)
-end
-
 function install()
     local srcdir = pkginfo.install_file():replace(".tar.gz", "")
     if not os.isdir(srcdir) then
@@ -146,6 +128,5 @@ function install()
 
     os.tryrm(pkginfo.install_dir())
     os.mv(srcdir, pkginfo.install_dir())
-    patch_x11_loader_names(pkginfo.install_dir())
     return true
 end

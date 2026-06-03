@@ -23,7 +23,7 @@ package = {
         cflags       = {"-D_GNU_SOURCE", "-D_DEFAULT_SOURCE"},
         include_dirs = {"*/include", "*/include/X11/extensions", "*/src"},
         sources      = {"*/src/*.c"},
-        targets      = { ["Xext"] = { kind = "shared" } },
+        targets      = { ["Xext"] = { kind = "shared", soname = "libXext.so.6" } },
         deps = {
             ["compat.x11"]        = "1.8.13",
             ["compat.xorgproto"] = "2025.1",

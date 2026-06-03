@@ -32,7 +32,7 @@ package = {
             "*/Wrap.c",
             "*/Write.c",
         },
-        targets = { ["Xdmcp"] = { kind = "shared" } },
+        targets = { ["Xdmcp"] = { kind = "shared", soname = "libXdmcp.so.6" } },
         deps = {
             ["compat.xorgproto"] = "2025.1",
         },

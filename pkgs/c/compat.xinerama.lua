@@ -23,7 +23,7 @@ package = {
         cflags       = {"-D_GNU_SOURCE", "-D_DEFAULT_SOURCE"},
         include_dirs = {"*/include", "*/include/X11/extensions", "*/src"},
         sources      = {"*/src/*.c"},
-        targets      = { ["Xinerama"] = { kind = "shared" } },
+        targets      = { ["Xinerama"] = { kind = "shared", soname = "libXinerama.so.1" } },
         deps = {
             ["compat.x11"]        = "1.8.13",
             ["compat.xext"]       = "1.3.7",

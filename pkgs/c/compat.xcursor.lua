@@ -23,7 +23,7 @@ package = {
         cflags       = {"-D_GNU_SOURCE", "-D_DEFAULT_SOURCE", "-DHAVE_XFIXES=1"},
         include_dirs = {"*/include", "*/include/X11/Xcursor", "*/include/X11/extensions", "*/src"},
         sources      = {"*/src/*.c"},
-        targets      = { ["Xcursor"] = { kind = "shared" } },
+        targets      = { ["Xcursor"] = { kind = "shared", soname = "libXcursor.so.1" } },
         deps = {
             ["compat.x11"]        = "1.8.13",
             ["compat.xfixes"]     = "6.0.2",

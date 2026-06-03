@@ -23,7 +23,7 @@ package = {
         cflags       = {"-D_GNU_SOURCE", "-D_DEFAULT_SOURCE"},
         include_dirs = {"*/include", "*/include/X11/extensions", "*/src"},
         sources      = {"*/src/*.c"},
-        targets      = { ["Xrender"] = { kind = "shared" } },
+        targets      = { ["Xrender"] = { kind = "shared", soname = "libXrender.so.1" } },
         deps = {
             ["compat.x11"]        = "1.8.13",
             ["compat.xorgproto"] = "2025.1",

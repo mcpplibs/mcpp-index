@@ -26,7 +26,7 @@ package = {
             "*/src/*.c",
             "!*/src/XFreeLst.c",
         },
-        targets      = { ["Xi"] = { kind = "shared" } },
+        targets      = { ["Xi"] = { kind = "shared", soname = "libXi.so.6" } },
         deps = {
             ["compat.x11"]       = "1.8.13",
             ["compat.xext"]      = "1.3.7",

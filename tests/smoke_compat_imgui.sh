@@ -19,8 +19,9 @@ if [[ "${MCPP_INDEX_KEEP_SMOKE_TMP:-0}" == "1" ]]; then
 else
     trap 'rm -rf "$TMP"' EXIT
 fi
-SMOKE_CACHE_DIR="${MCPP_INDEX_SMOKE_CACHE_DIR:-}"
+SMOKE_CACHE_DIR="${MCPP_INDEX_SMOKE_CACHE_DIR:-$TMP/smoke-cache}"
 SMOKE_XPKGS_DIR="${MCPP_INDEX_SMOKE_XPKGS_DIR:-}"
+mkdir -p "$SMOKE_CACHE_DIR"
 
 if [[ -n "${MCPP_INDEX_SMOKE_MCPP_HOME:-}" ]]; then
     export MCPP_HOME="$MCPP_INDEX_SMOKE_MCPP_HOME"
@@ -54,6 +55,26 @@ if [[ -f "$USER_MCPP/config.toml" ]]; then
     cp -f "$USER_MCPP/config.toml" "$MCPP_HOME/config.toml" 2>/dev/null || true
 fi
 
+restore_smoke_cache() {
+    [[ -n "$SMOKE_CACHE_DIR" && -d "$SMOKE_CACHE_DIR" ]] || return 0
+    mkdir -p .mcpp/.xlings/data/runtimedir
+    find "$SMOKE_CACHE_DIR" -maxdepth 1 -type f \
+        \( -name '*.tar.gz' -o -name '*.tar.xz' -o -name '*.zip' \) \
+        -exec cp -f {} .mcpp/.xlings/data/runtimedir/ \;
+}
+
+save_smoke_cache() {
+    [[ -n "$SMOKE_CACHE_DIR" && -d .mcpp/.xlings/data ]] || return 0
+    find .mcpp/.xlings/data -type f \
+        \( -name '*.tar.gz' -o -name '*.tar.xz' -o -name '*.zip' \) \
+        -exec cp -n {} "$SMOKE_CACHE_DIR"/ \; 2>/dev/null || true
+}
+
+mcpp_build() {
+    "$MCPP_BIN" build
+    save_smoke_cache
+}
+
 make_project() {
     local name="$1"
     mkdir -p "$TMP/$name/src"
@@ -74,12 +95,7 @@ kind = "bin"
 main = "src/main.cpp"
 EOF
 
-    if [[ -n "$SMOKE_CACHE_DIR" && -d "$SMOKE_CACHE_DIR" ]]; then
-        mkdir -p .mcpp/.xlings/data/runtimedir
-        find "$SMOKE_CACHE_DIR" -maxdepth 1 -type f \
-            \( -name '*.tar.gz' -o -name '*.tar.xz' -o -name '*.zip' \) \
-            -exec cp -f {} .mcpp/.xlings/data/runtimedir/ \;
-    fi
+    restore_smoke_cache
 }
 
 make_project "compat-imgui-core-smoke"
@@ -114,7 +130,7 @@ int main() {
     return ok ? 0 : 1;
 }
 EOF
-"$MCPP_BIN" build
+mcpp_build
 "$MCPP_BIN" run
 
 make_project "compat-xlibs-runtime-smoke"
@@ -151,11 +167,12 @@ int main() {
            XIQueryVersion != nullptr ? 0 : 1;
 }
 EOF
-"$MCPP_BIN" build
+mcpp_build
 "$MCPP_BIN" run
 if command -v readelf >/dev/null 2>&1; then
     bin="$(find target -path '*/bin/compat-xlibs-runtime-smoke' -type f | head -1)"
-    for lib in libXext.so libXrender.so libXfixes.so libXcursor.so libXinerama.so libXrandr.so libXi.so; do
+    for lib in libXext.so.6 libXrender.so.1 libXfixes.so.3 libXcursor.so.1 libXinerama.so.1 libXrandr.so.2 libXi.so.6; do
+        test -e "$(dirname "$bin")/$lib"
         readelf -d "$bin" | grep -q "Shared library: \\[$lib\\]"
     done
 fi
@@ -178,11 +195,11 @@ int main() {
     return GLFW_VERSION_MAJOR == 3 ? 0 : 1;
 }
 EOF
-"$MCPP_BIN" build
+mcpp_build
 "$MCPP_BIN" run
 if command -v readelf >/dev/null 2>&1; then
     bin="$(find target -path '*/bin/compat-glfw-runtime-smoke' -type f | head -1)"
-    for lib in libX11.so libXcursor.so libXext.so libXfixes.so libXi.so libXinerama.so libXrandr.so libXrender.so; do
+    for lib in libX11.so.6 libXcursor.so.1 libXext.so.6 libXfixes.so.3 libXi.so.6 libXinerama.so.1 libXrandr.so.2 libXrender.so.1; do
         readelf -d "$bin" | grep -q "Shared library: \\[$lib\\]"
     done
 fi
@@ -209,12 +226,14 @@ int main() {
     return allocated && auth_file != nullptr ? 0 : 1;
 }
 EOF
-"$MCPP_BIN" build
+mcpp_build
 "$MCPP_BIN" run
 if command -v readelf >/dev/null 2>&1; then
     bin="$(find target -path '*/bin/compat-xorg-runtime-smoke' -type f | head -1)"
-    readelf -d "$bin" | grep -q 'Shared library: \[libXau.so\]'
-    readelf -d "$bin" | grep -q 'Shared library: \[libXdmcp.so\]'
+    test -e "$(dirname "$bin")/libXau.so.6"
+    test -e "$(dirname "$bin")/libXdmcp.so.6"
+    readelf -d "$bin" | grep -q 'Shared library: \[libXau.so.6\]'
+    readelf -d "$bin" | grep -q 'Shared library: \[libXdmcp.so.6\]'
 fi
 
 make_project "compat-xcb-runtime-smoke"
@@ -236,11 +255,12 @@ int main() {
     return ok && display == 0 && screen == 1 ? 0 : 1;
 }
 EOF
-"$MCPP_BIN" build
+mcpp_build
 "$MCPP_BIN" run
 if command -v readelf >/dev/null 2>&1; then
     bin="$(find target -path '*/bin/compat-xcb-runtime-smoke' -type f | head -1)"
-    readelf -d "$bin" | grep -q 'Shared library: \[libxcb.so\]'
+    test -e "$(dirname "$bin")/libxcb.so.1"
+    readelf -d "$bin" | grep -q 'Shared library: \[libxcb.so.1\]'
 fi
 
 make_project "compat-x11-runtime-smoke"
@@ -258,13 +278,16 @@ int main() {
     return X_PROTOCOL == 11 && escape == XK_Escape ? 0 : 1;
 }
 EOF
-"$MCPP_BIN" build
+mcpp_build
 "$MCPP_BIN" run
 if command -v readelf >/dev/null 2>&1; then
     bin="$(find target -path '*/bin/compat-x11-runtime-smoke' -type f | head -1)"
     lib="$(find target -path '*/bin/libX11.so' -type f | head -1)"
-    readelf -d "$bin" | grep -q 'Shared library: \[libX11.so\]'
-    readelf -d "$lib" | grep -q 'Shared library: \[libxcb.so\]'
+    test -e "$(dirname "$bin")/libX11.so.6"
+    test -e "$(dirname "$bin")/libxcb.so.1"
+    readelf -d "$bin" | grep -q 'Shared library: \[libX11.so.6\]'
+    readelf -d "$lib" | grep -q 'Library soname: \[libX11.so.6\]'
+    readelf -d "$lib" | grep -q 'Shared library: \[libxcb.so.1\]'
 fi
 
 echo "OK"

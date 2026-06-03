@@ -42,7 +42,7 @@ package = {
             "src/bigreq.c",
             "src/xc_misc.c",
         },
-        targets = { ["xcb"] = { kind = "shared" } },
+        targets = { ["xcb"] = { kind = "shared", soname = "libxcb.so.1" } },
         deps = {
             ["compat.xau"]       = "1.0.12",
             ["compat.xcb-proto"] = "1.17.0",

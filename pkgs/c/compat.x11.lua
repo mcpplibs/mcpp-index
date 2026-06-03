@@ -55,7 +55,7 @@ package = {
             "modules/lc/Utf8/*.c",
             "modules/om/generic/*.c",
         },
-        targets = { ["X11"] = { kind = "shared" } },
+        targets = { ["X11"] = { kind = "shared", soname = "libX11.so.6" } },
         deps = {
             ["compat.xcb"]       = "1.17.0",
             ["compat.xorgproto"] = "2025.1",

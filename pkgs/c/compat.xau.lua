@@ -32,7 +32,7 @@ package = {
             "*/AuUnlock.c",
             "*/AuWrite.c",
         },
-        targets = { ["Xau"] = { kind = "shared" } },
+        targets = { ["Xau"] = { kind = "shared", soname = "libXau.so.6" } },
         deps = {
             ["compat.xorgproto"] = "2025.1",
         },

@@ -39,6 +39,7 @@ mcpp build                  # 自动拉取源码 + 构建
 | `gtest` | 1.15.2 | Google Test 测试框架 |
 | `imgui` | 1.92.8 | Dear ImGui immediate-mode GUI 核心源码 |
 | `opengl` | 2026.05.31 | Khronos OpenGL API 头文件 |
+| `glx-runtime` | 2026.06.03 | Linux host GLVND/GLX/OpenGL runtime adapter |
 | `khrplatform` | 2026.05.31 | Khronos KHR platform 头文件 |
 | `xorgproto` | 2025.1 | X.Org protocol 头文件 |
 | `xtrans` | 1.6.0 | X.Org transport support headers/source snippets |
@@ -77,7 +78,10 @@ mcpplibs.xpkg
 imgui
   ├── compat.imgui
   ├── compat.glfw
-  │     └── compat.opengl
+  │     ├── compat.opengl
+  │     └── compat.glx-runtime
+  │           └── compat.xext → compat.x11
+  │                            ← Linux GLX/OpenGL driver runtime provider
   └── compat.opengl              ← 消费者只需要 import imgui.* 模块
 
 libarchive
@@ -90,6 +94,8 @@ libarchive
 glfw
   ├── opengl
   │     └── khrplatform           ← GLFW/glfw3.h 所需 OpenGL/KHR 头文件
+  ├── glx-runtime
+  │     └── xext → x11            ← GLFW GLX dlopen 所需 host GLVND/driver runtime
   └── x11 / xcursor / xext / xfixes / xi
       / xinerama / xorgproto / xrandr / xrender
                                   ← GLFW Linux X11 后端所需 runtime/header 闭包
@@ -111,9 +117,11 @@ x11
 mcpp 0.0.3+ 的 transitive walker 自动沿链路传播头文件和依赖,消费者只需声明直接依赖。
 
 > 当前 X11/XCB/Xau/Xdmcp 以及 GLFW 需要的 Xcursor/Xext/Xfixes/Xi/Xinerama/
-> Xrandr/Xrender 都已按上游源码提供 runtime `.so`。`compat.glfw` 仍沿用
-> GLFW 上游的 GLX/OpenGL 动态加载行为,包描述会声明需要 `dlopen` 的
-> `libGLX.so.0`/`libGL.so.1`/`libGL.so` 以及 `opengl.glx.driver` 能力。
+> Xrandr/Xrender 都已按上游源码提供 runtime `.so`,并声明标准 ELF SONAME
+> (如 `libX11.so.6`、`libxcb.so.1`)。`compat.glx-runtime` 是 Linux host
+> GLVND/GLX/OpenGL driver runtime adapter,提供 GLFW 上游 `dlopen` 需要的
+> `libGLX.so.0`/`libGL.so.1`/`libGL.so` runtime 目录,并通过 `compat.xext`
+> 带入 host GLX 库常见的 X11/Xext ABI 依赖闭包。
 > 窗口运行时仍需要宿主环境提供可用的 X server/GLX/OpenGL 驱动。
 
 ### 本地 smoke 验证

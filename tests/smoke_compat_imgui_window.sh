@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Build a minimal Dear ImGui + GLFW + OpenGL window program through this
-# checkout as a local mcpp path index. Runtime execution is optional because
-# GLX/OpenGL driver libraries are host-specific.
+# checkout as a local mcpp path index. Runtime execution is opt-in because it
+# requires a live X11/GLX display, but when enabled it must run through mcpp
+# without test-local library shims.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -176,7 +177,15 @@ if [[ -z "$bin" ]]; then
 fi
 
 if command -v readelf >/dev/null 2>&1; then
-    for lib in libX11.so libXcursor.so libXext.so libXfixes.so libXi.so libXinerama.so libXrandr.so libXrender.so; do
+    for lib in \
+        libX11.so.6 \
+        libXcursor.so.1 \
+        libXext.so.6 \
+        libXfixes.so.3 \
+        libXi.so.6 \
+        libXinerama.so.1 \
+        libXrandr.so.2 \
+        libXrender.so.1; do
         readelf -d "$bin" | grep -q "Shared library: \\[$lib\\]"
     done
 fi
@@ -191,85 +200,5 @@ if [[ -z "${DISPLAY:-}" ]]; then
     exit 1
 fi
 
-bindir="$(dirname "$bin")"
-shim="$TMP/gl-runtime-shim"
-mkdir -p "$shim"
-
-HOST_GL_LIBDIR="${MCPP_INDEX_HOST_GL_LIBDIR:-/lib/x86_64-linux-gnu}"
-if [[ ! -d "$HOST_GL_LIBDIR" ]]; then
-    echo "FATAL: host GL library directory not found: $HOST_GL_LIBDIR" >&2
-    exit 1
-fi
-
-link_host_glob() {
-    local pattern="$1"
-    local matched=0
-    for lib in "$HOST_GL_LIBDIR"/$pattern; do
-        [[ -e "$lib" ]] || continue
-        ln -sf "$lib" "$shim/$(basename "$lib")"
-        matched=1
-    done
-    return $matched
-}
-
-link_host_glob 'libGL*.so*' || true
-link_host_glob 'libEGL*.so*' || true
-link_host_glob 'libnvidia*.so*' || true
-link_host_glob 'libglapi.so*' || true
-link_host_glob 'libdrm.so*' || true
-link_host_glob 'libxcb*.so*' || true
-link_host_glob 'libX11-xcb.so*' || true
-link_host_glob 'libX11.so*' || true
-link_host_glob 'libXau.so*' || true
-link_host_glob 'libXdmcp.so*' || true
-link_host_glob 'libXext.so*' || true
-link_host_glob 'libXfixes.so*' || true
-link_host_glob 'libXrender.so*' || true
-link_host_glob 'libXcursor.so*' || true
-link_host_glob 'libXinerama.so*' || true
-link_host_glob 'libXrandr.so*' || true
-link_host_glob 'libXi.so*' || true
-link_host_glob 'libXxf86vm.so*' || true
-link_host_glob 'libexpat.so*' || true
-link_host_glob 'libxshmfence.so*' || true
-link_host_glob 'libbsd.so*' || true
-link_host_glob 'libmd.so*' || true
-
-runpath="$(readelf -d "$bin" | sed -n 's/.*RUNPATH.*\[\(.*\)\].*/\1/p' | head -1)"
-IFS=':' read -r -a runpath_dirs <<< "$runpath"
-for dir in "${runpath_dirs[@]}"; do
-    for lib in libdl.so.2 libpthread.so.0 librt.so.1; do
-        [[ -e "$dir/$lib" ]] && ln -sf "$dir/$lib" "$shim/$lib"
-    done
-done
-
-find_target_lib() {
-    local name="$1"
-    find target -path "*/bin/$name" -type f | head -1
-}
-
-link_compat_lib() {
-    local file="$1"
-    shift
-    local src
-    src="$(find_target_lib "$file")"
-    [[ -n "$src" ]] || return 0
-    for soname in "$@"; do
-        ln -sf "$(cd "$(dirname "$src")" && pwd)/$(basename "$src")" "$shim/$soname"
-    done
-}
-
-link_compat_lib libX11.so libX11.so libX11.so.6
-link_compat_lib libxcb.so libxcb.so libxcb.so.1
-link_compat_lib libXau.so libXau.so libXau.so.6
-link_compat_lib libXdmcp.so libXdmcp.so libXdmcp.so.6
-link_compat_lib libXext.so libXext.so libXext.so.6
-link_compat_lib libXfixes.so libXfixes.so libXfixes.so.3
-link_compat_lib libXrender.so libXrender.so libXrender.so.1
-link_compat_lib libXcursor.so libXcursor.so libXcursor.so.1
-link_compat_lib libXinerama.so libXinerama.so libXinerama.so.1
-link_compat_lib libXrandr.so libXrandr.so libXrandr.so.2
-link_compat_lib libXi.so libXi.so libXi.so.6
-
-LD_LIBRARY_PATH="$shim${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" "$bin"
+"$MCPP_BIN" run
 echo "OK"

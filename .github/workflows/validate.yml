@@ -53,12 +53,12 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.mcpp/registry
-          key: mcpp-registry-${{ runner.os }}-0.0.45-${{ hashFiles('pkgs/**/*.lua', 'tests/*.sh', '.github/workflows/validate.yml') }}
+          key: mcpp-registry-${{ runner.os }}-0.0.46-${{ hashFiles('pkgs/**/*.lua', 'tests/*.sh', '.github/workflows/validate.yml') }}
           restore-keys: |
-            mcpp-registry-${{ runner.os }}-0.0.45-
+            mcpp-registry-${{ runner.os }}-0.0.46-
       - name: Download mcpp
         env:
-          MCPP_VERSION: "0.0.45"
+          MCPP_VERSION: "0.0.46"
         run: |
           curl -L -fsS -o mcpp.tar.gz \
             "https://github.com/mcpp-community/mcpp/releases/download/v${MCPP_VERSION}/mcpp-${MCPP_VERSION}-linux-x86_64.tar.gz"
@@ -72,6 +72,7 @@ jobs:
       - name: Run compat smoke tests
         env:
           MCPP_INDEX_SMOKE_MCPP_HOME: ${{ runner.temp }}/mcpp-smoke-home
+          MCPP_INDEX_SMOKE_CACHE_DIR: ${{ runner.temp }}/mcpp-smoke-cache
         run: |
           mkdir -p "$MCPP_INDEX_SMOKE_MCPP_HOME"
           "$MCPP" --version
@@ -91,14 +92,14 @@ jobs:
         include:
           - platform: macos
             os: macos-15
-            archive: mcpp-0.0.45-macosx-arm64.tar.gz
-            root: mcpp-0.0.45-macosx-arm64
+            archive: mcpp-0.0.46-macosx-arm64.tar.gz
+            root: mcpp-0.0.46-macosx-arm64
             mcpp: bin/mcpp
             xlings: registry/bin/xlings
           - platform: windows
             os: windows-latest
-            archive: mcpp-0.0.45-windows-x86_64.zip
-            root: mcpp-0.0.45-windows-x86_64
+            archive: mcpp-0.0.46-windows-x86_64.zip
+            root: mcpp-0.0.46-windows-x86_64
             mcpp: bin/mcpp.exe
             xlings: registry/bin/xlings.exe
     steps:
@@ -107,13 +108,13 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.mcpp/registry
-          key: mcpp-registry-${{ runner.os }}-0.0.45-${{ hashFiles('pkgs/**/*.lua', 'tests/*.sh', '.github/workflows/validate.yml') }}
+          key: mcpp-registry-${{ runner.os }}-0.0.46-${{ hashFiles('pkgs/**/*.lua', 'tests/*.sh', '.github/workflows/validate.yml') }}
           restore-keys: |
-            mcpp-registry-${{ runner.os }}-0.0.45-
+            mcpp-registry-${{ runner.os }}-0.0.46-
       - name: Download mcpp
         shell: bash
         env:
-          MCPP_VERSION: "0.0.45"
+          MCPP_VERSION: "0.0.46"
           MCPP_ARCHIVE: ${{ matrix.archive }}
           MCPP_ROOT: ${{ matrix.root }}
         run: |
