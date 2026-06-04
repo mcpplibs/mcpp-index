@@ -21,19 +21,19 @@ package = {
     xpm = {
         linux = {
             ["5.4.7"] = {
-                url    = "https://www.lua.org/ftp/lua-5.4.7.tar.gz",
+                url    = "https://github.com/xlings-res/lua/releases/download/5.4.7/lua-5.4.7.tar.gz",
                 sha256 = "9fbf5e28ef86c69858f6d3d34eccc32e911c1a28b4120ff3e84aaa70cfbf1e30",
             },
         },
         macosx = {
             ["5.4.7"] = {
-                url    = "https://www.lua.org/ftp/lua-5.4.7.tar.gz",
+                url    = "https://github.com/xlings-res/lua/releases/download/5.4.7/lua-5.4.7.tar.gz",
                 sha256 = "9fbf5e28ef86c69858f6d3d34eccc32e911c1a28b4120ff3e84aaa70cfbf1e30",
             },
         },
         windows = {
             ["5.4.7"] = {
-                url    = "https://www.lua.org/ftp/lua-5.4.7.tar.gz",
+                url    = "https://github.com/xlings-res/lua/releases/download/5.4.7/lua-5.4.7.tar.gz",
                 sha256 = "9fbf5e28ef86c69858f6d3d34eccc32e911c1a28b4120ff3e84aaa70cfbf1e30",
             },
         },
