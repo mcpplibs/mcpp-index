@@ -1,0 +1,48 @@
+name: Publish Index Artifact
+
+# Decouples mcpp-index publishing from mcpp releases: editing the index here
+# (pkgs/**) re-publishes a content-hash index artifact + rolling pointer to
+# xlings-res/mcpp-index (GitHub + GitCode), so artifact-source clients pick up
+# the change on their next refresh — no mcpp release needed.
+# Design: .agents/docs/2026-06-24-artifact-publish-mechanism.md
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'pkgs/**'
+  workflow_dispatch:
+  schedule:
+    - cron: '0 18 * * *'   # nightly catch-all / mirror re-sync
+
+concurrency:
+  group: publish-mcpp-index-artifact
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      XLINGS_RES_TOKEN: ${{ secrets.XLINGS_RES_TOKEN }}
+      GITCODE_TOKEN: ${{ secrets.GITCODE_TOKEN }}
+      GH_TOKEN: ${{ secrets.XLINGS_RES_TOKEN }}   # gh targets xlings-res (cross-repo PAT)
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # need HEAD short-sha for content-hash artifact name
+
+      - name: Enable vendored gtc (gitcode-cli)
+        run: |
+          chmod +x tools/gtc
+          echo "$PWD/tools" >> "$GITHUB_PATH"
+
+      - name: Build + publish mcpp-index artifact
+        if: ${{ env.XLINGS_RES_TOKEN != '' }}
+        run: bash tools/publish_mcpp_index.sh .
+
+      - name: Skipped (no XLINGS_RES_TOKEN)
+        if: ${{ env.XLINGS_RES_TOKEN == '' }}
+        run: echo "XLINGS_RES_TOKEN not set — skipping publish (fork/no-secret run)."
