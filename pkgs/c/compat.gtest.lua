@@ -53,6 +53,18 @@ package = {
             "*/googletest",
         },
         targets      = { ["gtest"] = { kind = "lib" } },
+        -- gtest_main.cc provides its own main(); it must NOT be linked by
+        -- default (it would collide with a binary's own main, e.g. an app via
+        -- `mcpp add gtest` + `mcpp build`, or a test that writes its own main).
+        -- It is listed BOTH in `sources` (so OLD mcpp, which ignores `features`,
+        -- keeps today's behavior — no regression) AND here under the `main`
+        -- feature: NEW mcpp treats a feature-listed source as gated → excluded
+        -- by default, included only when `features = ["main"]` is requested on
+        -- the gtest dependency. See
+        -- mcpp .agents/docs/2026-06-25-gtest-main-feature-and-add-dev-design.md.
+        features     = {
+            ["main"] = { sources = { "*/googletest/src/gtest_main.cc" } },
+        },
         deps         = { },
     },
 }
