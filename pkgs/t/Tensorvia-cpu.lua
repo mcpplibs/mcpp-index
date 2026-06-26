@@ -10,13 +10,13 @@ package = {
 
     xpm = {
         linux   = {
-        ['0.1.0'] = { url = "https://github.com/Aimol-l/Tensorvia-cpu/releases/download/v0.1.0/Tensorvia-cpu-0.1.0.tar.gz", sha256 = "b0e9ca2c3138b3cd24c118aa2ff598a3b46505d8d027cd20e033c96a954fea88" },
+        ['0.1.0'] = { url = "https://github.com/Aimol-l/Tensorvia-cpu/releases/download/v0.1.0/Tensorvia-cpu-0.1.0.tar.gz", sha256 = "d44dac5ba61940105aa028a2d56861758b7784f03d00971e566d2224b6523836" },
         },
         macosx  = {
-        ['0.1.0'] = { url = "https://github.com/Aimol-l/Tensorvia-cpu/releases/download/v0.1.0/Tensorvia-cpu-0.1.0.tar.gz", sha256 = "b0e9ca2c3138b3cd24c118aa2ff598a3b46505d8d027cd20e033c96a954fea88" },
+        ['0.1.0'] = { url = "https://github.com/Aimol-l/Tensorvia-cpu/releases/download/v0.1.0/Tensorvia-cpu-0.1.0.tar.gz", sha256 = "d44dac5ba61940105aa028a2d56861758b7784f03d00971e566d2224b6523836" },
         },
         windows = {
-        ['0.1.0'] = { url = "https://github.com/Aimol-l/Tensorvia-cpu/releases/download/v0.1.0/Tensorvia-cpu-0.1.0.tar.gz", sha256 = "b0e9ca2c3138b3cd24c118aa2ff598a3b46505d8d027cd20e033c96a954fea88" },
+        ['0.1.0'] = { url = "https://github.com/Aimol-l/Tensorvia-cpu/releases/download/v0.1.0/Tensorvia-cpu-0.1.0.tar.gz", sha256 = "d44dac5ba61940105aa028a2d56861758b7784f03d00971e566d2224b6523836" },
         },
     },
 
