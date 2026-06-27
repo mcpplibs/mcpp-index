@@ -317,13 +317,17 @@ PR #48。两处与「升级到最新 mcpp 0.0.67」相关的 CI 排查:
    门控(默认不链)→ 无 main;0.0.46 **忽略** feature 总是链入,故旧版「假绿」。
    **修复**:依赖声明改 `gtest = { version = "1.15.2", features = ["main"] }`(本地 0.0.66 实测全绿)。
 
-2. **glfw ABI mismatch(mcpp 0.0.67 回归,已隔离,待 mcpp 侧排查)**:`smoke_compat_imgui_window.sh`
-   在 0.0.67 CI 报 `ABI mismatch: compat.glfw requires abi=glibc but resolved clang 20.1.7 (libc++)`,
-   **尽管工程已 `default = "gcc@16.1.0"`**。对照证据:同脚本 0.0.66 本地正常解析 gcc 并通过;glfw 在
-   0.0.67 别处(linux `smoke_compat_imgui.sh`、mac/windows portable)均正常构建。→ 判定为 **mcpp 0.0.67
-   工具链解析回归**(对带 abi 要求的 glfw 依赖错误回退 clang/libc++),非配方/非本 PR。
-   **处置**:把 GL 窗口 + imgui-module 两个 demo 移到 `smoke-gl-linux`(仅 nightly + 手动 dispatch),
-   不阻塞 PR/main;core/imgui/archive 仍在 0.0.67 阻塞跑。**待 mcpp 侧单独修工具链解析后回收。**
+2. **glfw `abi:glibc` 在 clang/libc++ 下误报(mcpp core bug,已在 0.0.68 修复并回收)**:
+   CI 报 `ABI mismatch: compat.glfw requires abi=glibc but resolved clang 20.1.7 (libc++)`。
+   **真正肇事**是 `smoke_imgui_module.sh`(**显式 pin `llvm@20.1.7`**,非 imgui_window、非"工具链误解析")——
+   其传递依赖 glfw 声明 `abi:glibc`。**根因**:mcpp `prepare.cppm` 的 `abi:` 门控把 **libc ABI** 与
+   **C++ 标准库**混为一谈(`stdlibId=="libc++"` 抢占了 glibc),而 clang+libc++ 的三元组是 `*-linux-gnu`,
+   libc 仍是 glibc → 把 glibc 的 C 库误判不兼容。检查随 0.0.54 引入,故 CI 旧 pin 0.0.46 不报、0.0.67 报。
+   **修复**:mcpp **0.0.68**(#178)把 ABI 建成维度模型(libc / cxxstdlib 等正交,未声明即 don't-care);
+   分析+设计见 mcpp 仓 `.agents/docs/2026-06-27-glfw-abi-glibc-vs-libcxx-conflation-analysis.md`、
+   `2026-06-27-abi-compat-model-single-pr-design.md`。
+   **回收**:本 PR 把 CI 升到 `0.0.68` 并将 GL window + imgui-module 两 smoke 从 nightly 移回阻塞 `smoke-full-linux`
+   (本地 0.0.68 实测 `imgui-module-smoke` 在 llvm 下 `Dear ImGui 1.92.8 module package ok`)。
 
 ### 8.3 CI 选跑实测(PR #48)
 detect 正确产出 `examples=["cjson","nlohmann.json"]`;`smoke-examples (cjson)`/`(nlohmann.json)`

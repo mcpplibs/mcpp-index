@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
 
 env:
-  MCPP_VERSION: "0.0.67"
+  MCPP_VERSION: "0.0.68"
 
 jobs:
   lint:
@@ -216,47 +216,13 @@ jobs:
           timeout 1800 bash tests/smoke_compat_core.sh
           timeout 1800 bash tests/smoke_compat_imgui.sh
           timeout 1800 bash tests/smoke_compat_archive.sh
-
-  # ── GLFW/OpenGL window + imgui-module demos (nightly / manual only) ────
-  # These two depend on `compat.glfw` (abi=glibc) and the GLX/OpenGL runtime.
-  # On mcpp 0.0.67 the window demo intermittently resolves a clang/libc++
-  # toolchain for compat.glfw despite a `default = "gcc@16.1.0"` pin, failing
-  # with `ABI mismatch: compat.glfw requires abi=glibc`. The same scripts pass
-  # on 0.0.66 locally, and glfw builds fine on 0.0.67 elsewhere (linux imgui
-  # smoke + mac/windows portable), so this is an mcpp toolchain-resolution
-  # regression unrelated to package descriptors — tracked separately. Kept out
-  # of the PR-blocking path (display/driver/ABI-sensitive, already optional)
-  # but still exercised on the nightly schedule and on manual dispatch.
-  smoke-gl-linux:
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Restore mcpp registry cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.mcpp/registry
-          key: mcpp-registry-${{ runner.os }}-${{ env.MCPP_VERSION }}-${{ hashFiles('pkgs/**/*.lua', 'tests/**', '.github/workflows/validate.yml') }}
-          restore-keys: |
-            mcpp-registry-${{ runner.os }}-${{ env.MCPP_VERSION }}-
-      - name: Download mcpp
-        run: |
-          curl -L -fsS -o mcpp.tar.gz \
-            "https://github.com/mcpp-community/mcpp/releases/download/v${MCPP_VERSION}/mcpp-${MCPP_VERSION}-linux-x86_64.tar.gz"
-          tar -xzf mcpp.tar.gz
-          root="$PWD/mcpp-${MCPP_VERSION}-linux-x86_64"
-          mkdir -p "$HOME/.mcpp/registry"
-          cp -a "$root/registry/." "$HOME/.mcpp/registry/"
-          echo "MCPP=$root/bin/mcpp" >> "$GITHUB_ENV"
-          echo "MCPP_VENDORED_XLINGS=$root/registry/bin/xlings" >> "$GITHUB_ENV"
-          echo "$root/bin" >> "$GITHUB_PATH"
-      - name: Run GL window + imgui-module smoke tests
-        env:
-          MCPP_INDEX_SMOKE_MCPP_HOME: ${{ runner.temp }}/mcpp-smoke-home
-          MCPP_INDEX_SMOKE_CACHE_DIR: ${{ runner.temp }}/mcpp-smoke-cache
-        run: |
-          mkdir -p "$MCPP_INDEX_SMOKE_MCPP_HOME"
-          "$MCPP" --version
+          # GLFW/OpenGL window + imgui-module demos. These pull compat.glfw
+          # (abi:glibc). The imgui-module smoke pins llvm@20.1.7 (clang/libc++);
+          # on mcpp ≤0.0.67 that tripped the conflated `abi:` gate ("requires
+          # abi=glibc … is abi=libc++") because a clang+libc++ toolchain on
+          # *-linux-gnu was mislabelled. Fixed in mcpp 0.0.68 (dimensional ABI
+          # model: libc and cxxstdlib are independent axes), so these are back in
+          # the blocking set. The window run itself stays opt-in (needs a display).
           timeout 1800 bash tests/smoke_compat_imgui_window.sh
           timeout 1800 bash tests/smoke_imgui_module.sh
 
@@ -272,14 +238,14 @@ jobs:
         include:
           - platform: macos
             os: macos-15
-            archive: mcpp-0.0.67-macosx-arm64.tar.gz
-            root: mcpp-0.0.67-macosx-arm64
+            archive: mcpp-0.0.68-macosx-arm64.tar.gz
+            root: mcpp-0.0.68-macosx-arm64
             mcpp: bin/mcpp
             xlings: registry/bin/xlings
           - platform: windows
             os: windows-latest
-            archive: mcpp-0.0.67-windows-x86_64.zip
-            root: mcpp-0.0.67-windows-x86_64
+            archive: mcpp-0.0.68-windows-x86_64.zip
+            root: mcpp-0.0.68-windows-x86_64
             mcpp: bin/mcpp.exe
             xlings: registry/bin/xlings.exe
     steps:
