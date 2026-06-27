@@ -293,3 +293,39 @@ smoke:
 - **Q4**(待确认默认):CI 选跑本期范围 —— 只对**新增两库**接入 examples 选跑、存量库渐进迁移(推荐),
   还是一次性把 imgui/core 等所有 smoke 都拆成 examples。默认走渐进。
 - **Q5**(待确认默认):cJSON 的 `cJSON_Utils` 用 feature `utils` 门控(默认不编)。无异议即采用。
+
+---
+
+## 8. 实现记录 + CI 排查(2026-06-27 落地)
+
+落地结果:cjson + nlohmann.json 两包均已实测可用(真实 mcpp 管线:CN 镜像拉取 → 生成 → 编译 → 运行),
+PR #48。两处与「升级到最新 mcpp 0.0.67」相关的 CI 排查:
+
+### 8.1 R1 结论(generated `.cppm` 作 module 源)— 成立
+本地 mcpp 0.0.66 实测:`generated_files` 生成的 `nlohmann.json.cppm` 被当作 module 接口单元正常
+编译,`import nlohmann.json;` 开箱可用(`nlohmann::json` / `ordered_json` / `_json` UDL 全 OK)。
+**关键坑**:`mcpp` 段解析器不支持 Lua 长括号 `[[...]]`(`publisher.cppm:76` 明示),必须用
+双引号字符串 + `\n`/`\"` 转义(同 zlib);否则 `error: malformed mcpp segment`。
+**消费侧坑**:`import nlohmann.json;` 不要和文本 `#include <string>` 混用(GCC modules 冲突),
+应配 `import std;`;UDL 需 `using namespace nlohmann::literals;`。
+
+### 8.2 旧 smoke 在 0.0.67 暴露的两处「与本 PR 无关」的历史漂移
+升级 CI mcpp `0.0.46 → 0.0.67`(新 example job 需要)后,旧全量 smoke 暴露两处既有问题:
+
+1. **gtest `undefined symbol: main`(已修)**:`smoke_compat_{core,portable}.sh` 用 gtest `TEST()` 但
+   不自带 `main()`,依赖 `gtest_main`。#168 把 `gtest_main.cc` 收进 `main` feature;0.0.67 **遵守**
+   门控(默认不链)→ 无 main;0.0.46 **忽略** feature 总是链入,故旧版「假绿」。
+   **修复**:依赖声明改 `gtest = { version = "1.15.2", features = ["main"] }`(本地 0.0.66 实测全绿)。
+
+2. **glfw ABI mismatch(mcpp 0.0.67 回归,已隔离,待 mcpp 侧排查)**:`smoke_compat_imgui_window.sh`
+   在 0.0.67 CI 报 `ABI mismatch: compat.glfw requires abi=glibc but resolved clang 20.1.7 (libc++)`,
+   **尽管工程已 `default = "gcc@16.1.0"`**。对照证据:同脚本 0.0.66 本地正常解析 gcc 并通过;glfw 在
+   0.0.67 别处(linux `smoke_compat_imgui.sh`、mac/windows portable)均正常构建。→ 判定为 **mcpp 0.0.67
+   工具链解析回归**(对带 abi 要求的 glfw 依赖错误回退 clang/libc++),非配方/非本 PR。
+   **处置**:把 GL 窗口 + imgui-module 两个 demo 移到 `smoke-gl-linux`(仅 nightly + 手动 dispatch),
+   不阻塞 PR/main;core/imgui/archive 仍在 0.0.67 阻塞跑。**待 mcpp 侧单独修工具链解析后回收。**
+
+### 8.3 CI 选跑实测(PR #48)
+detect 正确产出 `examples=["cjson","nlohmann.json"]`;`smoke-examples (cjson)`/`(nlohmann.json)`
+两个 matrix job 在干净 runner + 0.0.67 全绿(独立复现 R1);`mirror-cn-reachable` 覆盖两条新 CN url(200);
+gtest 修复后 `smoke-macos`/`smoke-windows`/full-linux(core/imgui/archive)在 0.0.67 全绿。
