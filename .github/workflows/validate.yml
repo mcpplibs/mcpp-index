@@ -10,9 +10,8 @@ on:
     - cron: "0 6 * * *"
   workflow_dispatch:
 
-# Note: mcpp version is pinned per-job, not globally. The new per-package
-# example jobs run on the current release (what real users have); the legacy
-# whole-suite regression stays on the version it was authored against.
+env:
+  MCPP_VERSION: "0.0.67"
 
 jobs:
   lint:
@@ -151,8 +150,6 @@ jobs:
     needs: detect
     if: needs.detect.outputs.examples != '[]'
     runs-on: ubuntu-latest
-    env:
-      MCPP_VERSION: "0.0.67"
     strategy:
       fail-fast: false
       matrix:
@@ -189,11 +186,6 @@ jobs:
     needs: detect
     if: needs.detect.outputs.full == 'true'
     runs-on: ubuntu-latest
-    env:
-      # legacy whole-suite smoke is pinned to the version it was authored
-      # against; bumping it surfaces unrelated package/version drift (e.g. the
-      # gtest `main` feature gating) that belongs in a separate maintenance PR.
-      MCPP_VERSION: "0.0.46"
     steps:
       - uses: actions/checkout@v4
       - name: Restore mcpp registry cache
@@ -233,22 +225,20 @@ jobs:
     name: smoke-${{ matrix.platform }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
-    env:
-      MCPP_VERSION: "0.0.46"
     strategy:
       fail-fast: false
       matrix:
         include:
           - platform: macos
             os: macos-15
-            archive: mcpp-0.0.46-macosx-arm64.tar.gz
-            root: mcpp-0.0.46-macosx-arm64
+            archive: mcpp-0.0.67-macosx-arm64.tar.gz
+            root: mcpp-0.0.67-macosx-arm64
             mcpp: bin/mcpp
             xlings: registry/bin/xlings
           - platform: windows
             os: windows-latest
-            archive: mcpp-0.0.46-windows-x86_64.zip
-            root: mcpp-0.0.46-windows-x86_64
+            archive: mcpp-0.0.67-windows-x86_64.zip
+            root: mcpp-0.0.67-windows-x86_64
             mcpp: bin/mcpp.exe
             xlings: registry/bin/xlings.exe
     steps:

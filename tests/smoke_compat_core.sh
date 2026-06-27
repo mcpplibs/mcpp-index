@@ -63,7 +63,7 @@ default = "gcc@16.1.0"
 compat = { path = "$ROOT" }
 
 [dependencies.compat]
-gtest = "1.15.2"
+gtest = { version = "1.15.2", features = ["main"] }
 ftxui = "6.1.9"
 lua = "5.4.7"
 mbedtls = "3.6.1"
