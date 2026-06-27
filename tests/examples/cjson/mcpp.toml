@@ -1,0 +1,18 @@
+# Minimal example: third-party C library cJSON via compat source build.
+# Run from this directory:  mcpp run   (index path is relative to repo root)
+[package]
+name = "cjson-example"
+version = "0.1.0"
+
+[toolchain]
+default = "gcc@16.1.0"
+
+[indices]
+compat = { path = "../../.." }
+
+[dependencies.compat]
+cjson = "1.7.19"
+
+[targets.cjson-example]
+kind = "bin"
+main = "src/main.cpp"

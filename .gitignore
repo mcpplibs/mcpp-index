@@ -1,1 +1,6 @@
 .xlings-index-cache.json
+# example project build/fetch artifacts
+tests/examples/*/target/
+tests/examples/*/.mcpp/
+tests/examples/*/compile_commands.json
+tests/examples/*/mcpp.lock

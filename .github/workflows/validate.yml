@@ -5,6 +5,13 @@ on:
     paths: ["pkgs/**/*.lua", "tests/**", "README.md", ".github/workflows/validate.yml"]
   push:
     branches: [main]
+  schedule:
+    # nightly full regression — exercises every smoke suite regardless of diff
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+env:
+  MCPP_VERSION: "0.0.67"
 
 jobs:
   lint:
@@ -84,7 +91,100 @@ jobs:
           [ $fail -eq 0 ] && echo "All CN mirror urls reachable."
           exit $fail
 
-  smoke-linux:
+  # ── Decide what to smoke-test ─────────────────────────────────────────
+  # PR builds run ONLY the example projects whose package descriptor changed
+  # (tests/examples/<pkg>/). Anything that can't be narrowed that way — a
+  # changed pkg without an example yet, a scaffolding/CI change, or a
+  # push/nightly/manual run — falls back to the full legacy smoke regression.
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      examples: ${{ steps.f.outputs.examples }}
+      full: ${{ steps.f.outputs.full }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install jq
+        run: sudo apt-get install -y --no-install-recommends jq
+      - id: f
+        run: |
+          full=false
+          examples='[]'
+          event="${{ github.event_name }}"
+          if [ "$event" != "pull_request" ]; then
+            # push to main / nightly schedule / manual dispatch → full regression
+            full=true
+          else
+            git fetch -q origin "${{ github.base_ref }}"
+            changed=$(git diff --name-only "origin/${{ github.base_ref }}...HEAD")
+            echo "changed files:"; echo "$changed" | sed 's/^/  /'
+            # scaffolding / CI change → full regression
+            if echo "$changed" | grep -qE '^(tests/run_example\.sh|tests/smoke_.*\.sh|tests/check_mirror_urls\.lua|tests/list_cn_urls\.lua|\.github/workflows/validate\.yml)$'; then
+              full=true
+            fi
+            sel=""
+            while IFS= read -r file; do
+              case "$file" in
+                pkgs/*/*.lua)
+                  b=$(basename "$file" .lua); b=${b#compat.}
+                  if [ -d "tests/examples/$b" ]; then
+                    sel="$sel$b"$'\n'
+                  else
+                    # changed pkg with no example yet → cannot narrow, run full
+                    full=true
+                  fi
+                  ;;
+              esac
+            done <<< "$changed"
+            if [ -n "$sel" ]; then
+              examples=$(printf '%s' "$sel" | grep -v '^$' | sort -u | jq -R . | jq -sc .)
+            fi
+          fi
+          echo "full=$full" >> "$GITHUB_OUTPUT"
+          echo "examples=$examples" >> "$GITHUB_OUTPUT"
+          echo "=> full=$full examples=$examples"
+
+  # ── Fast path: per-changed-package example projects (Linux) ───────────
+  smoke-examples:
+    needs: detect
+    if: needs.detect.outputs.examples != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        pkg: ${{ fromJson(needs.detect.outputs.examples) }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Restore mcpp registry cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.mcpp/registry
+          key: mcpp-registry-${{ runner.os }}-${{ env.MCPP_VERSION }}-${{ hashFiles('pkgs/**/*.lua', 'tests/**', '.github/workflows/validate.yml') }}
+          restore-keys: |
+            mcpp-registry-${{ runner.os }}-${{ env.MCPP_VERSION }}-
+      - name: Download mcpp
+        run: |
+          curl -L -fsS -o mcpp.tar.gz \
+            "https://github.com/mcpp-community/mcpp/releases/download/v${MCPP_VERSION}/mcpp-${MCPP_VERSION}-linux-x86_64.tar.gz"
+          tar -xzf mcpp.tar.gz
+          root="$PWD/mcpp-${MCPP_VERSION}-linux-x86_64"
+          mkdir -p "$HOME/.mcpp/registry"
+          cp -a "$root/registry/." "$HOME/.mcpp/registry/"
+          echo "MCPP=$root/bin/mcpp" >> "$GITHUB_ENV"
+          echo "MCPP_VENDORED_XLINGS=$root/registry/bin/xlings" >> "$GITHUB_ENV"
+          echo "$root/bin" >> "$GITHUB_PATH"
+      - name: Run example "${{ matrix.pkg }}"
+        env:
+          MCPP_INDEX_MIRROR: GLOBAL
+        run: |
+          "$MCPP" --version
+          timeout 1800 bash tests/run_example.sh "${{ matrix.pkg }}"
+
+  # ── Full regression (legacy whole-suite smoke) ────────────────────────
+  smoke-full-linux:
+    needs: detect
+    if: needs.detect.outputs.full == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -92,12 +192,10 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.mcpp/registry
-          key: mcpp-registry-${{ runner.os }}-0.0.46-${{ hashFiles('pkgs/**/*.lua', 'tests/*.sh', '.github/workflows/validate.yml') }}
+          key: mcpp-registry-${{ runner.os }}-${{ env.MCPP_VERSION }}-${{ hashFiles('pkgs/**/*.lua', 'tests/**', '.github/workflows/validate.yml') }}
           restore-keys: |
-            mcpp-registry-${{ runner.os }}-0.0.46-
+            mcpp-registry-${{ runner.os }}-${{ env.MCPP_VERSION }}-
       - name: Download mcpp
-        env:
-          MCPP_VERSION: "0.0.46"
         run: |
           curl -L -fsS -o mcpp.tar.gz \
             "https://github.com/mcpp-community/mcpp/releases/download/v${MCPP_VERSION}/mcpp-${MCPP_VERSION}-linux-x86_64.tar.gz"
@@ -122,6 +220,8 @@ jobs:
           timeout 1800 bash tests/smoke_imgui_module.sh
 
   smoke-portable:
+    needs: detect
+    if: needs.detect.outputs.full == 'true'
     name: smoke-${{ matrix.platform }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
@@ -131,14 +231,14 @@ jobs:
         include:
           - platform: macos
             os: macos-15
-            archive: mcpp-0.0.46-macosx-arm64.tar.gz
-            root: mcpp-0.0.46-macosx-arm64
+            archive: mcpp-0.0.67-macosx-arm64.tar.gz
+            root: mcpp-0.0.67-macosx-arm64
             mcpp: bin/mcpp
             xlings: registry/bin/xlings
           - platform: windows
             os: windows-latest
-            archive: mcpp-0.0.46-windows-x86_64.zip
-            root: mcpp-0.0.46-windows-x86_64
+            archive: mcpp-0.0.67-windows-x86_64.zip
+            root: mcpp-0.0.67-windows-x86_64
             mcpp: bin/mcpp.exe
             xlings: registry/bin/xlings.exe
     steps:
@@ -147,13 +247,12 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.mcpp/registry
-          key: mcpp-registry-${{ runner.os }}-0.0.46-${{ hashFiles('pkgs/**/*.lua', 'tests/*.sh', '.github/workflows/validate.yml') }}
+          key: mcpp-registry-${{ runner.os }}-${{ env.MCPP_VERSION }}-${{ hashFiles('pkgs/**/*.lua', 'tests/**', '.github/workflows/validate.yml') }}
           restore-keys: |
-            mcpp-registry-${{ runner.os }}-0.0.46-
+            mcpp-registry-${{ runner.os }}-${{ env.MCPP_VERSION }}-
       - name: Download mcpp
         shell: bash
         env:
-          MCPP_VERSION: "0.0.46"
           MCPP_ARCHIVE: ${{ matrix.archive }}
           MCPP_ROOT: ${{ matrix.root }}
         run: |

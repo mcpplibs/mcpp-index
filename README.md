@@ -29,6 +29,7 @@ mcpp build                  # 自动拉取源码 + 构建
 | 包名 | 版本 | 简介 | 仓库 |
 |------|------|------|------|
 | `imgui` | 0.0.1 | Dear ImGui C++23 模块封装 — `import imgui.core;` / `import imgui.backend.glfw_opengl3;` | [mcpplibs/imgui-m](https://github.com/mcpplibs/imgui-m) |
+| `nlohmann.json` | 3.12.0 | JSON for Modern C++,开箱即用的 C++23 模块 — `import nlohmann.json;` | [nlohmann/json](https://github.com/nlohmann/json) |
 
 ### 第三方 C/C++ 库
 
@@ -37,6 +38,7 @@ mcpp build                  # 自动拉取源码 + 构建
 | `ftxui` | 6.1.9 | C++ 函数式终端 UI 库(screen + dom + component) |
 | `glfw` | 3.4 | GLFW 窗口与输入库(X11/null 后端源码构建) |
 | `gtest` | 1.15.2 | Google Test 测试框架 |
+| `cjson` | 1.7.19 | 超轻量 ANSI C JSON 解析库(`#include <cJSON.h>`,`compat` 源码构建) |
 | `imgui` | 1.92.8 | Dear ImGui immediate-mode GUI 核心源码 |
 | `opengl` | 2026.05.31 | Khronos OpenGL API 头文件 |
 | `glx-runtime` | 2026.06.03 | Linux host GLVND/GLX/OpenGL runtime adapter |
@@ -124,7 +126,19 @@ mcpp 0.0.3+ 的 transitive walker 自动沿链路传播头文件和依赖,消费
 > 带入 host GLX 库常见的 X11/Xext ABI 依赖闭包。
 > 窗口运行时仍需要宿主环境提供可用的 X server/GLX/OpenGL 驱动。
 
-### 本地 smoke 验证
+### 单库示例工程(`tests/examples/<pkg>/`)
+
+每个库可以有一个最小可构建工程(自带 `mcpp.toml` + 源码,`[indices]` 相对指回本仓),
+既是文档也是测试。CI 在 PR 上**只跑改动到的库**对应的示例(`tests/run_example.sh`),
+其余情况(push / nightly / 改动脚手架)才跑下面的全量 smoke。
+
+```bash
+MCPP=/path/to/mcpp tests/run_example.sh cjson           # #include <cJSON.h>
+MCPP=/path/to/mcpp tests/run_example.sh nlohmann.json   # import nlohmann.json;
+# 等价于:cd tests/examples/cjson && mcpp run
+```
+
+### 本地 smoke 验证(全量回归)
 
 ```bash
 MCPP=/path/to/mcpp tests/smoke_compat_core.sh
