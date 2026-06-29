@@ -10,11 +10,13 @@ default = "gcc@16.1.0"
 [indices]
 compat = { path = "../../.." }
 
-# `features = ["blas"]` opts into Eigen's reference BLAS (eigen_blas) so this
+# `features = ["eigen_blas"]` opts into Eigen's reference BLAS provider so this
 # example also exercises the feature-gated source build. Without it, the core
-# header-only `#include <Eigen/...>` path still works on its own.
+# header-only `#include <Eigen/...>` path still works on its own. (NOTE: do not
+# combine with `use_blas` — that defines EIGEN_USE_BLAS, which is incompatible
+# with compiling Eigen's own BLAS sources; see the recipe header.)
 [dependencies.compat]
-eigen = { version = "5.0.1", features = ["blas"] }
+eigen = { version = "5.0.1", features = ["eigen_blas"] }
 
 [targets.eigen-example]
 kind = "bin"
