@@ -97,6 +97,24 @@ copy_smoke_cache() {
         -exec cp -f {} .mcpp/.xlings/data/runtimedir/ \;
 }
 
+# Save half (was missing): stash this project's freshly-downloaded toolchain /
+# source archives back into SMOKE_CACHE_DIR so the NEXT project in this run (and,
+# when SMOKE_CACHE_DIR is on actions/cache, the next CI run) restores them instead
+# of re-downloading. Mirrors tests/smoke_compat_imgui.sh. `cp -n` = no-clobber.
+save_smoke_cache() {
+    [[ -n "$SMOKE_CACHE_DIR" && -d .mcpp/.xlings/data ]] || return 0
+    mkdir -p "$SMOKE_CACHE_DIR"
+    find .mcpp/.xlings/data -type f \
+        \( -name '*.tar.gz' -o -name '*.tar.xz' -o -name '*.zip' \) \
+        -exec cp -n {} "$SMOKE_CACHE_DIR"/ \; 2>/dev/null || true
+}
+
+# Build + populate the cache, so every project's downloads are reused.
+pbuild() {
+    "$MCPP_BIN_POSIX" build
+    save_smoke_cache
+}
+
 write_build_ldflags() {
     case "$platform" in
         Linux)
@@ -196,7 +214,7 @@ TEST(CompatPortableCore, UpstreamHeadersAndRuntime) {
     EXPECT_EQ(static_cast<khronos_uint32_t>(1), 1u);
 }
 EOF
-"$MCPP_BIN_POSIX" build
+pbuild
 "$MCPP_BIN_POSIX" run
 
 make_project "compat-portable-archive-smoke"
@@ -232,7 +250,7 @@ int main() {
     return 0;
 }
 EOF
-"$MCPP_BIN_POSIX" build
+pbuild
 "$MCPP_BIN_POSIX" run
 
 make_project "compat-portable-compression-smoke"
@@ -356,7 +374,7 @@ int main() {
     return 0;
 }
 EOF
-"$MCPP_BIN_POSIX" build
+pbuild
 "$MCPP_BIN_POSIX" run
 
 make_project "compat-portable-imgui-glfw-smoke"
@@ -411,7 +429,7 @@ int main() {
            IMGUI_VERSION_NUM >= 19200 ? 0 : 1;
 }
 EOF
-"$MCPP_BIN_POSIX" build
+pbuild
 "$MCPP_BIN_POSIX" run
 
 # compat.openblas — Windows-only build-AND-run. This is the only place that
@@ -447,7 +465,7 @@ int main() {
     return 0;
 }
 EOF
-    "$MCPP_BIN_POSIX" build
+    pbuild
     # `mcpp run` also prepends the source bin/ to PATH, so it alone would not
     # prove the DLL was deployed. Run the produced .exe DIRECTLY from a neutral
     # CWD: Windows searches the executable's own directory first, so a clean exit

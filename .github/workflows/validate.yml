@@ -103,6 +103,8 @@ jobs:
     outputs:
       examples: ${{ steps.f.outputs.examples }}
       full: ${{ steps.f.outputs.full }}
+      full_linux: ${{ steps.f.outputs.full_linux }}
+      full_portable: ${{ steps.f.outputs.full_portable }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -111,30 +113,51 @@ jobs:
         run: sudo apt-get install -y --no-install-recommends jq
       - id: f
         run: |
-          full=false
+          # The two heavy suites run on disjoint platforms and from disjoint
+          # scripts: smoke-full-linux runs the smoke_compat_{core,imgui,archive,
+          # imgui_window}.sh + smoke_imgui_module.sh scripts (Linux); smoke-portable
+          # runs ONLY smoke_compat_portable.sh (windows+macos). So a change to one
+          # platform's harness needn't trigger the other's. We classify each changed
+          # file into full_linux / full_portable; unclassified test changes, the
+          # common harness, and pkgs without an example fall back to BOTH (no
+          # coverage is ever silently dropped).
+          full_linux=false
+          full_portable=false
           examples='[]'
           event="${{ github.event_name }}"
           if [ "$event" != "pull_request" ]; then
             # push to main / nightly schedule / manual dispatch → full regression
-            full=true
+            full_linux=true; full_portable=true
           else
             git fetch -q origin "${{ github.base_ref }}"
             changed=$(git diff --name-only "origin/${{ github.base_ref }}...HEAD")
             echo "changed files:"; echo "$changed" | sed 's/^/  /'
-            # scaffolding / CI change → full regression
-            if echo "$changed" | grep -qE '^(tests/run_example\.sh|tests/smoke_.*\.sh|tests/check_mirror_urls\.lua|tests/list_cn_urls\.lua|\.github/workflows/validate\.yml)$'; then
-              full=true
-            fi
             sel=""
             while IFS= read -r file; do
+              [ -z "$file" ] && continue
               case "$file" in
+                # Common harness / the workflow itself → both platforms.
+                tests/run_example.sh|tests/check_mirror_urls.lua|tests/list_cn_urls.lua|.github/workflows/validate.yml)
+                  full_linux=true; full_portable=true ;;
+                # Portable suite script runs only in smoke-portable (win+mac).
+                tests/smoke_compat_portable.sh)
+                  full_portable=true ;;
+                # Linux-only smoke scripts run only in smoke-full-linux.
+                tests/smoke_compat_core.sh|tests/smoke_compat_imgui.sh|tests/smoke_compat_archive.sh|tests/smoke_compat_imgui_window.sh|tests/smoke_imgui_module.sh)
+                  full_linux=true ;;
+                # Example projects are handled by the smoke-examples fast path.
+                tests/examples/*)
+                  : ;;
+                # Any other tests/ change (new helper / new smoke script) → both (safe).
+                tests/*)
+                  full_linux=true; full_portable=true ;;
                 pkgs/*/*.lua)
                   b=$(basename "$file" .lua); b=${b#compat.}
                   if [ -d "tests/examples/$b" ]; then
                     sel="$sel$b"$'\n'
                   else
-                    # changed pkg with no example yet → cannot narrow, run full
-                    full=true
+                    # changed pkg with no example yet → cannot narrow, run both
+                    full_linux=true; full_portable=true
                   fi
                   ;;
               esac
@@ -143,9 +166,13 @@ jobs:
               examples=$(printf '%s' "$sel" | grep -v '^$' | sort -u | jq -R . | jq -sc .)
             fi
           fi
+          full=false
+          { [ "$full_linux" = true ] || [ "$full_portable" = true ]; } && full=true
           echo "full=$full" >> "$GITHUB_OUTPUT"
+          echo "full_linux=$full_linux" >> "$GITHUB_OUTPUT"
+          echo "full_portable=$full_portable" >> "$GITHUB_OUTPUT"
           echo "examples=$examples" >> "$GITHUB_OUTPUT"
-          echo "=> full=$full examples=$examples"
+          echo "=> full_linux=$full_linux full_portable=$full_portable examples=$examples"
 
   # ── Fast path: per-changed-package example projects (Linux) ───────────
   smoke-examples:
@@ -186,7 +213,7 @@ jobs:
   # ── Full regression (legacy whole-suite smoke) ────────────────────────
   smoke-full-linux:
     needs: detect
-    if: needs.detect.outputs.full == 'true'
+    if: needs.detect.outputs.full_linux == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -197,6 +224,18 @@ jobs:
           key: mcpp-registry-${{ runner.os }}-${{ env.MCPP_VERSION }}-${{ hashFiles('pkgs/**/*.lua', 'tests/**', '.github/workflows/validate.yml') }}
           restore-keys: |
             mcpp-registry-${{ runner.os }}-${{ env.MCPP_VERSION }}-
+      # Persist the smoke download cache (toolchains + compat source archives)
+      # ACROSS runs. Without this, every run re-downloads xim:python/make, the
+      # gcc/llvm toolchains, and every source tarball. restore-keys gives a
+      # partial hit even when pkgs change, so only new/changed archives download;
+      # save_smoke_cache (in the smoke scripts) repopulates the dir each run.
+      - name: Cache smoke downloads
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/mcpp-smoke-cache
+          key: smoke-dl-${{ runner.os }}-${{ env.MCPP_VERSION }}-${{ hashFiles('pkgs/**/*.lua') }}
+          restore-keys: |
+            smoke-dl-${{ runner.os }}-${{ env.MCPP_VERSION }}-
       - name: Download mcpp
         run: |
           curl -L -fsS -o mcpp.tar.gz \
@@ -230,7 +269,7 @@ jobs:
 
   smoke-portable:
     needs: detect
-    if: needs.detect.outputs.full == 'true'
+    if: needs.detect.outputs.full_portable == 'true'
     name: smoke-${{ matrix.platform }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
@@ -259,6 +298,18 @@ jobs:
           key: mcpp-registry-${{ runner.os }}-${{ env.MCPP_VERSION }}-${{ hashFiles('pkgs/**/*.lua', 'tests/**', '.github/workflows/validate.yml') }}
           restore-keys: |
             mcpp-registry-${{ runner.os }}-${{ env.MCPP_VERSION }}-
+      # Persist the smoke download cache across runs (same rationale as
+      # smoke-full-linux). Previously the portable job never set
+      # MCPP_INDEX_SMOKE_CACHE_DIR at all, so its 5 projects each re-downloaded
+      # the full llvm toolchain + compat archives WITHIN one run; now they share
+      # one dir, persisted between runs too.
+      - name: Cache smoke downloads
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/mcpp-smoke-cache
+          key: smoke-dl-${{ runner.os }}-${{ env.MCPP_VERSION }}-${{ hashFiles('pkgs/**/*.lua') }}
+          restore-keys: |
+            smoke-dl-${{ runner.os }}-${{ env.MCPP_VERSION }}-
       - name: Download mcpp
         shell: bash
         env:
@@ -292,6 +343,9 @@ jobs:
         shell: bash
         env:
           MCPP_INDEX_MIRROR: GLOBAL
+          # Enables the within-run + cross-run download cache (copy/save_smoke_cache).
+          MCPP_INDEX_SMOKE_CACHE_DIR: ${{ runner.temp }}/mcpp-smoke-cache
         run: |
+          mkdir -p "$MCPP_INDEX_SMOKE_CACHE_DIR"
           "$MCPP" --version
           bash tests/smoke_compat_portable.sh
