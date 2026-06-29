@@ -18,8 +18,18 @@
 -- headers, and emits the anchor — then compiles the anchor and links the lib
 -- (`-Llib -lopenblas`, with `-Llib` rewritten to <verdir>/lib).
 --
--- Platforms: linux/macosx build from source via Make. Windows (no upstream Make
--- path; OpenBLAS ships prebuilt zips) is a follow-up.
+-- Platforms:
+--   * linux/macosx — build a fully static libopenblas.a from source via Make
+--     (no runtime artifact; install() emits the anchor → triggers the build).
+--   * windows — no upstream Make path with the MSVC-ABI Clang mcpp links with, so
+--     use OpenBLAS's prebuilt x64 zip: link the MSVC import lib (lib/libopenblas.lib)
+--     and ship the runtime DLL (bin/libopenblas.dll) beside the consumer's .exe.
+--     mcpp >= 0.0.73 deploys a dependency's [runtime] library_dirs *.dll next to
+--     the executable (PE has no RPATH); see
+--     mcpp/.agents/docs/2026-06-29-windows-runtime-dll-deployment-and-openblas.md.
+--     The Windows anchor is a generated_files TU (no Make build), so install()
+--     returns immediately on windows. The asymmetry is intentional: only Windows
+--     declares a [runtime] library_dir because only Windows ships a runtime DLL.
 package = {
     spec        = "1",
     namespace   = "compat",
@@ -50,21 +60,57 @@ package = {
                 sha256 = "6761af1d9f5d353ab4f0b7497be2643313b36c8f31caec0144bfef198e71e6ab",
             },
         },
+        windows = {
+            -- Prebuilt x64 zip (no Make build). Unpacks to bin/ lib/ include/ with
+            -- no wrapper dir: bin/libopenblas.dll, lib/libopenblas.lib (MSVC import
+            -- lib), include/cblas.h.
+            ["0.3.33"] = {
+                url = {
+                    GLOBAL = "https://github.com/OpenMathLib/OpenBLAS/releases/download/v0.3.33/OpenBLAS-0.3.33-x64.zip",
+                    CN     = "https://gitcode.com/mcpp-res/openblas/releases/download/0.3.33/OpenBLAS-0.3.33-x64.zip",
+                },
+                sha256 = "7ad797ef0c9a5c42e28903bf726eaaaade307dafe187ff0e923d90cd4002780c",
+            },
+        },
     },
 
     mcpp = {
         language     = "c++23",
         import_std   = false,
         c_standard   = "c11",
-        -- The anchor is NOT a generated_files entry: it is emitted by install()
-        -- so mcpp must run install() (which also builds the lib) before it can
-        -- compile this source. include/ + lib/ are produced by `make install`.
+        -- On linux/macosx the anchor is NOT a generated_files entry: it is emitted
+        -- by install() so mcpp must run install() (which also builds the lib)
+        -- before it can compile this source. include/ + lib/ are produced by
+        -- `make install`. On windows there is no Make build, so the anchor is a
+        -- generated_files TU (see the windows block) and install() is a no-op.
         sources      = { "mcpp_openblas_anchor.c" },
         targets      = { ["openblas"] = { kind = "lib" } },
         include_dirs = { "include" },
-        ldflags      = { "-Llib", "-lopenblas" },
         provides     = { "blas" },
         deps         = { },
+
+        -- ldflags are per-OS: the synthesized-manifest parser APPENDS ldflags, so
+        -- a global `-lopenblas` would also reach the Windows link (wrong: there
+        -- the lib is the import lib libopenblas.lib). linux/macosx link the static
+        -- archive; the per-OS merge picks exactly one of these blocks by host.
+        linux  = { ldflags = { "-Llib", "-lopenblas" } },
+        macosx = { ldflags = { "-Llib", "-lopenblas" } },
+        windows = {
+            -- Link the MSVC import lib lib/libopenblas.lib (clang MSVC driver maps
+            -- `-llibopenblas` → libopenblas.lib). `-Llib` is rewritten to
+            -- <verdir>/lib by mcpp.
+            ldflags = { "-Llib", "-llibopenblas" },
+            -- bin/libopenblas.dll is staged beside the consumer .exe by mcpp's
+            -- runtime-DLL deployment (mcpp >= 0.0.73). On non-Windows the *.dll
+            -- filter makes this declaration inert.
+            runtime = { library_dirs = { "bin" } },
+            -- No Make build on Windows: provide the anchor TU directly so mcpp is
+            -- self-sufficient and never triggers install() here. (linux/macosx get
+            -- their anchor from install(), which is what triggers the Make build.)
+            generated_files = {
+                ["mcpp_openblas_anchor.c"] = "int mcpp_compat_openblas_anchor(void) { return 0; }\n",
+            },
+        },
     },
 }
 
@@ -155,6 +201,12 @@ local function _install_impl()
 end
 
 function install()
+    -- Windows ships a prebuilt zip (import lib + DLL); nothing to build. The
+    -- anchor TU comes from mcpp `generated_files`, so mcpp never needs install()
+    -- to produce a source here — this is a no-op success.
+    if os.host() == "windows" then
+        return true
+    end
     local ok, err = pcall(_install_impl)
     if not ok then
         log.error("compat.openblas install() failed: %s", tostring(err))

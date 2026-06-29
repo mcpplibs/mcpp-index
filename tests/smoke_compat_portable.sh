@@ -414,4 +414,53 @@ EOF
 "$MCPP_BIN_POSIX" build
 "$MCPP_BIN_POSIX" run
 
+# compat.openblas — Windows-only build-AND-run. This is the only place that
+# exercises the mcpp >= 0.0.73 runtime-DLL deployment end to end: the consumer
+# links the MSVC import lib (lib/libopenblas.lib) and, at `mcpp run`, loads the
+# bin/libopenblas.dll that mcpp staged beside the .exe (a build-only check would
+# pass even if the DLL were never deployed). cblas_dgemm computes a 2x2 GEMM and
+# the program returns nonzero unless the result is exactly [19 22; 43 50], so a
+# wrong/missing BLAS fails the run. Scoped to Windows: linux/macosx link a static
+# libopenblas.a (no DLL, nothing new to validate here) and macosx would add a
+# multi-minute source build to every portable run.
+if [[ "$platform" == "Windows_NT" ]]; then
+    make_project "compat-portable-openblas-smoke"
+    cat >> mcpp.toml <<'EOF'
+
+[dependencies.compat]
+openblas = "0.3.33"
+EOF
+    cat > src/main.cpp <<'EOF'
+#include <cblas.h>
+
+int main() {
+    // A (2x2, row-major) * B (2x2) = C; expect [[19,22],[43,50]].
+    const double A[4] = {1, 2, 3, 4};
+    const double B[4] = {5, 6, 7, 8};
+    double C[4] = {0, 0, 0, 0};
+    cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
+                2, 2, 2, 1.0, A, 2, B, 2, 0.0, C, 2);
+    const double expected[4] = {19, 22, 43, 50};
+    for (int i = 0; i < 4; ++i) {
+        if (C[i] != expected[i]) return 10 + i;  // wrong/missing BLAS
+    }
+    return 0;
+}
+EOF
+    "$MCPP_BIN_POSIX" build
+    # `mcpp run` also prepends the source bin/ to PATH, so it alone would not
+    # prove the DLL was deployed. Run the produced .exe DIRECTLY from a neutral
+    # CWD: Windows searches the executable's own directory first, so a clean exit
+    # proves bin/libopenblas.dll was actually staged beside app.exe (the deploy).
+    "$MCPP_BIN_POSIX" run
+    exe="$(find target -type f -name '*.exe' | head -1)"
+    [ -n "$exe" ] || { echo "FAIL: openblas smoke produced no .exe"; exit 1; }
+    exedir="$(cd "$(dirname "$exe")" && pwd)"
+    [ -f "$exedir/libopenblas.dll" ] || {
+        echo "FAIL: libopenblas.dll was not deployed beside the .exe ($exedir)"
+        ls -la "$exedir"; exit 1; }
+    ( cd / && "$(to_native_path "$exe")" ) || {
+        echo "FAIL: direct .exe launch failed — deployed DLL not loadable"; exit 1; }
+fi
+
 echo "OK"
