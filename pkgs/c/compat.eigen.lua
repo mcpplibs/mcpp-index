@@ -13,30 +13,50 @@
 -- under `unsupported/Eigen/` (Tensor, AutoDiff, Splines, MatrixFunctions, …)
 -- resolvable out of the box.
 --
--- Feature: `blas` — Eigen's reference BLAS implementation.
---   Eigen ships a full BLAS library under `blas/` (the `eigen_blas` target in
---   upstream CMake). Despite the historical name, it builds from pure C++
---   (`blas/*.cpp`) + f2c-translated C (`blas/f2c/*.c`) — NO Fortran compiler
---   is needed (the only `.f` files live under `blas/testing/`, the test
---   suite, and are not part of the library). So it fits mcpp's sources-only
---   feature gate cleanly, exactly like compat.cjson's `utils`: excluded by
---   default, and compiled into the `eigen` lib when the dependency requests
---   `features = ["blas"]`. The result exposes the standard BLAS symbols
---   (sgemm_/dgemm_/ddot_/… , Fortran ABI) for code that wants to link a BLAS.
---   Common.h pulls Eigen via a path RELATIVE to blas/ (`../Eigen/Core`), so
---   the sources must compile in place — they do, since `*/blas/*.cpp` keeps
---   them under the unpacked tree. Verified locally on mcpp 0.0.68.
+-- Features (Feature System v2, requires mcpp >= 0.0.69). The two BLAS stories
+-- run on ORTHOGONAL axes — do not confuse them:
 --
--- What is NOT a feature here (and why):
---   * `unsupported/` modules are header-only and live BESIDE `Eigen/` under
---     the same tarball root, so the core include path (`*`) already exposes
---     them; a sources-only gate cannot hide headers, so there is nothing to
---     gate — they are simply available.
---   * Eigen's compile-define knobs (EIGEN_MPL2_ONLY, EIGEN_USE_BLAS/LAPACKE,
---     …) are preprocessor defines; the feature table carries only `sources`
---     on mcpp 0.0.68, so they cannot be feature-gated yet. If mcpp later lets
---     a feature contribute defines/cflags, `mpl2only` (-> -DEIGEN_MPL2_ONLY)
---     would be the clean fit.
+--   `eigen_blas` — Eigen AS a BLAS provider.
+--     Eigen ships a full BLAS library under `blas/` (the `eigen_blas` target in
+--     upstream CMake). It builds from pure C++ (`blas/*.cpp`) + f2c-translated
+--     C (`blas/f2c/*.c`) — NO Fortran compiler is needed (the only `.f` files
+--     live under `blas/testing/`, not the library). Sources-only gate (excluded
+--     by default; compiled into the `eigen` lib when requested). It exposes the
+--     standard BLAS symbols (sgemm_/dgemm_/… , Fortran ABI) for code that wants
+--     to link a BLAS — so it also `provides = ["blas"]` as a capability. Common.h
+--     pulls Eigen via a path RELATIVE to blas/ (`../Eigen/Core`), so the sources
+--     compile in place under the unpacked tree.
+--
+--   `use_blas` / `use_lapacke` — Eigen CONSUMING an external BLAS/LAPACK.
+--     These flip Eigen's own kernels to delegate to an external implementation.
+--     Each contributes the package-owned define (EIGEN_USE_BLAS / EIGEN_USE_LAPACKE)
+--     and `requires` the abstract `blas` / `lapack` capability; the resolver binds
+--     one provider from the graph (the `eigen_blas` feature above can satisfy it,
+--     or a dedicated provider such as a future compat.openblas). Pick the provider
+--     with `[capabilities] blas = "<provider>"` or `--cap blas=<provider>` when
+--     more than one is present.
+--
+--   `mpl2only` — package-owned define EIGEN_MPL2_ONLY (no capability).
+--
+-- MUTUAL EXCLUSION: `eigen_blas` and `use_blas` are OPPOSITE roles and must NOT
+-- be enabled together. `eigen_blas` compiles Eigen's own BLAS implementation;
+-- `use_blas` defines EIGEN_USE_BLAS, which flips Eigen's headers into "delegate
+-- to an EXTERNAL BLAS" mode. Compiling Eigen's own BLAS sources in that mode is
+-- self-contradictory: the `blas/*_impl.h` dispatch tables (functype expects the
+-- native `const Scalar&`) no longer match the now-by-value BLAS-backend `run`
+-- signatures → `invalid conversion ... [-fpermissive]` on level2/level3_impl.h.
+-- Verified on mcpp 0.0.69: a blas TU compiles cleanly WITHOUT -DEIGEN_USE_BLAS
+-- and fails WITH it. So:
+--   * use `eigen_blas` ALONE to get a BLAS library OUT of Eigen, or
+--   * use `use_blas` paired with a SEPARATE `blas` provider (a future
+--     compat.openblas) to feed an external BLAS INTO Eigen — never both.
+-- The header-only path and the `use_blas`/`mpl2only` DEFINES themselves are
+-- proven on 0.0.69 (compile_commands.json carries EIGEN_USE_BLAS / EIGEN_MPL2_ONLY;
+-- a header-only `mpl2only` consumer builds+runs; `eigen_blas` alone compiles).
+--
+-- Note: `unsupported/` modules are header-only and live BESIDE `Eigen/` under the
+-- same tarball root, so the core include path (`*`) already exposes them; a
+-- sources-only gate cannot hide headers, so there is nothing to gate.
 --
 -- All `mcpp` paths are GLOBS relative to the verdir; the leading `*` absorbs
 -- the GitLab archive's `eigen-<tag>/` wrap layer.
@@ -92,18 +112,24 @@ package = {
         },
         sources      = { "mcpp_generated/eigen_anchor.c" },
         targets      = { ["eigen"] = { kind = "lib" } },
-        -- Optional: compile Eigen's reference BLAS (`eigen_blas`) into the lib.
-        -- C++ + f2c-C only, no Fortran. Off by default; pulled in with
-        -- `features = ["blas"]`. blas/ has exactly the 5 library .cpp and
-        -- blas/f2c/ exactly the 18 library .c (the upstream eigen_blas source
-        -- set); the `*.cpp`/`*.c` globs match them and nothing else.
+        -- Feature System v2 (mcpp >= 0.0.69). See the header for the
+        -- provider-vs-consumer distinction. Old mcpp ignores the `defines`/
+        -- `requires`/`provides` keys (skip-unknown), so this recipe still parses
+        -- there — only the v2 behaviors are inert.
         features     = {
-            ["blas"] = {
-                sources = {
-                    "*/blas/*.cpp",
-                    "*/blas/f2c/*.c",
-                },
+            -- PROVIDER: compile Eigen's reference BLAS (eigen_blas) into the lib
+            -- and advertise the `blas` capability. C++ + f2c-C only, no Fortran.
+            -- blas/ has exactly the 5 library .cpp and blas/f2c/ exactly the 18
+            -- library .c (the upstream eigen_blas set); the globs match those.
+            ["eigen_blas"]  = {
+                sources  = { "*/blas/*.cpp", "*/blas/f2c/*.c" },
+                provides = { "blas" },
             },
+            -- CONSUMER: delegate Eigen's kernels to an external BLAS / LAPACK.
+            ["use_blas"]    = { defines = { "EIGEN_USE_BLAS" },    requires = { "blas" } },
+            ["use_lapacke"] = { defines = { "EIGEN_USE_LAPACKE" }, requires = { "lapack" } },
+            -- Pure package-owned define knob.
+            ["mpl2only"]    = { defines = { "EIGEN_MPL2_ONLY" } },
         },
         deps         = { },
     },
