@@ -128,6 +128,20 @@ package = {
             -- CONSUMER: delegate Eigen's kernels to an external BLAS / LAPACK.
             ["use_blas"]    = { defines = { "EIGEN_USE_BLAS" },    requires = { "blas" } },
             ["use_lapacke"] = { defines = { "EIGEN_USE_LAPACKE" }, requires = { "lapack" } },
+            -- BACKEND (Feature System v2, mcpp >= 0.0.72): one-liner that PULLS an
+            -- external BLAS provider AND turns on the consumer switch.
+            -- `implies use_blas` defines EIGEN_USE_BLAS + requires the `blas`
+            -- capability; `deps compat.openblas` pulls the provider that
+            -- `provides=["blas"]`, so the resolver binds it automatically. Do NOT
+            -- combine with `eigen_blas` (provider vs consumer are exclusive).
+            -- Requires mcpp >= 0.0.72: EIGEN_USE_BLAS is an INTERFACE define that
+            -- must reach the consumer's TUs (Eigen is header-only) — interface-
+            -- define propagation landed in 0.0.72. On 0.0.71 the dep is still
+            -- pulled and linked, but Eigen keeps its built-in GEMM in the consumer.
+            ["backend-openblas"] = {
+                implies = { "use_blas" },
+                deps    = { ["compat.openblas"] = "0.3.33" },
+            },
             -- Pure package-owned define knob.
             ["mpl2only"]    = { defines = { "EIGEN_MPL2_ONLY" } },
         },
