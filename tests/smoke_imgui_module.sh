@@ -51,8 +51,15 @@ if [[ -f "$USER_MCPP/config.toml" ]]; then
 fi
 
 default_index="$MCPP_HOME/registry/data/mcpplibs"
+# Reseed cleanly. The smoke jobs share one MCPP_HOME across several scripts, so
+# an earlier smoke may already have populated mcpplibs/.git with read-only pack
+# objects; `cp -a "$ROOT/."` over those then fails with "Permission denied".
+# Remove the destination first, and skip the repo's own .git — its pack objects
+# are read-only and irrelevant to the package index (which only needs pkgs/),
+# and are the sole reason the copy ever conflicts.
+rm -rf "$default_index"
 mkdir -p "$default_index"
-cp -a "$ROOT/." "$default_index/"
+( cd "$ROOT" && find . -mindepth 1 -maxdepth 1 ! -name .git -exec cp -a {} "$default_index/" \; )
 rm -f "$default_index/.xlings-index-cache.json"
 printf 'ok\n' > "$default_index/.mcpp-index-updated"
 
