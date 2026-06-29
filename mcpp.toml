@@ -1,0 +1,12 @@
+# mcpp-index is simultaneously the package index (pkgs/) AND a mcpp workspace that
+# tests it: a virtual workspace whose members are the per-library example/test
+# projects under tests/examples/, each consuming this repo's own pkgs/ via a local
+# [indices] path. "Eat our own dog food." See
+# .agents/docs/2026-06-29-mcpp-native-workspace-ci-design.md.
+[workspace]
+members = [
+    "tests/examples/cjson",
+    "tests/examples/eigen",
+    "tests/examples/nlohmann.json",
+    "tests/examples/openblas",
+]

@@ -11,9 +11,9 @@ on:
   workflow_dispatch:
 
 env:
-  # Bumped to 0.0.73: carries Windows runtime-DLL deployment, required by the
+  # Bumped to 0.0.77: carries L1 platform-conditional deps/flags + [xlings] env,
   # compat.openblas Windows recipe (bin/libopenblas.dll staged beside the .exe).
-  MCPP_VERSION: "0.0.73"
+  MCPP_VERSION: "0.0.77"
 
 jobs:
   lint:
@@ -105,6 +105,7 @@ jobs:
       full: ${{ steps.f.outputs.full }}
       full_linux: ${{ steps.f.outputs.full_linux }}
       full_portable: ${{ steps.f.outputs.full_portable }}
+      workspace: ${{ steps.f.outputs.workspace }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -123,11 +124,12 @@ jobs:
           # coverage is ever silently dropped).
           full_linux=false
           full_portable=false
+          workspace=false
           examples='[]'
           event="${{ github.event_name }}"
           if [ "$event" != "pull_request" ]; then
             # push to main / nightly schedule / manual dispatch → full regression
-            full_linux=true; full_portable=true
+            full_linux=true; full_portable=true; workspace=true
           else
             git fetch -q origin "${{ github.base_ref }}"
             changed=$(git diff --name-only "origin/${{ github.base_ref }}...HEAD")
@@ -138,16 +140,22 @@ jobs:
               case "$file" in
                 # Common harness / the workflow itself → both platforms.
                 tests/run_example.sh|tests/check_mirror_urls.lua|tests/list_cn_urls.lua|.github/workflows/validate.yml)
-                  full_linux=true; full_portable=true ;;
+                  full_linux=true; full_portable=true; workspace=true ;;
+                # The self-referential workspace: its declaration (root mcpp.toml)
+                # and its driver. A member change under tests/examples/* also feeds
+                # the workspace job (handled below, with the examples fast path).
+                mcpp.toml|tests/run_workspace.sh)
+                  workspace=true ;;
                 # Portable suite script runs only in smoke-portable (win+mac).
                 tests/smoke_compat_portable.sh)
                   full_portable=true ;;
                 # Linux-only smoke scripts run only in smoke-full-linux.
                 tests/smoke_compat_core.sh|tests/smoke_compat_imgui.sh|tests/smoke_compat_archive.sh|tests/smoke_compat_imgui_window.sh|tests/smoke_imgui_module.sh)
                   full_linux=true ;;
-                # Example projects are handled by the smoke-examples fast path.
+                # Example projects are handled by the smoke-examples fast path;
+                # they are also workspace members, so re-run the workspace driver.
                 tests/examples/*)
-                  : ;;
+                  workspace=true ;;
                 # Any other tests/ change (new helper / new smoke script) → both (safe).
                 tests/*)
                   full_linux=true; full_portable=true ;;
@@ -171,8 +179,9 @@ jobs:
           echo "full=$full" >> "$GITHUB_OUTPUT"
           echo "full_linux=$full_linux" >> "$GITHUB_OUTPUT"
           echo "full_portable=$full_portable" >> "$GITHUB_OUTPUT"
+          echo "workspace=$workspace" >> "$GITHUB_OUTPUT"
           echo "examples=$examples" >> "$GITHUB_OUTPUT"
-          echo "=> full_linux=$full_linux full_portable=$full_portable examples=$examples"
+          echo "=> full_linux=$full_linux full_portable=$full_portable workspace=$workspace examples=$examples"
 
   # ── Fast path: per-changed-package example projects (Linux) ───────────
   smoke-examples:
@@ -209,6 +218,44 @@ jobs:
         run: |
           "$MCPP" --version
           timeout 1800 bash tests/run_example.sh "${{ matrix.pkg }}"
+
+  # ── Self-referential workspace: mcpp-index AS a mcpp [workspace] ──────
+  # Dogfoods mcpp's own native [workspace]: the root mcpp.toml declares every
+  # per-library example as a workspace member, and the driver builds+runs each
+  # through the real pkgs/ index (local [indices] path). This is the dual
+  # perspective — the repo is both the package index and a consumer of it. The
+  # openblas member additionally exercises L1 platform-conditional deps/flags
+  # (no-op here on linux; the Windows cblas path is covered by smoke-portable).
+  smoke-workspace:
+    needs: detect
+    if: needs.detect.outputs.workspace == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Restore mcpp registry cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.mcpp/registry
+          key: mcpp-registry-${{ runner.os }}-${{ env.MCPP_VERSION }}-${{ hashFiles('pkgs/**/*.lua', 'tests/**', '.github/workflows/validate.yml') }}
+          restore-keys: |
+            mcpp-registry-${{ runner.os }}-${{ env.MCPP_VERSION }}-
+      - name: Download mcpp
+        run: |
+          curl -L -fsS -o mcpp.tar.gz \
+            "https://github.com/mcpp-community/mcpp/releases/download/v${MCPP_VERSION}/mcpp-${MCPP_VERSION}-linux-x86_64.tar.gz"
+          tar -xzf mcpp.tar.gz
+          root="$PWD/mcpp-${MCPP_VERSION}-linux-x86_64"
+          mkdir -p "$HOME/.mcpp/registry"
+          cp -a "$root/registry/." "$HOME/.mcpp/registry/"
+          echo "MCPP=$root/bin/mcpp" >> "$GITHUB_ENV"
+          echo "MCPP_VENDORED_XLINGS=$root/registry/bin/xlings" >> "$GITHUB_ENV"
+          echo "$root/bin" >> "$GITHUB_PATH"
+      - name: Build + run every workspace member
+        env:
+          MCPP_INDEX_MIRROR: GLOBAL
+        run: |
+          "$MCPP" --version
+          timeout 1800 bash tests/run_workspace.sh
 
   # ── Full regression (legacy whole-suite smoke) ────────────────────────
   smoke-full-linux:
@@ -279,14 +326,14 @@ jobs:
         include:
           - platform: macos
             os: macos-15
-            archive: mcpp-0.0.73-macosx-arm64.tar.gz
-            root: mcpp-0.0.73-macosx-arm64
+            archive: mcpp-0.0.77-macosx-arm64.tar.gz
+            root: mcpp-0.0.77-macosx-arm64
             mcpp: bin/mcpp
             xlings: registry/bin/xlings
           - platform: windows
             os: windows-latest
-            archive: mcpp-0.0.73-windows-x86_64.zip
-            root: mcpp-0.0.73-windows-x86_64
+            archive: mcpp-0.0.77-windows-x86_64.zip
+            root: mcpp-0.0.77-windows-x86_64
             mcpp: bin/mcpp.exe
             xlings: registry/bin/xlings.exe
     steps:

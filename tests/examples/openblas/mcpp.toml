@@ -1,0 +1,22 @@
+# L1-cfg consumer: openblas is a Windows-only runtime dependency (import lib +
+# DLL); on linux/macos this member is a trivial no-op binary. Demonstrates mcpp's
+# platform-conditional [target.'cfg(...)'] dependencies + flags (mcpp >= 0.0.75),
+# with the windows-runtime-DLL deployment (mcpp >= 0.0.73). Self-referential:
+# the openblas recipe is resolved from THIS repo's pkgs/ via the local index.
+[package]
+name    = "openblas-example"
+version = "0.1.0"
+
+[indices]
+compat = { path = "../../.." }
+
+# Pull OpenBLAS only when building for Windows; define HAVE_OPENBLAS so the source
+# compiles the cblas path there and a no-op everywhere else.
+[target.'cfg(windows)'.dependencies.compat]
+openblas = "0.3.33"
+[target.'cfg(windows)'.build]
+cxxflags = ["-DHAVE_OPENBLAS=1"]
+
+[targets.openblas-example]
+kind = "bin"
+main = "src/main.cpp"
