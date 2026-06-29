@@ -455,11 +455,15 @@ EOF
     "$MCPP_BIN_POSIX" run
     exe="$(find target -type f -name '*.exe' | head -1)"
     [ -n "$exe" ] || { echo "FAIL: openblas smoke produced no .exe"; exit 1; }
+    # Absolutise: `find` yields a path relative to the project dir, but the launch
+    # runs from a neutral CWD (so the DLL can only be found beside the .exe, not
+    # via CWD). pwd makes exedir absolute; build an absolute native exe path.
     exedir="$(cd "$(dirname "$exe")" && pwd)"
+    exeabs="$exedir/$(basename "$exe")"
     [ -f "$exedir/libopenblas.dll" ] || {
         echo "FAIL: libopenblas.dll was not deployed beside the .exe ($exedir)"
         ls -la "$exedir"; exit 1; }
-    ( cd / && "$(to_native_path "$exe")" ) || {
+    ( cd / && "$(to_native_path "$exeabs")" ) || {
         echo "FAIL: direct .exe launch failed — deployed DLL not loadable"; exit 1; }
 fi
 
