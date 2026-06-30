@@ -11,9 +11,9 @@ on:
   workflow_dispatch:
 
 env:
-  # Bumped to 0.0.77: carries L1 platform-conditional deps/flags + [xlings] env,
+  # Bumped to 0.0.78: carries L3 build.mcpp native build program (build-mcpp member),
   # compat.openblas Windows recipe (bin/libopenblas.dll staged beside the .exe).
-  MCPP_VERSION: "0.0.77"
+  MCPP_VERSION: "0.0.78"
 
 jobs:
   lint:
@@ -326,14 +326,14 @@ jobs:
         include:
           - platform: macos
             os: macos-15
-            archive: mcpp-0.0.77-macosx-arm64.tar.gz
-            root: mcpp-0.0.77-macosx-arm64
+            archive: mcpp-0.0.78-macosx-arm64.tar.gz
+            root: mcpp-0.0.78-macosx-arm64
             mcpp: bin/mcpp
             xlings: registry/bin/xlings
           - platform: windows
             os: windows-latest
-            archive: mcpp-0.0.77-windows-x86_64.zip
-            root: mcpp-0.0.77-windows-x86_64
+            archive: mcpp-0.0.78-windows-x86_64.zip
+            root: mcpp-0.0.78-windows-x86_64
             mcpp: bin/mcpp.exe
             xlings: registry/bin/xlings.exe
     steps:
