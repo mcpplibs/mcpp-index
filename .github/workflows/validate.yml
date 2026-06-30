@@ -168,7 +168,8 @@ jobs:
           MCPP_INDEX_MIRROR: GLOBAL
         run: |
           "$MCPP" --version
-          timeout 2400 "$MCPP" test --workspace
+          # No `timeout` wrapper: absent on macOS runners; job-level timeout-minutes bounds it.
+          "$MCPP" test --workspace
 
   # ── Exception: the public `imgui` C++23-module package (namespace "") ──
   # Not yet a workspace member: its package has an empty namespace (the builtin
