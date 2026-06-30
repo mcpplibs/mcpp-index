@@ -5,6 +5,7 @@
 # .agents/docs/2026-06-29-mcpp-native-workspace-ci-design.md.
 [workspace]
 members = [
+    "tests/examples/build-mcpp",
     "tests/examples/cjson",
     "tests/examples/eigen",
     "tests/examples/nlohmann.json",

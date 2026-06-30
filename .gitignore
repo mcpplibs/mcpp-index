@@ -4,3 +4,5 @@ tests/examples/*/target/
 tests/examples/*/.mcpp/
 tests/examples/*/compile_commands.json
 tests/examples/*/mcpp.lock
+# build.mcpp-generated source (regenerated each build by the build program)
+tests/examples/build-mcpp/src/generated.cpp

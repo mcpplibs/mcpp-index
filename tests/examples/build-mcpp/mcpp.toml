@@ -1,0 +1,11 @@
+# L3 build.mcpp consumer: a project-local native build program (mcpp >= 0.0.78)
+# generates a source and emits a compile define, both consumed by main.cpp. No
+# registry dependency — this member exercises the build.mcpp pipeline itself
+# (Zig build.zig / Cargo build.rs analog, in C++).
+[package]
+name    = "build-mcpp-example"
+version = "0.1.0"
+
+[targets.build-mcpp-example]
+kind = "bin"
+main = "src/main.cpp"

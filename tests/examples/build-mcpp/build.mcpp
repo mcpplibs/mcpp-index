@@ -1,0 +1,15 @@
+// Native build program. mcpp compiles this with the host toolchain and runs it
+// before the main build; its stdout `mcpp:` directives augment the build. Here we
+// generate a source file and define a macro that main.cpp asserts on.
+#include <cstdio>
+#include <fstream>
+
+int main() {
+    std::ofstream("src/generated.cpp")
+        << "int answer() { return 42; }\n";
+
+    std::puts("mcpp:generated=src/generated.cpp");
+    std::puts("mcpp:cxxflag=-DBUILT_BY_BUILD_MCPP=1");
+    std::puts("mcpp:rerun-if-changed=build.mcpp");
+    return 0;
+}
