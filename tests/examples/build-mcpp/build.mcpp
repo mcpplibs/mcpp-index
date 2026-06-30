@@ -1,13 +1,13 @@
-// Native build program: generate a source the test links + define a macro the
-// test sees. mcpp compiles+runs this (cwd = project root) before the build.
+// Modules-first build program: import mcpp; for the typed directive API. A textual
+// #include is still fine for file I/O (only `import std;` is unnecessary).
 #include <filesystem>
 #include <fstream>
-#include <cstdio>
+import mcpp;
 int main() {
     std::filesystem::create_directories("src");
     std::ofstream("src/generated.cpp") << "int answer() { return 42; }\n";
-    std::puts("mcpp:generated=src/generated.cpp");
-    std::puts("mcpp:cxxflag=-DBUILT_BY_BUILD_MCPP=1");
-    std::puts("mcpp:rerun-if-changed=build.mcpp");
+    mcpp::generated("src/generated.cpp");
+    mcpp::define("BUILT_BY_BUILD_MCPP");   // cfg= → -DBUILT_BY_BUILD_MCPP
+    mcpp::rerun_if_changed("build.mcpp");
     return 0;
 }
