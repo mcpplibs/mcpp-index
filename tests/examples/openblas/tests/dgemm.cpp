@@ -1,5 +1,5 @@
-// Portable: on Windows the cfg-gated openblas dep + HAVE_OPENBLAS are active and
-// this calls cblas_dgemm (asserting [19 22; 43 50]); elsewhere it is a no-op.
+// On Windows the cfg-gated openblas dep + HAVE_OPENBLAS are active: cblas_dgemm
+// asserting [19 22; 43 50]. Elsewhere a no-op (openblas is Windows-only).
 #ifdef HAVE_OPENBLAS
 #include <cblas.h>
 int main() {

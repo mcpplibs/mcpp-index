@@ -1,7 +1,7 @@
-# Minimal example: nlohmann/json consumed as the C++23 module `nlohmann.json`.
-# Run from this directory:  mcpp run   (index path is relative to repo root)
+# nlohmann/json test project: consumes the C++23 module `nlohmann.json` and
+# asserts round-trip + ordered_json under `mcpp test`.
 [package]
-name = "nlohmann-json-example"
+name = "nlohmann-json-tests"
 version = "0.1.0"
 
 [toolchain]
@@ -12,7 +12,3 @@ nlohmann = { path = "../../.." }
 
 [dependencies.nlohmann]
 json = "3.12.0"
-
-[targets.nlohmann-json-example]
-kind = "bin"
-main = "src/main.cpp"

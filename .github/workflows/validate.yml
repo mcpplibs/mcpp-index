@@ -13,7 +13,7 @@ on:
 env:
   # Bumped to 0.0.78: carries L3 build.mcpp native build program (build-mcpp member),
   # compat.openblas Windows recipe (bin/libopenblas.dll staged beside the .exe).
-  MCPP_VERSION: "0.0.78"
+  MCPP_VERSION: "0.0.79"
 
 jobs:
   lint:
@@ -139,12 +139,12 @@ jobs:
               [ -z "$file" ] && continue
               case "$file" in
                 # Common harness / the workflow itself → both platforms.
-                tests/run_example.sh|tests/check_mirror_urls.lua|tests/list_cn_urls.lua|.github/workflows/validate.yml)
+                tests/check_mirror_urls.lua|tests/list_cn_urls.lua|.github/workflows/validate.yml)
                   full_linux=true; full_portable=true; workspace=true ;;
-                # The self-referential workspace: its declaration (root mcpp.toml)
-                # and its driver. A member change under tests/examples/* also feeds
-                # the workspace job (handled below, with the examples fast path).
-                mcpp.toml|tests/run_workspace.sh)
+                # The self-referential workspace declaration (root mcpp.toml). A
+                # member change under tests/examples/* also feeds the workspace job
+                # (handled below, with the examples fast path).
+                mcpp.toml)
                   workspace=true ;;
                 # Portable suite script runs only in smoke-portable (win+mac).
                 tests/smoke_compat_portable.sh)
@@ -212,20 +212,21 @@ jobs:
           echo "MCPP=$root/bin/mcpp" >> "$GITHUB_ENV"
           echo "MCPP_VENDORED_XLINGS=$root/registry/bin/xlings" >> "$GITHUB_ENV"
           echo "$root/bin" >> "$GITHUB_PATH"
-      - name: Run example "${{ matrix.pkg }}"
+      - name: Test member "${{ matrix.pkg }}"
         env:
           MCPP_INDEX_MIRROR: GLOBAL
         run: |
           "$MCPP" --version
-          timeout 1800 bash tests/run_example.sh "${{ matrix.pkg }}"
+          timeout 1800 "$MCPP" test -p "${{ matrix.pkg }}"
 
   # ── Self-referential workspace: mcpp-index AS a mcpp [workspace] ──────
-  # Dogfoods mcpp's own native [workspace]: the root mcpp.toml declares every
-  # per-library example as a workspace member, and the driver builds+runs each
-  # through the real pkgs/ index (local [indices] path). This is the dual
-  # perspective — the repo is both the package index and a consumer of it. The
-  # openblas member additionally exercises L1 platform-conditional deps/flags
-  # (no-op here on linux; the Windows cblas path is covered by smoke-portable).
+  # Dogfoods mcpp's own native [workspace] + test runner: the root mcpp.toml
+  # declares every per-library test project as a workspace member, and
+  # `mcpp test --workspace` builds + runs each member's tests/ (behavioral
+  # assertions) through the real pkgs/ index (local [indices] path). The repo is
+  # both the package index and a consumer that really uses + tests it — driven
+  # entirely by mcpp, no shell driver. The openblas member exercises L1
+  # platform-conditional deps/flags (no-op on linux; Windows cblas via smoke-portable).
   smoke-workspace:
     needs: detect
     if: needs.detect.outputs.workspace == 'true'
@@ -250,12 +251,12 @@ jobs:
           echo "MCPP=$root/bin/mcpp" >> "$GITHUB_ENV"
           echo "MCPP_VENDORED_XLINGS=$root/registry/bin/xlings" >> "$GITHUB_ENV"
           echo "$root/bin" >> "$GITHUB_PATH"
-      - name: Build + run every workspace member
+      - name: Test every workspace member (mcpp test --workspace)
         env:
           MCPP_INDEX_MIRROR: GLOBAL
         run: |
           "$MCPP" --version
-          timeout 1800 bash tests/run_workspace.sh
+          timeout 1800 "$MCPP" test --workspace
 
   # ── Full regression (legacy whole-suite smoke) ────────────────────────
   smoke-full-linux:
@@ -326,14 +327,14 @@ jobs:
         include:
           - platform: macos
             os: macos-15
-            archive: mcpp-0.0.78-macosx-arm64.tar.gz
-            root: mcpp-0.0.78-macosx-arm64
+            archive: mcpp-0.0.79-macosx-arm64.tar.gz
+            root: mcpp-0.0.79-macosx-arm64
             mcpp: bin/mcpp
             xlings: registry/bin/xlings
           - platform: windows
             os: windows-latest
-            archive: mcpp-0.0.78-windows-x86_64.zip
-            root: mcpp-0.0.78-windows-x86_64
+            archive: mcpp-0.0.79-windows-x86_64.zip
+            root: mcpp-0.0.79-windows-x86_64
             mcpp: bin/mcpp.exe
             xlings: registry/bin/xlings.exe
     steps:

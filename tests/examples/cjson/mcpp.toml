@@ -1,7 +1,8 @@
-# Minimal example: third-party C library cJSON via compat source build.
-# Run from this directory:  mcpp run   (index path is relative to repo root)
+# cJSON test project: depends on compat.cjson (built from source via this repo's
+# own index) and asserts behavior under `mcpp test`. Part of the mcpp-index
+# self-referential workspace.
 [package]
-name = "cjson-example"
+name = "cjson-tests"
 version = "0.1.0"
 
 [toolchain]
@@ -12,7 +13,3 @@ compat = { path = "../../.." }
 
 [dependencies.compat]
 cjson = "1.7.19"
-
-[targets.cjson-example]
-kind = "bin"
-main = "src/main.cpp"

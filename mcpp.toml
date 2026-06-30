@@ -1,8 +1,11 @@
 # mcpp-index is simultaneously the package index (pkgs/) AND a mcpp workspace that
-# tests it: a virtual workspace whose members are the per-library example/test
-# projects under tests/examples/, each consuming this repo's own pkgs/ via a local
-# [indices] path. "Eat our own dog food." See
-# .agents/docs/2026-06-29-mcpp-native-workspace-ci-design.md.
+# tests it: a virtual workspace whose members are per-library TEST projects under
+# tests/examples/ — each depends on this repo's own compat.<lib> via a local
+# [indices] path and asserts behavior in tests/*.cpp. The whole suite runs as a
+# single shell-free command, `mcpp test --workspace` (or `mcpp test -p <lib>`).
+# "Eat our own dog food." See
+# .agents/docs/2026-06-29-mcpp-native-workspace-ci-design.md and
+# mcpp .agents/docs/2026-06-30-workspace-test-and-zero-shell-index-design.md.
 [workspace]
 members = [
     "tests/examples/build-mcpp",
