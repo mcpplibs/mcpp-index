@@ -1,0 +1,24 @@
+# Linux GUI runtime stack: glfw + the X11/XCB libraries. These are Linux-only;
+# under cfg(linux) the deps are pulled and the tests assert symbol linkage +
+# headless behavior. Off-Linux the test files compile to no-op main() (the deps
+# aren't pulled), so `mcpp test --workspace` is a clean no-op on macOS/Windows.
+[package]
+name = "gui-stack-tests"
+version = "0.1.0"
+
+[indices]
+compat = { path = "../../.." }
+
+[target.'cfg(linux)'.dependencies.compat]
+glfw = "3.4"
+x11 = "1.8.13"
+xcb = "1.17.0"
+xext = "1.3.7"
+xrender = "0.9.12"
+xfixes = "6.0.2"
+xcursor = "1.2.3"
+xinerama = "1.1.6"
+xrandr = "1.5.5"
+xi = "1.8.3"
+xau = "1.0.12"
+xdmcp = "1.1.5"

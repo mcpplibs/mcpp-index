@@ -93,238 +93,28 @@ jobs:
           [ $fail -eq 0 ] && echo "All CN mirror urls reachable."
           exit $fail
 
-  # ── Decide what to smoke-test ─────────────────────────────────────────
-  # PR builds run ONLY the example projects whose package descriptor changed
-  # (tests/examples/<pkg>/). Anything that can't be narrowed that way — a
-  # changed pkg without an example yet, a scaffolding/CI change, or a
-  # push/nightly/manual run — falls back to the full legacy smoke regression.
-  detect:
-    runs-on: ubuntu-latest
-    outputs:
-      examples: ${{ steps.f.outputs.examples }}
-      full: ${{ steps.f.outputs.full }}
-      full_linux: ${{ steps.f.outputs.full_linux }}
-      full_portable: ${{ steps.f.outputs.full_portable }}
-      workspace: ${{ steps.f.outputs.workspace }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Install jq
-        run: sudo apt-get install -y --no-install-recommends jq
-      - id: f
-        run: |
-          # The two heavy suites run on disjoint platforms and from disjoint
-          # scripts: smoke-full-linux runs the smoke_compat_{core,imgui,archive,
-          # imgui_window}.sh + smoke_imgui_module.sh scripts (Linux); smoke-portable
-          # runs ONLY smoke_compat_portable.sh (windows+macos). So a change to one
-          # platform's harness needn't trigger the other's. We classify each changed
-          # file into full_linux / full_portable; unclassified test changes, the
-          # common harness, and pkgs without an example fall back to BOTH (no
-          # coverage is ever silently dropped).
-          full_linux=false
-          full_portable=false
-          workspace=false
-          examples='[]'
-          event="${{ github.event_name }}"
-          if [ "$event" != "pull_request" ]; then
-            # push to main / nightly schedule / manual dispatch → full regression
-            full_linux=true; full_portable=true; workspace=true
-          else
-            git fetch -q origin "${{ github.base_ref }}"
-            changed=$(git diff --name-only "origin/${{ github.base_ref }}...HEAD")
-            echo "changed files:"; echo "$changed" | sed 's/^/  /'
-            sel=""
-            while IFS= read -r file; do
-              [ -z "$file" ] && continue
-              case "$file" in
-                # Common harness / the workflow itself → both platforms.
-                tests/check_mirror_urls.lua|tests/list_cn_urls.lua|.github/workflows/validate.yml)
-                  full_linux=true; full_portable=true; workspace=true ;;
-                # The self-referential workspace declaration (root mcpp.toml). A
-                # member change under tests/examples/* also feeds the workspace job
-                # (handled below, with the examples fast path).
-                mcpp.toml)
-                  workspace=true ;;
-                # Portable suite script runs only in smoke-portable (win+mac).
-                tests/smoke_compat_portable.sh)
-                  full_portable=true ;;
-                # Linux-only smoke scripts run only in smoke-full-linux.
-                tests/smoke_compat_core.sh|tests/smoke_compat_imgui.sh|tests/smoke_compat_archive.sh|tests/smoke_compat_imgui_window.sh|tests/smoke_imgui_module.sh)
-                  full_linux=true ;;
-                # Example projects are handled by the smoke-examples fast path;
-                # they are also workspace members, so re-run the workspace driver.
-                tests/examples/*)
-                  workspace=true ;;
-                # Any other tests/ change (new helper / new smoke script) → both (safe).
-                tests/*)
-                  full_linux=true; full_portable=true ;;
-                pkgs/*/*.lua)
-                  b=$(basename "$file" .lua); b=${b#compat.}
-                  if [ -d "tests/examples/$b" ]; then
-                    sel="$sel$b"$'\n'
-                  else
-                    # changed pkg with no example yet → cannot narrow, run both
-                    full_linux=true; full_portable=true
-                  fi
-                  ;;
-              esac
-            done <<< "$changed"
-            if [ -n "$sel" ]; then
-              examples=$(printf '%s' "$sel" | grep -v '^$' | sort -u | jq -R . | jq -sc .)
-            fi
-          fi
-          full=false
-          { [ "$full_linux" = true ] || [ "$full_portable" = true ]; } && full=true
-          echo "full=$full" >> "$GITHUB_OUTPUT"
-          echo "full_linux=$full_linux" >> "$GITHUB_OUTPUT"
-          echo "full_portable=$full_portable" >> "$GITHUB_OUTPUT"
-          echo "workspace=$workspace" >> "$GITHUB_OUTPUT"
-          echo "examples=$examples" >> "$GITHUB_OUTPUT"
-          echo "=> full_linux=$full_linux full_portable=$full_portable workspace=$workspace examples=$examples"
-
-  # ── Fast path: per-changed-package example projects (Linux) ───────────
-  smoke-examples:
-    needs: detect
-    if: needs.detect.outputs.examples != '[]'
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        pkg: ${{ fromJson(needs.detect.outputs.examples) }}
-    steps:
-      - uses: actions/checkout@v4
-      - name: Restore mcpp registry cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.mcpp/registry
-          key: mcpp-registry-${{ runner.os }}-${{ env.MCPP_VERSION }}-${{ hashFiles('pkgs/**/*.lua', 'tests/**', '.github/workflows/validate.yml') }}
-          restore-keys: |
-            mcpp-registry-${{ runner.os }}-${{ env.MCPP_VERSION }}-
-      - name: Download mcpp
-        run: |
-          curl -L -fsS -o mcpp.tar.gz \
-            "https://github.com/mcpp-community/mcpp/releases/download/v${MCPP_VERSION}/mcpp-${MCPP_VERSION}-linux-x86_64.tar.gz"
-          tar -xzf mcpp.tar.gz
-          root="$PWD/mcpp-${MCPP_VERSION}-linux-x86_64"
-          mkdir -p "$HOME/.mcpp/registry"
-          cp -a "$root/registry/." "$HOME/.mcpp/registry/"
-          echo "MCPP=$root/bin/mcpp" >> "$GITHUB_ENV"
-          echo "MCPP_VENDORED_XLINGS=$root/registry/bin/xlings" >> "$GITHUB_ENV"
-          echo "$root/bin" >> "$GITHUB_PATH"
-      - name: Test member "${{ matrix.pkg }}"
-        env:
-          MCPP_INDEX_MIRROR: GLOBAL
-        run: |
-          "$MCPP" --version
-          timeout 1800 "$MCPP" test -p "${{ matrix.pkg }}"
-
-  # ── Self-referential workspace: mcpp-index AS a mcpp [workspace] ──────
-  # Dogfoods mcpp's own native [workspace] + test runner: the root mcpp.toml
-  # declares every per-library test project as a workspace member, and
-  # `mcpp test --workspace` builds + runs each member's tests/ (behavioral
-  # assertions) through the real pkgs/ index (local [indices] path). The repo is
-  # both the package index and a consumer that really uses + tests it — driven
-  # entirely by mcpp, no shell driver. The openblas member exercises L1
-  # platform-conditional deps/flags (no-op on linux; Windows cblas via smoke-portable).
-  smoke-workspace:
-    needs: detect
-    if: needs.detect.outputs.workspace == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Restore mcpp registry cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.mcpp/registry
-          key: mcpp-registry-${{ runner.os }}-${{ env.MCPP_VERSION }}-${{ hashFiles('pkgs/**/*.lua', 'tests/**', '.github/workflows/validate.yml') }}
-          restore-keys: |
-            mcpp-registry-${{ runner.os }}-${{ env.MCPP_VERSION }}-
-      - name: Download mcpp
-        run: |
-          curl -L -fsS -o mcpp.tar.gz \
-            "https://github.com/mcpp-community/mcpp/releases/download/v${MCPP_VERSION}/mcpp-${MCPP_VERSION}-linux-x86_64.tar.gz"
-          tar -xzf mcpp.tar.gz
-          root="$PWD/mcpp-${MCPP_VERSION}-linux-x86_64"
-          mkdir -p "$HOME/.mcpp/registry"
-          cp -a "$root/registry/." "$HOME/.mcpp/registry/"
-          echo "MCPP=$root/bin/mcpp" >> "$GITHUB_ENV"
-          echo "MCPP_VENDORED_XLINGS=$root/registry/bin/xlings" >> "$GITHUB_ENV"
-          echo "$root/bin" >> "$GITHUB_PATH"
-      - name: Test every workspace member (mcpp test --workspace)
-        env:
-          MCPP_INDEX_MIRROR: GLOBAL
-        run: |
-          "$MCPP" --version
-          timeout 1800 "$MCPP" test --workspace
-
-  # ── Full regression (legacy whole-suite smoke) ────────────────────────
-  smoke-full-linux:
-    needs: detect
-    if: needs.detect.outputs.full_linux == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Restore mcpp registry cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.mcpp/registry
-          key: mcpp-registry-${{ runner.os }}-${{ env.MCPP_VERSION }}-${{ hashFiles('pkgs/**/*.lua', 'tests/**', '.github/workflows/validate.yml') }}
-          restore-keys: |
-            mcpp-registry-${{ runner.os }}-${{ env.MCPP_VERSION }}-
-      # Persist the smoke download cache (toolchains + compat source archives)
-      # ACROSS runs. Without this, every run re-downloads xim:python/make, the
-      # gcc/llvm toolchains, and every source tarball. restore-keys gives a
-      # partial hit even when pkgs change, so only new/changed archives download;
-      # save_smoke_cache (in the smoke scripts) repopulates the dir each run.
-      - name: Cache smoke downloads
-        uses: actions/cache@v4
-        with:
-          path: ${{ runner.temp }}/mcpp-smoke-cache
-          key: smoke-dl-${{ runner.os }}-${{ env.MCPP_VERSION }}-${{ hashFiles('pkgs/**/*.lua') }}
-          restore-keys: |
-            smoke-dl-${{ runner.os }}-${{ env.MCPP_VERSION }}-
-      - name: Download mcpp
-        run: |
-          curl -L -fsS -o mcpp.tar.gz \
-            "https://github.com/mcpp-community/mcpp/releases/download/v${MCPP_VERSION}/mcpp-${MCPP_VERSION}-linux-x86_64.tar.gz"
-          tar -xzf mcpp.tar.gz
-          root="$PWD/mcpp-${MCPP_VERSION}-linux-x86_64"
-          mkdir -p "$HOME/.mcpp/registry"
-          cp -a "$root/registry/." "$HOME/.mcpp/registry/"
-          echo "MCPP=$root/bin/mcpp" >> "$GITHUB_ENV"
-          echo "MCPP_VENDORED_XLINGS=$root/registry/bin/xlings" >> "$GITHUB_ENV"
-          echo "$root/bin" >> "$GITHUB_PATH"
-      - name: Run compat smoke tests
-        env:
-          MCPP_INDEX_SMOKE_MCPP_HOME: ${{ runner.temp }}/mcpp-smoke-home
-          MCPP_INDEX_SMOKE_CACHE_DIR: ${{ runner.temp }}/mcpp-smoke-cache
-        run: |
-          mkdir -p "$MCPP_INDEX_SMOKE_MCPP_HOME"
-          "$MCPP" --version
-          timeout 1800 bash tests/smoke_compat_core.sh
-          timeout 1800 bash tests/smoke_compat_imgui.sh
-          timeout 1800 bash tests/smoke_compat_archive.sh
-          # GLFW/OpenGL window + imgui-module demos. These pull compat.glfw
-          # (abi:glibc). The imgui-module smoke pins llvm@20.1.7 (clang/libc++);
-          # on mcpp ≤0.0.67 that tripped the conflated `abi:` gate ("requires
-          # abi=glibc … is abi=libc++") because a clang+libc++ toolchain on
-          # *-linux-gnu was mislabelled. Fixed in mcpp 0.0.68 (dimensional ABI
-          # model: libc and cxxstdlib are independent axes), so these are back in
-          # the blocking set. The window run itself stays opt-in (needs a display).
-          timeout 1800 bash tests/smoke_compat_imgui_window.sh
-          timeout 1800 bash tests/smoke_imgui_module.sh
-
-  smoke-portable:
-    needs: detect
-    if: needs.detect.outputs.full_portable == 'true'
-    name: smoke-${{ matrix.platform }}
+  # ── The whole test surface, as a mcpp workspace ───────────────────────
+  # mcpp-index is a mcpp [workspace]; every per-library test project under
+  # tests/examples/ is a member. `mcpp test --workspace` builds + runs each
+  # member's tests/ (behavioral assertions) on each OS — members self-gate by
+  # `[target.'cfg(...)']` (e.g. the X11/glfw stack is linux-only, openblas is
+  # windows-only), so one command covers the matrix with no shell driver.
+  # The ~/.mcpp/registry cache carries the built compat packages (xpkgs) across
+  # runs, so repeat builds are fast.
+  workspace:
+    name: workspace (${{ matrix.platform }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
         include:
+          - platform: linux
+            os: ubuntu-latest
+            archive: mcpp-0.0.79-linux-x86_64.tar.gz
+            root: mcpp-0.0.79-linux-x86_64
+            mcpp: bin/mcpp
+            xlings: registry/bin/xlings
           - platform: macos
             os: macos-15
             archive: mcpp-0.0.79-macosx-arm64.tar.gz
@@ -342,22 +132,12 @@ jobs:
       - name: Restore mcpp registry cache
         uses: actions/cache@v4
         with:
+          # Holds toolchains AND the built compat packages (data/xpkgs), so a
+          # repeat `mcpp test` rebuilds little.
           path: ~/.mcpp/registry
           key: mcpp-registry-${{ runner.os }}-${{ env.MCPP_VERSION }}-${{ hashFiles('pkgs/**/*.lua', 'tests/**', '.github/workflows/validate.yml') }}
           restore-keys: |
             mcpp-registry-${{ runner.os }}-${{ env.MCPP_VERSION }}-
-      # Persist the smoke download cache across runs (same rationale as
-      # smoke-full-linux). Previously the portable job never set
-      # MCPP_INDEX_SMOKE_CACHE_DIR at all, so its 5 projects each re-downloaded
-      # the full llvm toolchain + compat archives WITHIN one run; now they share
-      # one dir, persisted between runs too.
-      - name: Cache smoke downloads
-        uses: actions/cache@v4
-        with:
-          path: ${{ runner.temp }}/mcpp-smoke-cache
-          key: smoke-dl-${{ runner.os }}-${{ env.MCPP_VERSION }}-${{ hashFiles('pkgs/**/*.lua') }}
-          restore-keys: |
-            smoke-dl-${{ runner.os }}-${{ env.MCPP_VERSION }}-
       - name: Download mcpp
         shell: bash
         env:
@@ -367,14 +147,9 @@ jobs:
           curl -L -fsS -o "$MCPP_ARCHIVE" \
             "https://github.com/mcpp-community/mcpp/releases/download/v${MCPP_VERSION}/${MCPP_ARCHIVE}"
           case "$MCPP_ARCHIVE" in
-            *.zip)
-              powershell -NoProfile -Command "Expand-Archive -Force -Path '${MCPP_ARCHIVE}' -DestinationPath '.'"
-              ;;
-            *)
-              tar -xzf "$MCPP_ARCHIVE"
-              ;;
+            *.zip) powershell -NoProfile -Command "Expand-Archive -Force -Path '${MCPP_ARCHIVE}' -DestinationPath '.'" ;;
+            *)     tar -xzf "$MCPP_ARCHIVE" ;;
           esac
-
           root="$PWD/$MCPP_ROOT"
           mkdir -p "$HOME/.mcpp/registry"
           cp -a "$root/registry/." "$HOME/.mcpp/registry/"
@@ -387,13 +162,46 @@ jobs:
             echo "MCPP_VENDORED_XLINGS=$root/${{ matrix.xlings }}" >> "$GITHUB_ENV"
             echo "$root/bin" >> "$GITHUB_PATH"
           fi
-      - name: Run portable compat smoke tests
+      - name: mcpp test --workspace
         shell: bash
         env:
           MCPP_INDEX_MIRROR: GLOBAL
-          # Enables the within-run + cross-run download cache (copy/save_smoke_cache).
-          MCPP_INDEX_SMOKE_CACHE_DIR: ${{ runner.temp }}/mcpp-smoke-cache
         run: |
-          mkdir -p "$MCPP_INDEX_SMOKE_CACHE_DIR"
           "$MCPP" --version
-          bash tests/smoke_compat_portable.sh
+          timeout 2400 "$MCPP" test --workspace
+
+  # ── Exception: the public `imgui` C++23-module package (namespace "") ──
+  # Not yet a workspace member: its package has an empty namespace (the builtin
+  # default index), which a workspace member can't point at a local path the way
+  # namespaced compat.*/nlohmann packages can. Until mcpp can map the default
+  # namespace to a local index, this one keeps a thin driver that reseeds the
+  # default index from the repo. Tracked in the rearchitecture design doc.
+  imgui-module:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Restore mcpp registry cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.mcpp/registry
+          key: mcpp-registry-${{ runner.os }}-${{ env.MCPP_VERSION }}-${{ hashFiles('pkgs/**/*.lua', 'tests/**', '.github/workflows/validate.yml') }}
+          restore-keys: |
+            mcpp-registry-${{ runner.os }}-${{ env.MCPP_VERSION }}-
+      - name: Download mcpp
+        run: |
+          curl -L -fsS -o mcpp.tar.gz \
+            "https://github.com/mcpp-community/mcpp/releases/download/v${MCPP_VERSION}/mcpp-${MCPP_VERSION}-linux-x86_64.tar.gz"
+          tar -xzf mcpp.tar.gz
+          root="$PWD/mcpp-${MCPP_VERSION}-linux-x86_64"
+          mkdir -p "$HOME/.mcpp/registry"
+          cp -a "$root/registry/." "$HOME/.mcpp/registry/"
+          echo "MCPP=$root/bin/mcpp" >> "$GITHUB_ENV"
+          echo "MCPP_VENDORED_XLINGS=$root/registry/bin/xlings" >> "$GITHUB_ENV"
+          echo "$root/bin" >> "$GITHUB_PATH"
+      - name: imgui module package smoke
+        env:
+          MCPP_INDEX_MIRROR: GLOBAL
+        run: |
+          "$MCPP" --version
+          timeout 1800 bash tests/smoke_imgui_module.sh

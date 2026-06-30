@@ -1,0 +1,10 @@
+# Dear ImGui (compat source build): headless in-memory frame → valid draw data.
+[package]
+name = "imgui-tests"
+version = "0.1.0"
+
+[indices]
+compat = { path = "../../.." }
+
+[dependencies.compat]
+imgui = "1.92.8"

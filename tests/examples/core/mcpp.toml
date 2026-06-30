@@ -1,0 +1,23 @@
+# Core compat libraries: gtest (test framework), ftxui (TUI), lua, mbedtls
+# (crypto), opengl + khrplatform (headers). Headless behavioral assertions via
+# `mcpp test`. Cross-platform: toolchain auto-selects per OS; link flags per OS.
+[package]
+name = "core-tests"
+version = "0.1.0"
+
+[indices]
+compat = { path = "../../.." }
+
+[dependencies.compat]
+gtest = { version = "1.15.2", features = ["main"] }
+ftxui = "6.1.9"
+lua = "5.4.7"
+mbedtls = "3.6.1"
+opengl = "2026.05.31"
+khrplatform = "2026.05.31"
+
+# Per-OS link flags (was the portable smoke's write_build_ldflags()).
+[target.'cfg(linux)'.build]
+ldflags = ["-ldl", "-lm"]
+[target.'cfg(macos)'.build]
+ldflags = ["-lm"]

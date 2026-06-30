@@ -4,9 +4,6 @@
 name = "nlohmann-json-tests"
 version = "0.1.0"
 
-[toolchain]
-default = "gcc@16.1.0"
-
 [indices]
 nlohmann = { path = "../../.." }
 

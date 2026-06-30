@@ -8,9 +8,14 @@
 # mcpp .agents/docs/2026-06-30-workspace-test-and-zero-shell-index-design.md.
 [workspace]
 members = [
+    "tests/examples/archive",
     "tests/examples/build-mcpp",
     "tests/examples/cjson",
+    "tests/examples/core",
     "tests/examples/eigen",
+    "tests/examples/gui-stack",
+    "tests/examples/imgui",
+    "tests/examples/imgui-window",
     "tests/examples/nlohmann.json",
     "tests/examples/openblas",
 ]

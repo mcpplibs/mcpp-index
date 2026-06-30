@@ -1,0 +1,16 @@
+# Archive + compression codecs: libarchive, zlib, bzip2, lz4, xz (lzma), zstd.
+# Headless: version probes + compress→decompress round-trips. Cross-platform.
+[package]
+name = "archive-tests"
+version = "0.1.0"
+
+[indices]
+compat = { path = "../../.." }
+
+[dependencies.compat]
+libarchive = "3.8.7"
+zlib = "1.3.2"
+bzip2 = "1.0.8"
+lz4 = "1.10.0"
+xz = "5.8.3"
+zstd = "1.5.7"

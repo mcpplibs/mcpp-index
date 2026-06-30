@@ -1,0 +1,15 @@
+# imgui + glfw + the OpenGL3/GLFW backends. Linux-only (cfg). The BUILD + LINK is
+# the test (the backends compile and glfw/GL link); the actual window run needs a
+# display and is opt-in (set MCPP_RUN_WINDOW=1). Off-Linux: no-op.
+[package]
+name = "imgui-window-tests"
+version = "0.1.0"
+
+[indices]
+compat = { path = "../../.." }
+
+[target.'cfg(linux)'.dependencies.compat]
+imgui = "1.92.8"
+glfw = "3.4"
+[target.'cfg(linux)'.build]
+ldflags = ["-ldl"]
