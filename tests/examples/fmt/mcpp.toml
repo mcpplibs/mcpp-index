@@ -1,0 +1,12 @@
+# {fmt} test project: depends on compat.fmt (built from source via this repo's
+# own index) and asserts behavior under `mcpp test`. Part of the mcpp-index
+# self-referential workspace.
+[package]
+name = "fmt-tests"
+version = "0.1.0"
+
+[indices]
+compat = { path = "../../.." }
+
+[dependencies.compat]
+fmt = "12.2.0"
