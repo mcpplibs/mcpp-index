@@ -66,7 +66,52 @@ package = {
         -- Upstream's official module unit (develop @ src/modules/json.cppm),
         -- reproduced verbatim. Verdir-relative path, no glob.
         generated_files = {
-            ["mcpp_generated/nlohmann.json.cppm"] = "module;\n\n// GCC workaround for C++ modules support.\n// When using C++20 modules, some compilers (particularly GCC) may have issues\n// with template instantiations in the module preamble. If you encounter\n// \"redefinition\" errors when including nlohmann/json.hpp, try one of:\n// 1. Include nlohmann/json.hpp in your module preamble BEFORE other #includes\n// 2. Or use: import nlohmann.json;  instead of #include <nlohmann/json.hpp>\n// 3. Or upgrade to a newer GCC version with better modules support.\n// See: https://github.com/nlohmann/json/issues/5103\n\n#include <nlohmann/json.hpp>\n\nexport module nlohmann.json;\n\nexport\nNLOHMANN_JSON_NAMESPACE_BEGIN\n\nusing NLOHMANN_JSON_NAMESPACE::adl_serializer;\nusing NLOHMANN_JSON_NAMESPACE::basic_json;\nusing NLOHMANN_JSON_NAMESPACE::json;\nusing NLOHMANN_JSON_NAMESPACE::json_pointer;\nusing NLOHMANN_JSON_NAMESPACE::ordered_json;\nusing NLOHMANN_JSON_NAMESPACE::ordered_map;\nusing NLOHMANN_JSON_NAMESPACE::to_string;\n\ninline namespace literals\n{\ninline namespace json_literals\n{\n    using NLOHMANN_JSON_NAMESPACE::literals::json_literals::operator\"\"_json;\n    using NLOHMANN_JSON_NAMESPACE::literals::json_literals::operator\"\"_json_pointer;\n} // namespace json_literals\n} // namespace literals\n\n// Note: the following nlohmann::detail symbols must be exported due to\n// an MSVC bug failing to compile without these symbols visible (ticket #3970)\nnamespace detail\n{\n    using NLOHMANN_JSON_NAMESPACE::detail::json_sax_dom_callback_parser;\n    using NLOHMANN_JSON_NAMESPACE::detail::unknown_size;\n} // namespace detail\n\nNLOHMANN_JSON_NAMESPACE_END\n",
+            ["mcpp_generated/nlohmann.json.cppm"] = [==[
+module;
+
+// GCC workaround for C++ modules support.
+// When using C++20 modules, some compilers (particularly GCC) may have issues
+// with template instantiations in the module preamble. If you encounter
+// "redefinition" errors when including nlohmann/json.hpp, try one of:
+// 1. Include nlohmann/json.hpp in your module preamble BEFORE other #includes
+// 2. Or use: import nlohmann.json;  instead of #include <nlohmann/json.hpp>
+// 3. Or upgrade to a newer GCC version with better modules support.
+// See: https://github.com/nlohmann/json/issues/5103
+
+#include <nlohmann/json.hpp>
+
+export module nlohmann.json;
+
+export
+NLOHMANN_JSON_NAMESPACE_BEGIN
+
+using NLOHMANN_JSON_NAMESPACE::adl_serializer;
+using NLOHMANN_JSON_NAMESPACE::basic_json;
+using NLOHMANN_JSON_NAMESPACE::json;
+using NLOHMANN_JSON_NAMESPACE::json_pointer;
+using NLOHMANN_JSON_NAMESPACE::ordered_json;
+using NLOHMANN_JSON_NAMESPACE::ordered_map;
+using NLOHMANN_JSON_NAMESPACE::to_string;
+
+inline namespace literals
+{
+inline namespace json_literals
+{
+    using NLOHMANN_JSON_NAMESPACE::literals::json_literals::operator""_json;
+    using NLOHMANN_JSON_NAMESPACE::literals::json_literals::operator""_json_pointer;
+} // namespace json_literals
+} // namespace literals
+
+// Note: the following nlohmann::detail symbols must be exported due to
+// an MSVC bug failing to compile without these symbols visible (ticket #3970)
+namespace detail
+{
+    using NLOHMANN_JSON_NAMESPACE::detail::json_sax_dom_callback_parser;
+    using NLOHMANN_JSON_NAMESPACE::detail::unknown_size;
+} // namespace detail
+
+NLOHMANN_JSON_NAMESPACE_END
+]==],
         },
         sources      = { "mcpp_generated/nlohmann.json.cppm" },
         targets      = { ["nlohmann_json"] = { kind = "lib" } },

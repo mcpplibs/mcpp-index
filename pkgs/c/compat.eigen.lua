@@ -108,7 +108,9 @@ package = {
         include_dirs = { "*" },
         -- Header-only: a trivial anchor TU gives mcpp a buildable lib target.
         generated_files = {
-            ["mcpp_generated/eigen_anchor.c"] = "int mcpp_compat_eigen_headers_anchor(void) { return 0; }\n",
+            ["mcpp_generated/eigen_anchor.c"] = [==[
+int mcpp_compat_eigen_headers_anchor(void) { return 0; }
+]==],
         },
         sources      = { "mcpp_generated/eigen_anchor.c" },
         targets      = { ["eigen"] = { kind = "lib" } },
