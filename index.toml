@@ -1,0 +1,11 @@
+# Index→client version contract (design: mcpp .agents/docs/2026-07-08-index-
+# version-semantics-and-descriptor-grammar-design.md D3). The contract travels
+# WITH the index tree: packed into the artifact, present in git checkouts and
+# path-indices alike. mcpp >= 0.0.85 checks it at the index-open choke point
+# (E0006 on violation). Bump min_mcpp ONLY together with the CI MCPP_VERSION
+# pin — lint parses descriptors with the pinned mcpp, which enforces the
+# "floor first, new grammar after" rollout rule mechanically.
+[index]
+spec        = "1"
+min_mcpp    = "0.0.85"
+latest_mcpp = "0.0.85"

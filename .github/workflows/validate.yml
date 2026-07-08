@@ -13,7 +13,7 @@ on:
 env:
   # Bumped to 0.0.78: carries L3 build.mcpp native build program (build-mcpp member),
   # compat.openblas Windows recipe (bin/libopenblas.dll staged beside the .exe).
-  MCPP_VERSION: "0.0.81"
+  MCPP_VERSION: "0.0.85"
 
 jobs:
   lint:
@@ -58,6 +58,30 @@ jobs:
             fi
           done
           [ $fail -eq 0 ] && echo "All package files valid."
+          exit $fail
+      # ── Single-source-of-truth grammar check ─────────────────────────
+      # `mcpp xpkg parse` uses EXACTLY the resolver's parser, so what
+      # passes here is what builds for users of the pinned MCPP_VERSION.
+      # Strict by default: unknown mcpp-segment keys fail (they would be
+      # silently ignored at build time). This also mechanically enforces
+      # the rollout rule "floor first, new grammar after": descriptors
+      # needing a newer grammar cannot pass a lint pinned to an older mcpp.
+      - name: Download pinned mcpp
+        run: |
+          curl -L -fsS -o mcpp.tar.gz \
+            "https://github.com/mcpp-community/mcpp/releases/download/v${MCPP_VERSION}/mcpp-${MCPP_VERSION}-linux-x86_64.tar.gz"
+          tar -xzf mcpp.tar.gz
+          echo "MCPP=$PWD/mcpp-${MCPP_VERSION}-linux-x86_64/bin/mcpp" >> "$GITHUB_ENV"
+      - name: Parse descriptors with the resolver grammar (mcpp xpkg parse)
+        run: |
+          fail=0
+          for f in pkgs/*/*.lua; do
+            if ! "$MCPP" xpkg parse "$f" > /dev/null; then
+              echo "::error file=$f::mcpp xpkg parse failed (resolver grammar)"
+              fail=1
+            fi
+          done
+          [ $fail -eq 0 ] && echo "All descriptors parse with mcpp ${MCPP_VERSION}."
           exit $fail
 
   mirror-cn-reachable:
@@ -111,20 +135,20 @@ jobs:
         include:
           - platform: linux
             os: ubuntu-latest
-            archive: mcpp-0.0.81-linux-x86_64.tar.gz
-            root: mcpp-0.0.81-linux-x86_64
+            archive: mcpp-0.0.85-linux-x86_64.tar.gz
+            root: mcpp-0.0.85-linux-x86_64
             mcpp: bin/mcpp
             xlings: registry/bin/xlings
           - platform: macos
             os: macos-15
-            archive: mcpp-0.0.81-macosx-arm64.tar.gz
-            root: mcpp-0.0.81-macosx-arm64
+            archive: mcpp-0.0.85-macosx-arm64.tar.gz
+            root: mcpp-0.0.85-macosx-arm64
             mcpp: bin/mcpp
             xlings: registry/bin/xlings
           - platform: windows
             os: windows-latest
-            archive: mcpp-0.0.81-windows-x86_64.zip
-            root: mcpp-0.0.81-windows-x86_64
+            archive: mcpp-0.0.85-windows-x86_64.zip
+            root: mcpp-0.0.85-windows-x86_64
             mcpp: bin/mcpp.exe
             xlings: registry/bin/xlings.exe
     steps:

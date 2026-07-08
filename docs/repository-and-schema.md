@@ -47,12 +47,25 @@ tools/gtc                    gitcode CLI,见 cn-mirror.md
 | `c_standard` | C 源码:`"c99"` 或 `"c11"` |
 | `modules` | module 库:`{ "x.y" }` |
 | `include_dirs` | glob 列表,暴露给消费者的头目录 |
-| `generated_files` | `{ ["相对路径"]="内容字符串" }`;不支持 `[[…]]`,须以 `\n`、`\"` 转义 |
+| `generated_files` | `{ ["相对路径"]="内容字符串" }`;mcpp ≥ 0.0.85 支持 Lua 长括号 `[==[…]==]` 多行字符串(推荐,可读可 review);转义单行串仍兼容 |
+| `scan_overrides` | `{ ["glob"]={ provides={…}, imports={…} } }`;声明式扫描结果,命中文件跳过 M1 文本扫描(适用于带条件 import 守卫的上游模块单元,如 fmt 的 src/fmt.cc);构建期由编译器 P1689 输出自动对账,声明错误响亮失败(mcpp ≥ 0.0.85)|
 | `sources` | glob 列表,编入 lib 的源码 |
 | `cflags` / `cxxflags` / `ldflags` | 追加至对应规则 |
 | `targets` | `{ ["name"]={ kind="lib"/"bin", main=…, soname=… } }` |
 | `features` | `{ ["f"]={ sources={…} } }`,仅识别 sources |
 | `deps` | `{ ["ns.name"]="ver" }`,扁平或点号式 |
+
+## index 版本契约(index.toml)
+
+仓库根的 `index.toml` 声明 `[index] min_mcpp` —— 能解析本索引全部描述符的最老
+mcpp 版本。契约随树旅行:`publish_mcpp_index.sh` 把它打进 artifact,git clone 与
+`[indices] path =` 本地索引天然携带。mcpp ≥ 0.0.85 在打开索引树时检查,违反时报
+`E0006` + 升级指引(调试逃生口 `MCPP_INDEX_FLOOR=ignore`)。
+
+规则(由 lint 机械强制,非纪律):**floor 先行、新文法在后**——lint 用 CI pin 的
+mcpp 跑 `xpkg parse`(strict:未知键即失败),所以需要更新文法/键的描述符在
+`MCPP_VERSION` 与 `min_mcpp` 同步提升之前物理上合不进 main。本地复现:
+`mcpp xpkg parse pkgs/<x>/<name>.lua`。
 
 ## CI 行为(validate.yml)
 

@@ -25,6 +25,9 @@ info() { echo "[mcpp-index] $*"; }
 TREE="$OUT/tree"; mkdir -p "$TREE"
 cp -a "$SRC/pkgs" "$TREE/"
 [ -f "$SRC/README.md" ] && cp "$SRC/README.md" "$TREE/" || true
+# index.toml carries the index→client version contract (min_mcpp floor);
+# it must travel with the tree so unpacked snapshots enforce it offline.
+[ -f "$SRC/index.toml" ] && cp "$SRC/index.toml" "$TREE/" || true
 tar --sort=name --owner=0 --group=0 --numeric-owner -czf "$OUT/$BASE.tar.gz" -C "$TREE" . 2>/dev/null \
   || tar -czf "$OUT/$BASE.tar.gz" -C "$TREE" .
 SHA="$(sha256sum "$OUT/$BASE.tar.gz" | awk '{print $1}')"
