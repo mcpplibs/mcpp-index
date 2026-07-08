@@ -1,0 +1,14 @@
+# {fmt} test project: consumes the C++23 module `fmt` (`import fmt;`, no
+# #include) from the `fmtlib.fmt` package and asserts behavior under `mcpp test`.
+# Part of the mcpp-index self-referential workspace: `[indices] fmtlib` points at
+# this repo, so the dependency resolves to the checked-in recipe (pkgs/f/
+# fmtlib.fmt.lua) rather than a remote index. The exported module is plain `fmt`.
+[package]
+name = "fmtlib-fmt-tests"
+version = "0.1.0"
+
+[indices]
+fmtlib = { path = "../../.." }
+
+[dependencies.fmtlib]
+fmt = "12.2.0"

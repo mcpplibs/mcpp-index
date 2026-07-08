@@ -1,8 +1,10 @@
 -- Form B inline descriptor for {fmt} exposed as the C++23 module `fmt`, so
 -- users can write `import fmt;` out of the box (no `#include` needed). This is
--- the module sibling of the header-based `compat.fmt` package. Empty namespace
--- (like the public `imgui` module package) so the dependency key and the module
--- name are both simply `fmt`.
+-- the module sibling of the header-based `compat.fmt` package. Namespaced under
+-- `fmtlib` (package `fmtlib.fmt`) so a workspace member can route the dependency
+-- to this repo's local `[indices] fmtlib = { path }` — an empty namespace would
+-- bind to the builtin default index and can't be pointed at a local path. The
+-- exported module name is still plain `fmt`, so consumers write `import fmt;`.
 --
 -- fmt's release DOES ship an official C++20 module interface unit at
 -- `src/fmt.cc` (`export module fmt;`), but it cannot be fed to mcpp verbatim:
@@ -23,8 +25,8 @@
 -- (no glob), like nlohmann.json / compat.eigen.
 package = {
     spec        = "1",
-    namespace   = "",
-    name        = "fmt",
+    namespace   = "fmtlib",
+    name        = "fmtlib.fmt",
     description = "A modern formatting library for C++, exposed as C++23 module fmt",
     licenses    = {"MIT"},
     repo        = "https://github.com/fmtlib/fmt",

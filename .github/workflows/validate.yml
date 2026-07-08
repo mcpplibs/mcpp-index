@@ -206,37 +206,3 @@ jobs:
         run: |
           "$MCPP" --version
           timeout 1800 bash tests/smoke_imgui_module.sh
-
-  # ── Exception: the public `fmt` C++23-module package (namespace "") ──
-  # Same story as imgui-module above: empty namespace maps to the builtin default
-  # index, which a workspace member can't point at a local path, so it keeps a
-  # thin driver that reseeds the default index and consumes `import fmt;`.
-  fmt-module:
-    runs-on: ubuntu-latest
-    timeout-minutes: 60
-    steps:
-      - uses: actions/checkout@v4
-      - name: Restore mcpp registry cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.mcpp/registry
-          key: mcpp-registry-${{ runner.os }}-${{ env.MCPP_VERSION }}-${{ hashFiles('pkgs/**/*.lua', 'tests/**', '.github/workflows/validate.yml') }}
-          restore-keys: |
-            mcpp-registry-${{ runner.os }}-${{ env.MCPP_VERSION }}-
-      - name: Download mcpp
-        run: |
-          curl -L -fsS -o mcpp.tar.gz \
-            "https://github.com/mcpp-community/mcpp/releases/download/v${MCPP_VERSION}/mcpp-${MCPP_VERSION}-linux-x86_64.tar.gz"
-          tar -xzf mcpp.tar.gz
-          root="$PWD/mcpp-${MCPP_VERSION}-linux-x86_64"
-          mkdir -p "$HOME/.mcpp/registry"
-          cp -a "$root/registry/." "$HOME/.mcpp/registry/"
-          echo "MCPP=$root/bin/mcpp" >> "$GITHUB_ENV"
-          echo "MCPP_VENDORED_XLINGS=$root/registry/bin/xlings" >> "$GITHUB_ENV"
-          echo "$root/bin" >> "$GITHUB_PATH"
-      - name: fmt module package smoke
-        env:
-          MCPP_INDEX_MIRROR: GLOBAL
-        run: |
-          "$MCPP" --version
-          timeout 1800 bash tests/smoke_fmt_module.sh
