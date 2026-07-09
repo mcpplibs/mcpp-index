@@ -310,6 +310,10 @@ local function _install_impl()
         -- platform-specific static lib to carry.
         "-DWITH_CAROTENE=OFF -DWITH_KLEIDICV=OFF",
         "-DWITH_ADE=OFF -DWITH_IPP=OFF -DWITH_ITT=OFF -DWITH_TBB=OFF -DWITH_OPENMP=OFF",
+        -- WITH_LAPACK=OFF: on macOS OpenCV auto-finds the Accelerate framework and
+        -- emits cblas_*/sgesv_/… calls into it; core's built-in fallback is used
+        -- instead, so the consumer needn't link Accelerate (host-free, minimal set).
+        "-DWITH_LAPACK=OFF",
         "-DWITH_OPENCL=OFF -DWITH_CUDA=OFF -DWITH_EIGEN=OFF -DWITH_PROTOBUF=OFF",
         "-DWITH_FFMPEG=OFF -DWITH_GTK=OFF -DWITH_QT=OFF -DWITH_GSTREAMER=OFF",
         "-DWITH_V4L=OFF -DWITH_1394=OFF -DWITH_TIFF=OFF -DWITH_WEBP=OFF",
