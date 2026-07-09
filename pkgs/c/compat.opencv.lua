@@ -82,9 +82,12 @@ package = {
             },
         },
         windows = {
-            -- Source tarball declared for index completeness + CN mirror coverage.
-            -- The install() CMake build on Windows (MSVC-ABI clang mcpp links with)
-            -- is a documented follow-up; the test project excludes Windows for now.
+            -- clang-cl (xim:llvm) builds OpenCV from source targeting
+            -- x86_64-pc-windows-msvc (msvc-stl) to match mcpp's Windows consumer
+            -- ABI; Ninja generator (xim:ninja is cross-platform). clang-cl finds the
+            -- MSVC toolchain + Windows SDK from the registry, so no glibc-style
+            -- build-dep wiring is needed here.
+            deps = { "xim:cmake@4.0.2", "xim:ninja@1.12.1", "xim:llvm" },
             ["4.13.0"] = {
                 -- Plain-string GLOBAL url (no CN mirror table): this session lacks
                 -- mcpp-res write access. Per the add-package skill, CN users fall
@@ -124,14 +127,18 @@ package = {
             "-lopencv_imgcodecs", "-lopencv_imgproc", "-lopencv_core",
             "-llibpng", "-llibjpeg-turbo", "-lzlib",
         } },
-        windows = {
-            -- No source build wired on Windows yet; provide the anchor directly so
-            -- mcpp is self-sufficient here and never triggers the (unimplemented)
-            -- Windows install() build. Consumers target non-Windows for now.
-            generated_files = {
-                ["mcpp_opencv_anchor.c"] = "int mcpp_compat_opencv_anchor(void) { return 0; }\n",
-            },
-        },
+        windows = { ldflags = {
+            -- clang-cl (MSVC driver) maps `-lfoo` → foo.lib and `-Llib` →
+            -- /LIBPATH:<verdir>/lib (the compat.openblas Windows precedent). Names
+            -- match the normalised install layout: version suffix dropped
+            -- (opencv_core.lib) and 3rdparty under lib/opencv4/3rdparty. No anchor
+            -- generated_files here: install() builds from source and emits the
+            -- anchor itself (its absence is what triggers the build), same as
+            -- linux/macOS.
+            "-Llib", "-Llib/opencv4/3rdparty",
+            "-lopencv_imgcodecs", "-lopencv_imgproc", "-lopencv_core",
+            "-llibpng", "-llibjpeg-turbo", "-lzlib",
+        } },
     },
 }
 
@@ -140,6 +147,14 @@ import("xim.libxpkg.log")
 
 local function sh_quote(value)
     return "'" .. tostring(value):gsub("'", "'\\''") .. "'"
+end
+
+-- TEMP diagnostics path — cross-platform (no /tmp on Windows). GitHub sets
+-- RUNNER_TEMP on every runner OS; the CI step cats these files after a failure.
+local function diag_path(name)
+    local base = os.getenv("RUNNER_TEMP") or os.getenv("TMPDIR")
+              or os.getenv("TEMP") or "/tmp"
+    return path.join(base, name)
 end
 
 -- Tools are invoked by BARE name, resolved off the install() PATH that xim sets up
@@ -169,7 +184,7 @@ local function _install_impl()
     local _trbuf = ""
     local function trace(s)
         _trbuf = _trbuf .. tostring(s) .. "\n"
-        pcall(function() io.writefile("/tmp/ocv_trace.txt", _trbuf) end)
+        pcall(function() io.writefile(diag_path("ocv_trace.txt"), _trbuf) end)
     end
     trace("enter host=" .. tostring(os.host()))
     local version = pkginfo.version()
@@ -196,11 +211,17 @@ local function _install_impl()
     -- building OpenCV with gcc there would produce a libstdc++ .a that ABI-clashes
     -- with a libc++ consumer.
     local isMac = (os.host() == "macosx")
+    local isWin = (os.host() == "windows")
     -- Ninja generator on ALL platforms (cross-platform via xim:ninja; xim:make has
     -- no macOS build). `cmake --build` drives it uniformly.
     local cmake, make = "cmake", "ninja"
-    local gcc = isMac and "clang"   or "gcc"
-    local gxx = isMac and "clang++" or "g++"
+    -- Per-platform compiler: Linux gcc (gcc/libstdc++ default consumer); macOS
+    -- clang/clang++ (libc++ default); Windows clang-cl for BOTH C and C++ — it
+    -- targets x86_64-pc-windows-msvc (msvc-stl), matching mcpp's own Windows
+    -- consumer ABI, and autodetects the installed MSVC toolchain + Windows SDK from
+    -- the registry (no vcvars/Developer-prompt needed).
+    local gcc = isMac and "clang"   or (isWin and "clang-cl" or "gcc")
+    local gxx = isMac and "clang++" or (isWin and "clang-cl" or "g++")
 
     -- xim:gcc's specs wire xim:glibc only for RUNTIME (rpath / dynamic-linker),
     -- NOT the LINK-time startfile + library search. mcpp's own build provides that
@@ -253,6 +274,11 @@ local function _install_impl()
                .. "export CFLAGS=\"--no-default-config\" "
                .. "CXXFLAGS=\"--no-default-config -nostdinc++ "
                .. "-isystem $SDKROOT/usr/include/c++/v1\" && "
+    elseif isWin then
+        -- Windows: clang-cl autodetects the MSVC toolchain + Windows SDK from the
+        -- registry, so no build-time env wiring is needed (libenv stays empty). The
+        -- cmake build is driven through cmd, not bash (see the exec branch below).
+        libenv = ""
     else
         local glibc_bd = pkginfo.build_dep("glibc")
         local gcc_bd   = pkginfo.build_dep("gcc")
@@ -296,18 +322,26 @@ local function _install_impl()
     local logf = path.join(prefix, "mcpp_opencv_build.log")
     trace("about to run cmake configure; logf=" .. tostring(logf))
 
+    -- Value quoting differs by driver: the linux/macOS build runs through bash
+    -- (sh_quote), Windows through cmd (see the exec branch) where single quotes
+    -- would reach cmake LITERALLY — so pass values bare there. Runner paths carry
+    -- no spaces, so bare is safe. cmake also wants forward slashes in -D paths on
+    -- Windows (a trailing backslash escapes the closing quote in the cache).
+    local function q(v) return isWin and tostring(v) or sh_quote(v) end
+    local cmake_prefix = isWin and tostring(prefix):gsub("\\", "/") or prefix
+
     -- Curated, fully-offline profile: core+imgproc+imgcodecs, bundled zlib/png/jpeg,
     -- everything downloadable or host-dependent OFF (WITH_ADE=OFF kills the only
-    -- configure-time fetch). Unix Makefiles generator + the resolved build-dep
-    -- tools. CMAKE_POLICY_VERSION_MINIMUM=3.5 lets CMake 4.x parse OpenCV's (and
-    -- its 3rdparty's) old cmake_minimum_required.
+    -- configure-time fetch). Ninja generator + the resolved build-dep tools.
+    -- CMAKE_POLICY_VERSION_MINIMUM=3.5 lets CMake 4.x parse OpenCV's (and its
+    -- 3rdparty's) old cmake_minimum_required.
     local dflags = table.concat({
-        "-G", sh_quote("Ninja"),
-        "-DCMAKE_MAKE_PROGRAM=" .. sh_quote(make),
-        "-DCMAKE_C_COMPILER=" .. sh_quote(gcc),
-        "-DCMAKE_CXX_COMPILER=" .. sh_quote(gxx),
+        "-G", q("Ninja"),
+        "-DCMAKE_MAKE_PROGRAM=" .. q(make),
+        "-DCMAKE_C_COMPILER=" .. q(gcc),
+        "-DCMAKE_CXX_COMPILER=" .. q(gxx),
         "-DCMAKE_BUILD_TYPE=Release",
-        "-DCMAKE_INSTALL_PREFIX=" .. sh_quote(prefix),
+        "-DCMAKE_INSTALL_PREFIX=" .. q(cmake_prefix),
         "-DCMAKE_POLICY_VERSION_MINIMUM=3.5",
         "-DBUILD_LIST=core,imgproc,imgcodecs",
         "-DBUILD_SHARED_LIBS=OFF -DENABLE_PIC=ON",
@@ -349,26 +383,57 @@ local function _install_impl()
         -- version 15.0 newer than target minimum 14.0" link warnings. Empty on
         -- Linux (this var expands to nothing there).
         isMac and "-DCMAKE_OSX_DEPLOYMENT_TARGET=14.0" or "",
+        -- Windows: normalise OpenCV's install layout to the linux/macOS shape so the
+        -- one set of ldflags (`-Llib …`) + artifact checks work everywhere — drop
+        -- the default x64/vc17 binaries prefix and the version suffix on lib names
+        -- (opencv_core.lib, not opencv_core4130.lib), and put static libs under lib/
+        -- + 3rdparty under lib/opencv4/3rdparty + headers under include/opencv4.
+        -- BUILD_WITH_STATIC_CRT=OFF builds against the DYNAMIC CRT (/MD) to match
+        -- mcpp's clang-cl consumer; OpenCV defaults to static CRT (/MT) on Windows,
+        -- which would clash at link. Expands to nothing off Windows.
+        isWin and ("-DOPENCV_INSTALL_BINARIES_PREFIX= "
+                .. "-DOPENCV_LIB_INSTALL_PATH=lib "
+                .. "-DOPENCV_3P_LIB_INSTALL_PATH=lib/opencv4/3rdparty "
+                .. "-DOPENCV_INCLUDE_INSTALL_PATH=include/opencv4 "
+                .. "-DOPENCV_DLLVERSION= "
+                .. "-DBUILD_WITH_STATIC_CRT=OFF") or "",
     }, " ")
 
-    os.exec(string.format("bash -c %s", sh_quote(string.format(
-        "cd %s && %s%s -S . -B _bld %s > %s 2>&1",
-        sh_quote(prefix), libenv, sh_quote(cmake), dflags, sh_quote(logf)))))
-    os.exec(string.format("bash -c %s", sh_quote(string.format(
-        "cd %s && %s%s --build _bld -j%d >> %s 2>&1",
-        sh_quote(prefix), libenv, sh_quote(cmake), jobs, sh_quote(logf)))))
-    os.exec(string.format("bash -c %s", sh_quote(string.format(
-        "cd %s && %s%s --install _bld >> %s 2>&1",
-        sh_quote(prefix), libenv, sh_quote(cmake), sh_quote(logf)))))
+    if isWin then
+        -- No bash on a bare Windows runner; drive cmake through cmd, which also
+        -- gives the `>` redirect for the on-disk log. cwd is already `prefix`
+        -- (os.cd above), so `-S .` resolves here. clang-cl finds MSVC + the Windows
+        -- SDK itself, so no toolchain env (libenv is empty). Values in dflags are
+        -- bare (see q()), so the whole cmake line sits inside one cmd `"..."` arg.
+        os.exec(string.format('cmd /c "%s -S . -B _bld %s > %s 2>&1"',
+            cmake, dflags, logf))
+        os.exec(string.format('cmd /c "%s --build _bld -j%d >> %s 2>&1"',
+            cmake, jobs, logf))
+        os.exec(string.format('cmd /c "%s --install _bld >> %s 2>&1"',
+            cmake, logf))
+    else
+        os.exec(string.format("bash -c %s", sh_quote(string.format(
+            "cd %s && %s%s -S . -B _bld %s > %s 2>&1",
+            sh_quote(prefix), libenv, sh_quote(cmake), dflags, sh_quote(logf)))))
+        os.exec(string.format("bash -c %s", sh_quote(string.format(
+            "cd %s && %s%s --build _bld -j%d >> %s 2>&1",
+            sh_quote(prefix), libenv, sh_quote(cmake), jobs, sh_quote(logf)))))
+        os.exec(string.format("bash -c %s", sh_quote(string.format(
+            "cd %s && %s%s --install _bld >> %s 2>&1",
+            sh_quote(prefix), libenv, sh_quote(cmake), sh_quote(logf)))))
+    end
 
     -- Verify BOTH the static libs AND the installed public headers materialised
     -- (exit-0 != correct; and a partial install that lays libs but not headers at
     -- include/opencv4 would slip past a libs-only check, then fail the consumer
     -- compile with a bare "opencv2/core.hpp: No such file").
+    -- Static-lib file names differ: linux/macOS `libopencv_core.a`, Windows (MSVC
+    -- clang-cl, version suffix dropped above) `opencv_core.lib`.
+    local function slib(n) return isWin and (n .. ".lib") or ("lib" .. n .. ".a") end
     local must = {
-        path.join(prefix, "lib", "libopencv_core.a"),
-        path.join(prefix, "lib", "libopencv_imgproc.a"),
-        path.join(prefix, "lib", "libopencv_imgcodecs.a"),
+        path.join(prefix, "lib", slib("opencv_core")),
+        path.join(prefix, "lib", slib("opencv_imgproc")),
+        path.join(prefix, "lib", slib("opencv_imgcodecs")),
         path.join(prefix, "include", "opencv4", "opencv2", "core.hpp"),
         path.join(prefix, "include", "opencv4", "opencv2", "imgproc.hpp"),
         path.join(prefix, "include", "opencv4", "opencv2", "imgcodecs.hpp"),
@@ -403,14 +468,10 @@ local function _dump_diagnostics(raised, err)
         table.insert(out, "no build log at " .. logf)
         table.insert(out, "PATH=" .. tostring(os.getenv("PATH")))
     end
-    pcall(function() io.writefile("/tmp/ocv_diag.txt", table.concat(out, "\n") .. "\n") end)
+    pcall(function() io.writefile(diag_path("ocv_diag.txt"), table.concat(out, "\n") .. "\n") end)
 end
 
 function install()
-    if os.host() == "windows" then
-        -- Windows uses the generated_files anchor; source build is a follow-up.
-        return true
-    end
     local ok, ret = pcall(_install_impl)
     if not ok or ret == false then
         _dump_diagnostics(not ok, ret)

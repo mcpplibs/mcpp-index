@@ -1,9 +1,9 @@
 # OpenCV test project. compat.opencv builds core+imgproc+imgcodecs from source via
-# its install() CMake hook (host-free: ecosystem xim:cmake/ninja/gcc only) and links
-# the static module libs. Linux-only for now: OpenCV is built with gcc/libstdc++, and
-# only Linux's default toolchain is gcc — off-Linux the test compiles to a no-op main
-# (the dep isn't pulled), so `mcpp test --workspace` stays clean on macOS/Windows.
-# Resolves compat.opencv from this repo's own index.
+# its install() CMake hook (host-free: ecosystem xim:cmake/ninja + per-OS compiler)
+# and links the static module libs. All three platforms are wired, each with the
+# compiler whose ABI matches that platform's mcpp consumer: linux gcc/libstdc++,
+# macOS clang/libc++, Windows clang-cl/msvc-stl. Resolves compat.opencv from this
+# repo's own index.
 [package]
 name    = "opencv-tests"
 version = "0.1.0"
@@ -15,4 +15,7 @@ compat = { path = "../../.." }
 opencv = "4.13.0"
 
 [target.'cfg(macos)'.dependencies.compat]
+opencv = "4.13.0"
+
+[target.'cfg(windows)'.dependencies.compat]
 opencv = "4.13.0"

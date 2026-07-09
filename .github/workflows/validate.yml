@@ -199,21 +199,27 @@ jobs:
       # TEMP diagnostic (remove before merge): xim's interface mode hides install()
       # source-build output; on failure surface the opencv build log from the runner.
       - name: opencv build-log on failure
-        if: failure() && runner.os != 'Windows'
+        if: failure()
         shell: bash
         run: |
+          # Cross-platform (linux/macOS/Windows-Git-Bash). The hook writes trace/diag
+          # under $RUNNER_TEMP (set on every runner OS); convert to a bash path on
+          # Windows. xim's interface mode hides install() output, so these files +
+          # the on-disk build log are the only window into a source-build failure.
+          d="$RUNNER_TEMP"
+          command -v cygpath >/dev/null 2>&1 && d="$(cygpath -u "$RUNNER_TEMP")"
           echo "=== opencv install() trace ==="
-          cat /tmp/ocv_trace.txt 2>/dev/null || echo "(no trace)"
+          cat "$d/ocv_trace.txt" 2>/dev/null || echo "(no trace)"
           echo "=== opencv install() diag (build log / error, written by the hook) ==="
-          cat /tmp/ocv_diag.txt 2>/dev/null || echo "(no diag)"
+          cat "$d/ocv_diag.txt" 2>/dev/null || echo "(no diag)"
           echo "=== opencv build log(s) ==="
-          find "$GITHUB_WORKSPACE" "$HOME" -name 'mcpp_opencv_build.log' 2>/dev/null | while read -r f; do
+          find . -name 'mcpp_opencv_build.log' 2>/dev/null | while read -r f; do
             echo "--- $f ---"; cat "$f"; echo "--- end ---"
           done || true
           echo "=== opencv store tree (did cmake even run?) ==="
-          find "$GITHUB_WORKSPACE" -path '*compat.opencv*4.13.0' -maxdepth 12 -type d 2>/dev/null | head -1 | while read -r d; do ls -la "$d" 2>/dev/null | head; done || true
-          echo "=== clang + SDK sanity ==="
-          command -v clang clang++ clang-cl 2>/dev/null || true
+          find . -path '*compat.opencv*4.13.0' -type d 2>/dev/null | head -1 | while read -r t; do ls -la "$t" 2>/dev/null | head; done || true
+          echo "=== compiler sanity ==="
+          command -v clang clang++ clang-cl gcc 2>/dev/null || true
           xcrun --show-sdk-path 2>/dev/null || echo "(no xcrun)"
 
   # ── Exception: the public `imgui` C++23-module package (namespace "") ──
