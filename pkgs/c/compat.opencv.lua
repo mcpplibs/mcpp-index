@@ -189,18 +189,24 @@ local function _install_impl()
     -- do NOT add these to the header search path; mcpp's build supplies them via
     -- CPATH, which an install() subprocess doesn't inherit -> "stdlib.h / limits.h:
     -- No such file". Point CPATH at both so the build is host-free.
-    local glibc_dir = pkginfo.install_dir("xim:glibc", "2.39")
-                   or pkginfo.install_dir("glibc", "2.39")
-    local gcc_dir   = pkginfo.install_dir("xim:gcc", "16.1.0")
-                   or pkginfo.install_dir("gcc", "16.1.0")
-    local kern_dir  = pkginfo.install_dir("xim:linux-headers", "5.11.1")
-                   or pkginfo.install_dir("scode:linux-headers", "5.11.1")
-                   or pkginfo.install_dir("linux-headers", "5.11.1")
+    -- Resolve each build-dep's dir via pkginfo.build_dep — the version is already
+    -- resolved by xlings from the build_deps DECLARATION (via XLINGS_BUILDDEP_*_PATH),
+    -- so NO version is hardcoded in this install() code. Returns {path,bin,include,lib}.
+    -- NOTE: distinct var names (…_bd) so they don't shadow the `gcc`/`gxx` tool
+    -- strings used for -DCMAKE_C_COMPILER above.
+    local glibc_bd = pkginfo.build_dep("glibc")
+    local gcc_bd   = pkginfo.build_dep("gcc")
+    local kern_bd  = pkginfo.build_dep("linux-headers")
     local libpaths, incpaths = {}, {}
-    if glibc_dir then table.insert(libpaths, path.join(glibc_dir, "lib"))
-                      table.insert(incpaths, path.join(glibc_dir, "include")) end
-    if gcc_dir   then table.insert(libpaths, path.join(gcc_dir, "lib64")) end
-    if kern_dir  then table.insert(incpaths, path.join(kern_dir, "include")) end
+    if glibc_bd then
+        if os.isdir(glibc_bd.lib)     then table.insert(libpaths, glibc_bd.lib) end
+        if os.isdir(glibc_bd.include) then table.insert(incpaths, glibc_bd.include) end
+    end
+    if gcc_bd then  -- libgcc_s lives in gcc's lib64
+        local gcc_lib64 = path.join(gcc_bd.path, "lib64")
+        if os.isdir(gcc_lib64) then table.insert(libpaths, gcc_lib64) end
+    end
+    if kern_bd and os.isdir(kern_bd.include) then table.insert(incpaths, kern_bd.include) end
     if #libpaths == 0 or #incpaths == 0 then
         error("compat.opencv: cannot resolve xim:glibc / xim:gcc / xim:linux-headers dirs for the build env")
     end
