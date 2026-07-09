@@ -162,9 +162,20 @@ local function find_srcroot(version)
 end
 
 local function _install_impl()
+    -- [TEMP macOS debug] on-disk trace: the install() failure is invisible under
+    -- xim's interface mode; write progress to $HOME so CI can surface where it dies.
+    local _trbuf = ""
+    local function trace(s)
+        _trbuf = _trbuf .. tostring(s) .. "\n"
+        pcall(function() io.writefile((os.getenv("HOME") or "/tmp") .. "/ocv_trace.txt", _trbuf) end)
+    end
+    trace("enter host=" .. tostring(os.host()))
     local version = pkginfo.version()
     local prefix  = pkginfo.install_dir()
     local srcroot = find_srcroot(version)
+    trace("version=" .. tostring(version))
+    trace("prefix=" .. tostring(prefix))
+    trace("srcroot=" .. tostring(srcroot) .. " isdir=" .. tostring(os.isdir(srcroot)))
 
     local jobs = (os.default_njob and os.default_njob()) or 4
 
@@ -252,10 +263,14 @@ local function _install_impl()
     -- compat.openblas). Then build out-of-source into ./_bld and install
     -- headers+libs back into prefix, which is now the cwd.
     os.tryrm(prefix)
+    trace("compiler gcc=" .. tostring(gcc) .. " gxx=" .. tostring(gxx) .. " isMac=" .. tostring(isMac))
+    trace("libenv=[" .. tostring(libenv) .. "]")
     os.mv(srcroot, prefix)
     os.cd(prefix)
+    trace("after mv+cd, prefix isdir=" .. tostring(os.isdir(prefix)))
 
     local logf = path.join(prefix, "mcpp_opencv_build.log")
+    trace("about to run cmake configure; logf=" .. tostring(logf))
 
     -- Curated, fully-offline profile: core+imgproc+imgcodecs, bundled zlib/png/jpeg,
     -- everything downloadable or host-dependent OFF (WITH_ADE=OFF kills the only

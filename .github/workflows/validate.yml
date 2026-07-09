@@ -202,6 +202,8 @@ jobs:
         if: failure() && runner.os != 'Windows'
         shell: bash
         run: |
+          echo "=== opencv install() trace ==="
+          cat "$HOME/ocv_trace.txt" 2>/dev/null || echo "(no trace)"
           echo "=== opencv build log(s) ==="
           find "$GITHUB_WORKSPACE" "$HOME" -name 'mcpp_opencv_build.log' 2>/dev/null | while read -r f; do
             echo "--- $f ---"; cat "$f"; echo "--- end ---"
