@@ -195,6 +195,20 @@ jobs:
           # No `timeout` wrapper: absent on macOS runners; job-level timeout-minutes bounds it.
           "$MCPP" test --workspace
 
+      # TEMP diagnostic (remove before merge): xim's interface mode hides install()
+      # source-build output; on failure surface the opencv build log from the runner.
+      - name: opencv build-log on failure
+        if: failure() && runner.os != 'Windows'
+        shell: bash
+        run: |
+          echo "=== opencv build log(s) ==="
+          find "$HOME" -name 'mcpp_opencv_build.log' 2>/dev/null | while read -r f; do
+            echo "--- $f ---"; cat "$f"; echo "--- end ---"
+          done || true
+          echo "=== clang + SDK sanity ==="
+          command -v clang clang++ clang-cl 2>/dev/null || true
+          xcrun --show-sdk-path 2>/dev/null || echo "(no xcrun)"
+
   # ── Exception: the public `imgui` C++23-module package (namespace "") ──
   # Not yet a workspace member: its package has an empty namespace (the builtin
   # default index), which a workspace member can't point at a local path the way
