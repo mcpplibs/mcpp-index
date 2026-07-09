@@ -388,15 +388,17 @@ local function _install_impl()
         -- the default x64/vc17 binaries prefix and the version suffix on lib names
         -- (opencv_core.lib, not opencv_core4130.lib), and put static libs under lib/
         -- + 3rdparty under lib/opencv4/3rdparty + headers under include/opencv4.
-        -- BUILD_WITH_STATIC_CRT=OFF builds against the DYNAMIC CRT (/MD) to match
-        -- mcpp's clang-cl consumer; OpenCV defaults to static CRT (/MT) on Windows,
-        -- which would clash at link. Expands to nothing off Windows.
+        -- BUILD_WITH_STATIC_CRT=ON builds against the STATIC CRT (/MT) — mcpp's
+        -- clang-cl consumer compiles its objects /MT (roundtrip.o = MT_StaticRelease),
+        -- so OpenCV must match or the link fails LNK2038 (MD vs MT RuntimeLibrary
+        -- mismatch). /MT is also OpenCV's Windows default. Expands to nothing off
+        -- Windows.
         isWin and ("-DOPENCV_INSTALL_BINARIES_PREFIX= "
                 .. "-DOPENCV_LIB_INSTALL_PATH=lib "
                 .. "-DOPENCV_3P_LIB_INSTALL_PATH=lib/opencv4/3rdparty "
                 .. "-DOPENCV_INCLUDE_INSTALL_PATH=include/opencv4 "
                 .. "-DOPENCV_DLLVERSION= "
-                .. "-DBUILD_WITH_STATIC_CRT=OFF") or "",
+                .. "-DBUILD_WITH_STATIC_CRT=ON") or "",
     }, " ")
 
     if isWin then
