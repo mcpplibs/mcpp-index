@@ -167,7 +167,7 @@ local function _install_impl()
     local _trbuf = ""
     local function trace(s)
         _trbuf = _trbuf .. tostring(s) .. "\n"
-        pcall(function() io.writefile((os.getenv("HOME") or "/tmp") .. "/ocv_trace.txt", _trbuf) end)
+        pcall(function() io.writefile("/tmp/ocv_trace.txt", _trbuf) end)
     end
     trace("enter host=" .. tostring(os.host()))
     local version = pkginfo.version()
