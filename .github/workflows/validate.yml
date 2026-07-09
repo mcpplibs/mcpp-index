@@ -190,6 +190,7 @@ jobs:
         shell: bash
         env:
           MCPP_INDEX_MIRROR: GLOBAL
+          MCPP_VERBOSE: "1"   # TEMP: surface install() hook error detail for macOS debug
         run: |
           "$MCPP" --version
           # No `timeout` wrapper: absent on macOS runners; job-level timeout-minutes bounds it.
