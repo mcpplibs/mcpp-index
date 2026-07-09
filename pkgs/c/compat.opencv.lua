@@ -332,6 +332,15 @@ local function _install_impl()
         "-DWITH_OPENJPEG=OFF -DWITH_JASPER=OFF -DWITH_OPENEXR=OFF -DWITH_GDAL=OFF",
         "-DWITH_GDCM=OFF -DBUILD_opencv_world=OFF",
         "-DOPENCV_GENERATE_PKGCONFIG=OFF -DINSTALL_CREATE_DISTRIB=OFF",
+        -- macOS: pin the deployment target to the consumer's (14.0). Apple's libc++
+        -- added the out-of-line std::__1::__hash_memory at macOS 14.4; building at
+        -- the SDK's default (15.0) makes its availability-guarded headers EMIT it,
+        -- but the runtime libc++ linked at the consumer's min (14.0) lacks it ->
+        -- undefined symbol. Targeting 14.0 (< 14.4) makes the guard pick the INLINE
+        -- hash path, so no external symbol is emitted; also silences the "object
+        -- version 15.0 newer than target minimum 14.0" link warnings. Empty on
+        -- Linux (this var expands to nothing there).
+        isMac and "-DCMAKE_OSX_DEPLOYMENT_TARGET=14.0" or "",
     }, " ")
 
     os.exec(string.format("bash -c %s", sh_quote(string.format(
