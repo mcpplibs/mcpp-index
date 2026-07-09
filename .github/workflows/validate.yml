@@ -195,6 +195,29 @@ jobs:
           # No `timeout` wrapper: absent on macOS runners; job-level timeout-minutes bounds it.
           "$MCPP" test --workspace
 
+      # TEMP diagnostic (remove before merge): xim's interface mode suppresses
+      # install() subprocess + log output, so a failed source-build (e.g. opencv's
+      # CMake hook) is invisible. On failure, surface the on-disk build log + the
+      # xim:cmake launcher/loader state directly from the runner.
+      - name: install() build-log on failure
+        if: failure() && runner.os == 'Linux'
+        shell: bash
+        run: |
+          echo "=== opencv build log(s) ==="
+          find "$HOME/.mcpp" -name 'mcpp_opencv_build.log' 2>/dev/null | while read -r f; do
+            echo "--- $f ---"; cat "$f"; echo "--- end ---"
+          done || true
+          echo "=== opencv store top-level ==="
+          find "$HOME/.mcpp" -path '*compat.opencv*4.13.0' -maxdepth 9 2>/dev/null | head -1 | while read -r d; do ls -la "$d" 2>/dev/null; ls -la "$d/include/opencv4/opencv2" 2>/dev/null | head; done || true
+          echo "=== xim:cmake binary + launcher on PATH ==="
+          find "$HOME/.mcpp" -type f -name 'cmake' 2>/dev/null | head || true
+          echo "PATH=$PATH"; command -v cmake || echo "(no bare cmake on this PATH)"
+          echo "=== xim:cmake ELF interpreter + can it exec? ==="
+          cm=$(find "$HOME/.mcpp" -type f -path '*xim-x-cmake*/bin/cmake' 2>/dev/null | head -1)
+          if [ -n "$cm" ]; then readelf -l "$cm" 2>/dev/null | grep -i interpreter || true; "$cm" --version 2>&1 | head -3 || echo "exec FAILED rc=$?"; fi
+          echo "=== xim:glibc present? ==="
+          find "$HOME/.mcpp" -path '*xim-x-glibc*ld-linux*' 2>/dev/null | head || echo "(no xim glibc loader)"
+
   # ── Exception: the public `imgui` C++23-module package (namespace "") ──
   # Not yet a workspace member: its package has an empty namespace (the builtin
   # default index), which a workspace member can't point at a local path the way
