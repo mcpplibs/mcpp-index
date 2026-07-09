@@ -222,6 +222,12 @@ local function _install_impl()
         "-DBUILD_TESTS=OFF -DBUILD_PERF_TESTS=OFF -DBUILD_EXAMPLES=OFF",
         "-DBUILD_opencv_apps=OFF -DBUILD_opencv_python3=OFF -DBUILD_JAVA=OFF",
         "-DBUILD_opencv_python_bindings_generator=OFF -DBUILD_opencv_js=OFF",
+        -- Skip Python detection entirely (we build no bindings). Without this,
+        -- OpenCVDetectPython finds xlings' python3 shim, reads an EMPTY version
+        -- string, and calls find_package with an invalid "OFF" argument -> a hard
+        -- CMake configure error. OPENCV_PYTHON_SKIP_DETECTION makes the module
+        -- return() before any find_python.
+        "-DOPENCV_PYTHON_SKIP_DETECTION=ON",
         "-DBUILD_ZLIB=ON -DBUILD_PNG=ON -DBUILD_JPEG=ON",
         "-DWITH_PNG=ON -DWITH_JPEG=ON",
         "-DWITH_ADE=OFF -DWITH_IPP=OFF -DWITH_ITT=OFF -DWITH_TBB=OFF -DWITH_OPENMP=OFF",
