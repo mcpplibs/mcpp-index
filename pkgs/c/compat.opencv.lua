@@ -50,7 +50,8 @@ package = {
             -- xim:glibc is declared explicitly (though transitively pulled by
             -- cmake/gcc) so install() can resolve its lib dir via pkginfo for the
             -- LINK-time LIBRARY_PATH (crt1.o/crti.o/libm) — see install() below.
-            deps = { "xim:cmake@4.0.2", "xim:make@latest", "xim:gcc@16.1.0", "xim:glibc@2.39" },
+            deps = { "xim:cmake@4.0.2", "xim:make@latest", "xim:gcc@16.1.0",
+                     "xim:glibc@2.39", "xim:linux-headers@5.11.1" },
             ["4.13.0"] = {
                 -- Plain-string GLOBAL url (no CN mirror table): this session lacks
                 -- mcpp-res write access. Per the add-package skill, CN users fall
@@ -182,17 +183,29 @@ local function _install_impl()
     -- Point gcc at xim:glibc/lib (+ xim:gcc/lib64 for libgcc_s) via LIBRARY_PATH so
     -- the build resolves the ecosystem glibc and stays host-free. (openblas never
     -- hit this: it only compiles + archives a .a, it never LINKS an executable.)
+    -- Same gap on the HEADER side: gcc's own limits.h does `#include_next
+    -- <limits.h>` and the C sources pull <stdlib.h> etc., all from xim:glibc's
+    -- include dir (+ the kernel uapi headers from xim:linux-headers). gcc's specs
+    -- do NOT add these to the header search path; mcpp's build supplies them via
+    -- CPATH, which an install() subprocess doesn't inherit -> "stdlib.h / limits.h:
+    -- No such file". Point CPATH at both so the build is host-free.
     local glibc_dir = pkginfo.install_dir("xim:glibc", "2.39")
                    or pkginfo.install_dir("glibc", "2.39")
     local gcc_dir   = pkginfo.install_dir("xim:gcc", "16.1.0")
                    or pkginfo.install_dir("gcc", "16.1.0")
-    local libpaths = {}
-    if glibc_dir then table.insert(libpaths, path.join(glibc_dir, "lib")) end
+    local kern_dir  = pkginfo.install_dir("xim:linux-headers", "5.11.1")
+                   or pkginfo.install_dir("scode:linux-headers", "5.11.1")
+                   or pkginfo.install_dir("linux-headers", "5.11.1")
+    local libpaths, incpaths = {}, {}
+    if glibc_dir then table.insert(libpaths, path.join(glibc_dir, "lib"))
+                      table.insert(incpaths, path.join(glibc_dir, "include")) end
     if gcc_dir   then table.insert(libpaths, path.join(gcc_dir, "lib64")) end
-    if #libpaths == 0 then
-        error("compat.opencv: cannot resolve xim:glibc / xim:gcc lib dirs for the LINK env")
+    if kern_dir  then table.insert(incpaths, path.join(kern_dir, "include")) end
+    if #libpaths == 0 or #incpaths == 0 then
+        error("compat.opencv: cannot resolve xim:glibc / xim:gcc / xim:linux-headers dirs for the build env")
     end
-    local libenv = "export LIBRARY_PATH=" .. sh_quote(table.concat(libpaths, ":")) .. " && "
+    local libenv = "export LIBRARY_PATH=" .. sh_quote(table.concat(libpaths, ":"))
+                 .. " CPATH=" .. sh_quote(table.concat(incpaths, ":")) .. " && "
 
     -- Move the extracted tree INTO the install dir (this CREATES prefix — xim's
     -- restricted Lua has no os.mkdir; os.cd is the only dir primitive, same as
