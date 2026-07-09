@@ -232,7 +232,19 @@ local function _install_impl()
         -- bake in a default sysroot the way Xcode's /usr/bin/clang does. Point it at
         -- the active SDK so <stdio.h>/frameworks resolve. xcrun is present on the
         -- runner; the command substitution runs inside the build's bash.
-        libenv = "export SDKROOT=\"$(xcrun --show-sdk-path)\" && "
+        --
+        -- --no-default-config resolves a libc++ header/dylib SKEW: xim:llvm's
+        -- clang++.cfg wires ITS OWN LLVM-20 libc++ headers (-isystem <llvm>/include/
+        -- c++/v1) but links against the SDK's Apple system libc++ dylib. OpenCV's
+        -- unordered_map<string,…> code (persistence.cpp/logtagmanager.cpp) then
+        -- emits the LLVM-20 out-of-line std::__1::__hash_memory, which the runner's
+        -- older Apple libc++ doesn't export -> undefined symbol at the consumer link.
+        -- Dropping the default config makes clang build OpenCV against the SDK's own
+        -- (Apple) libc++ headers — matching the dylib everything links — so no
+        -- newer-than-dylib symbol is emitted. SDKROOT (exported here) still supplies
+        -- the sysroot, so headers/frameworks resolve without the cfg.
+        libenv = "export SDKROOT=\"$(xcrun --show-sdk-path)\" "
+               .. "CFLAGS='--no-default-config' CXXFLAGS='--no-default-config' && "
     else
         local glibc_bd = pkginfo.build_dep("glibc")
         local gcc_bd   = pkginfo.build_dep("gcc")
