@@ -55,7 +55,7 @@ package = {
             -- deps on scode:linux-headers), so build_dep("linux-headers") off the
             -- wrapper yields no include/ — declare the real one so glibc's
             -- <linux/limits.h> resolves host-free.
-            deps = { "xim:cmake@4.0.2", "xim:make@latest", "xim:gcc@16.1.0",
+            deps = { "xim:cmake@4.0.2", "xim:ninja@1.12.1", "xim:gcc@16.1.0",
                      "xim:glibc@2.39", "scode:linux-headers@5.11.1" },
             ["4.13.0"] = {
                 -- Plain-string GLOBAL url (no CN mirror table): this session lacks
@@ -69,7 +69,9 @@ package = {
         macosx = {
             -- clang/libc++ (xim:llvm) to match the macOS default consumer's ABI;
             -- gcc/libstdc++ would ABI-clash. clang finds the system SDK itself.
-            deps = { "xim:cmake@4.0.2", "xim:make@latest", "xim:llvm@20.1.7" },
+            -- Ninja (not xim:make — it has no macOS build) + clang (xim:llvm,
+            -- unpinned: compiler version needn't be fixed; libc++ ABI is stable).
+            deps = { "xim:cmake@4.0.2", "xim:ninja@1.12.1", "xim:llvm" },
             ["4.13.0"] = {
                 -- Plain-string GLOBAL url (no CN mirror table): this session lacks
                 -- mcpp-res write access. Per the add-package skill, CN users fall
@@ -194,7 +196,9 @@ local function _install_impl()
     -- building OpenCV with gcc there would produce a libstdc++ .a that ABI-clashes
     -- with a libc++ consumer.
     local isMac = (os.host() == "macosx")
-    local cmake, make = "cmake", "make"
+    -- Ninja generator on ALL platforms (cross-platform via xim:ninja; xim:make has
+    -- no macOS build). `cmake --build` drives it uniformly.
+    local cmake, make = "cmake", "ninja"
     local gcc = isMac and "clang"   or "gcc"
     local gxx = isMac and "clang++" or "g++"
 
@@ -278,7 +282,7 @@ local function _install_impl()
     -- tools. CMAKE_POLICY_VERSION_MINIMUM=3.5 lets CMake 4.x parse OpenCV's (and
     -- its 3rdparty's) old cmake_minimum_required.
     local dflags = table.concat({
-        "-G", sh_quote("Unix Makefiles"),
+        "-G", sh_quote("Ninja"),
         "-DCMAKE_MAKE_PROGRAM=" .. sh_quote(make),
         "-DCMAKE_C_COMPILER=" .. sh_quote(gcc),
         "-DCMAKE_CXX_COMPILER=" .. sh_quote(gxx),
