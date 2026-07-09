@@ -195,30 +195,6 @@ jobs:
           # No `timeout` wrapper: absent on macOS runners; job-level timeout-minutes bounds it.
           "$MCPP" test --workspace
 
-      # TEMP diagnostic (remove before merge): xim's interface mode suppresses
-      # install() subprocess + log output, so a failed source-build (e.g. opencv's
-      # CMake hook) is invisible. On failure, surface the on-disk build log + the
-      # xim:cmake launcher/loader state directly from the runner.
-      - name: install() diagnostics on failure
-        if: failure() && runner.os == 'Linux'
-        shell: bash
-        run: |
-          echo "=== env ==="
-          echo "MCPP=$MCPP"; echo "MCPP_VENDORED_XLINGS=$MCPP_VENDORED_XLINGS"; echo "HOME=$HOME"
-          echo "=== whole-runner search: xim-x-cmake / opencv build log / cmake bins ==="
-          find / -type d -name 'xim-x-cmake' 2>/dev/null | head || true
-          find / -name 'mcpp_opencv_build.log' 2>/dev/null | while read -r f; do echo "--- $f ---"; cat "$f"; echo "--- end ---"; done || true
-          find / -type f -path '*xim-x-cmake*/bin/cmake' 2>/dev/null | while read -r c; do
-            echo "cmake bin: $c"; readelf -l "$c" 2>/dev/null | grep -i interpreter || true
-            "$c" --version 2>&1 | head -2 || echo "exec FAILED"
-          done || true
-          echo "=== directly install cmake@4.0.2 via the vendored xlings (visible output) ==="
-          if [ -n "$MCPP_VENDORED_XLINGS" ] && [ -x "$MCPP_VENDORED_XLINGS" ]; then
-            MCPP_INDEX_MIRROR=GLOBAL "$MCPP_VENDORED_XLINGS" install cmake@4.0.2 -y 2>&1 | tail -40 || echo "xlings install cmake exit=$?"
-          fi
-          echo "=== opencv store (whole runner) ==="
-          find / -path '*compat.opencv*4.13.0/include/opencv4/opencv2' -type d 2>/dev/null | head || echo "(no opencv headers materialised anywhere)"
-
   # ── Exception: the public `imgui` C++23-module package (namespace "") ──
   # Not yet a workspace member: its package has an empty namespace (the builtin
   # default index), which a workspace member can't point at a local path the way
