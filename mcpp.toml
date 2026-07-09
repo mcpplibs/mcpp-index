@@ -18,4 +18,5 @@ members = [
     "tests/examples/imgui-window",
     "tests/examples/nlohmann.json",
     "tests/examples/openblas",
+    "tests/examples/opencv",
 ]

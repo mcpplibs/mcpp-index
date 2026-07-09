@@ -7,5 +7,5 @@
 # "floor first, new grammar after" rollout rule mechanically.
 [index]
 spec        = "1"
-min_mcpp    = "0.0.85"
-latest_mcpp = "0.0.85"
+min_mcpp    = "0.0.87"
+latest_mcpp = "0.0.87"
