@@ -202,9 +202,11 @@ jobs:
         shell: bash
         run: |
           echo "=== opencv build log(s) ==="
-          find "$HOME" -name 'mcpp_opencv_build.log' 2>/dev/null | while read -r f; do
+          find "$GITHUB_WORKSPACE" "$HOME" -name 'mcpp_opencv_build.log' 2>/dev/null | while read -r f; do
             echo "--- $f ---"; cat "$f"; echo "--- end ---"
           done || true
+          echo "=== opencv store tree (did cmake even run?) ==="
+          find "$GITHUB_WORKSPACE" -path '*compat.opencv*4.13.0' -maxdepth 12 -type d 2>/dev/null | head -1 | while read -r d; do ls -la "$d" 2>/dev/null | head; done || true
           echo "=== clang + SDK sanity ==="
           command -v clang clang++ clang-cl 2>/dev/null || true
           xcrun --show-sdk-path 2>/dev/null || echo "(no xcrun)"

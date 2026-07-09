@@ -212,7 +212,13 @@ local function _install_impl()
     -- provide it host-free via LIBRARY_PATH + -idirafter. macOS clang locates the
     -- system SDK on its own (via the default -isysroot), so no such wiring there.
     local libenv = ""
-    if not isMac then
+    if isMac then
+        -- macOS: xim:llvm's clang is a slim, relocatable toolchain that does NOT
+        -- bake in a default sysroot the way Xcode's /usr/bin/clang does. Point it at
+        -- the active SDK so <stdio.h>/frameworks resolve. xcrun is present on the
+        -- runner; the command substitution runs inside the build's bash.
+        libenv = "export SDKROOT=\"$(xcrun --show-sdk-path)\" && "
+    else
         local glibc_bd = pkginfo.build_dep("glibc")
         local gcc_bd   = pkginfo.build_dep("gcc")
         local kern_bd  = pkginfo.build_dep("linux-headers")
