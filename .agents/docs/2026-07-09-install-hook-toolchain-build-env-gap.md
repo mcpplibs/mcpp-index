@@ -72,6 +72,15 @@ opencv PR 上现存的 `LIBRARY_PATH`/`CPATH` + `pkginfo.install_dir("xim:glibc"
 
 无论哪个,目标一致:**任意生态工具(mcpp 构建 / install() hook / 用户直调 gcc)在 host-free 环境下都能编译+链接,不 fallback 到宿主。** descriptor 侧则**零环境接线**。
 
+### 实现落点(已核对源码)
+
+核对 `xim-x-gcc-specs-config/0.0.1/gcc-specs-config.lua`(115 行):它只做**运行期**注入 —— 取 gcc `-dumpspecs`,替换 `*link:` 的 dynamic-linker、追加 `-rpath/-rpath-link <default_libdir>`,回写 specs。**完全没碰构建期**(startfile 前缀 / `-L` / header `-isystem`),坐实缺口。两条实现路径的精确落点:
+
+- **方案 A(推荐,更聚焦)——xlings 在执行 install() hook 时导出构建环境。** 落点在 xlings 执行 xpkg `install()` 的地方(`xpkg-executor` / `installer.cppm` 的 hook 调用),依据当前 default toolchain 的 gcc→(glibc、linux-headers)runtime dep 链,导出 `LIBRARY_PATH=<glibc>/lib`、`CPATH=<glibc>/include:<linux-headers>/include`(路径由 resolver plan 的 effective store 给出,与 ③ D1 的 `effective_install_dir` 同源可复用)。只影响 install() hook,不改工具链本身,风险面最小。
+- **方案 B——扩 specs 生成器。** 需给 `gcc-specs-config.lua` **增加入参**(glibc include 目录 + linux-headers include 目录 —— 目前它只拿到 `default_libdir`),并在 specs 里补:`*startfile_prefix_spec:` = `<glibc>/lib`(找 crt1.o/crti.o/crtn.o)、`*link:` 追加 `-L<glibc>/lib`(找 -lm/-lc)、`*cpp:` 追加 `-isystem <glibc>/include -isystem <linux-headers>/include`(找系统头)。好处是对任何 gcc 调用方都生效;代价是跨"生成器 + 其调用者(装 glibc 时传 include 路径)"两处联动,且改动作用于**整个生态的 gcc**。
+
+> 评估:A 更聚焦、可验证成本低(改 install() 执行环境即可,不动工具链);B 更彻底但联动面大、且触及官方 index 的 gcc 行为。二者都需 xlings/xim 侧的 C++/Lua 改动 + 其自身 build/验证闭环,**属 maintainer 协作项,不宜由下游会话半实现且无法完整验证地推进**。本文即为该实现提供 ready 的设计与落点。
+
 ## 5. 落地关系
 
 - **不阻塞 mcpp 0.0.87**(②,已发布)、**不阻塞 D1/#354**(③,独立,当前 HOLD)。
