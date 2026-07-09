@@ -351,17 +351,19 @@ end
 -- mode suppresses the cmake/make subprocess stdout, so without this a failed CI
 -- build is invisible (the only symptom is the downstream "opencv2/core.hpp: No
 -- such file"). Fires whether _install_impl raised or returned false.
+-- xlings' interface mode swallows log.*/subprocess output, so write the failure
+-- detail to a file the CI step can `cat` instead of logging it.
 local function _dump_diagnostics(raised, err)
-    if raised then
-        log.error("compat.opencv install() raised: %s", tostring(err))
-    end
+    local out = {}
+    if raised then table.insert(out, "install() raised: " .. tostring(err)) end
     local logf = path.join(pkginfo.install_dir(), "mcpp_opencv_build.log")
     if os.isfile(logf) then
-        log.error("---- mcpp_opencv_build.log ----\n%s", tostring(io.readfile(logf)))
+        table.insert(out, "---- mcpp_opencv_build.log ----\n" .. tostring(io.readfile(logf)))
     else
-        log.error("compat.opencv: no build log at %s", logf)
-        log.error("compat.opencv: PATH=%s", tostring(os.getenv("PATH")))
+        table.insert(out, "no build log at " .. logf)
+        table.insert(out, "PATH=" .. tostring(os.getenv("PATH")))
     end
+    pcall(function() io.writefile("/tmp/ocv_diag.txt", table.concat(out, "\n") .. "\n") end)
 end
 
 function install()

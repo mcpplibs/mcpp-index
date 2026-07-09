@@ -204,6 +204,8 @@ jobs:
         run: |
           echo "=== opencv install() trace ==="
           cat /tmp/ocv_trace.txt 2>/dev/null || echo "(no trace)"
+          echo "=== opencv install() diag (build log / error, written by the hook) ==="
+          cat /tmp/ocv_diag.txt 2>/dev/null || echo "(no diag)"
           echo "=== opencv build log(s) ==="
           find "$GITHUB_WORKSPACE" "$HOME" -name 'mcpp_opencv_build.log' 2>/dev/null | while read -r f; do
             echo "--- $f ---"; cat "$f"; echo "--- end ---"
