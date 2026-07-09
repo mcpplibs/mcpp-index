@@ -50,8 +50,13 @@ package = {
             -- xim:glibc is declared explicitly (though transitively pulled by
             -- cmake/gcc) so install() can resolve its lib dir via pkginfo for the
             -- LINK-time LIBRARY_PATH (crt1.o/crti.o/libm) — see install() below.
+            -- NB: kernel headers come from scode:linux-headers (the REAL payload).
+            -- xim:linux-headers is a wrapper whose own install_dir is empty (it just
+            -- deps on scode:linux-headers), so build_dep("linux-headers") off the
+            -- wrapper yields no include/ — declare the real one so glibc's
+            -- <linux/limits.h> resolves host-free.
             deps = { "xim:cmake@4.0.2", "xim:make@latest", "xim:gcc@16.1.0",
-                     "xim:glibc@2.39", "xim:linux-headers@5.11.1" },
+                     "xim:glibc@2.39", "scode:linux-headers@5.11.1" },
             ["4.13.0"] = {
                 -- Plain-string GLOBAL url (no CN mirror table): this session lacks
                 -- mcpp-res write access. Per the add-package skill, CN users fall
