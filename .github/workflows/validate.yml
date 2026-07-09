@@ -135,20 +135,20 @@ jobs:
         include:
           - platform: linux
             os: ubuntu-latest
-            archive: mcpp-0.0.85-linux-x86_64.tar.gz
-            root: mcpp-0.0.85-linux-x86_64
+            archive: mcpp-0.0.87-linux-x86_64.tar.gz
+            root: mcpp-0.0.87-linux-x86_64
             mcpp: bin/mcpp
             xlings: registry/bin/xlings
           - platform: macos
             os: macos-15
-            archive: mcpp-0.0.85-macosx-arm64.tar.gz
-            root: mcpp-0.0.85-macosx-arm64
+            archive: mcpp-0.0.87-macosx-arm64.tar.gz
+            root: mcpp-0.0.87-macosx-arm64
             mcpp: bin/mcpp
             xlings: registry/bin/xlings
           - platform: windows
             os: windows-latest
-            archive: mcpp-0.0.85-windows-x86_64.zip
-            root: mcpp-0.0.85-windows-x86_64
+            archive: mcpp-0.0.87-windows-x86_64.zip
+            root: mcpp-0.0.87-windows-x86_64
             mcpp: bin/mcpp.exe
             xlings: registry/bin/xlings.exe
     steps:
