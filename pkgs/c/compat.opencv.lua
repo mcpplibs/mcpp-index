@@ -302,6 +302,11 @@ local function _install_impl()
         "-DOPENCV_PYTHON_SKIP_DETECTION=ON",
         "-DBUILD_ZLIB=ON -DBUILD_PNG=ON -DBUILD_JPEG=ON",
         "-DWITH_PNG=ON -DWITH_JPEG=ON",
+        -- WITH_CAROTENE=OFF: on arm64 OpenCV's imgproc emits calls into the carotene
+        -- NEON HAL (libtegra_hal.a) that our curated link set doesn't carry, so the
+        -- consumer link fails with undefined carotene_o4t::* symbols. Off => imgproc
+        -- uses its baseline C++ path; no extra platform-specific static lib to link.
+        "-DWITH_CAROTENE=OFF",
         "-DWITH_ADE=OFF -DWITH_IPP=OFF -DWITH_ITT=OFF -DWITH_TBB=OFF -DWITH_OPENMP=OFF",
         "-DWITH_OPENCL=OFF -DWITH_CUDA=OFF -DWITH_EIGEN=OFF -DWITH_PROTOBUF=OFF",
         "-DWITH_FFMPEG=OFF -DWITH_GTK=OFF -DWITH_QT=OFF -DWITH_GSTREAMER=OFF",
