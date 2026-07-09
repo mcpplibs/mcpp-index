@@ -47,7 +47,10 @@ package = {
 
     xpm = {
         linux = {
-            deps = { "xim:cmake@4.0.2", "xim:make@latest", "xim:gcc@16.1.0" },
+            -- xim:glibc is declared explicitly (though transitively pulled by
+            -- cmake/gcc) so install() can resolve its lib dir via pkginfo for the
+            -- LINK-time LIBRARY_PATH (crt1.o/crti.o/libm) — see install() below.
+            deps = { "xim:cmake@4.0.2", "xim:make@latest", "xim:gcc@16.1.0", "xim:glibc@2.39" },
             ["4.13.0"] = {
                 -- Plain-string GLOBAL url (no CN mirror table): this session lacks
                 -- mcpp-res write access. Per the add-package skill, CN users fall
@@ -169,6 +172,28 @@ local function _install_impl()
     -- correct for all four.) This matches the header-comment strategy above.
     local cmake, make, gcc, gxx = "cmake", "make", "gcc", "g++"
 
+    -- xim:gcc's specs wire xim:glibc only for RUNTIME (rpath / dynamic-linker),
+    -- NOT the LINK-time startfile + library search. mcpp's own build provides that
+    -- via LIBRARY_PATH; an install() subprocess does NOT inherit it, so cmake's
+    -- compiler check fails to LINK a test exe with
+    --   ld: cannot find crt1.o / crti.o / -lm   (all in <xim:glibc>/lib).
+    -- On a dev host it silently fell back to the host's /usr/lib crt/libc (works,
+    -- but NOT host-free); a minimal CI runner has no libc-dev, so it hard-fails.
+    -- Point gcc at xim:glibc/lib (+ xim:gcc/lib64 for libgcc_s) via LIBRARY_PATH so
+    -- the build resolves the ecosystem glibc and stays host-free. (openblas never
+    -- hit this: it only compiles + archives a .a, it never LINKS an executable.)
+    local glibc_dir = pkginfo.install_dir("xim:glibc", "2.39")
+                   or pkginfo.install_dir("glibc", "2.39")
+    local gcc_dir   = pkginfo.install_dir("xim:gcc", "16.1.0")
+                   or pkginfo.install_dir("gcc", "16.1.0")
+    local libpaths = {}
+    if glibc_dir then table.insert(libpaths, path.join(glibc_dir, "lib")) end
+    if gcc_dir   then table.insert(libpaths, path.join(gcc_dir, "lib64")) end
+    if #libpaths == 0 then
+        error("compat.opencv: cannot resolve xim:glibc / xim:gcc lib dirs for the LINK env")
+    end
+    local libenv = "export LIBRARY_PATH=" .. sh_quote(table.concat(libpaths, ":")) .. " && "
+
     -- Move the extracted tree INTO the install dir (this CREATES prefix — xim's
     -- restricted Lua has no os.mkdir; os.cd is the only dir primitive, same as
     -- compat.openblas). Then build out-of-source into ./_bld and install
@@ -209,14 +234,14 @@ local function _install_impl()
     }, " ")
 
     os.exec(string.format("bash -c %s", sh_quote(string.format(
-        "cd %s && %s -S . -B _bld %s > %s 2>&1",
-        sh_quote(prefix), sh_quote(cmake), dflags, sh_quote(logf)))))
+        "cd %s && %s%s -S . -B _bld %s > %s 2>&1",
+        sh_quote(prefix), libenv, sh_quote(cmake), dflags, sh_quote(logf)))))
     os.exec(string.format("bash -c %s", sh_quote(string.format(
-        "cd %s && %s --build _bld -j%d >> %s 2>&1",
-        sh_quote(prefix), sh_quote(cmake), jobs, sh_quote(logf)))))
+        "cd %s && %s%s --build _bld -j%d >> %s 2>&1",
+        sh_quote(prefix), libenv, sh_quote(cmake), jobs, sh_quote(logf)))))
     os.exec(string.format("bash -c %s", sh_quote(string.format(
-        "cd %s && %s --install _bld >> %s 2>&1",
-        sh_quote(prefix), sh_quote(cmake), sh_quote(logf)))))
+        "cd %s && %s%s --install _bld >> %s 2>&1",
+        sh_quote(prefix), libenv, sh_quote(cmake), sh_quote(logf)))))
 
     -- Verify BOTH the static libs AND the installed public headers materialised
     -- (exit-0 != correct; and a partial install that lays libs but not headers at
