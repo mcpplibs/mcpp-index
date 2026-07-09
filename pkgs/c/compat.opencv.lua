@@ -215,8 +215,18 @@ local function _install_impl()
     if #libpaths == 0 or #incpaths == 0 then
         error("compat.opencv: cannot resolve xim:glibc / xim:gcc / xim:linux-headers dirs for the build env")
     end
+    -- Headers via -idirafter, NOT CPATH: gcc's C++ headers do
+    -- `#include_next <stdlib.h>` which searches dirs AFTER gcc's own include dir;
+    -- CPATH injects them early (like -I) so #include_next skips right past them
+    -- ("cstdlib: stdlib.h: No such file"). -idirafter appends at the very END of
+    -- the search order — where system headers belong — so both plain includes and
+    -- #include_next resolve. (Matches mcpp's linkmodel: "GCC needs -idirafter".)
+    local idflags = {}
+    for _, d in ipairs(incpaths) do table.insert(idflags, "-idirafter " .. d) end
+    local incflags = table.concat(idflags, " ")
     local libenv = "export LIBRARY_PATH=" .. sh_quote(table.concat(libpaths, ":"))
-                 .. " CPATH=" .. sh_quote(table.concat(incpaths, ":")) .. " && "
+                 .. " CFLAGS="   .. sh_quote(incflags)
+                 .. " CXXFLAGS=" .. sh_quote(incflags) .. " && "
 
     -- Move the extracted tree INTO the install dir (this CREATES prefix — xim's
     -- restricted Lua has no os.mkdir; os.cd is the only dir primitive, same as
