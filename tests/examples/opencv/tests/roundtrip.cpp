@@ -2,7 +2,7 @@
 // against the static libs built from source by the package's install() CMake hook.
 // Linux-only (see mcpp.toml); off-Linux this is a no-op main so `mcpp test
 // --workspace` is clean on macOS/Windows.
-#ifdef __linux__
+#if defined(__linux__) || defined(__APPLE__)
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/imgcodecs.hpp>

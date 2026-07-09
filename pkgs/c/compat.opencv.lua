@@ -67,7 +67,9 @@ package = {
             },
         },
         macosx = {
-            deps = { "xim:cmake@4.0.2", "xim:make@latest", "xim:gcc@16.1.0" },
+            -- clang/libc++ (xim:llvm) to match the macOS default consumer's ABI;
+            -- gcc/libstdc++ would ABI-clash. clang finds the system SDK itself.
+            deps = { "xim:cmake@4.0.2", "xim:make@latest", "xim:llvm@22.1.8" },
             ["4.13.0"] = {
                 -- Plain-string GLOBAL url (no CN mirror table): this session lacks
                 -- mcpp-res write access. Per the add-package skill, CN users fall
@@ -176,7 +178,14 @@ local function _install_impl()
     -- exactly what silently broke the install() build in CI. (xim:make is
     -- musl-static so it'd tolerate an absolute path; bare names are uniform +
     -- correct for all four.) This matches the header-comment strategy above.
-    local cmake, make, gcc, gxx = "cmake", "make", "gcc", "g++"
+    -- Per-platform compiler: Linux uses gcc (matches the gcc/libstdc++ default
+    -- consumer); macOS uses clang/clang++ (matches the macOS libc++ default) —
+    -- building OpenCV with gcc there would produce a libstdc++ .a that ABI-clashes
+    -- with a libc++ consumer.
+    local isMac = (os.host() == "macosx")
+    local cmake, make = "cmake", "make"
+    local gcc = isMac and "clang"   or "gcc"
+    local gxx = isMac and "clang++" or "g++"
 
     -- xim:gcc's specs wire xim:glibc only for RUNTIME (rpath / dynamic-linker),
     -- NOT the LINK-time startfile + library search. mcpp's own build provides that
@@ -199,34 +208,38 @@ local function _install_impl()
     -- so NO version is hardcoded in this install() code. Returns {path,bin,include,lib}.
     -- NOTE: distinct var names (…_bd) so they don't shadow the `gcc`/`gxx` tool
     -- strings used for -DCMAKE_C_COMPILER above.
-    local glibc_bd = pkginfo.build_dep("glibc")
-    local gcc_bd   = pkginfo.build_dep("gcc")
-    local kern_bd  = pkginfo.build_dep("linux-headers")
-    local libpaths, incpaths = {}, {}
-    if glibc_bd then
-        if os.isdir(glibc_bd.lib)     then table.insert(libpaths, glibc_bd.lib) end
-        if os.isdir(glibc_bd.include) then table.insert(incpaths, glibc_bd.include) end
+    -- LINUX ONLY: gcc's specs don't wire the build-time glibc/kernel-header search;
+    -- provide it host-free via LIBRARY_PATH + -idirafter. macOS clang locates the
+    -- system SDK on its own (via the default -isysroot), so no such wiring there.
+    local libenv = ""
+    if not isMac then
+        local glibc_bd = pkginfo.build_dep("glibc")
+        local gcc_bd   = pkginfo.build_dep("gcc")
+        local kern_bd  = pkginfo.build_dep("linux-headers")
+        local libpaths, incpaths = {}, {}
+        if glibc_bd then
+            if os.isdir(glibc_bd.lib)     then table.insert(libpaths, glibc_bd.lib) end
+            if os.isdir(glibc_bd.include) then table.insert(incpaths, glibc_bd.include) end
+        end
+        if gcc_bd then  -- libgcc_s lives in gcc's lib64
+            local gcc_lib64 = path.join(gcc_bd.path, "lib64")
+            if os.isdir(gcc_lib64) then table.insert(libpaths, gcc_lib64) end
+        end
+        if kern_bd and os.isdir(kern_bd.include) then table.insert(incpaths, kern_bd.include) end
+        if #libpaths == 0 or #incpaths == 0 then
+            error("compat.opencv: cannot resolve xim:glibc / xim:gcc / xim:linux-headers dirs for the build env")
+        end
+        -- Headers via -idirafter, NOT CPATH: gcc's C++ headers do
+        -- `#include_next <stdlib.h>` which searches dirs AFTER gcc's own include dir;
+        -- CPATH injects them early (like -I) so #include_next skips right past them.
+        -- -idirafter appends at the END of the search — where system headers belong.
+        local idflags = {}
+        for _, d in ipairs(incpaths) do table.insert(idflags, "-idirafter " .. d) end
+        local incflags = table.concat(idflags, " ")
+        libenv = "export LIBRARY_PATH=" .. sh_quote(table.concat(libpaths, ":"))
+               .. " CFLAGS="   .. sh_quote(incflags)
+               .. " CXXFLAGS=" .. sh_quote(incflags) .. " && "
     end
-    if gcc_bd then  -- libgcc_s lives in gcc's lib64
-        local gcc_lib64 = path.join(gcc_bd.path, "lib64")
-        if os.isdir(gcc_lib64) then table.insert(libpaths, gcc_lib64) end
-    end
-    if kern_bd and os.isdir(kern_bd.include) then table.insert(incpaths, kern_bd.include) end
-    if #libpaths == 0 or #incpaths == 0 then
-        error("compat.opencv: cannot resolve xim:glibc / xim:gcc / xim:linux-headers dirs for the build env")
-    end
-    -- Headers via -idirafter, NOT CPATH: gcc's C++ headers do
-    -- `#include_next <stdlib.h>` which searches dirs AFTER gcc's own include dir;
-    -- CPATH injects them early (like -I) so #include_next skips right past them
-    -- ("cstdlib: stdlib.h: No such file"). -idirafter appends at the very END of
-    -- the search order — where system headers belong — so both plain includes and
-    -- #include_next resolve. (Matches mcpp's linkmodel: "GCC needs -idirafter".)
-    local idflags = {}
-    for _, d in ipairs(incpaths) do table.insert(idflags, "-idirafter " .. d) end
-    local incflags = table.concat(idflags, " ")
-    local libenv = "export LIBRARY_PATH=" .. sh_quote(table.concat(libpaths, ":"))
-                 .. " CFLAGS="   .. sh_quote(incflags)
-                 .. " CXXFLAGS=" .. sh_quote(incflags) .. " && "
 
     -- Move the extracted tree INTO the install dir (this CREATES prefix — xim's
     -- restricted Lua has no os.mkdir; os.cd is the only dir primitive, same as
