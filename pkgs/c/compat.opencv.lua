@@ -233,18 +233,26 @@ local function _install_impl()
         -- the active SDK so <stdio.h>/frameworks resolve. xcrun is present on the
         -- runner; the command substitution runs inside the build's bash.
         --
-        -- --no-default-config resolves a libc++ header/dylib SKEW: xim:llvm's
-        -- clang++.cfg wires ITS OWN LLVM-20 libc++ headers (-isystem <llvm>/include/
-        -- c++/v1) but links against the SDK's Apple system libc++ dylib. OpenCV's
-        -- unordered_map<string,…> code (persistence.cpp/logtagmanager.cpp) then
-        -- emits the LLVM-20 out-of-line std::__1::__hash_memory, which the runner's
-        -- older Apple libc++ doesn't export -> undefined symbol at the consumer link.
-        -- Dropping the default config makes clang build OpenCV against the SDK's own
-        -- (Apple) libc++ headers — matching the dylib everything links — so no
-        -- newer-than-dylib symbol is emitted. SDKROOT (exported here) still supplies
-        -- the sysroot, so headers/frameworks resolve without the cfg.
-        libenv = "export SDKROOT=\"$(xcrun --show-sdk-path)\" "
-               .. "CFLAGS='--no-default-config' CXXFLAGS='--no-default-config' && "
+        -- Build OpenCV against the SDK's APPLE libc++ headers, not xim:llvm's
+        -- bundled LLVM-20 ones. The skew: xim:llvm's clang uses its own LLVM-20
+        -- libc++ headers (found toolchain-relative at <llvm>/include/c++/v1, even
+        -- without the cfg's -isystem) where std::__1::__hash_memory is UNCONDITIONAL,
+        -- but the final link resolves libc++ against the runner's Apple system
+        -- libc++ dylib, which lacks that symbol -> undefined at the consumer link
+        -- (OpenCV's unordered_map<string,…> in persistence.cpp/logtagmanager.cpp).
+        --   --no-default-config  drop the cfg's -isystem <llvm libc++> (+ --sysroot;
+        --                        SDKROOT below re-supplies the sysroot),
+        --   -nostdinc++          drop clang's toolchain-relative libc++ headers,
+        --   -isystem $SDKROOT/usr/include/c++/v1  use Apple's libc++ headers, which
+        --                        DO carry availability guards; paired with the
+        --                        CMAKE_OSX_DEPLOYMENT_TARGET=14.0 pin (< 14.4, where
+        --                        Apple added out-of-line __hash_memory) the guard
+        --                        selects the inline hash path -> no external symbol.
+        -- -nostdinc++ is C++-only (CXXFLAGS); C HAL files use the SDK libc as usual.
+        libenv = "export SDKROOT=\"$(xcrun --show-sdk-path)\" && "
+               .. "export CFLAGS=\"--no-default-config\" "
+               .. "CXXFLAGS=\"--no-default-config -nostdinc++ "
+               .. "-isystem $SDKROOT/usr/include/c++/v1\" && "
     else
         local glibc_bd = pkginfo.build_dep("glibc")
         local gcc_bd   = pkginfo.build_dep("gcc")
