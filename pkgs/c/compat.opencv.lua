@@ -157,22 +157,17 @@ local function _install_impl()
 
     local jobs = (os.default_njob and os.default_njob()) or 4
 
-    -- Resolve build-dep tools via pkginfo.build_dep (the compat.openblas pattern:
-    -- deps are provisioned by xlings; we just take each tool's bin/). Bare-name
-    -- PATH fallback otherwise. No hand-wiring of loaders/toolchains here — that is
-    -- xlings's job.
-    local function dep_bin(name, exe)
-        local d = pkginfo.build_dep and pkginfo.build_dep(name)
-        if d and d.bin then
-            local cand = path.join(d.bin, exe)
-            if os.isfile(cand) then return cand end
-        end
-        return exe
-    end
-    local cmake = dep_bin("xim:cmake", "cmake")
-    local make  = dep_bin("xim:make", "make")
-    local gcc   = dep_bin("xim:gcc", "gcc")
-    local gxx   = dep_bin("xim:gcc", "g++")
+    -- Invoke build tools by BARE name (NOT absolute paths to the raw binaries).
+    -- xim puts loader-wired LAUNCHERS for the declared build-deps on the install()
+    -- PATH; bare names hit those. xim:cmake is glibc-DYNAMIC — its raw binary's
+    -- ELF interpreter points at xim:glibc's loader, which is only wired through
+    -- the launcher. Calling the raw binary by ABSOLUTE path works on a warm host
+    -- (glibc already materialised at the patched interpreter path) but fails on a
+    -- cold CI runner with "cannot execute: required file not found" — which is
+    -- exactly what silently broke the install() build in CI. (xim:make is
+    -- musl-static so it'd tolerate an absolute path; bare names are uniform +
+    -- correct for all four.) This matches the header-comment strategy above.
+    local cmake, make, gcc, gxx = "cmake", "make", "gcc", "g++"
 
     -- Move the extracted tree INTO the install dir (this CREATES prefix — xim's
     -- restricted Lua has no os.mkdir; os.cd is the only dir primitive, same as
@@ -223,15 +218,21 @@ local function _install_impl()
         "cd %s && %s --install _bld >> %s 2>&1",
         sh_quote(prefix), sh_quote(cmake), sh_quote(logf)))))
 
-    -- Verify the expected static libs materialised (exit-0 != correct).
+    -- Verify BOTH the static libs AND the installed public headers materialised
+    -- (exit-0 != correct; and a partial install that lays libs but not headers at
+    -- include/opencv4 would slip past a libs-only check, then fail the consumer
+    -- compile with a bare "opencv2/core.hpp: No such file").
     local must = {
         path.join(prefix, "lib", "libopencv_core.a"),
         path.join(prefix, "lib", "libopencv_imgproc.a"),
         path.join(prefix, "lib", "libopencv_imgcodecs.a"),
+        path.join(prefix, "include", "opencv4", "opencv2", "core.hpp"),
+        path.join(prefix, "include", "opencv4", "opencv2", "imgproc.hpp"),
+        path.join(prefix, "include", "opencv4", "opencv2", "imgcodecs.hpp"),
     }
     for _, m in ipairs(must) do
         if not os.isfile(m) then
-            log.error("compat.opencv: expected lib missing: %s (see %s)", m, logf)
+            log.error("compat.opencv: expected artifact missing: %s (see %s)", m, logf)
             return false
         end
     end
@@ -243,14 +244,31 @@ local function _install_impl()
     return true
 end
 
+-- Surface the on-disk build log to the console on ANY failure. xim's interface
+-- mode suppresses the cmake/make subprocess stdout, so without this a failed CI
+-- build is invisible (the only symptom is the downstream "opencv2/core.hpp: No
+-- such file"). Fires whether _install_impl raised or returned false.
+local function _dump_diagnostics(raised, err)
+    if raised then
+        log.error("compat.opencv install() raised: %s", tostring(err))
+    end
+    local logf = path.join(pkginfo.install_dir(), "mcpp_opencv_build.log")
+    if os.isfile(logf) then
+        log.error("---- mcpp_opencv_build.log ----\n%s", tostring(io.readfile(logf)))
+    else
+        log.error("compat.opencv: no build log at %s", logf)
+        log.error("compat.opencv: PATH=%s", tostring(os.getenv("PATH")))
+    end
+end
+
 function install()
     if os.host() == "windows" then
         -- Windows uses the generated_files anchor; source build is a follow-up.
         return true
     end
-    local ok, err = pcall(_install_impl)
-    if not ok then
-        log.error("compat.opencv install() failed: %s", tostring(err))
+    local ok, ret = pcall(_install_impl)
+    if not ok or ret == false then
+        _dump_diagnostics(not ok, ret)
         return false
     end
     return true
