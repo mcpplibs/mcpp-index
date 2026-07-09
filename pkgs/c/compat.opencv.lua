@@ -69,7 +69,7 @@ package = {
         macosx = {
             -- clang/libc++ (xim:llvm) to match the macOS default consumer's ABI;
             -- gcc/libstdc++ would ABI-clash. clang finds the system SDK itself.
-            deps = { "xim:cmake@4.0.2", "xim:make@latest", "xim:llvm@22.1.8" },
+            deps = { "xim:cmake@4.0.2", "xim:make@latest", "xim:llvm@20.1.7" },
             ["4.13.0"] = {
                 -- Plain-string GLOBAL url (no CN mirror table): this session lacks
                 -- mcpp-res write access. Per the add-package skill, CN users fall
