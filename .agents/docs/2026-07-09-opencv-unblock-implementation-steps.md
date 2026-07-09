@@ -11,40 +11,37 @@
 ```
 S0 mcpp 0.0.87 ──✅已发布
       │
-S1 libxpkg: hook 子进程注入 LIBRARY_PATH/CPATH ──(发新版 libxpkg X)
-      │  (前一 PR 需发版 → 下一 PR 直接带版本号 X)
-S2 xlings: 解析 toolchain glibc/linux-headers → 喂给 ctx；pin libxpkg X ──(发新版 xlings Y)
+S1 xlings: 扩展 per-hook build-dep 环境注入 (lib→LIBRARY_PATH, include→CPATH)
+      │  ✅ 已实现 + 编译验证 (分支 fix/install-hook-toolchain-build-env);待发新版 xlings Y
+      │  ★ 更新:xlings-only,libxpkg 不需改、不需发版(见下修正)
+S3 冷环境验证:opencv install() 不带 descriptor 硬接线也能编译+链接(需 xlings Y + CI)
       │
-S3 冷环境验证:opencv install() 不带 descriptor 硬接线也能编译+链接
-      │
-S4 清理:删 opencv descriptor 的临时 LIBRARY_PATH/CPATH + 显式 glibc/linux-headers deps；删 validate.yml 临时诊断步骤(450acbb)
+S4 清理:删 opencv descriptor 的临时 LIBRARY_PATH/CPATH 接线;删 validate.yml 临时诊断步骤(450acbb)
       │
 S5 opencv PR #67 un-draft → CI 全绿 → squash 合入(index floor→0.0.87 随之落地)
       │
 S6 (可选) mcpp-index CN 镜像 opencv 源码包 + xim-pkgindex 若需
 ```
 
-**关键路径 S1→S2→S3→S4→S5 本质串行**(每步依赖前步产物:libxpkg 版本 → xlings pin → 验证 → 清理 → 合入),**不可并行 fan-out**。这解释了为何本任务实际是串行链而非多 agent 并行——并行只在"各步内部的子任务"层面有限适用(见各步注)。
+**★ 重大修正(2026-07-09,已读源码 + 编译验证)**:原计划 S1(libxpkg)+S2(xlings)两仓两版,**实际是 xlings 单仓一处改动,不动 libxpkg、不发 libxpkg 版**。xlings 的 install() 执行处(`installer.cppm::execute`,~1518)**早有** per-hook 的 build-dep 环境注入(把每个 build_dep 的 `bin/` 前插 PATH,跑完还原);修复只是**在同一循环里加**:build_dep 的 `lib/`(+`lib64/`)→ `LIBRARY_PATH`、`include/` → `CPATH`,同样跑完还原。**对着仓库当前 pin 的 libxpkg 0.0.42 就能编**(`mcpp build` exit 0)。故也**无需 toolchain 解析**——直接复用包声明的 build_deps(opencv 声明 `xim:glibc`+`xim:linux-headers` 即自动生效,descriptor 零环境接线)。
+
+**关键路径 S1→S3→S4→S5 本质串行**(每步依赖前步产物:xlings 发版 → CI 验证 → 清理 → 合入),**不可并行 fan-out**。
 
 ---
 
-## Step 1 — libxpkg:hook 执行时注入构建环境
+## Step 1 — xlings:扩展 per-hook build-dep 环境注入 【已实现 + 编译验证】
 
-**仓库**: xlings 实际 pin 的 libxpkg(确认是 `mcpplibs/libxpkg` 还是 `openxlings/libxpkg`——xlings 经 `mcpp.lock` pin,先核对)。
-**改动**: xpkg executor 的 `run_hook`(执行 install()/config Lua hook 的子进程)在组装子进程 env 时,除已有的 build-dep PATH 注入外,再 `LIBRARY_PATH` / `CPATH` 追加**调用方传入的 toolchain lib/include 目录**(executor 不自己解析工具链,只消费 xlings 传来的值——保持分层)。
-**接口**: 给 hook 执行的 ctx/exports 增加一个"额外环境"字段(内存态,不落盘;契合 #351 revert 留言"若需元数据,xlings 自己为第一消费者")。
-**产物**: libxpkg 新版本 **X**(= 当前 0.0.42 的下一个;若 D1 的 0.0.43 也一并发,则本步为 0.0.44,或与 D1 合并为一个 0.0.43)。
-**验证**: libxpkg 自身单测 + 一个"hook 内 env 含 LIBRARY_PATH/CPATH"的断言。
-**并行点**: 可与 S2 的"xlings 侧解析逻辑"并行开发,但 S2 的**集成+pin** 必须等 X 发布。
+**仓库**: `openxlings/xlings`。**分支**: `fix/install-hook-toolchain-build-env`(1 commit,基于 main;**未 push**)。
+**改动**(`src/core/xim/installer.cppm::execute`,现有 build-dep env 注入块 ~1518):在遍历 `node.build_deps` 组 PATH 的同一循环里,追加
+- `<bdDir>/lib` 与 `<bdDir>/lib64`(存在则)→ `LIBRARY_PATH`(crt1.o/crti.o/libm/libc)
+- `<bdDir>/include`(存在则)→ `CPATH`(stdlib.h/limits.h、内核 uapi 头)
 
-## Step 2 — xlings:解析 toolchain 的 glibc/linux-headers → 喂给 ctx
-
-**仓库**: `openxlings/xlings`。
-**改动**: `src/core/xim/installer.cppm` 在跑 install() hook 前(约 1313–1346 组 ctx 处),用已有的 `effective_install_dir_` / `locate_dep_install_dir_`(~1081)机制解析**当前 default toolchain**(gcc@16.1.0)的 runtime dep 链上的 `xim:glibc`、`xim:linux-headers` 的 effective install_dir,拼出 `<glibc>/lib`、`<glibc>/include`、`<linux-headers>/include`,写进 ctx 的"额外环境"字段传给 executor(S1 的接口)。
-**关键**: 用 effective store(additive:project 叠 global)口径,与 D1 同源——若 D1 已合,直接复用其 `effective_install_dir`。
-**pin**: 把 `mcpp.lock` 里 libxpkg 提到 **X**。
-**产物**: xlings 新版本 **Y**。
-**验证**: 冷环境跑任意"链接可执行体的源码构建包"的 install() 成功(见 S3)。
+用 `platform::set_env_variable` 在 hook 前设、跑完还原(与既有 PATH 注入同款,含错误路径还原)。**不新增 ctx 字段、不动 libxpkg、无需 toolchain 解析**——包声明的 build_deps 直接驱动。
+**验证已完成**:
+1. **编译**:`mcpp build`(release)exit 0,**对着 pin 的 libxpkg 0.0.42**,即 xlings-only、无需 libxpkg 发版。
+2. **代码路径证实**:实跑 opencv install(),marker dump 进程 env → PATH 含 `xim-x-{cmake,gcc,glibc}/.../bin`,证明该循环确对 opencv 执行、glibc 被解析;同循环加的 LIBRARY_PATH/CPATH 在打补丁的 xlings 里必然填充(glibc 的 lib/include 存在)。
+**未完成**:端到端"opencv 变绿"——因 mcpp 会重新物化自带的 xlings 二进制、本地二进制热替换有竞争,且宿主 libc 会掩盖差异;**铁证需正式发一版带此改动的 xlings Y + CI 冷环境**。
+**产物**: xlings 新版本 **Y**(= 0.4.62 的下一个)。若 D1(#354)一起走,可同一版发。
 
 ## Step 3 — 冷环境验证
 
@@ -53,7 +50,7 @@ S6 (可选) mcpp-index CN 镜像 opencv 源码包 + xim-pkgindex 若需
 
 ## Step 4 — 清理 opencv descriptor + CI 临时件
 
-- `pkgs/c/compat.opencv.lua`: 删除 `_install_impl` 里的 `LIBRARY_PATH`/`CPATH` 拼接 + `pkginfo.install_dir("xim:glibc"/"xim:gcc"/"xim:linux-headers")` 解析 + `libenv` 注入;`deps` 去掉临时的 `xim:glibc@2.39`、`xim:linux-headers@5.11.1`(回到 cmake/make/gcc)。保留 `OPENCV_PYTHON_SKIP_DETECTION`(那是 OpenCV×CMake4 的独立正解,非临时)+ bare-name 工具调用(那是 loader launcher 的正解)。
+- `pkgs/c/compat.opencv.lua`: 删除 `_install_impl` 里的 `LIBRARY_PATH`/`CPATH` 拼接 + `pkginfo.install_dir("xim:glibc"/"xim:gcc"/"xim:linux-headers")` 解析 + `libenv` 注入(这些改由 xlings 提供)。**但 `deps` 里的 `xim:glibc@2.39`、`xim:linux-headers@5.11.1` 声明要保留** —— S1 的 xlings 注入正是**由包声明的 build_deps 驱动**的,删了就没 lib/include 可注入。保留 `OPENCV_PYTHON_SKIP_DETECTION`(OpenCV×CMake4 的独立正解)+ bare-name 工具调用(loader launcher 的正解)。
 - `.github/workflows/validate.yml`: 删除 commit `450acbb` 的临时诊断步骤 `install() diagnostics on failure`。
 - `index.toml` floor→0.0.87 + `MCPP_VERSION`→0.0.87 保持(随 opencv 一起合入 main 才正确——见"floor 与 opencv 耦合"结论)。
 
