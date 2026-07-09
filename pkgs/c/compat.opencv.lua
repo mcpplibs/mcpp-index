@@ -138,6 +138,9 @@ package = {
             "-Llib", "-Llib/opencv4/3rdparty",
             "-lopencv_imgcodecs", "-lopencv_imgproc", "-lopencv_core",
             "-llibpng", "-llibjpeg-turbo", "-lzlib",
+            -- Win32 system import libs OpenCV core pulls (resolved off the Windows
+            -- SDK lib path clang-cl adds): ole32 for CoCreateGuid (cv::tempfile).
+            "-lole32",
         } },
     },
 }
