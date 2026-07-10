@@ -11,10 +11,10 @@
 -- .agents/docs/2026-07-08-opencv-implementation-and-verification.md.
 --
 -- HOST-FREE / ecosystem-closed: the build uses ONLY ecosystem tools — xim:cmake,
--- xim:make, xim:gcc (declared build-deps) — never host cmake/make/gcc. Verified
--- offline under a network-isolated namespace (unshare -rn): zero downloads (gapi's
--- ADE fetch is killed by WITH_ADE=OFF); everything else is compiled from the
--- tarball's bundled 3rdparty/ (zlib + libpng + libjpeg-turbo built via BUILD_*=ON).
+-- xim:ninja + the per-OS compiler (declared build-deps) — never host
+-- cmake/ninja/compiler. Zero downloads at build time (gapi's ADE fetch is killed by
+-- WITH_ADE=OFF); everything else is compiled from the tarball's bundled 3rdparty/
+-- (zlib + libpng + libjpeg-turbo built via BUILD_*=ON).
 --
 -- MVP module set (this recipe): core + imgproc + imgcodecs (BUILD_LIST). This is a
 -- fixed, curated profile — OpenCV's WITH_*/BUILD_opencv_* toggles CANNOT be mcpp
@@ -23,19 +23,15 @@
 -- variants (calib3d/dnn/highgui/contrib) are separate follow-up packages, not
 -- per-consumer features. See the impl doc §"generic mcpp asks".
 --
--- ABI: OpenCV is C++, so its .a must be linked by the SAME C++ ABI (libstdc++) as
--- the consumer. install() builds with xim:gcc (gcc/libstdc++); the consumer must use
--- a gcc toolchain (the test project pins gcc@16.1.0). A clang/libc++ consumer would
--- ABI-clash — this is the toolchain-handshake gap noted in the impl doc.
+-- ABI: OpenCV is C++, so its static libs must be linked by the SAME C++ ABI as the
+-- consumer. install() therefore builds with the compiler whose ABI matches each
+-- platform's mcpp consumer — Linux gcc/libstdc++, macOS clang/libc++ (xim:llvm),
+-- Windows clang-cl/msvc-stl — selected in install() by os.host(). See that function
+-- for the per-platform toolchain + build-env details.
 --
--- Verified locally (mcpp 0.0.85, linux x86_64): build → link → run green
--- (opencv ok=1 core=4x4x3 gray(blue)=29 png_bytes=82 decoded=4x4). macOS follows the
--- same source-CMake path but is NOT yet verified — its default toolchain is clang
--- (libc++), which would ABI-clash with the gcc/libstdc++ .a this recipe builds
--- (the toolchain-handshake gap); making macOS use gcc, or building with the
--- consumer's compiler, is a follow-up. Windows (MSVC-ABI clang vs OpenCV CMake) is
--- likewise a follow-up. The test project is therefore LINUX-GATED for now
--- (gui-stack precedent): off-linux it is a clean no-op.
+-- All three platforms build → link → run green in CI (workspace linux/macOS/windows):
+-- the roundtrip test asserts core (4x4x3 BGR), imgproc (BGR->GRAY, blue luma 29) and
+-- imgcodecs (PNG encode/decode round-trip).
 package = {
     spec        = "1",
     namespace   = "compat",
@@ -152,14 +148,6 @@ local function sh_quote(value)
     return "'" .. tostring(value):gsub("'", "'\\''") .. "'"
 end
 
--- TEMP diagnostics path — cross-platform (no /tmp on Windows). GitHub sets
--- RUNNER_TEMP on every runner OS; the CI step cats these files after a failure.
-local function diag_path(name)
-    local base = os.getenv("RUNNER_TEMP") or os.getenv("TMPDIR")
-              or os.getenv("TEMP") or "/tmp"
-    return path.join(base, name)
-end
-
 -- Tools are invoked by BARE name, resolved off the install() PATH that xim sets up
 -- from the declared build-deps (the compat.openblas `CC=gcc` approach). This is
 -- deliberate: xim:cmake is glibc-dynamic, so exec'ing its raw binary by absolute
@@ -182,20 +170,9 @@ local function find_srcroot(version)
 end
 
 local function _install_impl()
-    -- [TEMP macOS debug] on-disk trace: the install() failure is invisible under
-    -- xim's interface mode; write progress to $HOME so CI can surface where it dies.
-    local _trbuf = ""
-    local function trace(s)
-        _trbuf = _trbuf .. tostring(s) .. "\n"
-        pcall(function() io.writefile(diag_path("ocv_trace.txt"), _trbuf) end)
-    end
-    trace("enter host=" .. tostring(os.host()))
     local version = pkginfo.version()
     local prefix  = pkginfo.install_dir()
     local srcroot = find_srcroot(version)
-    trace("version=" .. tostring(version))
-    trace("prefix=" .. tostring(prefix))
-    trace("srcroot=" .. tostring(srcroot) .. " isdir=" .. tostring(os.isdir(srcroot)))
 
     local jobs = (os.default_njob and os.default_njob()) or 4
 
@@ -316,14 +293,10 @@ local function _install_impl()
     -- compat.openblas). Then build out-of-source into ./_bld and install
     -- headers+libs back into prefix, which is now the cwd.
     os.tryrm(prefix)
-    trace("compiler gcc=" .. tostring(gcc) .. " gxx=" .. tostring(gxx) .. " isMac=" .. tostring(isMac))
-    trace("libenv=[" .. tostring(libenv) .. "]")
     os.mv(srcroot, prefix)
     os.cd(prefix)
-    trace("after mv+cd, prefix isdir=" .. tostring(os.isdir(prefix)))
 
     local logf = path.join(prefix, "mcpp_opencv_build.log")
-    trace("about to run cmake configure; logf=" .. tostring(logf))
 
     -- Value quoting differs by driver: the linux/macOS build runs through bash
     -- (sh_quote), Windows through cmd (see the exec branch) where single quotes
@@ -457,29 +430,15 @@ local function _install_impl()
     return true
 end
 
--- Surface the on-disk build log to the console on ANY failure. xim's interface
--- mode suppresses the cmake/make subprocess stdout, so without this a failed CI
--- build is invisible (the only symptom is the downstream "opencv2/core.hpp: No
--- such file"). Fires whether _install_impl raised or returned false.
--- xlings' interface mode swallows log.*/subprocess output, so write the failure
--- detail to a file the CI step can `cat` instead of logging it.
-local function _dump_diagnostics(raised, err)
-    local out = {}
-    if raised then table.insert(out, "install() raised: " .. tostring(err)) end
-    local logf = path.join(pkginfo.install_dir(), "mcpp_opencv_build.log")
-    if os.isfile(logf) then
-        table.insert(out, "---- mcpp_opencv_build.log ----\n" .. tostring(io.readfile(logf)))
-    else
-        table.insert(out, "no build log at " .. logf)
-        table.insert(out, "PATH=" .. tostring(os.getenv("PATH")))
-    end
-    pcall(function() io.writefile(diag_path("ocv_diag.txt"), table.concat(out, "\n") .. "\n") end)
-end
-
 function install()
     local ok, ret = pcall(_install_impl)
     if not ok or ret == false then
-        _dump_diagnostics(not ok, ret)
+        -- Point at the on-disk build log: xim's interface mode suppresses the
+        -- cmake subprocess stdout, so the log is the only record of a failed
+        -- source build (the compat.openblas pattern).
+        local logf = path.join(pkginfo.install_dir(), "mcpp_opencv_build.log")
+        log.error("compat.opencv install() failed (%s); see %s",
+                  ok and "returned false" or tostring(ret), logf)
         return false
     end
     return true

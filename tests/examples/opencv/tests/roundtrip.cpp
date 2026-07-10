@@ -1,8 +1,6 @@
 // compat.opencv end-to-end assertion across core + imgproc + imgcodecs, linked
 // against the static libs built from source by the package's install() CMake hook.
-// Wired on linux/macOS/Windows (see mcpp.toml); on any other platform this is a
-// no-op main so `mcpp test --workspace` stays clean.
-#if defined(__linux__) || defined(__APPLE__) || defined(_WIN32)
+// Runs on all three supported platforms (linux/macOS/Windows).
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/imgcodecs.hpp>
@@ -28,6 +26,3 @@ int main() {
 
     return 0;
 }
-#else
-int main() { return 0; }  // compat.opencv is Linux-only for now; no-op elsewhere
-#endif
