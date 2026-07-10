@@ -54,11 +54,14 @@ package = {
             deps = { "xim:cmake@4.0.2", "xim:ninja@1.12.1", "xim:gcc@16.1.0",
                      "xim:glibc@2.39", "scode:linux-headers@5.11.1" },
             ["4.13.0"] = {
-                -- Plain-string GLOBAL url (no CN mirror table): this session lacks
-                -- mcpp-res write access. Per the add-package skill, CN users fall
-                -- back to GLOBAL and a maintainer adds the gitcode mirror later
-                -- (repo `mcpp-res/opencv`, asset `opencv-4.13.0.tar.gz`).
-                url    = "https://github.com/opencv/opencv/archive/refs/tags/4.13.0.tar.gz",
+                -- GLOBAL>CN fallback table (the mcpp-index CN-mirror convention).
+                -- The CN asset (gitcode mcpp-res/opencv) is the GitHub tag archive
+                -- mirrored byte-for-byte via gtc — same sha256 below — so GLOBAL
+                -- behaviour is unchanged and CN users get a fast mirror.
+                url    = {
+                    GLOBAL = "https://github.com/opencv/opencv/archive/refs/tags/4.13.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/opencv/releases/download/4.13.0/opencv-4.13.0.tar.gz",
+                },
                 sha256 = "1d40ca017ea51c533cf9fd5cbde5b5fe7ae248291ddf2af99d4c17cf8e13017d",
             },
         },
@@ -69,11 +72,14 @@ package = {
             -- unpinned: compiler version needn't be fixed; libc++ ABI is stable).
             deps = { "xim:cmake@4.0.2", "xim:ninja@1.12.1", "xim:llvm" },
             ["4.13.0"] = {
-                -- Plain-string GLOBAL url (no CN mirror table): this session lacks
-                -- mcpp-res write access. Per the add-package skill, CN users fall
-                -- back to GLOBAL and a maintainer adds the gitcode mirror later
-                -- (repo `mcpp-res/opencv`, asset `opencv-4.13.0.tar.gz`).
-                url    = "https://github.com/opencv/opencv/archive/refs/tags/4.13.0.tar.gz",
+                -- GLOBAL>CN fallback table (the mcpp-index CN-mirror convention).
+                -- The CN asset (gitcode mcpp-res/opencv) is the GitHub tag archive
+                -- mirrored byte-for-byte via gtc — same sha256 below — so GLOBAL
+                -- behaviour is unchanged and CN users get a fast mirror.
+                url    = {
+                    GLOBAL = "https://github.com/opencv/opencv/archive/refs/tags/4.13.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/opencv/releases/download/4.13.0/opencv-4.13.0.tar.gz",
+                },
                 sha256 = "1d40ca017ea51c533cf9fd5cbde5b5fe7ae248291ddf2af99d4c17cf8e13017d",
             },
         },
@@ -85,11 +91,14 @@ package = {
             -- build-dep wiring is needed here.
             deps = { "xim:cmake@4.0.2", "xim:ninja@1.12.1", "xim:llvm" },
             ["4.13.0"] = {
-                -- Plain-string GLOBAL url (no CN mirror table): this session lacks
-                -- mcpp-res write access. Per the add-package skill, CN users fall
-                -- back to GLOBAL and a maintainer adds the gitcode mirror later
-                -- (repo `mcpp-res/opencv`, asset `opencv-4.13.0.tar.gz`).
-                url    = "https://github.com/opencv/opencv/archive/refs/tags/4.13.0.tar.gz",
+                -- GLOBAL>CN fallback table (the mcpp-index CN-mirror convention).
+                -- The CN asset (gitcode mcpp-res/opencv) is the GitHub tag archive
+                -- mirrored byte-for-byte via gtc — same sha256 below — so GLOBAL
+                -- behaviour is unchanged and CN users get a fast mirror.
+                url    = {
+                    GLOBAL = "https://github.com/opencv/opencv/archive/refs/tags/4.13.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/opencv/releases/download/4.13.0/opencv-4.13.0.tar.gz",
+                },
                 sha256 = "1d40ca017ea51c533cf9fd5cbde5b5fe7ae248291ddf2af99d4c17cf8e13017d",
             },
         },
