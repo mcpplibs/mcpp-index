@@ -15,7 +15,7 @@ export MCPP_HOME
 default_index="$MCPP_HOME/registry/data/mcpplibs"
 rm -rf "$default_index"
 mkdir -p "$default_index"
-( cd "$ROOT" && find . -mindepth 1 -maxdepth 1 ! -name .git -exec cp -a {} "$default_index/" \; )
+cp -a "$ROOT/pkgs" "$default_index/"
 rm -f "$default_index/.xlings-index-cache.json"
 printf 'ok\n' > "$default_index/.mcpp-index-updated"
 

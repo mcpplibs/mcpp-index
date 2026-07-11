@@ -24,6 +24,6 @@ The upstream archive contains `mcpp.toml`, C++23 module sources, and its `compat
 
 - Lua syntax and mirror-table lint for all package descriptors.
 - Resolver grammar parse with CI-pinned mcpp 0.0.87.
-- `tests/smoke_tinyhttps_module.sh` with CI-pinned mcpp 0.0.87 and `MCPP_INDEX_MIRROR=GLOBAL`. The script reseeds the builtin `mcpplibs` index from the checkout because builtin namespaces cannot be overridden by a workspace path index.
+- `tests/smoke_tinyhttps_module.sh` with CI-pinned mcpp 0.0.87 and `MCPP_INDEX_MIRROR=GLOBAL`. The script reseeds only the checkout's `pkgs/` into the builtin `mcpplibs` index because builtin namespaces cannot be overridden by a workspace path index. Limiting the copy to package descriptors also avoids copying workspace build trees produced by an earlier CI step.
 - CN HTTP 200 and byte-identical SHA256 verification.
 - GitHub Actions Linux, macOS, and Windows workspace jobs run the tinyhttps smoke after the workspace suite, plus CN reachability.
