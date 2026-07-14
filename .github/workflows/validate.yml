@@ -146,22 +146,25 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # Archive names are derived from env.MCPP_VERSION in the Download
+          # step — bumping the pin is a ONE-line change (hardcoded versions
+          # here once 404'd a pin bump).
           - platform: linux
             os: ubuntu-latest
-            archive: mcpp-0.0.87-linux-x86_64.tar.gz
-            root: mcpp-0.0.87-linux-x86_64
+            suffix: linux-x86_64
+            ext: tar.gz
             mcpp: bin/mcpp
             xlings: registry/bin/xlings
           - platform: macos
             os: macos-15
-            archive: mcpp-0.0.87-macosx-arm64.tar.gz
-            root: mcpp-0.0.87-macosx-arm64
+            suffix: macosx-arm64
+            ext: tar.gz
             mcpp: bin/mcpp
             xlings: registry/bin/xlings
           - platform: windows
             os: windows-latest
-            archive: mcpp-0.0.87-windows-x86_64.zip
-            root: mcpp-0.0.87-windows-x86_64
+            suffix: windows-x86_64
+            ext: zip
             mcpp: bin/mcpp.exe
             xlings: registry/bin/xlings.exe
     steps:
@@ -178,8 +181,8 @@ jobs:
       - name: Download mcpp
         shell: bash
         env:
-          MCPP_ARCHIVE: ${{ matrix.archive }}
-          MCPP_ROOT: ${{ matrix.root }}
+          MCPP_ARCHIVE: mcpp-${{ env.MCPP_VERSION }}-${{ matrix.suffix }}.${{ matrix.ext }}
+          MCPP_ROOT: mcpp-${{ env.MCPP_VERSION }}-${{ matrix.suffix }}
         run: |
           curl -L -fsS -o "$MCPP_ARCHIVE" \
             "https://github.com/mcpp-community/mcpp/releases/download/v${MCPP_VERSION}/${MCPP_ARCHIVE}"
