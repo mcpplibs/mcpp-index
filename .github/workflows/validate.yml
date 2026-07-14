@@ -11,9 +11,11 @@ on:
   workflow_dispatch:
 
 env:
-  # Bumped to 0.0.78: carries L3 build.mcpp native build program (build-mcpp member),
-  # compat.openblas Windows recipe (bin/libopenblas.dll staged beside the .exe).
-  MCPP_VERSION: "0.0.87"
+  # Bumped to 0.0.91: carries standard = "c++fly" (experimental playground
+  # mode) in the resolver grammar — required so descriptors declaring it get
+  # the lint WARN below instead of a hard grammar-parse rejection from an
+  # older pinned mcpp (admission policy: warn, don't reject).
+  MCPP_VERSION: "0.0.91"
 
 jobs:
   lint:
@@ -55,6 +57,17 @@ jobs:
             #    the CN entry must point at the gitcode mcpp-res mirror.
             if ! lua5.4 tests/check_mirror_urls.lua "$f"; then
               fail=1
+            fi
+            # 5. c++fly admission policy (mcpp design 2026-07-14 §11-Q2, v1):
+            #    c++fly means "toolchain's latest level + every experimental
+            #    gate" — deliberately toolchain-dependent, so a published
+            #    package built with it is not reproducible for consumers.
+            #    Policy: WARN (never fail) and observe ecosystem usage before
+            #    deciding whether to tighten. Two spellings: `language = ` is
+            #    the descriptor's inline mcpp-segment key; `standard = ` covers
+            #    mcpp.toml content embedded in heredoc/generated_files blocks.
+            if grep -nE '\b(language|standard)[[:space:]]*=[[:space:]]*"c\+\+fly"' "$f" >/dev/null; then
+              echo "::warning file=$f::declares C++ standard \"c++fly\" (experimental playground mode) — toolchain-dependent and non-reproducible for consumers; published packages should pin a concrete standard (c++23/c++26)"
             fi
           done
           [ $fail -eq 0 ] && echo "All package files valid."
