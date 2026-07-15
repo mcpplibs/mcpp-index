@@ -1,0 +1,16 @@
+# spdlog test project: consumes compat.spdlog in its DEFAULT header-only mode
+# (bundled fmt, no external dependency) and asserts behavior under `mcpp test`.
+# Part of the mcpp-index self-referential workspace: `[indices] compat` points
+# at this repo, so the dependency resolves to the checked-in recipe
+# (pkgs/s/compat.spdlog.lua). The `compiled` feature mode is covered by the
+# design doc's local verification (interface-define propagation of
+# SPDLOG_COMPILED_LIB).
+[package]
+name = "spdlog-tests"
+version = "0.1.0"
+
+[indices]
+compat = { path = "../../.." }
+
+[dependencies.compat]
+spdlog = "1.17.0"
