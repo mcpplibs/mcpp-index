@@ -1,0 +1,19 @@
+# spdlog test project: consumes compat.spdlog in its COMPILED mode
+# (`features = ["compiled"]`) — spdlog's src/*.cpp are compiled into the lib and
+# SPDLOG_COMPILED_LIB reaches this consumer's TUs as an interface define, so the
+# headers take the non-inline path and link against those objects.
+#
+# Sibling of tests/examples/spdlog/ (header-only default mode). Both modes ship
+# from one descriptor; this member is what keeps the compiled path honest.
+#
+# Needs mcpp >= 0.0.94: older versions never compiled a dependency's active
+# feature `sources` under `mcpp test`, so this member would fail to link.
+[package]
+name = "spdlog-compiled-tests"
+version = "0.1.0"
+
+[indices]
+compat = { path = "../../.." }
+
+[dependencies.compat]
+spdlog = { version = "1.17.0", features = ["compiled"] }

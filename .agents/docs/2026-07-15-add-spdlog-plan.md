@@ -37,32 +37,47 @@ features = {
 }
 ```
 
-## 3. 关键实证:mcpp 0.0.91 不编译 feature 门控的 sources
+## 3. 关键实证:feature sources 在 `mcpp test` 下不编译(mcpp ≤0.0.93 的 bug,0.0.94 已修)
 
-投入前用 mcpp 0.0.91(与 CI 对齐)实测,发现一个**引擎级限制**,并三重佐证:
+> **修订(2026-07-15)**:本节初版结论「mcpp 0.0.91 引擎不编译 feature 门控的
+> sources」**是误判**,已由 mcpp#218 查清并修复。误判的成因值得记下来。
+
+初版三重佐证如下:
 
 | 实验 | feature | 现象 |
 |---|---|---|
-| spdlog(独立工程) | `compiled` | `src/*.cpp` 未编译 → 大量 `undefined reference` |
-| compat.cjson(独立工程) | `utils` | `cJSON_Utils.c` 未编译 → `undefined reference to cJSONUtils_*` |
-| compat.eigen(workspace 示例) | `eigen_blas` | `blas/*.cpp` 未编译 → `undefined reference to dgemm_` |
+| spdlog | `compiled` | `src/*.cpp` 未编译 → 大量 `undefined reference` |
+| compat.cjson | `utils` | `cJSON_Utils.c` 未编译 → `undefined reference to cJSONUtils_*` |
+| compat.eigen | `eigen_blas` | `blas/*.cpp` 未编译 → `undefined reference to dgemm_` |
 
-三例的 `build.ninja` 均只含核心 sources/anchor 的 `.o`,feature 的 sources
-一个都没进构建。
+三例现象属实,但**三次都只走了 `mcpp test` 这一条路径**(本仓 CI 是 workspace/test
+模型),于是把一个**只影响 test 模式**的 bug 误读成了「引擎不支持 feature sources」。
 
-**结论**:mcpp 0.0.91 中,依赖包被激活 feature 的 `sources` **不会被编译链接**;
-只有包的顶层 `sources` 与 feature 的 `defines` 生效。这正是 `compat.eigen` 的
-`dense.cpp` 注释所记的 follow-up——"linking feature-built dependency objects
-into test binaries is a follow-up"。
+**真因**(`mcpp/src/build/prepare.cppm`):feature 源集解析(drop + add)**整段**被门在
+`!includeDevDeps`,而 `mcpp test` 走 `includeDevDeps = true` → 激活 feature 的 sources
+从不被加回构建图。叠加 xpkg 侧 `features.X.sources` 只落进 `featureSources`、**从不进
+base `sources`** —— 于是「只在 features 下声明」的包:
 
-**已验证生效的部分**:feature 的 `defines` 确实作为 interface define 传播到消费者
-——`features=["compiled"]` 时消费者 TU 的编译行带上了 `-DSPDLOG_COMPILED_LIB`
-(`build.ninja` 实证)。所以 spdlog `compiled` 今天的表现是:宏到达消费者,但
-`src/*.cpp` 未编译,非 inline 符号无法链接。
+| 路径 | 结果 |
+|---|---|
+| `mcpp build` | ✅ **一直是好的**,7 个 src TU 全进 build.ninja,二进制真跑 |
+| `mcpp test` | ❌ `undefined reference` |
 
-**采用方案(与 eigen_blas 对齐)**:描述符保留 `compiled` feature 声明正确意图,
-注释如实标注引擎限制;待 mcpp 支持"编译并链接 feature sources"后无需改描述符即可
-生效。CI 只断言 header-only 模态。
+那段门的注释假设「descriptor 会把 `gtest_main.cc` 同时留在 base sources 里,故 test
+模式不受影响」——**只对 gtest 成立**,是未被察觉的隐式耦合。`compat.eigen` 里
+"linking feature-built dependency objects into test binaries is a follow-up" 的定性
+同样是错的:**不是链接问题,是源集解析问题**。
+
+**修复**:mcpp 0.0.94(#218)—— drop 仍只在 build 模式做(test 模式需保留完整源面供
+dev-dep 轨 per-test main 检测剪枝),add 改为两模式都做 + 去重。
+
+**采用方案**:描述符的 `compiled` feature 声明**本来就是对的,一行未改**;只把注释从
+「引擎不支持」改为如实的「`mcpp test` 下需 ≥0.0.94」。CI pin 提到 0.0.94 后,
+**两个模态都进 CI 断言**(`tests/examples/spdlog/` header-only +
+`tests/examples/spdlog-compiled/` compiled)。
+
+**教训**:诊断 feature 相关问题**必须 `build` / `test` 两条路径对比**,只测一条会把
+路径 bug 误判成引擎能力缺失。
 
 ## 4. feature 评估:为何不为 tweakme 开关新增 feature
 
@@ -103,7 +118,19 @@ release),lint(`check_mirror_urls.lua`)对纯字符串 url 不施加镜像约束,
 lint 只允许 `gitcode.com/mcpp-res/` 下的 CN url(信任边界 + 字节一致),任何
 第三方域名在表形式下都过不了 lint,故无"其他可用 CN 镜像"。
 
-## 6. 验证结论(mcpp 0.0.91,GLOBAL)
+## 6. 验证结论(mcpp 0.0.94,GLOBAL)
+
+**两个模态都已 CI 断言**:
+
+- `mcpp test -p spdlog` → header-only 默认模态,`test result ok. 1 passed`。
+- `mcpp test -p spdlog-compiled` → compiled 模态,`test result ok. 1 passed`。
+  `tests/examples/spdlog-compiled/tests/compiled_test.cpp` 静态断言
+  `SPDLOG_COMPILED_LIB` 已定义且 `SPDLOG_HEADER_ONLY` 未定义(退化回 inline 路径
+  会是**编译错误**而非静默通过),再跑与 header-only 同款的行为断言 —— 这些调用
+  解析到 `default_logger_raw` / `log_msg` ctor / `logger::log_it_` / bundled fmt
+  `vformat` 等**非 inline 符号**,正是 feature sources 没编译时链不上的那批。
+
+以下为初版(0.0.91)记录,保留作历史:
 
 - `mcpp xpkg parse pkgs/c/compat.spdlog.lua` → `parse OK`(strict floor/grammar)。
 - workspace 成员 `mcpp test -p spdlog` → `test result ok. 1 passed`。

@@ -2,9 +2,8 @@
 # (bundled fmt, no external dependency) and asserts behavior under `mcpp test`.
 # Part of the mcpp-index self-referential workspace: `[indices] compat` points
 # at this repo, so the dependency resolves to the checked-in recipe
-# (pkgs/s/compat.spdlog.lua). The `compiled` feature mode is covered by the
-# design doc's local verification (interface-define propagation of
-# SPDLOG_COMPILED_LIB).
+# (pkgs/c/compat.spdlog.lua). Compiled mode is covered by the sibling member
+# tests/examples/spdlog-compiled/.
 [package]
 name = "spdlog-tests"
 version = "0.1.0"

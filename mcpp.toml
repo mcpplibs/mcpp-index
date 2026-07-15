@@ -21,4 +21,5 @@ members = [
     "tests/examples/openblas",
     "tests/examples/opencv",
     "tests/examples/spdlog",
+    "tests/examples/spdlog-compiled",
 ]
