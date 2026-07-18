@@ -23,6 +23,7 @@ members = [
     "tests/examples/nlohmann.json",
     "tests/examples/openblas",
     "tests/examples/opencv",
+    "tests/examples/opencv5",
     "tests/examples/spdlog",
     "tests/examples/spdlog-compiled",
 ]

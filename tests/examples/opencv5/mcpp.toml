@@ -1,0 +1,17 @@
+# OpenCV 5 test project. compat.opencv5 compiles OpenCV 5.0.0 from source with
+# mcpp itself (457 TUs incl. 27 libjpeg-turbo NASM .asm, SIMD runtime dispatch
+# kept; no CMake at build time — small config snapshot ships as
+# generated_files, the large build-time products are synthesized on the
+# consumer by the package's embedded build.mcpp). Linux-only for now: under
+# cfg(linux) the dep is pulled and the test exercises core+imgproc+imgcodecs+
+# videoio; off-Linux the test compiles to a no-op main() so
+# `mcpp test --workspace` is a clean no-op on macOS/Windows.
+[package]
+name    = "opencv5-tests"
+version = "0.1.0"
+
+[indices]
+compat = { path = "../../.." }
+
+[target.'cfg(linux)'.dependencies.compat]
+opencv5 = "5.0.0"
