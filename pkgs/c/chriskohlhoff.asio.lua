@@ -1,4 +1,8 @@
--- compat.asio-m -- Asio 1.38.1 暴露为 C++23 模块 `asio` (Form B inline)
+-- chriskohlhoff.asio -- Asio 1.38.1 暴露为 C++23 模块 `asio` (Form B inline)
+--
+-- 消费者引入:
+--     mcpp add chriskohlhoff.asio@1.38.1
+--     mcpp add asio@1.38.1                (mcpp 短名简写)
 --
 -- 本包是 compat.asio (header-only: #include <asio.hpp>) 的模块伴侣包。
 -- 采用 ASIO_SEPARATE_COMPILATION 模式 (编译 */src/asio.cpp),
@@ -28,7 +32,7 @@
 --  1. 构建模型 (HEADER_ONLY -> SEPARATE_COMPILATION)
 --     compat.asio:   ASIO_HEADER_ONLY -- asio 模板在每个消费者 TU 中实例化,
 --                    编译系统只需一个锚定 .c 文件。
---     compat.asio-m: ASIO_SEPARATE_COMPILATION -- 每次构建只编译一次
+--     chriskohlhoff.asio: ASIO_SEPARATE_COMPILATION -- 每次构建只编译一次
 --                    */src/asio.cpp; BMI (模块) 缓存模板实例化。
 --                    首次构建较慢 (编译 asio 实现), 增量构建更快
 --                    (消费者 TU 变更时无需重解析 asio 头文件)。
@@ -64,7 +68,7 @@
 --
 --  6. import_std = false
 --     mcpp schema "0.1" 要求自身提供模块接口的包必须设置 import_std = false
---     (由使用者显式写 `import std; import asio;`)。compat.asio-m 不会
+--     (由使用者显式写 `import std; import asio;`)。chriskohlhoff.asio 不会
 --     在包级别自动引入 import std;。
 --
 -- ========== 本模块不可用的 API 组件 ==========
@@ -156,7 +160,7 @@
 -- ========== 迁移指南 (header-only -> 模块) ==========
 --
 --  将项目从 compat.asio (#include <asio.hpp>) 切换到
---  compat.asio-m (import asio;) 时, 请检查以下断点:
+--  chriskohlhoff.asio (import asio;) 时, 请检查以下断点:
 --
 --  [ ] 在每一个使用 asio 的 TU 顶部添加 import std;
 --      (标准库类型不再隐式可用)
@@ -176,8 +180,8 @@
 --      (BMI 缓存)。总体上更大的目标文件被跨 TU 更少的模板实例化抵消。
 package = {
     spec        = "1",
-    namespace   = "compat",
-    name        = "compat.asio-m",
+    namespace   = "chriskohlhoff",
+    name        = "chriskohlhoff.asio",
     description = "Standalone asio exposed as the C++23 module `asio` (separate compilation)",
     licenses    = {"BSL-1.0"},
     repo        = "https://github.com/chriskohlhoff/asio",

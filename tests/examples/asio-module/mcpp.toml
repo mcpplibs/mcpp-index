@@ -1,4 +1,4 @@
-# Asio C++23-module consumer test project: `import asio;` (compat.asio-m,
+# Asio C++23-module consumer test project: `import asio;` (chriskohlhoff.asio,
 # Form B inline descriptor, separate-compilation mode). Complements
 # tests/examples/asio, which exercises the same upstream in header-only
 # `#include <asio.hpp>` form.
@@ -7,7 +7,7 @@ name = "asio-module-tests"
 version = "0.1.0"
 
 [indices]
-compat = { path = "../../.." }
+chriskohlhoff = { path = "../../.." }
 
-[dependencies.compat]
-asio-m = "1.38.1"
+[dependencies.chriskohlhoff]
+asio = "1.38.1"
