@@ -391,3 +391,40 @@ jobs:
         run: |
           "$MCPP" --version
           timeout 2700 bash tests/smoke_ffmpeg_module.sh
+
+  # ── Exception: the public `opencv` C++23-module package (namespace "") ──
+  # Same default-namespace limitation as imgui-module above — validated via a
+  # reseeding smoke driver instead of a workspace member. Linux-only: its
+  # compat.opencv5 dependency ships a linux-x86_64 config snapshot (macOS is
+  # blocked on mcpp#229 dependency cfg-conditional sources).
+  opencv-module:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      MCPP_EFFECTIVE: "0.0.96"   # keep in sync with env.MCPP_VERSION
+    steps:
+      - uses: actions/checkout@v4
+      - name: Restore mcpp registry cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.mcpp/registry
+          key: mcpp-registry-${{ runner.os }}-${{ env.MCPP_EFFECTIVE }}-${{ hashFiles('pkgs/**/*.lua', 'tests/**', '.github/workflows/validate.yml') }}
+          restore-keys: |
+            mcpp-registry-${{ runner.os }}-${{ env.MCPP_EFFECTIVE }}-
+      - name: Download mcpp
+        run: |
+          curl -L -fsS -o mcpp.tar.gz \
+            "https://github.com/mcpp-community/mcpp/releases/download/v${MCPP_VERSION}/mcpp-${MCPP_VERSION}-linux-x86_64.tar.gz"
+          tar -xzf mcpp.tar.gz
+          root="$PWD/mcpp-${MCPP_VERSION}-linux-x86_64"
+          mkdir -p "$HOME/.mcpp/registry"
+          cp -a "$root/registry/." "$HOME/.mcpp/registry/"
+          echo "MCPP=$root/bin/mcpp" >> "$GITHUB_ENV"
+          echo "MCPP_VENDORED_XLINGS=$root/registry/bin/xlings" >> "$GITHUB_ENV"
+          echo "$root/bin" >> "$GITHUB_PATH"
+      - name: opencv module package smoke
+        env:
+          MCPP_INDEX_MIRROR: GLOBAL
+        run: |
+          "$MCPP" --version
+          timeout 2700 bash tests/smoke_opencv_module.sh
