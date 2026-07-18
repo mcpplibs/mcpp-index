@@ -2,7 +2,10 @@
 --
 -- 消费者引入:
 --     mcpp add chriskohlhoff.asio@1.38.1
---     mcpp add asio@1.38.1                (mcpp 短名简写)
+--
+-- 注意: 不要使用简写 mcpp add asio@1.38.1。
+-- 简写 "asio" 已在默认注册表中匹配多个包 (compat.asio, mcpplibs.asio 等),
+-- 会导致解析冲突或解析到错误的包。
 --
 -- 本包是 compat.asio (header-only: #include <asio.hpp>) 的模块伴侣包。
 -- 采用 ASIO_SEPARATE_COMPILATION 模式 (编译 */src/asio.cpp),
