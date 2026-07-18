@@ -275,6 +275,7 @@ module;
 #include <asio/ip/address.hpp>
 #include <asio/ip/address_v6.hpp>
 #include <asio/experimental/promise.hpp>
+#include <asio/experimental/channel_error.hpp>
 #include <asio/experimental/channel.hpp>
 #include <asio/experimental/concurrent_channel.hpp>
 #include <asio/experimental/use_promise.hpp>
@@ -350,6 +351,10 @@ export namespace asio::experimental {
 using ::asio::experimental::channel;
 using ::asio::experimental::concurrent_channel;
 using ::asio::experimental::use_promise;
+}
+
+export namespace asio::experimental::error {
+using ::asio::experimental::error::make_error_code;
 }
 
 export namespace asio::ip {
