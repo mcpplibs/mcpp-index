@@ -61,8 +61,8 @@ package = {
             "*/modules/highgui/include",
             "mcpp_generated/modules/highgui",
         },
-        cxxflags = { , "-w" },
-        cflags   = { , "-w" },
+        cxxflags = { "-w" },
+        cflags   = { "-w" },
         flags = {
             { glob = "**/modules/core/**", defines = { "HAVE_STDARG_H=1", "HAVE_UNISTD_H=1", "NDEBUG", "OPENCV_ALLOCATOR_STATS_COUNTER_TYPE=int", "_USE_MATH_DEFINES", "__OPENCV_BUILD=1", "__STDC_CONSTANT_MACROS", "__STDC_FORMAT_MACROS", "__STDC_LIMIT_MACROS" } },
             { glob = "**/modules/flann/**", defines = { "NDEBUG", "_USE_MATH_DEFINES", "__OPENCV_BUILD=1", "__STDC_CONSTANT_MACROS", "__STDC_FORMAT_MACROS", "__STDC_LIMIT_MACROS" } },
