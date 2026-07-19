@@ -1,7 +1,7 @@
 // compat.ffmpeg end-to-end assertion: the full-profile source build must
 // expose its major decoders and demuxers, and library versions must match the
 // vendored 8.1.2 release. Linux-only (see mcpp.toml).
-#ifdef __linux__
+#if defined(__linux__) || defined(__APPLE__) || defined(_WIN32)
 extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
