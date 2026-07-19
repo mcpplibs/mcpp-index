@@ -153,7 +153,13 @@ def gen_block(d, ind):
                              for k in sorted(d)) + f"\n{' '*ind}}},"
 
 def per_os_block(o):
-    srcs = compress_sources([l.strip() for l in (SNAP[o] / "sources.txt").read_text().splitlines() if l.strip()])
+    # sources.txt may carry a leading `src/` (linux/macosx snapshots) or not
+    # (windows); strip it so globs are `*/libavcodec/...` matching the extracted
+    # ffmpeg tree. Drop stray non-source artifacts (e.g. a leaked `-Pconfig.asm`).
+    raw = [l.strip().removeprefix("src/")
+           for l in (SNAP[o] / "sources.txt").read_text().splitlines()
+           if l.strip() and not l.strip().removeprefix("src/").startswith("-")]
+    srcs = compress_sources(raw)
     parts = [f'            cflags = {L(PER_OS_CFLAGS[o], 12)},',
              f'            ldflags = {L(PER_OS_LDFLAGS[o], 12)},']
     if o in X86:
