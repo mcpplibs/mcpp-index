@@ -102,26 +102,55 @@ def split_common_delta(rel, defre):
         assert set(base) | set(deltas[o]) == defsets[o], f"{rel} split mismatch on {o}"
     return base, deltas, list(present)
 
-# gather + classify.
-# NOTE: neutral (top-level mcpp) generated_files + per-OS blocks together trip
-# mcpp#251 (neutral entries lose the mcpp_generated/ prefix at materialize and
-# land off the include path). Until that lands, ALL generated_files go per-OS —
-# the proven structure. The config.{h,asm}/config_components.{h,asm} common/delta
-# split is retained in split_common_delta() for when #251 is fixed; here every
-# file is emitted per-OS in full. Sources are still glob-compressed (the biggest
-# single win, independent of #251).
-neutral_gen = {}        # kept empty until mcpp#251
+# gather + classify (data/logic separation, mcpp 0.0.100 design doc §2.1-C)
+neutral_gen = {}        # relpath -> content (identical across OSes + common bases)
 per_os_gen = {o: {} for o in OSES}
 
-for rel in GEN_LISTS + SPLIT_C + SPLIT_ASM:
-    for o in OSES:
-        c = read(o, rel)
-        if c is not None:
+# 1) list files: neutral if identical across all OSes that have them; else per-OS
+for rel in GEN_LISTS:
+    have = {o: read(o, rel) for o in OSES if read(o, rel) is not None}
+    vals = set(have.values())
+    if len(vals) == 1:
+        neutral_gen[rel] = next(iter(vals))
+    else:
+        for o, c in have.items():
             per_os_gen[o][rel] = c
+
+# 2) config.{h} + config_components.{h}: common/delta split (C headers)
+CDEF = re.compile(r'^#define ')
+for rel in SPLIT_C:
+    base, deltas, present = split_common_delta(rel, CDEF)
+    stem, ext = rel.rsplit(".", 1)
+    base_name = f"{stem}.base.{ext}"
+    neutral_gen[base_name] = "\n".join(base) + "\n"
+    guardname = "FFMPEG_" + re.sub(r'[^A-Z0-9]', '_', rel.upper())
+    for o in present:
+        body = (f"/* mcpp: per-OS delta over {base_name} (data/logic split) */\n"
+                f"#ifndef {guardname}\n#define {guardname}\n"
+                f'#include "{Path(base_name).name}"\n'
+                + "\n".join(deltas[o]) + ("\n" if deltas[o] else "")
+                + f"#endif /* {guardname} */\n")
+        per_os_gen[o][rel] = body
+
+# 3) config.asm + config_components.asm: common/delta split (NASM), x86 OSes
+ADEF = re.compile(r'^%define ')
+for rel in SPLIT_ASM:
+    base, deltas, present = split_common_delta(rel, ADEF)
+    stem = rel.rsplit(".", 1)[0]
+    base_name = f"{stem}.base.asm"
+    neutral_gen[base_name] = "\n".join(base) + "\n"
+    for o in present:
+        body = (f"; mcpp: per-OS delta over {base_name} (data/logic split)\n"
+                f'%include "{Path(base_name).name}"\n'
+                + "\n".join(deltas[o]) + ("\n" if deltas[o] else ""))
+        per_os_gen[o][rel] = body
 
 # ── emit ────────────────────────────────────────────────────────────────
 def gen_block(d, ind):
-    return "{\n" + "\n".join(longbracket(k, d[k], ind + 4) for k in sorted(d)) + f"\n{' '*ind}}},"
+    # generated_files keys MUST carry the mcpp_generated/ prefix so they
+    # materialize under <builddir>/mcpp_generated/ (on the -I include path).
+    return "{\n" + "\n".join(longbracket("mcpp_generated/" + k, d[k], ind + 4)
+                             for k in sorted(d)) + f"\n{' '*ind}}},"
 
 def per_os_block(o):
     srcs = compress_sources([l.strip() for l in (SNAP[o] / "sources.txt").read_text().splitlines() if l.strip()])
