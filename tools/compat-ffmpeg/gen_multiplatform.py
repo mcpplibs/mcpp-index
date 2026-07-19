@@ -36,9 +36,14 @@ SPLIT_C = ["config.h", "config_components.h"]                 # C headers, all O
 SPLIT_ASM = ["config.asm", "config_components.asm"]           # NASM, x86 OSes only
 
 NEUTRAL_INCLUDE = ["mcpp_generated", "mcpp_generated/libavcodec", "mcpp_generated/libavformat",
-    "mcpp_generated/libavfilter", "mcpp_generated/libavdevice"]
-ROOT_INCLUDE_AFTER = ["*", "*/libavcodec"]                    # #249: ffmpeg source root as -idirafter
-X86_INCLUDE_AFTER = ["*/libavutil/x86", "*/libavcodec/x86", "*/libavfilter/x86",
+    "mcpp_generated/libavfilter", "mcpp_generated/libavdevice", "*/libavcodec"]
+# ONLY the ffmpeg source root ('*') goes on include_dirs_after (-idirafter): it
+# holds the VERSION file that shadows libc++ <version> on case-insensitive macOS
+# (#249). '*/libavcodec' must stay on regular -I — ffmpeg's relative "parser.h"
+# style includes need it there (on -idirafter, windows clang-MSVC fails to find
+# them, e.g. opus/parser.c → ParseContext undefined).
+ROOT_INCLUDE_AFTER = ["*"]
+X86_INCLUDE = ["*/libavutil/x86", "*/libavcodec/x86", "*/libavfilter/x86",
     "*/libswscale/x86", "*/libswresample/x86"]
 NEUTRAL_CFLAGS = ["-DHAVE_AV_CONFIG_H", "-D_ISOC11_SOURCE", "-D_FILE_OFFSET_BITS=64",
     "-D_LARGEFILE_SOURCE", "-w"]
@@ -163,7 +168,7 @@ def per_os_block(o):
     parts = [f'            cflags = {L(PER_OS_CFLAGS[o], 12)},',
              f'            ldflags = {L(PER_OS_LDFLAGS[o], 12)},']
     if o in X86:
-        parts.append(f'            include_dirs_after = {L(X86_INCLUDE_AFTER, 12)},')
+        parts.append(f'            include_dirs = {L(X86_INCLUDE, 12)},')
         parts.append('            flags = {\n                { glob = "**/*.asm", asmflags = { "-Pconfig.asm" } },\n            },')
     parts.append(f'            sources = {L(srcs, 12)},')
     parts.append('            generated_files = ' + gen_block(per_os_gen[o], 12))

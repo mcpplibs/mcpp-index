@@ -33,10 +33,10 @@ package = {
             "mcpp_generated/libavformat",
             "mcpp_generated/libavfilter",
             "mcpp_generated/libavdevice",
+            "*/libavcodec",
         },
         include_dirs_after = {
             "*",
-            "*/libavcodec",
         },
         cflags = {
             "-DHAVE_AV_CONFIG_H",
@@ -7776,7 +7776,7 @@ static const FFOutputFormat * const muxer_list[] = {
                 "-lpthread",
                 "-lm",
             },
-            include_dirs_after = {
+            include_dirs = {
                 "*/libavutil/x86",
                 "*/libavcodec/x86",
                 "*/libavfilter/x86",
@@ -8568,7 +8568,7 @@ static const URLProtocol * const url_protocols[] = {
                 "-lshell32",
                 "-lgdi32",
             },
-            include_dirs_after = {
+            include_dirs = {
                 "*/libavutil/x86",
                 "*/libavcodec/x86",
                 "*/libavfilter/x86",
