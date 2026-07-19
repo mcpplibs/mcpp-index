@@ -20,12 +20,30 @@ package = {
 
     xpm = {
         linux = {
-            ["0.0.1"] = {
+            ["0.0.3"] = {
                 url    = {
-                    GLOBAL = "https://github.com/mcpplibs/ffmpeg-m/archive/refs/tags/v0.0.1.tar.gz",
-                    CN     = "https://gitcode.com/mcpp-res/ffmpeg/releases/download/v0.0.1/ffmpeg-m-0.0.1.tar.gz",
+                    GLOBAL = "https://github.com/mcpplibs/ffmpeg-m/archive/refs/tags/v0.0.3.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/ffmpeg/releases/download/v0.0.3/ffmpeg-m-0.0.3.tar.gz",
                 },
-                sha256 = "e47dc9683f62466e9bd1c962a5f6ee83fbe3670fdb20c834bd9e8ee3f30e49fb",
+                sha256 = "822e59d1674b2ead88d1c8e2806c8f661dc0c628980e1dc23fd22dd51bf55fcc",
+            },
+        },
+        macosx = {
+            ["0.0.3"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/ffmpeg-m/archive/refs/tags/v0.0.3.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/ffmpeg/releases/download/v0.0.3/ffmpeg-m-0.0.3.tar.gz",
+                },
+                sha256 = "822e59d1674b2ead88d1c8e2806c8f661dc0c628980e1dc23fd22dd51bf55fcc",
+            },
+        },
+        windows = {
+            ["0.0.3"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/ffmpeg-m/archive/refs/tags/v0.0.3.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/ffmpeg/releases/download/v0.0.3/ffmpeg-m-0.0.3.tar.gz",
+                },
+                sha256 = "822e59d1674b2ead88d1c8e2806c8f661dc0c628980e1dc23fd22dd51bf55fcc",
             },
         },
     },

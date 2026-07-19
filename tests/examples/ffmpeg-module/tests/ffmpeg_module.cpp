@@ -1,7 +1,6 @@
 // Public ffmpeg module package end-to-end assertion: import-only consumption
 // (`import ffmpeg.av;`), libavutil version of the FFmpeg 8.1.x train, core
-// decoders present, demuxer registry populated. Linux-only (see mcpp.toml).
-#ifdef __linux__
+// decoders present, demuxer registry populated. Builds on linux+macOS+windows.
 import std;
 import ffmpeg.av;
 
@@ -26,6 +25,3 @@ int main() {
     std::println("{} demuxers registered", demuxers);
     return demuxers > 300 ? 0 : 3;
 }
-#else
-int main() { return 0; }
-#endif
