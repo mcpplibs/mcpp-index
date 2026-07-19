@@ -1,0 +1,11 @@
+# TEMP windows FFmpeg build spike (R1 proper): does mcpp clang-MSVC compile the
+# full FFmpeg win64 source set? Deps compat.ffmpegwin on cfg(windows); no-op elsewhere.
+[package]
+name    = "ffmpegwin-spike-tests"
+version = "0.1.0"
+
+[indices]
+compat = { path = "../../.." }
+
+[target.'cfg(windows)'.dependencies.compat]
+ffmpegwin = "8.1.2"
