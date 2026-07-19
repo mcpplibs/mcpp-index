@@ -1,0 +1,14 @@
+# TEMP spike: build-validate the macOS-arm64 headless compat.opencv snapshot
+# (compat.opencvmac) generated on a real macos-15 runner. Proves the aarch64
+# NEON source build (core/imgproc/imgcodecs; vendored zlib/libpng/libjpeg-turbo;
+# OpenCV's own universal-intrinsics NEON dispatch — KleidiCV disabled to stay
+# hermetic to the pinned tarball). macOS-only; elsewhere a no-op main().
+[package]
+name    = "opencvmac-spike-tests"
+version = "0.1.0"
+
+[indices]
+compat = { path = "../../.." }
+
+[target.'cfg(macos)'.dependencies.compat]
+opencvmac = "5.0.0"

@@ -17,6 +17,7 @@ members = [
     "tests/examples/eigen",
     "tests/examples/ffmpeg",
     "tests/examples/ffmpeg-module",
+    "tests/examples/opencvmac-spike",
     "tests/examples/fmtlib.fmt",
     "tests/examples/gui-stack",
     "tests/examples/imgui",
