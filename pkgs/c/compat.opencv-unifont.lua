@@ -17,16 +17,22 @@ package = {
     repo        = "https://github.com/vpisarev/opencv_3rdparty",
     type        = "package",
 
+    -- OS-neutral font blob (WenQuanYiMicroHei.ttf.gz): identical tarball on every
+    -- platform, so all three xpm keys point at the same asset. build.mcpp hex-embeds
+    -- it (builtin_font_uni.h) regardless of host.
     xpm = {
-        linux = {
-            ["1.0.0"] = {
-                url    = {
+        linux   = { ["1.0.0"] = { url = {
                     GLOBAL = "https://raw.githubusercontent.com/vpisarev/opencv_3rdparty/cc7d85179d69a704bee209aa37ce8a657f2f8b34/WenQuanYiMicroHei.ttf.gz",
                     CN     = "https://gitcode.com/mcpp-res/opencv/releases/download/unifont-1.0.0/WenQuanYiMicroHei.ttf.gz",
-                },
-                sha256 = "70c5634fe8326a20a18f4d634d08c510f2c05f6613d2d5aa3566f162cc02804f",
-            },
-        },
+                }, sha256 = "70c5634fe8326a20a18f4d634d08c510f2c05f6613d2d5aa3566f162cc02804f" } },
+        macosx  = { ["1.0.0"] = { url = {
+                    GLOBAL = "https://raw.githubusercontent.com/vpisarev/opencv_3rdparty/cc7d85179d69a704bee209aa37ce8a657f2f8b34/WenQuanYiMicroHei.ttf.gz",
+                    CN     = "https://gitcode.com/mcpp-res/opencv/releases/download/unifont-1.0.0/WenQuanYiMicroHei.ttf.gz",
+                }, sha256 = "70c5634fe8326a20a18f4d634d08c510f2c05f6613d2d5aa3566f162cc02804f" } },
+        windows = { ["1.0.0"] = { url = {
+                    GLOBAL = "https://raw.githubusercontent.com/vpisarev/opencv_3rdparty/cc7d85179d69a704bee209aa37ce8a657f2f8b34/WenQuanYiMicroHei.ttf.gz",
+                    CN     = "https://gitcode.com/mcpp-res/opencv/releases/download/unifont-1.0.0/WenQuanYiMicroHei.ttf.gz",
+                }, sha256 = "70c5634fe8326a20a18f4d634d08c510f2c05f6613d2d5aa3566f162cc02804f" } },
     },
 
     -- data-only: the payload is the font blob itself (parked in the store's
