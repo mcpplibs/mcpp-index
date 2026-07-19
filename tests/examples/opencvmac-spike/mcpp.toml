@@ -1,0 +1,10 @@
+# TEMP spike: build-validate the macOS-arm64 FULL-profile compat.opencv snapshot
+# (compat.opencvmac): core/imgproc/imgcodecs/highgui/videoio incl. FFmpeg backend
+# (via the compat.ffmpeg dependency — now 3-platform). aarch64 NEON. macOS-only.
+[package]
+name    = "opencvmac-spike-tests"
+version = "0.1.0"
+[indices]
+compat = { path = "../../.." }
+[target.'cfg(macos)'.dependencies.compat]
+opencvmac = "5.0.0"
