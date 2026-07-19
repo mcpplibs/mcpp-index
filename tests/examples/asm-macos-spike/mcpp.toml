@@ -1,0 +1,9 @@
+# R2 spike (TEMP — remove after the macOS .S path is proven): compile one
+# aarch64 GAS .S unit on macos-15 and link it into a test. cfg(macos)-gated so
+# the aarch64 asm is only assembled on macOS; a no-op main elsewhere.
+[package]
+name    = "asm-macos-spike-tests"
+version = "0.1.0"
+
+[target.'cfg(macos)'.build]
+sources = ["asm/add_arm64.S"]
