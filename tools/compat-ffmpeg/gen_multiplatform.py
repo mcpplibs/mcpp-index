@@ -157,13 +157,32 @@ def gen_block(d, ind):
     return "{\n" + "\n".join(longbracket("mcpp_generated/" + k, d[k], ind + 4)
                              for k in sorted(d)) + f"\n{' '*ind}}},"
 
+def read_sources(o):
+    return [l.strip().removeprefix("src/")
+            for l in (SNAP[o] / "sources.txt").read_text().splitlines()
+            if l.strip() and not l.strip().removeprefix("src/").startswith("-")]
+
+# Reference (dir set per basename) from the OSes that build clean (linux+macosx).
+# FFmpeg's shared sources (file_open.c, log2_tab.c, …) are compiled into EACH lib
+# by upstream's build; the windows make-n snapshot captured them per-lib, but on
+# mcpp's single-lib build those per-lib copies collide (LNK2005 ff_open already
+# defined). linux/macosx snapshots list each shared source once (at its real
+# dir), so restrict any OS's shared-source basenames to the dirs the clean OSes
+# use. Genuinely-distinct same-basename files (libavcodec/4xm.c vs
+# libavformat/4xm.c) appear in multiple dirs in the reference too, so both stay.
+from collections import defaultdict as _dd
+_ref = _dd(set)
+for _o in ("linux", "macosx"):
+    for _l in read_sources(_o):
+        _ref[Path(_l).name].add(str(Path(_l).parent))
+
 def per_os_block(o):
-    # sources.txt may carry a leading `src/` (linux/macosx snapshots) or not
-    # (windows); strip it so globs are `*/libavcodec/...` matching the extracted
-    # ffmpeg tree. Drop stray non-source artifacts (e.g. a leaked `-Pconfig.asm`).
-    raw = [l.strip().removeprefix("src/")
-           for l in (SNAP[o] / "sources.txt").read_text().splitlines()
-           if l.strip() and not l.strip().removeprefix("src/").startswith("-")]
+    raw = []
+    for l in read_sources(o):
+        base, d = Path(l).name, str(Path(l).parent)
+        if base in _ref and d not in _ref[base]:
+            continue   # shared-source per-lib duplicate not present in clean OSes
+        raw.append(l)
     srcs = compress_sources(raw)
     parts = [f'            cflags = {L(PER_OS_CFLAGS[o], 12)},',
              f'            ldflags = {L(PER_OS_LDFLAGS[o], 12)},']
