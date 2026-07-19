@@ -43,55 +43,99 @@ FF_PREFIX = os.environ.get("FFMPEG_PREFIX", "")
 BASE_BLD = Path(os.environ["BASE_BLD"]).resolve() if os.environ.get("BASE_BLD") else None
 FFMPEG_DEP_VERSION = os.environ.get("FFMPEG_DEP_VERSION", "8.1.2")
 
+def rel_posix(child, parent):
+    """child relative to parent as a forward-slashed str, or None if not under
+    parent. Separator-agnostic — Windows clang-cl command paths mix '/' and '\\',
+    so plain str.startswith(str(SRC)) comparisons fail; go through pathlib."""
+    c, p = Path(child), Path(parent)
+    if c == p:
+        return ""
+    try:
+        return c.relative_to(p).as_posix()
+    except ValueError:
+        return None
+
 # ── parse `ninja -t commands` ───────────────────────────────────────────
 compiles = []
-for line in (BLD / "ninja-cmds.log").read_text().splitlines():
-    line = line.strip()
-    if not line:
+DRIVE_ABS = re.compile(r"^[A-Za-z]:[\\/]")
+for raw in (BLD / "ninja-cmds.log").read_text().splitlines():
+    raw = raw.strip()
+    if not raw:
         continue
+    # Windows (clang-cl / win64 nasm) lines carry backslash paths that shlex's
+    # POSIX mode would treat as escapes; normalise to forward slashes first (no
+    # meaningful backslash-escapes appear in these commands). Linux/macOS lines
+    # have no backslashes so this is a no-op for them.
+    is_win = ("clang-cl" in raw.lower()) or bool(re.search(r"[A-Za-z]:\\", raw))
+    line = raw.replace("\\", "/") if is_win else raw
     try:
         toks = shlex.split(line)
     except ValueError:
         continue
     if not toks:
         continue
-    tool = Path(toks[0]).name
-    if tool not in ("g++", "gcc", "cc", "c++", "clang", "clang++", "nasm"):
+    tool_raw = Path(toks[0].strip('"')).name.lower()
+    if tool_raw.endswith(".exe"):
+        tool_raw = tool_raw[:-4]
+    if tool_raw == "clang-cl":
+        tool = "g++"          # clang-cl builds .c and .cpp; source extension decides downstream
+    elif tool_raw == "nasm":
+        tool = "nasm"
+    elif tool_raw in ("g++", "gcc", "cc", "c++", "clang", "clang++"):
+        tool = "g++" if tool_raw in ("g++", "c++", "clang++") else "gcc"
+    else:
         continue
-    tool = "nasm" if tool == "nasm" else ("g++" if tool in ("g++", "c++", "clang++") else "gcc")
     src = None; defs = set(); mflags = []; incs = []; std = None
     skip = False
     for i in range(1, len(toks)):
         t = toks[i]
         if skip: skip = False; continue
-        if t in ("-o", "-MF", "-MT", "-MQ"): skip = True; continue
+        # gnu depfile/output flags that consume the next token (never on clang-cl,
+        # where -MT is the *runtime* selector, not a depfile target)
+        if not is_win and t in ("-o", "-MF", "-MT", "-MQ"): skip = True; continue
+        if tool == "nasm" and t == "-o": skip = True; continue
         if t == "-MD":
             if tool == "nasm": skip = True
             continue
         if t == "-c": continue
+        if is_win:
+            if t.startswith(("/Fo", "/Fd", "/Fi", "/Fa", "/Fp")): continue   # output artifacts
+            if t.startswith("-clang:"): continue                             # depfile passthrough (-clang:-MD/-MF/-MT)
+            if t in ("/D", "/I", "/U"):                                       # msvc space-separated define/include
+                if i + 1 < len(toks):
+                    nx = toks[i + 1].strip('"')
+                    if t == "/D": defs.add("-D" + nx)
+                    elif t == "/I": incs.append(nx)
+                    skip = True
+                continue
+            if t.startswith("/D"): defs.add("-D" + t[2:]); continue
+            if t.startswith("/I"): incs.append(t[2:].strip('"')); continue
+            if t.startswith("-imsvc"):                                        # clang-cl system include
+                d = t[len("-imsvc"):].strip('"')
+                if d: incs.append(d)
+                elif i + 1 < len(toks): incs.append(toks[i + 1].strip('"')); skip = True
+                continue
+            if t.startswith(("/std:", "-std:")): std = "-std=" + t.split(":", 1)[1]; continue  # clang-cl -std:c++17 -> canonical
+            # msvc codegen/warning/runtime flags mcpp supplies itself — drop
+            if t.startswith("/") or t in ("-TP", "-TC") or t.startswith(("-W", "-Q")): continue
         if t == "-isystem":
-            # capture the dir (next token) as an ordinary include dir
             if i + 1 < len(toks): incs.append(toks[i + 1].strip('"'))
             skip = True; continue
         if t.startswith("-std="): std = t; continue
         if t.startswith("-D"): defs.add(t); continue
         if t.startswith("-I"): incs.append(t[2:].strip('"')); continue
         if t.startswith("-m") or t in ("-O3", "-O2"): mflags.append(t); continue
-        if re.search(r"\.(c|cc|cpp|cxx|asm|S)$", t) and not t.startswith("-"):
+        if re.search(r"\.(c|cc|cpp|cxx|asm|S)$", t, re.I) and not t.startswith("-"):
             src = t
     if src is None:
         continue
-    src_abs = src if src.startswith("/") else str(BLD / src)
+    is_abs = src.startswith("/") or bool(DRIVE_ABS.match(src))
+    src_abs = src if is_abs else str(BLD / src)
     compiles.append((tool, src_abs, frozenset(defs), tuple(mflags), incs, std))
 assert compiles, "no compile commands parsed"
 print(f"parsed {len(compiles)} compiles")
 
-# x86 dispatch suffixes + aarch64 NEON dispatch suffixes (macOS/arm). Longest
-# alternatives first so `.neon_dotprod.cpp` isn't shadowed by `neon` (the
-# trailing `\.cpp$` anchor already forces a full match, but keep it explicit).
-ISA_RE = re.compile(
-    r"\.(sse4_1|sse4_2|avx512_skx|avx2|avx|fp16"
-    r"|neon_dotprod|neon_fp16|neon_bf16|neon_i8mm|neon)\.cpp$")
+ISA_RE = re.compile(r"\.(sse4_1|sse4_2|avx512_skx|avx2|avx|fp16)\.cpp$")
 MODS = ("core", "imgproc", "imgcodecs", "highgui", "videoio", "flann", "geometry", "dnn")
 # groups that belong to the additive `dnn` feature (sources gated; flags
 # entries stay unconditional — harmless when the feature is off)
@@ -200,7 +244,7 @@ for mod in MODS:
 
 # ── sources (real paths) + tu manifest (jpeg12/16 only) ─────────────────
 def wrap_rel(src_abs):
-    return str(Path(src_abs).relative_to(SRC))
+    return Path(src_abs).relative_to(SRC).as_posix()
 
 manifest, sources_real, sources_asm, kernel_files, seen = [], [], [], [], set()
 sources_dnn = []
@@ -221,7 +265,7 @@ for tool, src_abs, defs, mflags, incs, std in compiles:
             seen.add(key)
             manifest.append((f"?dnn\t{dk}\t{tgt}") if dk == "mlasgemm" else f"{dk}\t{tgt}")
         continue
-    if src_abs.startswith(str(SRC)):
+    if rel_posix(src_abs, SRC) is not None:
         e = f"*/{wrap_rel(src_abs)}"
     elif "opencl_kernels_" in src_abs:
         # synthesized by build.mcpp on the consumer (clsrc/…); flags via
@@ -231,7 +275,7 @@ for tool, src_abs, defs, mflags, incs, std in compiles:
         continue
     else:
         # snapshot file compiled from the build dir (dispatch stubs)
-        e = f"mcpp_generated/{Path(src_abs).relative_to(BLD)}"
+        e = f"mcpp_generated/{rel_posix(src_abs, BLD)}"
     if e in seen: continue
     seen.add(e)
     (sources_dnn if dk in FEATURE_DNN_GROUPS else sources_real).append(e)
@@ -248,10 +292,10 @@ def compress(entries):
     for e in entries:
         if e.startswith("*/"):
             p = Path(e[2:])
-            by_dir[("*", str(p.parent), p.suffix)].append(p.name)
+            by_dir[("*", p.parent.as_posix(), p.suffix)].append(p.name)  # as_posix: forward slashes on windows
         else:  # mcpp_generated/...
             p = Path(e)
-            by_dir[("g", str(p.parent), p.suffix)].append(p.name)
+            by_dir[("g", p.parent.as_posix(), p.suffix)].append(p.name)
     out = []
     for (kind, d, suf), names in sorted(by_dir.items()):
         if kind == "*":
@@ -276,9 +320,15 @@ print(f"sources compressed: {len(sources_real)} base files -> {len(sources_out)}
 
 # ── snapshot files (exclude synthesized classes) ────────────────────────
 def rewrite(text):
-    out = (text.replace(f'"{SRC}/', '"').replace(f'{SRC}/', '')
-               .replace(f'"{BLD}/', '"').replace(f'{BLD}/', '')
-               .replace(str(BLD), "<build>").replace(str(SRC), "<src>"))
+    out = text
+    # neutralize build-dir/source-tree paths in both separator conventions
+    # (Windows generated headers may carry backslash OR forward-slash paths)
+    for root in (str(SRC), Path(SRC).as_posix()):
+        out = out.replace(f'"{root}/', '"').replace(f'{root}/', '')
+    for root in (str(BLD), Path(BLD).as_posix()):
+        out = out.replace(f'"{root}/', '"').replace(f'{root}/', '')
+    out = (out.replace(str(BLD), "<build>").replace(Path(BLD).as_posix(), "<build>")
+              .replace(str(SRC), "<src>").replace(Path(SRC).as_posix(), "<src>"))
     if FF_PREFIX:
         assert FF_PREFIX not in out, "ffmpeg prefix path leaked into snapshot"
     return out
@@ -293,7 +343,7 @@ for p in sorted(BLD.rglob("*")):
         continue
     if "builtin_font" in p.name or "opencl_kernels" in p.name:
         continue    # build.mcpp synthesizes these
-    rel = p.relative_to(BLD)
+    rel = p.relative_to(BLD).as_posix()
     content = rewrite(p.read_text(errors="replace"))
     assert "]==]" not in content, f"lua long-bracket collision in {rel}"
     assert len(content) < 200_000, f"unexpectedly large snapshot file {rel}"
@@ -336,10 +386,11 @@ for c in compiles:
     for i in c[4]:
         if FF_PREFIX and i.startswith(FF_PREFIX):
             continue    # served by the compat.ffmpeg dependency's include dirs
-        if i.startswith(str(SRC)):
-            r = "*/" + str(Path(i).relative_to(SRC)) if i != str(SRC) else "*"
-        elif i.startswith(str(BLD)):
-            r = "mcpp_generated/" + str(Path(i).relative_to(BLD)) if i != str(BLD) else "mcpp_generated"
+        rs, rb = rel_posix(i, SRC), rel_posix(i, BLD)
+        if rs is not None:
+            r = "*" if rs == "" else "*/" + rs
+        elif rb is not None:
+            r = "mcpp_generated" if rb == "" else "mcpp_generated/" + rb
         else:
             continue
         if r not in iseen:
@@ -455,8 +506,8 @@ package = {{
 {deps_line}        include_dirs = {{
             {lua_list(incdirs, " " * 12)}
         }},
-        cxxflags = {{ {", ".join([f'"{m}"' for m in baseline_m] + ['"-w"'])} }},
-        cflags   = {{ {", ".join([f'"{m}"' for m in baseline_m] + ['"-w"'])} }},
+        cxxflags = {{ {", ".join(f'"{m}"' for m in baseline_m)}, "-w" }},
+        cflags   = {{ {", ".join(f'"{m}"' for m in baseline_m)}, "-w" }},
         flags = {{
             {("\n" + " " * 12).join(flags_entries)}
         }},
@@ -500,7 +551,7 @@ L.append("""        },
     },
 }
 """)
-OUT.write_text("".join(L))
+OUT.write_text("".join(L), encoding="utf-8")  # explicit: windows locale is cp1252 and mangles the em-dash
 kb = OUT.stat().st_size // 1024
 print(f"gen_descriptor: {OUT} written — {len(sources_out)} source globs "
       f"(+{len(sources_asm)} asm), {len(manifest)} jpeg12/16 stub TUs, "

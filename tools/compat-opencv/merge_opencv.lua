@@ -125,10 +125,11 @@ for _, e in ipairs(INPUTS) do
 end
 
 -- mcpp: neutral-common (from base) + per-OS blocks (each OS's platform-specific keys)
-local PEROS = { "include_dirs", "cxxflags", "cflags", "flags", "sources", "generated_files" }
+-- `deps` is PER-OS: linux/macosx carry compat.ffmpeg (videoio backend); a core-only
+-- windows profile (no videoio) carries none, so it must not inherit a global dep.
+local PEROS = { "include_dirs", "cxxflags", "cflags", "flags", "sources", "generated_files", "deps" }
 merged.mcpp = {
     language = base.mcpp.language,
-    deps     = base.mcpp.deps,
     targets  = base.mcpp.targets,
     features = base.mcpp.features,   -- unifont (neutral) + dnn (x86; opencv-dnn stays linux-only)
 }

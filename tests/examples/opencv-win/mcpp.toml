@@ -1,0 +1,12 @@
+# compat.opencv on windows-x86_64: the CORE profile (core/imgproc/imgcodecs,
+# headless, x86_64 SIMD dispatch via clang .simd.cpp). videoio+FFmpeg is not yet
+# in the windows profile (jpeg-turbo NASM SIMD is also off — C fallback), so this
+# member asserts the image-processing core rather than the full videoio surface the
+# `opencv` member exercises on linux/macOS. windows-only.
+[package]
+name    = "opencv-win-tests"
+version = "0.1.0"
+[indices]
+compat = { path = "../../.." }
+[target.'cfg(windows)'.dependencies.compat]
+opencv = "5.0.0"

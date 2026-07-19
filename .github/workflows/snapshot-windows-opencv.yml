@@ -1,0 +1,96 @@
+# TEMP spike: capture a windows-x86_64 compat.opencv config snapshot on a real
+# windows-latest runner using clang-cl (mcpp's windows toolchain is clang targeting
+# the MSVC ABI; OpenCV emits GCC-style -mavx2 SIMD flags under CV_CLANG even with
+# clang-cl -> mcpp-compatible). CORE profile first (core/imgproc/imgcodecs/highgui,
+# headless via WITH_WIN32UI=OFF, WITH_FFMPEG=OFF) to isolate the make-or-break
+# question: does mcpp clang-MSVC compile OpenCV's C++ from a clang-cl snapshot.
+# videoio+FFmpeg is a follow-up. Uploads the descriptor AND raw artifacts.
+name: snapshot-windows-opencv
+on: { workflow_dispatch: {}, push: { branches: [spike/opencv-windows-snapshot] } }
+jobs:
+  snapshot:
+    runs-on: windows-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ilammy/msvc-dev-cmd@v1        # MSVC SDK headers/libs for clang-cl
+      - name: tools (llvm/clang-cl, nasm, ninja)
+        shell: pwsh
+        run: |
+          choco install -y --no-progress nasm ninja llvm | Out-Null
+          echo "C:\Program Files\NASM" | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
+          echo "C:\Program Files\LLVM\bin" | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
+      - name: probe toolchain
+        shell: bash
+        run: |
+          set -eux
+          which clang-cl cmake ninja nasm
+          clang-cl --version
+      - name: fetch + extract OpenCV 5.0.0
+        shell: bash
+        run: |
+          set -eux
+          curl -L -fsS -o opencv.tar.gz https://github.com/opencv/opencv/archive/refs/tags/5.0.0.tar.gz
+          echo "b0528f5a1d379d59d4701cb28c36e22214cc51cf64594e5b56f2d3e6c0233095  opencv.tar.gz" | sha256sum -c -
+          tar -xzf opencv.tar.gz
+          echo "OPENCV_SRC=$PWD/opencv-5.0.0" >> "$GITHUB_ENV"
+      - name: cmake configure (clang-cl, headless core, hermetic)
+        shell: bash
+        run: |
+          set -eux
+          cmake -G Ninja -S "$OPENCV_SRC" -B bld \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_COMPILER=clang-cl -DCMAKE_CXX_COMPILER=clang-cl \
+            -DBUILD_LIST=core,imgproc,imgcodecs,highgui \
+            -DBUILD_SHARED_LIBS=OFF -DBUILD_ZLIB=ON -DBUILD_PNG=ON -DBUILD_JPEG=ON \
+            -DENABLE_LIBJPEG_TURBO_SIMD=OFF \
+            -DWITH_WIN32UI=OFF -DWITH_DSHOW=OFF -DWITH_MSMF=OFF -DWITH_MSMF_DXVA=OFF \
+            -DWITH_TIFF=OFF -DWITH_WEBP=OFF -DWITH_OPENJPEG=OFF -DWITH_JASPER=OFF \
+            -DWITH_OPENEXR=OFF -DWITH_AVIF=OFF -DWITH_JPEGXL=OFF -DWITH_IMGCODEC_GIF=OFF \
+            -DWITH_OPENCL=OFF -DWITH_IPP=OFF -DWITH_LAPACK=OFF -DWITH_EIGEN=OFF -DWITH_ITT=OFF \
+            -DWITH_QT=OFF -DWITH_OPENGL=OFF -DWITH_FFMPEG=OFF -DWITH_GSTREAMER=OFF \
+            -DWITH_OBSENSOR=OFF -DWITH_PROTOBUF=OFF -DWITH_CAROTENE=OFF -DWITH_FLATBUFFERS=OFF \
+            -DWITH_KLEIDICV=OFF -DWITH_NDSRVP=OFF -DWITH_HAL_RVV=OFF \
+            -DWITH_UNIFONT=OFF -DWITH_ADE=OFF \
+            -DBUILD_TESTS=OFF -DBUILD_PERF_TESTS=OFF -DBUILD_EXAMPLES=OFF \
+            -DBUILD_opencv_apps=OFF -DBUILD_JAVA=OFF -DBUILD_opencv_python3=OFF 2>&1 | tail -40
+      - name: reference build (materialize generators) + dump commands
+        shell: bash
+        run: |
+          ninja -C bld -k 0 > bld/ninja-build.log 2>&1 || true
+          ninja -C bld -t commands > bld/ninja-cmds.log
+          echo "=== windows cvconfig facts ==="
+          grep -E "HAVE_WIN32UI|WIN32|HAVE_OPENCV_HIGHGUI|BUILTIN_BACKEND" bld/cvconfig.h bld/*highgui* 2>/dev/null | head || true
+          echo "=== SIMD dispatch TUs present? ==="
+          grep -oE '\.(avx[0-9_a-z]*|sse4_[12]|fp16|neon[a-z0-9_]*)\.cpp' bld/ninja-cmds.log | sort | uniq -c || true
+          echo "=== SIMD flag style (-mavx expected, NOT /arch) ==="
+          grep -oE '(\-mavx[0-9]*|/arch:[A-Z0-9]+)' bld/ninja-cmds.log | sort | uniq -c || true
+      - name: gen descriptor (relabel linux->windows; raw artifacts uploaded regardless)
+        shell: bash
+        run: |
+          set -eux
+          python tools/compat-opencv/gen_descriptor.py \
+            "$OPENCV_SRC" bld 5.0.0 \
+            b0528f5a1d379d59d4701cb28c36e22214cc51cf64594e5b56f2d3e6c0233095 \
+            compat.opencv.wingen.lua || echo "gen_descriptor needs windows tweaks — raw artifacts uploaded for local iteration"
+          if [ -f compat.opencv.wingen.lua ]; then
+            # relabel linux->windows (xpm key + per-OS block) and drop linux ldflags
+            # (-lpthread/-ldl don't exist on windows; the build spike surfaces any
+            # real LNK deps, added back per-OS afterwards).
+            sed -e 's/^        linux = {/        windows = {/' \
+                -e 's/name        = "compat.opencv"/name        = "compat.opencvwin"/' \
+                -e 's/ldflags = { "-lpthread", "-ldl" }/ldflags = { "-lole32" }/' \
+                compat.opencv.wingen.lua > compat.opencvwin.lua || true
+            echo "=== descriptor head ==="; head -50 compat.opencvwin.lua || true
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: opencv-windows-snapshot
+          path: |
+            compat.opencvwin.lua
+            compat.opencv.wingen.lua
+            bld/cvconfig.h
+            bld/cv_cpu_config.h
+            bld/ninja-cmds.log
+            bld/ninja-build.log
