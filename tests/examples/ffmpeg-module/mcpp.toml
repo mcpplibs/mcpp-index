@@ -4,7 +4,8 @@
 # and single-entry because xlings breaks with >1 project index repo, mcpp#238). Replaces the
 # former tests/smoke_ffmpeg_module.sh reseeding driver. The package is
 # linux-only (source build with 157 NASM .asm units); off-Linux the test
-# compiles to a no-op main().
+# compiles to a no-op main(). macOS widening tracked as a module re-release
+# (v0.0.2) once compat.ffmpeg is multi-platform in the index.
 [package]
 name    = "ffmpeg-module-tests"
 version = "0.1.0"
