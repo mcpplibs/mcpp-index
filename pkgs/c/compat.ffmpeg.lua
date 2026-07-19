@@ -4767,6 +4767,7 @@ package = {
 #define CONFIG_OPENAL_INDEV 0
 #define CONFIG_PULSE_INDEV 0
 #define CONFIG_SNDIO_INDEV 0
+#define CONFIG_VFWCAP_INDEV 0
 #define CONFIG_XCBGRAB_INDEV 0
 #define CONFIG_LIBCDIO_INDEV 0
 #define CONFIG_LIBDC1394_INDEV 0
@@ -8177,7 +8178,6 @@ static const FFOutputFormat * const muxer_list[] = {
 #define CONFIG_GDIGRAB_INDEV 0
 #define CONFIG_OSS_INDEV 1
 #define CONFIG_V4L2_INDEV 1
-#define CONFIG_VFWCAP_INDEV 0
 #define CONFIG_FBDEV_OUTDEV 1
 #define CONFIG_OSS_OUTDEV 1
 #define CONFIG_V4L2_OUTDEV 1
@@ -8498,7 +8498,6 @@ static const URLProtocol * const url_protocols[] = {
 #define CONFIG_GDIGRAB_INDEV 0
 #define CONFIG_OSS_INDEV 0
 #define CONFIG_V4L2_INDEV 0
-#define CONFIG_VFWCAP_INDEV 0
 #define CONFIG_FBDEV_OUTDEV 0
 #define CONFIG_OSS_OUTDEV 0
 #define CONFIG_V4L2_OUTDEV 0
@@ -8569,7 +8568,6 @@ static const URLProtocol * const url_protocols[] = {
                 "-lgdi32",
                 "-lstrmiids",
                 "-luuid",
-                "-lavicap32",
                 "-lshlwapi",
             },
             include_dirs = {
@@ -8597,7 +8595,7 @@ static const URLProtocol * const url_protocols[] = {
                 "*/libavcodec/x86/hevc/dsp_init.c",
                 "*/libavcodec/x86/vvc/{alf,dmvr,mc,of,sad,sao,sao_10bit}.asm",
                 "*/libavcodec/x86/vvc/dsp_init.c",
-                "*/libavdevice/{alldevices,avdevice,dshow,dshow_common,dshow_crossbar,dshow_enummediatypes,dshow_enumpins,dshow_filter,dshow_pin,gdigrab,lavfi,utils,version,vfwcap}.c",
+                "*/libavdevice/{alldevices,avdevice,dshow,dshow_common,dshow_crossbar,dshow_enummediatypes,dshow_enumpins,dshow_filter,dshow_pin,gdigrab,lavfi,utils,version}.c",
                 "*/libavfilter/{aeval,af_aap,af_acontrast,af_acopy,af_acrossover,af_acrusher,af_adeclick,af_adecorrelate,af_adelay,af_adenorm,af_aderivative,af_adrc,af_adynamicequalizer,af_adynamicsmooth,af_aecho,af_aemphasis,af_aexciter,af_afade,af_afftdn,af_afftfilt,af_afir,af_aformat,af_afreqshift,af_afwtdn,af_agate,af_aiir,af_alimiter,af_amerge,af_amix,af_amultiply,af_anequalizer,af_anlmdn,af_anlms,af_anull,af_apad,af_aphaser,af_apsyclip,af_apulsator,af_aresample,af_arls,af_arnndn,af_asdr,af_asetnsamples,af_asetrate,af_ashowinfo,af_asoftclip,af_aspectralstats,af_astats,af_asubboost,af_asupercut,af_atempo,af_atilt,af_axcorrelate,af_biquads,af_channelmap,af_channelsplit,af_chorus,af_compand,af_compensationdelay,af_crossfeed,af_crystalizer,af_dcshift,af_deesser,af_dialoguenhance,af_drmeter,af_dynaudnorm,af_earwax,af_extrastereo,af_firequalizer,af_flanger,af_haas,af_hdcd,af_headphone,af_join,af_loudnorm,af_mcompand,af_pan,af_replaygain,af_sidechaincompress,af_silencedetect,af_silenceremove,af_speechnorm,af_stereotools,af_stereowiden,af_superequalizer,af_surround,af_tremolo,af_vibrato,af_virtualbass,af_volume,af_volumedetect,allfilters,asink_anullsink,asrc_afdelaysrc,asrc_afirsrc,asrc_anoisesrc,asrc_anullsrc,asrc_hilbert,asrc_sinc,asrc_sine,audio,avf_a3dscope,avf_abitscope,avf_ahistogram,avf_aphasemeter,avf_avectorscope,avf_concat,avf_showcqt,avf_showcwt,avf_showfreqs,avf_showspatial,avf_showspectrum,avf_showvolume,avf_showwaves,avfilter,avfiltergraph,bbox,buffersink,buffersrc,bwdifdsp,ccfifo,colorspace,colorspacedsp,drawutils,ebur128,edge_common,f_bench,f_cue,f_drawgraph,f_ebur128,f_graphmonitor,f_interleave,f_latency,f_loop,f_metadata,f_perms,f_realtime,f_reverse,f_segment,f_select,f_sendcmd,f_sidedata,f_streamselect,formats,framepool,framequeue,framesync,generate_wave_table,graphdump,graphparser,lavfutils,lswsutils,motion_estimation,palette,perlin,psnr,pthread,qp_table,scale_eval,scene_sad,setpts,settb,split,src_avsynctest,src_movie,transform,trim,vaf_spectrumsynth,version,vf_addroi,vf_alphamerge,vf_amplify,vf_aspect,vf_atadenoise,vf_avgblur,vf_backgroundkey,vf_bbox,vf_bilateral,vf_bitplanenoise,vf_blackdetect,vf_blend,vf_blockdetect,vf_blurdetect,vf_bm3d,vf_bwdif,vf_cas,vf_ccrepack,vf_chromakey,vf_chromanr,vf_chromashift,vf_ciescope,vf_codecview,vf_colorbalance,vf_colorchannelmixer,vf_colorconstancy,vf_colorcontrast,vf_colorcorrect,vf_colordetect,vf_colorize,vf_colorkey,vf_colorlevels,vf_colormap,vf_colorspace,vf_colortemperature,vf_convolution,vf_convolve,vf_copy,vf_corr,vf_crop,vf_curves,vf_datascope,vf_dblur,vf_dctdnoiz,vf_deband,vf_deblock,vf_decimate,vf_dedot,vf_deflicker,vf_dejudder,vf_deshake,vf_despill,vf_detelecine,vf_displace,vf_drawbox,vf_edgedetect,vf_elbg,vf_entropy,vf_epx,vf_estdif,vf_exposure,vf_extractplanes,vf_fade,vf_feedback,vf_fftdnoiz,vf_fftfilt,vf_field,vf_fieldhint,vf_fieldmatch,vf_fieldorder,vf_fillborders,vf_floodfill,vf_format,vf_fps,vf_framepack,vf_framerate,vf_framestep,vf_freezedetect,vf_freezeframes,vf_fsync,vf_gblur,vf_geq,vf_gradfun,vf_grayworld,vf_guided,vf_hflip,vf_histogram,vf_hqx,vf_hsvkey,vf_hue,vf_huesaturation,vf_hwdownload,vf_hwmap,vf_hwupload,vf_hysteresis,vf_identity,vf_idet,vf_idetdsp,vf_il,vf_lagfun,vf_lenscorrection,vf_limitdiff,vf_limiter,vf_lumakey,vf_lut,vf_lut2,vf_lut3d,vf_maskedclamp,vf_maskedmerge,vf_maskedminmax,vf_maskedthreshold,vf_maskfun,vf_median,vf_mergeplanes,vf_mestimate,vf_midequalizer,vf_minterpolate,vf_mix,vf_monochrome,vf_morpho,vf_multiply,vf_negate,vf_neighbor,vf_nlmeans,vf_noise,vf_normalize,vf_null,vf_overlay,vf_pad,vf_palettegen,vf_paletteuse,vf_photosensitivity,vf_pixdesctest,vf_pixelize,vf_premultiply,vf_pseudocolor,vf_psnr,vf_qp,vf_random,vf_readeia608,vf_readvitc,vf_remap,vf_removegrain,vf_removelogo,vf_rotate,vf_scale,vf_scdet,vf_scroll,vf_selectivecolor,vf_separatefields,vf_setparams,vf_shear,vf_showinfo,vf_showpalette,vf_shuffleframes,vf_shufflepixels,vf_shuffleplanes,vf_signalstats,vf_siti,vf_ssim,vf_ssim360,vf_stack,vf_swaprect,vf_swapuv,vf_telecine,vf_threshold,vf_thumbnail,vf_tile,vf_tiltandshift,vf_tmidequalizer,vf_tonemap,vf_tpad,vf_transpose,vf_unsharp,vf_untile,vf_v360,vf_varblur,vf_vectorscope,vf_vflip,vf_vfrdet,vf_vibrance,vf_vif,vf_vignette,vf_vmafmotion,vf_w3fdif,vf_waveform,vf_weave,vf_xbr,vf_xfade,vf_xmedian,vf_xpsnr,vf_yadif,vf_yaepblur,vf_zoompan,video,vsink_nullsink,vsrc_cellauto,vsrc_gradients,vsrc_life,vsrc_mandelbrot,vsrc_perlin,vsrc_sierpinski,vsrc_testsrc,yadif_common}.c",
                 "*/libavfilter/x86/{af_afir,af_anlmdn,af_volume,avf_showcqt,colorspacedsp,f_ebur128,scene_sad,vf_atadenoise,vf_blackdetect,vf_blend,vf_bwdif,vf_colordetect,vf_convolution,vf_framerate,vf_gblur,vf_gradfun,vf_hflip,vf_idetdsp,vf_limiter,vf_lut3d,vf_maskedclamp,vf_maskedmerge,vf_nlmeans,vf_overlay,vf_psnr,vf_ssim,vf_threshold,vf_transpose,vf_v360,vf_w3fdif,vf_yadif,yadif-10,yadif-16}.asm",
                 "*/libavfilter/x86/{af_afir_init,af_anlmdn_init,af_volume_init,avf_showcqt_init,colorspacedsp_init,f_ebur128_init,scene_sad_init,vf_atadenoise_init,vf_blackdetect_init,vf_blend_init,vf_bwdif_init,vf_colordetect_init,vf_convolution_init,vf_framerate_init,vf_gblur_init,vf_gradfun_init,vf_hflip_init,vf_idetdsp_init,vf_limiter_init,vf_lut3d_init,vf_maskedclamp_init,vf_maskedmerge_init,vf_nlmeans_init,vf_noise,vf_overlay_init,vf_psnr_init,vf_ssim_init,vf_threshold_init,vf_transpose_init,vf_v360_init,vf_w3fdif_init,vf_yadif_init}.c",
@@ -8973,7 +8971,6 @@ static const URLProtocol * const url_protocols[] = {
 #define CONFIG_GDIGRAB_INDEV 1
 #define CONFIG_OSS_INDEV 0
 #define CONFIG_V4L2_INDEV 0
-#define CONFIG_VFWCAP_INDEV 1
 #define CONFIG_FBDEV_OUTDEV 0
 #define CONFIG_OSS_OUTDEV 0
 #define CONFIG_V4L2_OUTDEV 0
@@ -8985,7 +8982,6 @@ static const FFInputFormat * const indev_list[] = {
     &ff_dshow_demuxer,
     &ff_gdigrab_demuxer,
     &ff_lavfi_demuxer,
-    &ff_vfwcap_demuxer,
     NULL };
 ]==],
                 ["mcpp_generated/libavdevice/outdev_list.c"] = [==[

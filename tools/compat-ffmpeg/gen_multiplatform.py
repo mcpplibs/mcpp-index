@@ -60,10 +60,10 @@ PER_OS_LDFLAGS = {
     "macosx":  ["-lm"],
     "windows": ["-lbcrypt", "-lws2_32", "-lsecur32", "-luser32", "-lole32", "-loleaut32",
                 "-ladvapi32", "-lshell32", "-lgdi32",
-                # libavdevice capture backends: dshow → strmiids (DirectShow
-                # CLSID_/IID_/MEDIATYPE_ GUIDs) + uuid; vfwcap → avicap32
-                # (capCreateCaptureWindowA); + shlwapi (SHCreateStreamOnFileA).
-                "-lstrmiids", "-luuid", "-lavicap32", "-lshlwapi"],
+                # libavdevice dshow capture backend: strmiids (DirectShow
+                # CLSID_/IID_/MEDIATYPE_ GUIDs) + uuid; + shlwapi
+                # (SHCreateStreamOnFileA). vfwcap dropped (avicap32.lib absent).
+                "-lstrmiids", "-luuid", "-lshlwapi"],
 }
 BUILDING = ["avutil", "avcodec", "avformat", "avfilter", "avdevice", "swscale", "swresample"]
 
@@ -71,9 +71,23 @@ def L(items, ind):
     p = " " * ind
     return "{\n" + "".join(f'{p}    "{i}",\n' for i in items) + p + "}"
 
+# Windows: the vfwcap (Video-for-Windows) capture indev needs avicap32.lib,
+# which the mcpp clang-MSVC toolchain's SDK subset doesn't ship (dshow's
+# strmiids IS present). vfwcap is a legacy niche capture backend — drop it:
+# source excluded, indev_list entry removed, CONFIG_VFWCAP_INDEV → 0.
+WIN_DROP_SOURCES = {"libavdevice/vfwcap.c"}
+
 def read(os_, rel):
     p = SNAP[os_] / rel
-    return p.read_text() if p.exists() else None
+    if not p.exists():
+        return None
+    c = p.read_text()
+    if os_ == "windows":
+        if rel == "config_components.h":
+            c = c.replace("#define CONFIG_VFWCAP_INDEV 1", "#define CONFIG_VFWCAP_INDEV 0")
+        elif rel == "libavdevice/indev_list.c":
+            c = "\n".join(l for l in c.splitlines() if "vfwcap" not in l) + "\n"
+    return c
 
 def longbracket(name, content, ind):
     assert "]==]" not in content, name
@@ -162,9 +176,12 @@ def gen_block(d, ind):
                              for k in sorted(d)) + f"\n{' '*ind}}},"
 
 def read_sources(o):
-    return [l.strip().removeprefix("src/")
-            for l in (SNAP[o] / "sources.txt").read_text().splitlines()
-            if l.strip() and not l.strip().removeprefix("src/").startswith("-")]
+    out = [l.strip().removeprefix("src/")
+           for l in (SNAP[o] / "sources.txt").read_text().splitlines()
+           if l.strip() and not l.strip().removeprefix("src/").startswith("-")]
+    if o == "windows":
+        out = [l for l in out if l not in WIN_DROP_SOURCES]
+    return out
 
 # Reference (dir set per basename) from the OSes that build clean (linux+macosx).
 # FFmpeg's shared sources (file_open.c, log2_tab.c, …) are compiled into EACH lib
