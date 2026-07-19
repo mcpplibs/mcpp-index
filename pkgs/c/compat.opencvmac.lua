@@ -61,13 +61,13 @@ package = {
             "*/modules/highgui/include",
             "mcpp_generated/modules/highgui",
         },
-        cxxflags = { "-w" },
-        cflags   = { "-w" },
+        cxxflags = { , "-w" },
+        cflags   = { , "-w" },
         flags = {
             { glob = "**/modules/core/**", defines = { "HAVE_STDARG_H=1", "HAVE_UNISTD_H=1", "NDEBUG", "OPENCV_ALLOCATOR_STATS_COUNTER_TYPE=int", "_USE_MATH_DEFINES", "__OPENCV_BUILD=1", "__STDC_CONSTANT_MACROS", "__STDC_FORMAT_MACROS", "__STDC_LIMIT_MACROS" } },
             { glob = "**/modules/flann/**", defines = { "NDEBUG", "_USE_MATH_DEFINES", "__OPENCV_BUILD=1", "__STDC_CONSTANT_MACROS", "__STDC_FORMAT_MACROS", "__STDC_LIMIT_MACROS" } },
             { glob = "**/modules/geometry/**", defines = { "NDEBUG", "_USE_MATH_DEFINES", "__OPENCV_BUILD=1", "__STDC_CONSTANT_MACROS", "__STDC_FORMAT_MACROS", "__STDC_LIMIT_MACROS" } },
-            { glob = "**/modules/highgui/**", defines = { "ENABLE_PLUGINS", "HAVE_COCOA", "HAVE_STDARG_H=1", "HAVE_UNISTD_H=1", "NDEBUG", "_USE_MATH_DEFINES", "__OPENCV_BUILD=1", "__STDC_CONSTANT_MACROS", "__STDC_FORMAT_MACROS", "__STDC_LIMIT_MACROS" } },
+            { glob = "**/modules/highgui/**", defines = { "ENABLE_PLUGINS", "HAVE_STDARG_H=1", "HAVE_UNISTD_H=1", "NDEBUG", "_USE_MATH_DEFINES", "__OPENCV_BUILD=1", "__STDC_CONSTANT_MACROS", "__STDC_FORMAT_MACROS", "__STDC_LIMIT_MACROS" } },
             { glob = "**/modules/imgcodecs/**", defines = { "HAVE_IMGCODEC_HDR", "HAVE_IMGCODEC_PFM", "HAVE_IMGCODEC_PXM", "HAVE_IMGCODEC_SUNRASTER", "HAVE_STDARG_H=1", "HAVE_UNISTD_H=1", "NDEBUG", "_USE_MATH_DEFINES", "__OPENCV_BUILD=1", "__STDC_CONSTANT_MACROS", "__STDC_FORMAT_MACROS", "__STDC_LIMIT_MACROS" } },
             { glob = "**/modules/imgproc/**", defines = { "HAVE_STDARG_H=1", "HAVE_UNISTD_H=1", "NDEBUG", "_USE_MATH_DEFINES", "__OPENCV_BUILD=1", "__STDC_CONSTANT_MACROS", "__STDC_FORMAT_MACROS", "__STDC_LIMIT_MACROS" } },
             { glob = "**/3rdparty/libjpeg-turbo/**", defines = { "NDEBUG", "NEON_INTRINSICS", "NO_GETENV", "NO_PUTENV" } },
@@ -2102,10 +2102,10 @@ bool MLASCALL MlasHGemmSupported(CBLAS_TRANSPOSE, CBLAS_TRANSPOSE) { return fals
         ["mcpp_generated/modules/core/version_string.inc"] = [==[
 "\n"
 "General configuration for OpenCV 5.0.0 =====================================\n"
-"  Version control:               7b27f0e\n"
+"  Version control:               1daf3e8\n"
 "\n"
 "  Platform:\n"
-"    Timestamp:                   2026-07-19T18:31:44Z\n"
+"    Timestamp:                   2026-07-19T19:02:52Z\n"
 "    Host:                        Darwin 24.6.0 arm64\n"
 "    CMake:                       4.4.0\n"
 "    CMake generator:             Ninja\n"
@@ -2133,7 +2133,7 @@ bool MLASCALL MlasHGemmSupported(CBLAS_TRANSPOSE, CBLAS_TRANSPOSE) { return fals
 "    Linker flags (Debug):        -Wl,-dead_strip  \n"
 "    ccache:                      NO\n"
 "    Precompiled headers:         NO\n"
-"    Extra dependencies:          -framework Cocoa -framework AppKit\n"
+"    Extra dependencies:          -framework AppKit\n"
 "    3rdparty dependencies:       libjpeg-turbo libpng zlib\n"
 "\n"
 "  OpenCV modules:\n"
@@ -2145,8 +2145,7 @@ bool MLASCALL MlasHGemmSupported(CBLAS_TRANSPOSE, CBLAS_TRANSPOSE) { return fals
 "    Documentation:               NO\n"
 "    Non-free algorithms:         NO\n"
 "\n"
-"  GUI:                           COCOA\n"
-"    Cocoa:                       YES\n"
+"  GUI:                           NONE\n"
 "    VTK support:                 NO\n"
 "\n"
 "  Media I/O: \n"
@@ -2190,7 +2189,9 @@ bool MLASCALL MlasHGemmSupported(CBLAS_TRANSPOSE, CBLAS_TRANSPOSE) { return fals
 ]==],
         ["mcpp_generated/modules/highgui/opencv_highgui_config.hpp"] = [==[
 // Auto-generated file
-#define OPENCV_HIGHGUI_BUILTIN_BACKEND_STR "COCOA"
+#define OPENCV_HIGHGUI_BUILTIN_BACKEND_STR "NONE"
+
+#define OPENCV_HIGHGUI_WITHOUT_BUILTIN_BACKEND 1
 ]==],
         ["mcpp_generated/modules/imgproc/accum.avx.cpp"] = [==[
 
