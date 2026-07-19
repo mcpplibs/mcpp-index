@@ -59,7 +59,11 @@ PER_OS_LDFLAGS = {
     "linux":   ["-lpthread", "-lm"],
     "macosx":  ["-lm"],
     "windows": ["-lbcrypt", "-lws2_32", "-lsecur32", "-luser32", "-lole32", "-loleaut32",
-                "-ladvapi32", "-lshell32", "-lgdi32"],
+                "-ladvapi32", "-lshell32", "-lgdi32",
+                # libavdevice capture backends: dshow → strmiids (DirectShow
+                # CLSID_/IID_/MEDIATYPE_ GUIDs) + uuid; vfwcap → avicap32
+                # (capCreateCaptureWindowA); + shlwapi (SHCreateStreamOnFileA).
+                "-lstrmiids", "-luuid", "-lavicap32", "-lshlwapi"],
 }
 BUILDING = ["avutil", "avcodec", "avformat", "avfilter", "avdevice", "swscale", "swresample"]
 

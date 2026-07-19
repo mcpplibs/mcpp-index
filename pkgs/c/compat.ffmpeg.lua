@@ -8567,6 +8567,10 @@ static const URLProtocol * const url_protocols[] = {
                 "-ladvapi32",
                 "-lshell32",
                 "-lgdi32",
+                "-lstrmiids",
+                "-luuid",
+                "-lavicap32",
+                "-lshlwapi",
             },
             include_dirs = {
                 "*/libavutil/x86",
