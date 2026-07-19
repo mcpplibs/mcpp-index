@@ -1,0 +1,15 @@
+# TEMP multi-platform spike: deps the multi-platform compat.ffmpegmp on BOTH
+# linux and macos (per-OS frozen snapshots via mcpp.<os>). A green linux AND
+# macos leg proves the single-descriptor per-OS structure builds on both.
+[package]
+name    = "ffmpegmp-spike-tests"
+version = "0.1.0"
+
+[indices]
+compat = { path = "../../.." }
+
+[target.'cfg(linux)'.dependencies.compat]
+ffmpegmp = "8.1.2"
+
+[target.'cfg(macos)'.dependencies.compat]
+ffmpegmp = "8.1.2"
