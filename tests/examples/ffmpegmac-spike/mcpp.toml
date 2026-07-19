@@ -1,0 +1,12 @@
+# TEMP macOS ffmpeg build spike: deps the macos-only compat.ffmpegmac and links
+# avutil_version() — proves mcpp compiles+archives all 2091 FFmpeg C + 60 aarch64
+# GAS .S sources on macos-15 and links them. cfg(macos); no-op elsewhere.
+[package]
+name    = "ffmpegmac-spike-tests"
+version = "0.1.0"
+
+[indices]
+compat = { path = "../../.." }
+
+[target.'cfg(macos)'.dependencies.compat]
+ffmpegmac = "8.1.2"
