@@ -2,10 +2,9 @@
 # with mcpp itself (2281 TUs incl. 157 NASM .asm; no configure/make at build
 # time — the config snapshot ships as generated_files in the descriptor).
 # Linux + macOS: under those cfgs the dep is pulled (per-OS frozen config
-# snapshot in the descriptor — linux-x86_64 NASM, macosx-arm64 NEON, windows-
-# x86_64 win64 NASM) and the test asserts the full component surface on all
-# three (mcpp >= 0.0.100: #247 driver-style link rspfile makes the Windows
-# ~2283-object link work).
+# snapshot in the descriptor — linux-x86_64 NASM, macosx-arm64 NEON).
+# The test asserts the full component surface on both. Windows lands with the
+# common/delta dedup once mcpp#251 (neutral generated_files path) is fixed.
 [package]
 name    = "ffmpeg-tests"
 version = "0.1.0"
@@ -17,7 +16,4 @@ compat = { path = "../../.." }
 ffmpeg = "8.1.2"
 
 [target.'cfg(macos)'.dependencies.compat]
-ffmpeg = "8.1.2"
-
-[target.'cfg(windows)'.dependencies.compat]
 ffmpeg = "8.1.2"
