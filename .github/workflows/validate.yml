@@ -35,7 +35,7 @@ env:
   # 0.0.94 fixed feature-gated `sources` under `mcpp test` (mcpp#218); 0.0.91
   # added standard = "c++fly" to the resolver grammar, so c++fly descriptors
   # get the lint WARN below, not a hard grammar-parse rejection.
-  MCPP_VERSION: "0.0.99"
+  MCPP_VERSION: "0.0.100"
 
 jobs:
   lint:
@@ -187,21 +187,21 @@ jobs:
             ext: tar.gz
             mcpp: bin/mcpp
             xlings: registry/bin/xlings
-            mcpp_version: "0.0.99"   # keep in sync with env.MCPP_VERSION
+            mcpp_version: "0.0.100"   # keep in sync with env.MCPP_VERSION
           - platform: macos
             os: macos-15
             suffix: macosx-arm64
             ext: tar.gz
             mcpp: bin/mcpp
             xlings: registry/bin/xlings
-            mcpp_version: "0.0.99"   # keep in sync with env.MCPP_VERSION
+            mcpp_version: "0.0.100"   # keep in sync with env.MCPP_VERSION
           - platform: windows
             os: windows-latest
             suffix: windows-x86_64
             ext: zip
             mcpp: bin/mcpp.exe
             xlings: registry/bin/xlings.exe
-            mcpp_version: "0.0.99"   # keep in sync with env.MCPP_VERSION
+            mcpp_version: "0.0.100"   # keep in sync with env.MCPP_VERSION
     env:
       MCPP_EFFECTIVE: ${{ matrix.mcpp_version }}
     steps:
