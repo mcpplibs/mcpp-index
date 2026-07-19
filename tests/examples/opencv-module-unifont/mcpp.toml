@@ -12,3 +12,6 @@ default = { path = "../../.." }
 
 [target.'cfg(linux)'.dependencies]
 opencv = { version = "0.0.4", features = ["unifont"] }
+
+[target.'cfg(macos)'.dependencies]
+opencv = { version = "0.0.4", features = ["unifont"] }

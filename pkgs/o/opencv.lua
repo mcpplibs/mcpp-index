@@ -10,7 +10,9 @@
 -- Optional features (0.0.4+, mcpp#243 forwarding): `dnn` adds the
 -- import opencv.dnn; interface and forwards compat.opencv/dnn; `unifont`
 -- forwards compat.opencv/unifont — `opencv = { features = ["dnn"] }`.
--- Linux-only for now: compat.opencv carries a linux-x86_64 config snapshot.
+-- linux + macOS: compat.opencv carries per-OS config snapshots (linux-x86_64,
+    -- macosx-arm64 full profiles). windows is core-only (no videoio) so the module
+    -- (import opencv.cv aggregates videoio) is not yet offered there.
 --
 package = {
     spec        = "1",
@@ -23,6 +25,15 @@ package = {
 
     xpm = {
         linux = {
+            ["0.0.4"] = {
+                url    = {
+                    GLOBAL = "https://github.com/Sunrisepeak/opencv-m/archive/refs/tags/v0.0.4.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/opencv/releases/download/v0.0.4/opencv-m-0.0.4.tar.gz",
+                },
+                sha256 = "a2e95e8b22ae66712e3f78809426e058330073c2679a21c2b2d500faa0b4964f",
+            },
+        },
+        macosx = {
             ["0.0.4"] = {
                 url    = {
                     GLOBAL = "https://github.com/Sunrisepeak/opencv-m/archive/refs/tags/v0.0.4.tar.gz",

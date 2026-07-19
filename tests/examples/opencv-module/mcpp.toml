@@ -18,3 +18,6 @@ default = { path = "../../.." }
 
 [target.'cfg(linux)'.dependencies]
 opencv = "0.0.4"
+
+[target.'cfg(macos)'.dependencies]
+opencv = "0.0.4"

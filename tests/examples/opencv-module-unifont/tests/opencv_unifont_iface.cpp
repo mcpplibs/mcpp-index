@@ -2,7 +2,7 @@
 // compat.opencv/unifont — CJK rendering through the module layer must ink.
 // Linux-only (see mcpp.toml). Import-only (import std + opencv.cv): no textual
 // headers, matching the ffmpeg-module member convention.
-#ifdef __linux__
+#if defined(__linux__) || defined(__APPLE__)
 import std;
 import opencv.cv;
 

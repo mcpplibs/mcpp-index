@@ -3,7 +3,7 @@
 // replacement operator surface: Size comparison via != crosses the module
 // boundary — the v0.0.1 regression scenario), PNG+JPEG codec roundtrips,
 // videoio registry. Linux-only (see mcpp.toml).
-#ifdef __linux__
+#if defined(__linux__) || defined(__APPLE__)
 import std;
 import opencv.cv;
 
