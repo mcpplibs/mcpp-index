@@ -1,7 +1,8 @@
 // Public ffmpeg module package end-to-end assertion: import-only consumption
 // (`import ffmpeg.av;`), libavutil version of the FFmpeg 8.1.x train, core
-// decoders present, demuxer registry populated. Linux-only (see mcpp.toml).
-#ifdef __linux__
+// decoders present, demuxer registry populated. Linux + macOS (see mcpp.toml);
+// Windows compiles to a no-op main() (pending mcpp#247).
+#if defined(__linux__) || defined(__APPLE__)
 import std;
 import ffmpeg.av;
 
