@@ -25,21 +25,21 @@ package = {
 
     xpm = {
         linux = {
-            ["0.0.4"] = {
+            ["0.0.5"] = {
                 url    = {
-                    GLOBAL = "https://github.com/Sunrisepeak/opencv-m/archive/refs/tags/v0.0.4.tar.gz",
-                    CN     = "https://gitcode.com/mcpp-res/opencv/releases/download/v0.0.4/opencv-m-0.0.4.tar.gz",
+                    GLOBAL = "https://github.com/Sunrisepeak/opencv-m/archive/refs/tags/v0.0.5.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/opencv/releases/download/v0.0.5/opencv-m-0.0.5.tar.gz",
                 },
-                sha256 = "a2e95e8b22ae66712e3f78809426e058330073c2679a21c2b2d500faa0b4964f",
+                sha256 = "9e366631295aef806808f76fd6bf46528a9c231496eb8aa9d18f61f0b378d24e",
             },
         },
         macosx = {
-            ["0.0.4"] = {
+            ["0.0.5"] = {
                 url    = {
-                    GLOBAL = "https://github.com/Sunrisepeak/opencv-m/archive/refs/tags/v0.0.4.tar.gz",
-                    CN     = "https://gitcode.com/mcpp-res/opencv/releases/download/v0.0.4/opencv-m-0.0.4.tar.gz",
+                    GLOBAL = "https://github.com/Sunrisepeak/opencv-m/archive/refs/tags/v0.0.5.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/opencv/releases/download/v0.0.5/opencv-m-0.0.5.tar.gz",
                 },
-                sha256 = "a2e95e8b22ae66712e3f78809426e058330073c2679a21c2b2d500faa0b4964f",
+                sha256 = "9e366631295aef806808f76fd6bf46528a9c231496eb8aa9d18f61f0b378d24e",
             },
         },
     },
