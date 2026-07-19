@@ -14,3 +14,6 @@ compat = { path = "../../.." }
 
 [target.'cfg(linux)'.dependencies.compat]
 opencv = "5.0.0"
+
+[target.'cfg(macos)'.dependencies.compat]
+opencv = "5.0.0"

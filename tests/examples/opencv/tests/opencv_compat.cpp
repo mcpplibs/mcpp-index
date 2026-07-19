@@ -1,9 +1,9 @@
 // compat.opencv end-to-end assertion: the source build must expose the
 // five-module surface (Mat/imgproc ops, PNG codec roundtrip) AND the
 // FFmpeg videoio backend pulled in through the compat.ffmpeg dependency —
-// proven by a real mp4 encode -> decode roundtrip, not just registry
+// proven by a real mp4 encode -> decode roundtrip on linux + macOS, not just registry
 // presence. Linux-only (see mcpp.toml).
-#ifdef __linux__
+#if defined(__linux__) || defined(__APPLE__)
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/imgcodecs.hpp>

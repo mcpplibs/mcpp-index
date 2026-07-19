@@ -12,3 +12,6 @@ compat = { path = "../../.." }
 
 [target.'cfg(linux)'.dependencies.compat]
 opencv = { version = "5.0.0", features = ["unifont"] }
+
+[target.'cfg(macos)'.dependencies.compat]
+opencv = { version = "5.0.0", features = ["unifont"] }

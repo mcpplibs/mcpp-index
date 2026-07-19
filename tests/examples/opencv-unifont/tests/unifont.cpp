@@ -2,7 +2,7 @@
 // compat.opencv was built with HAVE_UNIFONT (drawing_text.cpp gates the
 // builtinFontData entry), so its usability IS the feature probe; CJK
 // rendering through it must produce real ink. Linux-only (see mcpp.toml).
-#ifdef __linux__
+#if defined(__linux__) || defined(__APPLE__)
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
 #include <cstdio>

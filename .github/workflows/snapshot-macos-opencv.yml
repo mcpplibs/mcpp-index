@@ -1,0 +1,86 @@
+# TEMP spike: capture a macOS-arm64 FULL-profile compat.opencv config snapshot on
+# a real macos-15 runner (core/imgproc/imgcodecs/highgui/videoio + WITH_FFMPEG —
+# module parity with linux), emit the descriptor via gen_descriptor.py, upload it.
+# Builds a static ffmpeg 8.1.2 prefix first (cmake's videoio-FFmpeg discovery;
+# consumers get the libs from the compat.ffmpeg dependency instead).
+name: snapshot-macos-opencv
+on: { workflow_dispatch: {}, push: { branches: [feat/opencv-3platform] } }
+jobs:
+  snapshot:
+    runs-on: macos-15
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - run: brew install cmake ninja nasm
+      - run: pip3 install --break-system-packages numpy || pip3 install numpy
+      - name: fetch sources (ffmpeg 8.1.2 + opencv 5.0.0)
+        run: |
+          set -eux
+          curl -L -fsS -o ffmpeg.tar.gz https://ffmpeg.org/releases/ffmpeg-8.1.2.tar.gz
+          echo "32faba5ef67340d54724941eae1425580791195312a4fd13bf6f820a2818bf22  ffmpeg.tar.gz" | shasum -a 256 -c -
+          tar -xzf ffmpeg.tar.gz
+          curl -L -fsS -o opencv.tar.gz https://github.com/opencv/opencv/archive/refs/tags/5.0.0.tar.gz
+          echo "b0528f5a1d379d59d4701cb28c36e22214cc51cf64594e5b56f2d3e6c0233095  opencv.tar.gz" | shasum -a 256 -c -
+          tar -xzf opencv.tar.gz
+          echo "OPENCV_SRC=$PWD/opencv-5.0.0" >> "$GITHUB_ENV"
+          # Headless highgui on macOS to MATCH linux (same API surface, no GUI backend):
+          # mcpp cannot compile window_cocoa.mm (.mm/Objective-C++ unsupported), and
+          # OpenCV 5 has no WITH_COCOA switch — HAVE_COCOA is set unconditionally on
+          # APPLE+clang in cmake/OpenCVFindLibsGUI.cmake. Neutralize that one line so the
+          # highgui elseif-chain falls through to the headless path (like linux w/o GTK/Qt).
+          sed -i.bak 's/set(HAVE_COCOA YES)/message(STATUS "mcpp: HAVE_COCOA disabled -> headless highgui (matches linux)")/' \
+            "$PWD/opencv-5.0.0/cmake/OpenCVFindLibsGUI.cmake"
+          grep -n 'HAVE_COCOA\|mcpp: HAVE_COCOA' "$PWD/opencv-5.0.0/cmake/OpenCVFindLibsGUI.cmake" || true
+      - name: build static ffmpeg prefix (videoio backend discovery)
+        run: |
+          set -eux
+          mkdir ffbuild && cd ffbuild
+          ../ffmpeg-8.1.2/configure --cc=clang --prefix="$PWD/../ffprefix" \
+            --enable-shared --disable-static --disable-programs --disable-doc \
+            --disable-autodetect --enable-pic
+          make -j"$(sysctl -n hw.ncpu)" && make install
+          echo "FFMPEG_PREFIX=$PWD/../ffprefix" >> "$GITHUB_ENV"
+      - name: cmake configure opencv (full profile, aarch64, ffmpeg videoio)
+        run: |
+          set -eux
+          PKG_CONFIG_LIBDIR="$FFMPEG_PREFIX/lib/pkgconfig" \
+          cmake -G Ninja -S "$OPENCV_SRC" -B bld -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_LIST=core,imgproc,imgcodecs,highgui,videoio \
+            -DBUILD_SHARED_LIBS=OFF -DBUILD_ZLIB=ON -DBUILD_PNG=ON -DBUILD_JPEG=ON \
+            -DWITH_TIFF=OFF -DWITH_WEBP=OFF -DWITH_OPENJPEG=OFF -DWITH_JASPER=OFF \
+            -DWITH_OPENEXR=OFF -DWITH_AVIF=OFF -DWITH_JPEGXL=OFF -DWITH_IMGCODEC_GIF=OFF \
+            -DWITH_OPENCL=OFF -DWITH_IPP=OFF -DWITH_LAPACK=OFF -DWITH_EIGEN=OFF -DWITH_ITT=OFF \
+            -DWITH_QT=OFF -DWITH_OPENGL=OFF -DWITH_FFMPEG=ON -DWITH_GSTREAMER=OFF \
+            -DWITH_AVFOUNDATION=OFF -DWITH_V4L=OFF -DWITH_OBSENSOR=OFF \
+            -DWITH_PROTOBUF=OFF -DWITH_CAROTENE=OFF -DWITH_FLATBUFFERS=OFF \
+            -DWITH_KLEIDICV=OFF -DWITH_NDSRVP=OFF -DWITH_HAL_RVV=OFF \
+            -DWITH_UNIFONT=OFF -DWITH_ADE=OFF \
+            -DBUILD_TESTS=OFF -DBUILD_PERF_TESTS=OFF -DBUILD_EXAMPLES=OFF \
+            -DBUILD_opencv_apps=OFF -DBUILD_JAVA=OFF -DBUILD_opencv_python3=OFF
+      - name: reference build (materialize generators) + dump commands
+        run: |
+          ninja -C bld -k 0 > bld/ninja-build.log 2>&1 || true
+          ninja -C bld -t commands > bld/ninja-cmds.log
+          grep -q cap_ffmpeg bld/ninja-cmds.log || { echo 'FATAL: cap_ffmpeg not compiled — ffmpeg videoio backend not active'; exit 1; }
+          echo "cap_ffmpeg TUs: $(grep -c cap_ffmpeg bld/ninja-cmds.log)"
+      - name: gen descriptor
+        run: |
+          set -eux
+          FFMPEG_PREFIX="$FFMPEG_PREFIX" python3 tools/compat-opencv/gen_descriptor.py \
+            "$OPENCV_SRC" bld 5.0.0 \
+            b0528f5a1d379d59d4701cb28c36e22214cc51cf64594e5b56f2d3e6c0233095 \
+            compat.opencv.macgen.lua
+          sed -e 's/^        linux = {/        macosx = {/' \
+              -e 's/name        = "compat.opencv"/name        = "compat.opencvmac"/' \
+              compat.opencv.macgen.lua > compat.opencvmac.lua
+          grep -oE '\.(neon[a-z0-9_]*|fp16)\.cpp' bld/ninja-cmds.log | sort | uniq -c || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: opencv-macos-full-snapshot
+          path: |
+            compat.opencvmac.lua
+            compat.opencv.macgen.lua
+            bld/cvconfig.h
+            bld/ninja-cmds.log
+            bld/ninja-build.log
