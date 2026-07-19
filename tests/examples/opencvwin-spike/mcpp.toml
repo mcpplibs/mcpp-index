@@ -1,0 +1,11 @@
+# TEMP spike: build-validate the windows-x86_64 compat.opencv CORE snapshot
+# (compat.opencvwin): core/imgproc/imgcodecs, headless (WITH_WIN32UI=OFF), x86_64
+# SIMD dispatch. Proves mcpp clang-MSVC compiles OpenCV's C++ from a clang-cl
+# config snapshot + links. videoio+FFmpeg is a follow-up. windows-only.
+[package]
+name    = "opencvwin-spike-tests"
+version = "0.1.0"
+[indices]
+compat = { path = "../../.." }
+[target.'cfg(windows)'.dependencies.compat]
+opencvwin = "5.0.0"
