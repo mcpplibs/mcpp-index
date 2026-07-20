@@ -1,5 +1,4 @@
 // Experimental channel/concurrent_channel/use_promise over the module surface.
-// Mirrors tests/examples/asio/tests/experimental.cpp.
 import std;
 import asio;
 

@@ -1,5 +1,5 @@
 // TCP (acceptor/socket, async_read/async_write) and UDP (datagram send/receive)
-// over the module surface. Mirrors tests/examples/asio/tests/network.cpp.
+// over the imported module surface.
 import std;
 import asio;
 
