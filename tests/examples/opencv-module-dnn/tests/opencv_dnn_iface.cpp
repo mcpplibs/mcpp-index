@@ -4,7 +4,7 @@
 // Linux-only (see mcpp.toml). Not named dnn.cpp (would collide with the dep's
 // modules/dnn/src/dnn.cpp — #240 family). Import-only (import std + the opencv
 // modules): no textual headers, matching the ffmpeg-module member convention.
-#if defined(__linux__) || defined(__APPLE__) || defined(_WIN32)
+#if defined(__linux__) || defined(__APPLE__)
 import std;
 import opencv.cv;
 import opencv.dnn;
