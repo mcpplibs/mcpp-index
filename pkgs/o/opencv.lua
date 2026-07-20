@@ -10,7 +10,9 @@
 -- Optional features (0.0.4+, mcpp#243 forwarding): `dnn` adds the
 -- import opencv.dnn; interface and forwards compat.opencv/dnn; `unifont`
 -- forwards compat.opencv/unifont — `opencv = { features = ["dnn"] }`.
--- Linux-only for now: compat.opencv carries a linux-x86_64 config snapshot.
+-- linux + macOS: the module tarball is OS-neutral; compat.opencv is per-OS
+    -- (linux/macosx full). v0.0.6 added the clang static-inline export forwarding
+    -- layer so clang (macOS) can import opencv.cv. windows: module needs videoio.
 --
 package = {
     spec        = "1",
@@ -23,12 +25,21 @@ package = {
 
     xpm = {
         linux = {
-            ["0.0.4"] = {
+            ["0.0.6"] = {
                 url    = {
-                    GLOBAL = "https://github.com/Sunrisepeak/opencv-m/archive/refs/tags/v0.0.4.tar.gz",
-                    CN     = "https://gitcode.com/mcpp-res/opencv/releases/download/v0.0.4/opencv-m-0.0.4.tar.gz",
+                    GLOBAL = "https://github.com/Sunrisepeak/opencv-m/archive/refs/tags/v0.0.6.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/opencv/releases/download/v0.0.6/opencv-m-0.0.6.tar.gz",
                 },
-                sha256 = "a2e95e8b22ae66712e3f78809426e058330073c2679a21c2b2d500faa0b4964f",
+                sha256 = "adebd6b1e7a434bf8d744a6fc191725466467ae13b4d7ee1c01d5a8e21bbf2eb",
+            },
+        },
+        macosx = {
+            ["0.0.6"] = {
+                url    = {
+                    GLOBAL = "https://github.com/Sunrisepeak/opencv-m/archive/refs/tags/v0.0.6.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/opencv/releases/download/v0.0.6/opencv-m-0.0.6.tar.gz",
+                },
+                sha256 = "adebd6b1e7a434bf8d744a6fc191725466467ae13b4d7ee1c01d5a8e21bbf2eb",
             },
         },
     },
