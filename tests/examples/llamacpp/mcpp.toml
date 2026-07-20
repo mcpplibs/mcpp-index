@@ -7,3 +7,12 @@ compat = { path = "../../.." }
 
 [dependencies.compat]
 llamacpp = "b10069"
+
+# To enable Metal GPU backend (macOS only):
+#   [dependencies.compat]
+#   llamacpp = { version = "b10069", features = ["metal"] }
+# Then set GGML_METAL_PATH_RESOURCES to a directory containing
+# the merged ggml-metal.metal source (with ggml-common.h inlined),
+# or pre-compile default.metallib:
+#   xcrun -sdk macosx metal -O3 -c ggml-metal.metal -o - |
+#     xcrun -sdk macosx metallib - -o default.metallib

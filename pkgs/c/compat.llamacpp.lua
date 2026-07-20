@@ -1,4 +1,5 @@
--- compat.llamacpp — llama.cpp b10069, CPU-only source build (Form B inline)
+-- compat.llamacpp — llama.cpp b10069, source build (Form B inline)
+-- CPU backend on all platforms + Metal GPU backend on macOS.
 --
 -- 消费者引入:
 --     mcpp add compat.llamacpp@b10069
@@ -12,9 +13,10 @@
 -- 单头文件库 (cpp-httplib/nlohmann/stb/miniaudio), 这些仅被工具层使用。
 --
 -- ========== 平台架构 ==========
--- linux:   x86-64 with AVX/AVX2/AVX512 auto-detection (编译器内置宏)
--- macosx:  arm64 (Apple Silicon) with NEON; x86-64 (Intel Mac) 需用户覆盖
--- windows: x86-64 with AVX/AVX2 auto-detection
+-- linux:   x86-64 with AVX/AVX2/AVX512 auto-detection (编译器内置宏), CPU only
+-- macosx:  arm64 (Apple Silicon) with NEON + Metal GPU backend
+--           Intel Mac 需用户自行替换 arch/arm/* → arch/x86/*
+-- windows: x86-64 with AVX/AVX2 auto-detection, CPU only
 --
 -- ========== 已知排除 ==========
 -- src/models/t5.cpp: upstream 含 template explicit specialization after implicit
@@ -25,19 +27,26 @@
 -- 零外部依赖: 核心库不依赖任何第三方代码 (vendor/ 仅用于 llama-server 等工具)。
 --
 -- ========== 已知限制 ==========
--- 1. 仅 CPU 后端 (GGML_USE_CPU)。GPU 后端 (CUDA/Metal/Vulkan) 暂不提供,
---    待 mcpp 支持 system-dependency/capability 机制后再添加。
--- 2. 单 SIMD 变体 (GGML_CPU_ALL_VARIANTS=OFF)。多变体运行时分发需 CMake 级
+-- 1. Metal GPU 后端 (macOS) 不嵌入 Metal shader 库。运行时按顺序搜索:
+--    a. default.metallib (可执行文件同目录)
+--    b. GGML_METAL_PATH_RESOURCES env var → ggml-metal.metal
+--    c. ggml-metal.metal (当前工作目录)
+--    若未找到 shader, Metal 设备初始化静默失败, 回退到纯 CPU 推理。
+--    如需 GPU 加速, 请从 llama.cpp 源码预编译 default.metallib:
+--      xcrun -sdk macosx metal -O3 -c ggml-metal.metal -o - |
+--        xcrun -sdk macosx metallib - -o default.metallib
+-- 2. CUDA/Vulkan/SYCL 等 GPU 后端暂不提供 (需要外部 SDK + 专用编译器)。
+-- 3. 单 SIMD 变体 (GGML_CPU_ALL_VARIANTS=OFF)。多变体运行时分发需 CMake 级
 --    对同一源文件编译多次的能力, mcpp 当前不支持。
--- 3. 不包含测试/工具/example 代码。
--- 4. Windows 上 GGML CPU 后端依赖 Clang/GCC intrinsics, MSVC 可能编译失败;
+-- 4. 不包含测试/工具/example 代码。
+-- 5. Windows 上 GGML CPU 后端依赖 Clang/GCC intrinsics, MSVC 可能编译失败;
 --    建议在 Windows 上使用 clang-cl。
 
 package = {
     spec        = "1",
     namespace   = "compat",
     name        = "compat.llamacpp",
-    description = "llama.cpp b10069 — LLM inference library, CPU backend (GGML core + llama)",
+    description = "llama.cpp b10069 — LLM inference library (GGML + llama + CPU + Metal GPU)",
     licenses    = {"MIT"},
     repo        = "https://github.com/ggml-org/llama.cpp",
     type        = "package",
@@ -91,6 +100,8 @@ package = {
             -- llama internal headers (models/models.h includes llama-model.h
             -- from the parent directory)
             "*/src",
+            -- Metal internal headers (ggml-metal-impl.h, ggml-metal-device.h, etc.)
+            "*/ggml/src/ggml-metal",
             -- For generated wrapper files that #include colliding source files
             "mcpp_generated",
         },
@@ -101,6 +112,12 @@ package = {
         -- ggml/src/ggml.o and collide. We wrap the .cpp variants under unique
         -- generated names to avoid this.
         generated_files = {
+            -- Wrapper for .m/.cpp basename collision: ggml-metal-device.m and
+            -- ggml-metal-device.cpp both strip to ggml-metal-device.o.
+            -- Wrap the .m variant under a unique generated name.
+            ["mcpp_generated/ggml_metal_device_m.m"] = [==[
+#include "ggml-metal-device.m"
+]==],
             -- Header force-included via -include to provide version string
             -- constants without shell quote-stripping issues.
             ["mcpp_generated/ggml_build_info.h"] = [==[
@@ -225,6 +242,27 @@ package = {
                 glob = "*/src/models/dflash.cpp",
                 cxxflags = { "-std=c++20" },
             },
+            -- Metal backend .m files use manual retain/release (MRC), not ARC.
+            -- Compile without Automatic Reference Counting.
+            {
+                glob = "mcpp_generated/ggml_metal_device_m.m",
+                cflags = { "-fno-objc-arc" },
+            },
+            {
+                glob = "*/ggml/src/ggml-metal/ggml-metal-context.m",
+                cflags = { "-fno-objc-arc" },
+            },
+            -- ggml-metal.cpp and ggml-metal-device.cpp use std::unique_ptr but
+            -- the upstream headers don't pull in <memory> on macOS (libc++ has
+            -- stricter transitive includes than libstdc++). Inject it.
+            {
+                glob = "*/ggml/src/ggml-metal/ggml-metal.cpp",
+                cxxflags = { "-include", "memory" },
+            },
+            {
+                glob = "*/ggml/src/ggml-metal/ggml-metal-device.cpp",
+                cxxflags = { "-include", "memory" },
+            },
         },
 
         -- Features -------------------------------------------------------------
@@ -237,6 +275,31 @@ package = {
             ["llamafile"] = {
                 sources = { "*/ggml/src/ggml-cpu/llamafile/sgemm.cpp" },
                 defines = { "GGML_USE_LLAMAFILE" },
+            },
+
+            -- Metal GPU backend (macOS only, opt-in).
+            --
+            -- Enables Apple GPU acceleration via MTL. The Metal framework ships
+            -- with macOS/Xcode — no external SDK required. At runtime the Metal
+            -- shader library must be accessible:
+            --   1. default.metallib next to the executable
+            --   2. GGML_METAL_PATH_RESOURCES env var -> ggml-metal.metal
+            --   3. ggml-metal.metal in cwd
+            -- Without a shader library, context creation fails and the program
+            -- can't fall back to CPU. Enable only when you can provide the
+            -- shader (pre-compiled .metallib or source + xcrun at build time).
+            --
+            -- Enable with: mcpp add compat.llamacpp@b10069 --features metal
+            ["metal"] = {
+                sources = {
+                    "*/ggml/src/ggml-metal/ggml-metal.cpp",
+                    "*/ggml/src/ggml-metal/ggml-metal-common.cpp",
+                    "*/ggml/src/ggml-metal/ggml-metal-device.cpp",
+                    "mcpp_generated/ggml_metal_device_m.m",
+                    "*/ggml/src/ggml-metal/ggml-metal-context.m",
+                    "*/ggml/src/ggml-metal/ggml-metal-ops.cpp",
+                },
+                defines = { "GGML_USE_METAL" },
             },
         },
 
@@ -286,6 +349,12 @@ package = {
             ldflags = {
                 "-lpthread",
                 "-lm",
+                -- Metal frameworks: always present in ldflags so the "metal"
+                -- feature can link against them. For static builds these are
+                -- no-ops unless Metal symbols are actually referenced.
+                "-framework", "Foundation",
+                "-framework", "Metal",
+                "-framework", "MetalKit",
             },
         },
 
