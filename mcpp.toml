@@ -29,6 +29,7 @@ members = [
     "tests/examples/opencv-module-unifont",
     "tests/examples/spdlog",
     "tests/examples/spdlog-compiled",
+    "tests/examples/llamacpp",
     "tests/examples/tinyhttps",
 ]
 
