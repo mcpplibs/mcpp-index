@@ -10,9 +10,11 @@
 -- Optional features (0.0.4+, mcpp#243 forwarding): `dnn` adds the
 -- import opencv.dnn; interface and forwards compat.opencv/dnn; `unifont`
 -- forwards compat.opencv/unifont — `opencv = { features = ["dnn"] }`.
--- linux + macOS: the module tarball is OS-neutral; compat.opencv is per-OS
-    -- (linux/macosx full). v0.0.6 added the clang static-inline export forwarding
-    -- layer so clang (macOS) can import opencv.cv. windows: module needs videoio.
+-- 3-platform: the module tarball is OS-neutral; compat.opencv is per-OS (all
+    -- three now full — videoio everywhere, dnn on linux/macOS/windows). v0.0.6's
+    -- clang static-inline export forwarding layer lets clang (macOS + windows
+    -- clang-cl) import opencv.cv; windows dnn uses the built-in fast_gemm backend
+    -- (compat.opencv skips mlas there — its x86 asm is GAS/ELF, not COFF).
 --
 package = {
     spec        = "1",
@@ -34,6 +36,15 @@ package = {
             },
         },
         macosx = {
+            ["0.0.6"] = {
+                url    = {
+                    GLOBAL = "https://github.com/Sunrisepeak/opencv-m/archive/refs/tags/v0.0.6.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/opencv/releases/download/v0.0.6/opencv-m-0.0.6.tar.gz",
+                },
+                sha256 = "adebd6b1e7a434bf8d744a6fc191725466467ae13b4d7ee1c01d5a8e21bbf2eb",
+            },
+        },
+        windows = {
             ["0.0.6"] = {
                 url    = {
                     GLOBAL = "https://github.com/Sunrisepeak/opencv-m/archive/refs/tags/v0.0.6.tar.gz",

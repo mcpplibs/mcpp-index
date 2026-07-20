@@ -21,3 +21,7 @@ opencv = "0.0.6"
 
 [target.'cfg(macos)'.dependencies]
 opencv = "0.0.6"
+
+# windows: import opencv.cv on windows-x86_64 (clang-cl; module tarball OS-neutral).
+[target.'cfg(windows)'.dependencies]
+opencv = "0.0.6"
