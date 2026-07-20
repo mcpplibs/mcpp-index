@@ -18,8 +18,3 @@ opencv = { version = "5.0.0", features = ["dnn"] }
 [target.'cfg(macos)'.dependencies.compat]
 opencv = { version = "5.0.0", features = ["dnn"] }
 
-# windows-x86_64 dnn: clang-cl builds the same x86 dnn delta (mlas/lib/x86_64 +
-# avx/avx2/avx512 kernels) as linux; dnn + vendored protobuf compile clean under
-# clang-cl (CI-verified).
-[target.'cfg(windows)'.dependencies.compat]
-opencv = { version = "5.0.0", features = ["dnn"] }

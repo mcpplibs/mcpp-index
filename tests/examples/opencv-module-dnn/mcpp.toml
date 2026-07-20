@@ -19,6 +19,3 @@ opencv = { version = "0.0.6", features = ["dnn"] }
 [target.'cfg(macos)'.dependencies]
 opencv = { version = "0.0.6", features = ["dnn"] }
 
-# windows: `import opencv.dnn;` on windows-x86_64 (clang-cl).
-[target.'cfg(windows)'.dependencies]
-opencv = { version = "0.0.6", features = ["dnn"] }

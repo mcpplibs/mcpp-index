@@ -440,9 +440,12 @@ for (dk, isa) in sorted(isa_defs):
     g = (g[:-3] if g.endswith("/**") else g) + f"/**/*.{isa}.cpp"
     (dnn_flags_entries if dk in FEATURE_DNN_GROUPS else flags_entries).append(
         f'{{ glob = "{g}", defines = {{ {ds} }}, cxxflags = {{ {ms} }} }},')
-for mod, dk in sorted(kernel_files):
-    flags_entries.append(
-        f'{{ glob = "**/clsrc/opencl_kernels_{mod}.cpp", ' + defines_lua(dir_defs[dk]) + " },")
+# NOTE: no per-file flags for clsrc/opencl_kernels_<m>.cpp. build.mcpp writes
+# them (cl2cpp) but leaves them INERT — OpenCL is OFF in this headless profile,
+# so they are never registered as compiled sources (no `mcpp:generated=`). A
+# flag-glob for them therefore matches nothing and mcpp 0.0.101 warns
+# "[build].flags glob '**/clsrc/opencl_kernels_*.cpp' matched no source file".
+# (kernel_files is still tracked for the TU count above.)
 for g, extra in sorted(per_file_flag_entries):
     (dnn_flags_entries if is_dnn_glob(g) else flags_entries).append(
         f'{{ glob = "{g}", ' + defines_lua(extra) + " },")
