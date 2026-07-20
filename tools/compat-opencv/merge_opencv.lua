@@ -162,6 +162,9 @@ local function is_mlas_glob(f)
     return type(f) == "table" and type(f.glob) == "string"
        and f.glob:find("3rdparty/mlas", 1, true) ~= nil
 end
+-- any mlas SOURCE (incl the curated mcpp_generated/mlas_hgemm_stub.cpp, which
+-- #includes "mlas.h") — dead on windows where mlas is skipped entirely.
+local function is_mlas_src(s) return type(s) == "string" and s:find("mlas", 1, true) ~= nil end
 -- clsrc/opencl_kernels_<m>.cpp are written INERT by build.mcpp (cl2cpp) but never
 -- compiled (OpenCL OFF in this headless profile, not registered as sources), so
 -- their per-file flag-globs match nothing -> a permanent "[build].flags glob …
@@ -178,7 +181,9 @@ for _, os_ in ipairs(order) do
     local feat = (p.mcpp.features and p.mcpp.features.dnn) or {}
     local srcs, flgs, cleaned = {}, {}, {}
     local drop_mlas = (os_ == "windows")                      -- windows uses fast_gemm, no mlas
-    for _, s in ipairs(feat.sources or {}) do if not is_vkcom(s) then srcs[#srcs+1] = s end end
+    for _, s in ipairs(feat.sources or {}) do
+        if not is_vkcom(s) and not (drop_mlas and is_mlas_src(s)) then srcs[#srcs+1] = s end
+    end
     for _, f in ipairs(feat.flags or {}) do
         if not (drop_mlas and is_mlas_glob(f)) then flgs[#flgs+1] = f end
     end

@@ -7331,7 +7331,6 @@ jpeg16	3rdparty/libjpeg-turbo/src/jutils.c
                         "mcpp_generated/modules/dnn/layers/{layers_common.avx,layers_common.avx2,layers_common.avx512_skx}.cpp",
                         [[
 mcpp_generated/modules/dnn/layers/cpu_kernels/{activation_kernels.avx,activation_kernels.avx2,conv2_depthwise.avx,conv2_depthwise.avx2,conv2_kernels.avx,conv2_kernels.avx2,conv_block.avx,conv_block.avx2,conv_depthwise.avx,conv_depthwise.avx2,conv_winograd_f63.avx,conv_winograd_f63.avx2,fast_gemm_kernels.avx,fast_gemm_kernels.avx2,gridsample_kernels.avx,gridsample_kernels.avx2,nary_eltwise_kernels.avx,nary_eltwise_kernels.avx2,reduce2_kernels.avx,reduce2_kernels.avx2,transpose_kernels.avx,transpose_kernels.avx2}.cpp]],
-                        "mcpp_generated/mlas_hgemm_stub.cpp",
                     },
                 },
             },
