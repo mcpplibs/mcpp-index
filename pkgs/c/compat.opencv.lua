@@ -13,12 +13,7 @@ package = {
         features = {
             dnn = {
                 defines = { "HAVE_OPENCV_DNN" },
-                flags = {
-                    {
-                        cxxflags = { "-include", "unistd.h" },
-                        glob = "*/3rdparty/mlas/lib/platform.cpp",
-                    },
-                },
+                flags = {},
                 sources = {
                     "*/3rdparty/mlas/lib/*.cpp",
                     "*/3rdparty/protobuf/src/google/protobuf/*.cc",
@@ -36,9 +31,6 @@ package = {
                     "*/modules/dnn/src/tensorflow/*.cpp",
                     "*/modules/dnn/src/tflite/tflite_importer.cpp",
                     "*/modules/dnn/src/tokenizer/*.cpp",
-                    "*/modules/dnn/src/vkcom/shader/*.cpp",
-                    "*/modules/dnn/src/vkcom/src/*.cpp",
-                    "*/modules/dnn/src/vkcom/vulkan/*.cpp",
                     "mcpp_generated/mlas_hgemm_stub.cpp",
                 },
             },
@@ -162,6 +154,10 @@ package = {
                                 "CV_CPU_DISPATCH_MODE=AVX512_SKX",
                             },
                             glob = "**/modules/dnn/**/*.avx512_skx.cpp",
+                        },
+                        {
+                            cxxflags = { "-include", "unistd.h" },
+                            glob = "*/3rdparty/mlas/lib/platform.cpp",
                         },
                     },
                     sources = {
@@ -3918,6 +3914,10 @@ mcpp_generated/modules/imgproc/{accum.avx,accum.avx2,accum.sse4_1,bilateral_filt
                             defines = { "CV_CPU_DISPATCH_MODE=NEON" },
                             glob = "mcpp_generated/modules/dnn/layers/layers_common.neon.cpp",
                         },
+                        {
+                            cxxflags = { "-include", "unistd.h" },
+                            glob = "*/3rdparty/mlas/lib/platform.cpp",
+                        },
                     },
                     sources = {
                         "*/3rdparty/mlas/lib/aarch64/*.S",
@@ -7427,17 +7427,6 @@ jpeg16	3rdparty/libjpeg-turbo/src/jutils.c
                                 "_WINDOWS",
                             },
                             glob = "*/3rdparty/mlas/lib/flashattn.cpp",
-                        },
-                        {
-                            defines = {
-                                "NDEBUG",
-                                "WIN32",
-                                "_CRT_NONSTDC_NO_DEPRECATE",
-                                "_CRT_SECURE_NO_DEPRECATE",
-                                "_SCL_SECURE_NO_WARNINGS",
-                                "_WINDOWS",
-                            },
-                            glob = "*/3rdparty/mlas/lib/platform.cpp",
                         },
                         {
                             defines = {

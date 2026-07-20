@@ -148,6 +148,17 @@ local function is_dnn_glob(g)
 end
 local function ser_id(v) return ser(v, "") end
 
+-- dnn's Vulkan compute backend (modules/dnn/src/vkcom/**) is dead code without a
+-- Vulkan SDK (WITH_VULKAN is OFF in every headless profile); its sources #include
+-- <opencv2/dnn.hpp> from a nested dir and fail mcpp's dependency scan off-linux.
+-- Drop them from the feature entirely — CPU dnn inference is unaffected.
+local function is_vkcom(s) return type(s) == "string" and s:find("modules/dnn/src/vkcom", 1, true) ~= nil end
+-- the mlas platform.cpp `-include unistd.h` curated exception is POSIX-only
+-- (glibc/darwin have unistd.h; windows does not -> `fatal error: 'unistd.h'`).
+local function is_unistd_platform_flag(f)
+    return type(f) == "table" and type(f.glob) == "string"
+       and f.glob:find("3rdparty/mlas/lib/platform.cpp", 1, true) ~= nil
+end
 local pkgs, order = {}, {}
 for _, e in ipairs(INPUTS) do pkgs[e.os] = load_pkg(e.path); order[#order+1] = e.os end
 local dnn_src, dnn_flg, base_flg = {}, {}, {}
@@ -155,10 +166,14 @@ for _, os_ in ipairs(order) do
     local p = pkgs[os_]
     local feat = (p.mcpp.features and p.mcpp.features.dnn) or {}
     local srcs, flgs, cleaned = {}, {}, {}
-    for _, s in ipairs(feat.sources or {}) do srcs[#srcs+1] = s end
-    for _, f in ipairs(feat.flags or {}) do flgs[#flgs+1] = f end
+    local drop_unistd = (os_ == "windows")
+    for _, s in ipairs(feat.sources or {}) do if not is_vkcom(s) then srcs[#srcs+1] = s end end
+    for _, f in ipairs(feat.flags or {}) do
+        if not (drop_unistd and is_unistd_platform_flag(f)) then flgs[#flgs+1] = f end
+    end
     for _, f in ipairs(p.mcpp.flags or {}) do
-        if type(f) == "table" and is_dnn_glob(f.glob) then flgs[#flgs+1] = f
+        if type(f) == "table" and is_dnn_glob(f.glob) then
+            if not (drop_unistd and is_unistd_platform_flag(f)) then flgs[#flgs+1] = f end
         else cleaned[#cleaned+1] = f end
     end
     dnn_src[os_], dnn_flg[os_], base_flg[os_] = srcs, flgs, cleaned
