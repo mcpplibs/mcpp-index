@@ -12,7 +12,9 @@
 
 **Design reference:** `.agents/docs/2026-07-20-retire-compat-asio-and-bare-module-design.md`
 
-**External-action boundary:** 本计划只产生本地提交。不要执行 `git push`、`gh pr create`、mirror 上传、tag、release 或手工 index 发布。完成后停止并等待用户审批。
+**Remote topology:** `origin` is the writable fork `wellwei/mcpp-index`; `upstream` is the canonical `mcpplibs/mcpp-index`. Refresh and diff against `upstream/main`; publish the topic branch to `origin` only after local approval.
+
+**External-action boundary:** 本计划实施阶段只产生本地提交。不要执行 `git push`、`gh pr create`、mirror 上传、tag、release 或手工 index 发布。完成后停止并等待用户审批；获批后才把 `refactor/asio-module` 推到 `origin`，并从 `wellwei:refactor/asio-module` 向 `mcpplibs:main` 创建 PR。
 
 ## File map
 
@@ -48,28 +50,28 @@ Expected:
 
 ```text
 refactor/asio-module
-## refactor/asio-module...origin/main [ahead 3]
+## refactor/asio-module...upstream/main [ahead 4]
 ```
 
 The exact ahead count may increase only by approved plan/doc commits. There must be no unstaged or staged implementation files.
 
-- [ ] **Step 2: Refresh `origin/main` and check for duplicate Asio work**
+- [ ] **Step 2: Refresh `upstream/main` and check for duplicate Asio work**
 
 Run:
 
 ```bash
-git fetch origin main
-git log --oneline HEAD..origin/main
+git fetch upstream main
+git log --oneline HEAD..upstream/main
 gh pr list --repo mcpplibs/mcpp-index --state open --search "asio in:title" --json number,title,headRefName,url
 ```
 
-Expected: no unreviewed upstream Asio change and no duplicate open Asio PR. If `HEAD..origin/main` contains only unrelated commits, rebase the unpushed branch with the one-shot repository identity:
+Expected: no unreviewed upstream Asio change and no duplicate open Asio PR. If `HEAD..upstream/main` contains only unrelated commits, rebase the unpushed branch with the one-shot repository identity:
 
 ```bash
 git -c user.name=wellwei \
     -c user.email=96378453+wellwei@users.noreply.github.com \
     -c core.editor=true \
-    rebase origin/main
+    rebase upstream/main
 ```
 
 If upstream changes any Asio path, `mcpp.toml`, `index.toml`, or the validation contract, stop and update this plan before implementation.
@@ -188,7 +190,7 @@ members = [
 ]
 ```
 
-Before continuing, compare this block with the latest `origin/main:mcpp.toml`. The only removed member must be `tests/examples/asio`.
+Before continuing, compare this block with the latest `upstream/main:mcpp.toml`. The only removed member must be `tests/examples/asio`.
 
 - [ ] **Step 4: Complete the revert commit**
 
@@ -535,7 +537,7 @@ Expected: one focused implementation commit after the separate PR #73 revert com
 ### Task 7: Prepare the local approval handoff and stop
 
 **Files:**
-- Read: all branch changes against `origin/main`
+- Read: all branch changes against `upstream/main`
 
 - [ ] **Step 1: Verify final repository state**
 
@@ -543,9 +545,9 @@ Run:
 
 ```bash
 git status --short --branch
-git log --oneline --decorate origin/main..HEAD
-git diff --stat origin/main...HEAD
-git diff origin/main...HEAD --check
+git log --oneline --decorate upstream/main..HEAD
+git diff --stat upstream/main...HEAD
+git diff upstream/main...HEAD --check
 ```
 
 Expected: clean worktree; design/plan commits, one PR #73 revert commit, and one module migration commit. No uncommitted files.
@@ -561,4 +563,4 @@ Report to the user:
 - descriptor/mirror/lockfile verification;
 - Linux/Windows CI still pending because no PR was created.
 
-Stop here. Do not push the branch and do not create a PR until the user explicitly approves the reviewed local diff and verification evidence.
+Stop here. Do not push the branch and do not create a PR until the user explicitly approves the reviewed local diff and verification evidence. After that approval, publish with `git push -u origin refactor/asio-module` and create the PR against `mcpplibs/mcpp-index:main`; required checks must pass before maintainers merge it.

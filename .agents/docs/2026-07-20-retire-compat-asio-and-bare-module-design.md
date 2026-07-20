@@ -64,7 +64,7 @@ The reverse patch removes:
 - all six header-only tests under `tests/examples/asio/tests/`;
 - `tests/examples/asio` from the root workspace.
 
-On the current `origin/main`, the revert conflicts only in the root
+On the current `upstream/main`, the revert conflicts only in the root
 `mcpp.toml`. Resolve it by removing only `tests/examples/asio`; retain
 `tests/examples/asio-module` and every workspace member added after PR #73.
 
@@ -195,7 +195,7 @@ identities.
 
 ## 8. Test-first implementation sequence
 
-1. Create a topic branch from the latest `origin/main`.
+1. Create a topic branch from the latest `upstream/main`.
 2. Revert PR #73 and resolve only the root workspace conflict.
 3. Change `tests/examples/asio-module` to the bare dependency while the module
    descriptor still has the qualified identity. Run the targeted test and
@@ -214,7 +214,7 @@ behavior assertions to make the migration pass.
 
 ## 9. Validation
 
-Use the mcpp version pinned by the live `origin/main` workflow. The descriptor
+Use the mcpp version pinned by the live `upstream/main` workflow. The descriptor
 uses existing grammar, so this change does not raise `index.toml`'s client floor
 or the workflow pin.
 
