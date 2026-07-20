@@ -6,7 +6,7 @@
 # question: does mcpp clang-MSVC compile OpenCV's C++ from a clang-cl snapshot.
 # videoio+FFmpeg is a follow-up. Uploads the descriptor AND raw artifacts.
 name: snapshot-windows-opencv
-on: { workflow_dispatch: {}, push: { branches: [feat/opencv-windows-videoio, feat/opencv-full-func] } }
+on: { workflow_dispatch: {}, push: { branches: [feat/opencv-windows-videoio, feat/opencv-full-func, feat/opencv-windows-dnn] } }
 jobs:
   snapshot:
     runs-on: windows-latest
@@ -57,6 +57,14 @@ jobs:
           echo "b0528f5a1d379d59d4701cb28c36e22214cc51cf64594e5b56f2d3e6c0233095  opencv.tar.gz" | sha256sum -c -
           tar -xzf opencv.tar.gz
           echo "OPENCV_SRC=$PWD/opencv-5.0.0" >> "$GITHUB_ENV"
+          # DNN on windows: skip the vendored mlas. Its x86 kernels are GAS/ELF `.S`
+          # (`.type …,@function`) which clang-cl cannot assemble to COFF. This is exactly
+          # upstream's OWN fallback — 3rdparty/mlas/CMakeLists.txt bails when no usable
+          # ASM is present, and DNN uses its built-in fast_gemm (`.cpp` AVX/AVX2 kernels).
+          # Force that path by returning early from the mlas subdir on WIN32.
+          MLAS="$PWD/opencv-5.0.0/3rdparty/mlas/CMakeLists.txt"
+          printf 'if(WIN32)\n  message(STATUS "mcpp: skip mlas on windows (GAS .S not COFF-assemblable); DNN uses built-in fast_gemm")\n  return()\nendif()\n' | cat - "$MLAS" > "$MLAS.tmp" && mv "$MLAS.tmp" "$MLAS"
+          head -6 "$MLAS"
           # Instrument detect_ffmpeg.cmake: at the very end (after ocv_add_external_target),
           # confirm the FindFFMPEG shim drove HAVE_FFMPEG=TRUE and the ocv.3rdparty.ffmpeg
           # INTERFACE target got created — that target (not HAVE_FFMPEG itself) is what

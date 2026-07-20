@@ -18,3 +18,9 @@ opencv = { version = "5.0.0", features = ["dnn"] }
 [target.'cfg(macos)'.dependencies.compat]
 opencv = { version = "5.0.0", features = ["dnn"] }
 
+# windows-x86_64 dnn: mlas is skipped (its x86 kernels are GAS/ELF .S, not COFF-
+# assemblable under clang-cl), so DNN uses OpenCV's built-in fast_gemm (.cpp
+# AVX/AVX2 kernels) — same blobFromImage assertion, no mlas.
+[target.'cfg(windows)'.dependencies.compat]
+opencv = { version = "5.0.0", features = ["dnn"] }
+

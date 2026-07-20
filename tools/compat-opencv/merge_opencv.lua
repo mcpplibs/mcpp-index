@@ -153,11 +153,14 @@ local function ser_id(v) return ser(v, "") end
 -- <opencv2/dnn.hpp> from a nested dir and fail mcpp's dependency scan off-linux.
 -- Drop them from the feature entirely — CPU dnn inference is unaffected.
 local function is_vkcom(s) return type(s) == "string" and s:find("modules/dnn/src/vkcom", 1, true) ~= nil end
--- the mlas platform.cpp `-include unistd.h` curated exception is POSIX-only
--- (glibc/darwin have unistd.h; windows does not -> `fatal error: 'unistd.h'`).
-local function is_unistd_platform_flag(f)
+-- windows ships NO mlas at all: its x86 kernels are GAS/ELF .S (not COFF-assemblable
+-- under clang-cl), so the windows snapshot skips mlas and DNN uses its built-in
+-- fast_gemm. Every mlas flag-glob (the group defines, the platform.cpp `-include
+-- unistd.h` curated exception — which would also fail, windows has no unistd.h) is
+-- therefore dead on windows -> drop them all.
+local function is_mlas_glob(f)
     return type(f) == "table" and type(f.glob) == "string"
-       and f.glob:find("3rdparty/mlas/lib/platform.cpp", 1, true) ~= nil
+       and f.glob:find("3rdparty/mlas", 1, true) ~= nil
 end
 -- clsrc/opencl_kernels_<m>.cpp are written INERT by build.mcpp (cl2cpp) but never
 -- compiled (OpenCL OFF in this headless profile, not registered as sources), so
@@ -174,15 +177,15 @@ for _, os_ in ipairs(order) do
     local p = pkgs[os_]
     local feat = (p.mcpp.features and p.mcpp.features.dnn) or {}
     local srcs, flgs, cleaned = {}, {}, {}
-    local drop_unistd = (os_ == "windows")
+    local drop_mlas = (os_ == "windows")                      -- windows uses fast_gemm, no mlas
     for _, s in ipairs(feat.sources or {}) do if not is_vkcom(s) then srcs[#srcs+1] = s end end
     for _, f in ipairs(feat.flags or {}) do
-        if not (drop_unistd and is_unistd_platform_flag(f)) then flgs[#flgs+1] = f end
+        if not (drop_mlas and is_mlas_glob(f)) then flgs[#flgs+1] = f end
     end
     for _, f in ipairs(p.mcpp.flags or {}) do
         if is_dead_opencl_glob(f) then                       -- drop: inert, never compiled
         elseif type(f) == "table" and is_dnn_glob(f.glob) then
-            if not (drop_unistd and is_unistd_platform_flag(f)) then flgs[#flgs+1] = f end
+            if not (drop_mlas and is_mlas_glob(f)) then flgs[#flgs+1] = f end
         else cleaned[#cleaned+1] = f end
     end
     dnn_src[os_], dnn_flg[os_], base_flg[os_] = srcs, flgs, cleaned

@@ -7205,6 +7205,136 @@ jpeg16	3rdparty/libjpeg-turbo/src/jutils.c
             cflags = { "-msse3", "-w" },
             cxxflags = { "-msse3", "-w" },
             deps = { ["compat.ffmpeg"] = "8.1.2" },
+            features = {
+                dnn = {
+                    defines = { "HAVE_OPENCV_DNN" },
+                    flags = {
+                        {
+                            defines = {
+                                "ENABLE_PLUGINS",
+                                "HAVE_PROTOBUF=1",
+                                "NDEBUG",
+                                "WIN32",
+                                "_CRT_NONSTDC_NO_DEPRECATE",
+                                "_CRT_SECURE_NO_DEPRECATE",
+                                "_CRT_SECURE_NO_WARNINGS=1",
+                                "_SCL_SECURE_NO_WARNINGS",
+                                "_USE_MATH_DEFINES",
+                                "_VARIADIC_MAX=10",
+                                "_WIN32_WINNT=0x0601",
+                                "_WINDOWS",
+                                "__OPENCV_BUILD=1",
+                                "__STDC_CONSTANT_MACROS",
+                                "__STDC_FORMAT_MACROS",
+                                "__STDC_LIMIT_MACROS",
+                            },
+                            glob = "**/modules/dnn/**",
+                        },
+                        {
+                            defines = {
+                                "NDEBUG",
+                                "WIN32",
+                                "_CRT_NONSTDC_NO_DEPRECATE",
+                                "_CRT_SECURE_NO_DEPRECATE",
+                                "_CRT_SECURE_NO_WARNINGS=1",
+                                "_SCL_SECURE_NO_WARNINGS",
+                                "_VARIADIC_MAX=10",
+                                "_WIN32_WINNT=0x0601",
+                                "_WINDOWS",
+                            },
+                            glob = "**/3rdparty/protobuf/**",
+                        },
+                        {
+                            cxxflags = { "-mssse3", "-msse4.1", "-mpopcnt", "-msse4.2", "-mavx" },
+                            defines = {
+                                "CV_CPU_COMPILE_AVX=1",
+                                "CV_CPU_COMPILE_POPCNT=1",
+                                "CV_CPU_COMPILE_SSE4_1=1",
+                                "CV_CPU_COMPILE_SSE4_2=1",
+                                "CV_CPU_COMPILE_SSSE3=1",
+                                "CV_CPU_DISPATCH_MODE=AVX",
+                            },
+                            glob = "**/modules/dnn/**/*.avx.cpp",
+                        },
+                        {
+                            cxxflags = { "-mssse3", "-msse4.1", "-mpopcnt", "-msse4.2", "-mavx", "-mf16c", "-mavx2", "-mfma" },
+                            defines = {
+                                "CV_CPU_COMPILE_AVX2=1",
+                                "CV_CPU_COMPILE_AVX=1",
+                                "CV_CPU_COMPILE_FMA3=1",
+                                "CV_CPU_COMPILE_FP16=1",
+                                "CV_CPU_COMPILE_POPCNT=1",
+                                "CV_CPU_COMPILE_SSE4_1=1",
+                                "CV_CPU_COMPILE_SSE4_2=1",
+                                "CV_CPU_COMPILE_SSSE3=1",
+                                "CV_CPU_DISPATCH_MODE=AVX2",
+                            },
+                            glob = "**/modules/dnn/**/*.avx2.cpp",
+                        },
+                        {
+                            cxxflags = {
+                                "-mssse3",
+                                "-msse4.1",
+                                "-mpopcnt",
+                                "-msse4.2",
+                                "-mavx",
+                                "-mf16c",
+                                "-mavx2",
+                                "-mfma",
+                                "-mavx512f",
+                                "-mavx512f",
+                                "-mavx512cd",
+                                "-mavx512f",
+                                "-mavx512cd",
+                                "-mavx512vl",
+                                "-mavx512bw",
+                                "-mavx512dq",
+                            },
+                            defines = {
+                                "CV_CPU_COMPILE_AVX2=1",
+                                "CV_CPU_COMPILE_AVX512_COMMON=1",
+                                "CV_CPU_COMPILE_AVX512_SKX=1",
+                                "CV_CPU_COMPILE_AVX=1",
+                                "CV_CPU_COMPILE_AVX_512F=1",
+                                "CV_CPU_COMPILE_FMA3=1",
+                                "CV_CPU_COMPILE_FP16=1",
+                                "CV_CPU_COMPILE_POPCNT=1",
+                                "CV_CPU_COMPILE_SSE4_1=1",
+                                "CV_CPU_COMPILE_SSE4_2=1",
+                                "CV_CPU_COMPILE_SSSE3=1",
+                                "CV_CPU_DISPATCH_MODE=AVX512_SKX",
+                            },
+                            glob = "**/modules/dnn/**/*.avx512_skx.cpp",
+                        },
+                        {
+                            defines = { "DEBUG_POSTFIX=d" },
+                            glob = "*/modules/dnn/src/backend.cpp",
+                        },
+                    },
+                    sources = {
+                        "*/3rdparty/protobuf/src/google/protobuf/*.cc",
+                        "*/3rdparty/protobuf/src/google/protobuf/io/*.cc",
+                        "*/3rdparty/protobuf/src/google/protobuf/stubs/*.cc",
+                        "*/modules/dnn/misc/caffe/opencv-caffe.pb.cc",
+                        "*/modules/dnn/misc/onnx/opencv-onnx.pb.cc",
+                        "*/modules/dnn/misc/tensorflow/*.cc",
+                        "*/modules/dnn/src/*.cpp",
+                        "*/modules/dnn/src/caffe/caffe_io.cpp",
+                        "*/modules/dnn/src/int8layers/*.cpp",
+                        "*/modules/dnn/src/layers/*.cpp",
+                        "*/modules/dnn/src/layers/cpu_kernels/*.cpp",
+                        "*/modules/dnn/src/onnx/*.cpp",
+                        "*/modules/dnn/src/tensorflow/*.cpp",
+                        "*/modules/dnn/src/tflite/tflite_importer.cpp",
+                        "*/modules/dnn/src/tokenizer/*.cpp",
+                        "mcpp_generated/modules/dnn/int8layers/{conv2_int8_kernels.avx2,layers_common.avx2,layers_common.avx512_skx}.cpp",
+                        "mcpp_generated/modules/dnn/layers/{layers_common.avx,layers_common.avx2,layers_common.avx512_skx}.cpp",
+                        [[
+mcpp_generated/modules/dnn/layers/cpu_kernels/{activation_kernels.avx,activation_kernels.avx2,conv2_depthwise.avx,conv2_depthwise.avx2,conv2_kernels.avx,conv2_kernels.avx2,conv_block.avx,conv_block.avx2,conv_depthwise.avx,conv_depthwise.avx2,conv_winograd_f63.avx,conv_winograd_f63.avx2,fast_gemm_kernels.avx,fast_gemm_kernels.avx2,gridsample_kernels.avx,gridsample_kernels.avx2,nary_eltwise_kernels.avx,nary_eltwise_kernels.avx2,reduce2_kernels.avx,reduce2_kernels.avx2,transpose_kernels.avx,transpose_kernels.avx2}.cpp]],
+                        "mcpp_generated/mlas_hgemm_stub.cpp",
+                    },
+                },
+            },
             flags = {
                 {
                     defines = {
@@ -9533,10 +9663,10 @@ bool MLASCALL MlasHGemmSupported(CBLAS_TRANSPOSE, CBLAS_TRANSPOSE) { return fals
                 ["mcpp_generated/modules/core/version_string.inc"] = [[
 "\n"
 "General configuration for OpenCV 5.0.0 =====================================\n"
-"  Version control:               f5b8842\n"
+"  Version control:               57b5f3a\n"
 "\n"
 "  Platform:\n"
-"    Timestamp:                   2026-07-20T12:04:49Z\n"
+"    Timestamp:                   2026-07-20T15:02:34Z\n"
 "    Host:                        Windows 10.0.26100 AMD64\n"
 "    CMake:                       4.4.0\n"
 "    CMake generator:             Ninja\n"
@@ -9551,10 +9681,10 @@ bool MLASCALL MlasHGemmSupported(CBLAS_TRANSPOSE, CBLAS_TRANSPOSE) { return fals
 "    Dispatched code generation:  SSE4_1 SSE4_2 AVX FP16 AVX2 AVX512_SKX\n"
 "      SSE4_1 (16 files):         + SSSE3 SSE4_1\n"
 "      SSE4_2 (1 files):          + SSSE3 SSE4_1 POPCNT SSE4_2\n"
-"      AVX (5 files):             + SSSE3 SSE4_1 POPCNT SSE4_2 AVX\n"
+"      AVX (17 files):            + SSSE3 SSE4_1 POPCNT SSE4_2 AVX\n"
 "      FP16 (0 files):            + SSSE3 SSE4_1 POPCNT SSE4_2 AVX FP16\n"
-"      AVX2 (32 files):           + SSSE3 SSE4_1 POPCNT SSE4_2 AVX FP16 AVX2 FMA3\n"
-"      AVX512_SKX (5 files):      + SSSE3 SSE4_1 POPCNT SSE4_2 AVX FP16 AVX2 FMA3 AVX_512F AVX512_COMMON AVX512_SKX\n"
+"      AVX2 (46 files):           + SSSE3 SSE4_1 POPCNT SSE4_2 AVX FP16 AVX2 FMA3\n"
+"      AVX512_SKX (7 files):      + SSSE3 SSE4_1 POPCNT SSE4_2 AVX FP16 AVX2 FMA3 AVX_512F AVX512_COMMON AVX512_SKX\n"
 "\n"
 "  C/C++:\n"
 "    Built as dynamic libs?:      NO\n"
@@ -9570,12 +9700,12 @@ bool MLASCALL MlasHGemmSupported(CBLAS_TRANSPOSE, CBLAS_TRANSPOSE) { return fals
 "    ccache:                      NO\n"
 "    Precompiled headers:         NO\n"
 "    Extra dependencies:          comctl32 gdi32 ole32 setupapi ws2_32\n"
-"    3rdparty dependencies:       libjpeg-turbo libpng zlib\n"
+"    3rdparty dependencies:       libprotobuf libjpeg-turbo libpng zlib\n"
 "\n"
 "  OpenCV modules:\n"
-"    To be built:                 core flann geometry highgui imgcodecs imgproc videoio\n"
+"    To be built:                 core dnn flann geometry highgui imgcodecs imgproc videoio\n"
 "    Disabled:                    world\n"
-"    Disabled by dependency:      calib dnn features java_bindings_generator js_bindings_generator objc_bindings_generator objdetect photo ptcloud python_bindings_generator python_tests stereo stitching video\n"
+"    Disabled by dependency:      calib features java_bindings_generator js_bindings_generator objc_bindings_generator objdetect photo ptcloud python_bindings_generator python_tests stereo stitching video\n"
 "    Unavailable:                 java python3 ts\n"
 "    Applications:                -\n"
 "    Documentation:               NO\n"
@@ -9614,6 +9744,7 @@ bool MLASCALL MlasHGemmSupported(CBLAS_TRANSPOSE, CBLAS_TRANSPOSE) { return fals
 "\n"
 "  Other third-party libraries:\n"
 "    Custom HAL:                  NO\n"
+"    Protobuf:                    build (3.19.1)\n"
 "\n"
 "  ONNX Runtime:                  NO\n"
 "\n"
@@ -9622,6 +9753,554 @@ bool MLASCALL MlasHGemmSupported(CBLAS_TRANSPOSE, CBLAS_TRANSPOSE) { return fals
 "  Install to:                    install\n"
 "-----------------------------------------------------------------\n"
 "\n"
+]],
+                ["mcpp_generated/modules/dnn/int8layers/conv2_int8_kernels.avx2.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/int8layers/conv2_int8_kernels.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/int8layers/conv2_int8_kernels.simd_declarations.hpp"] = [[
+#define CV_CPU_SIMD_FILENAME "modules/dnn/src/int8layers/conv2_int8_kernels.simd.hpp"
+#define CV_CPU_DISPATCH_MODE AVX2
+#include "opencv2/core/private/cv_cpu_include_simd_declarations.hpp"
+
+#define CV_CPU_DISPATCH_MODES_ALL AVX2, BASELINE
+
+#undef CV_CPU_SIMD_FILENAME
+]],
+                ["mcpp_generated/modules/dnn/int8layers/layers_common.avx2.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/int8layers/layers_common.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/int8layers/layers_common.avx512_skx.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/int8layers/layers_common.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/int8layers/layers_common.lasx.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/int8layers/layers_common.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/int8layers/layers_common.neon.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/int8layers/layers_common.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/int8layers/layers_common.rvv.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/int8layers/layers_common.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/int8layers/layers_common.simd_declarations.hpp"] = [[
+#define CV_CPU_SIMD_FILENAME "modules/dnn/src/int8layers/layers_common.simd.hpp"
+#define CV_CPU_DISPATCH_MODE AVX2
+#include "opencv2/core/private/cv_cpu_include_simd_declarations.hpp"
+
+#define CV_CPU_DISPATCH_MODE AVX512_SKX
+#include "opencv2/core/private/cv_cpu_include_simd_declarations.hpp"
+
+#define CV_CPU_DISPATCH_MODE RVV
+#include "opencv2/core/private/cv_cpu_include_simd_declarations.hpp"
+
+#define CV_CPU_DISPATCH_MODE LASX
+#include "opencv2/core/private/cv_cpu_include_simd_declarations.hpp"
+
+#define CV_CPU_DISPATCH_MODE NEON
+#include "opencv2/core/private/cv_cpu_include_simd_declarations.hpp"
+
+#define CV_CPU_DISPATCH_MODES_ALL NEON, LASX, RVV, AVX512_SKX, AVX2, BASELINE
+
+#undef CV_CPU_SIMD_FILENAME
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/activation_kernels.avx.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/layers/cpu_kernels/activation_kernels.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/activation_kernels.avx2.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/layers/cpu_kernels/activation_kernels.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/activation_kernels.neon.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/layers/cpu_kernels/activation_kernels.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/activation_kernels.neon_fp16.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/layers/cpu_kernels/activation_kernels.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/activation_kernels.simd_declarations.hpp"] = [[
+#define CV_CPU_SIMD_FILENAME "modules/dnn/src/layers/cpu_kernels/activation_kernels.simd.hpp"
+#define CV_CPU_DISPATCH_MODE AVX
+#include "opencv2/core/private/cv_cpu_include_simd_declarations.hpp"
+
+#define CV_CPU_DISPATCH_MODE AVX2
+#include "opencv2/core/private/cv_cpu_include_simd_declarations.hpp"
+
+#define CV_CPU_DISPATCH_MODES_ALL AVX2, AVX, BASELINE
+
+#undef CV_CPU_SIMD_FILENAME
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/conv2_depthwise.avx.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/layers/cpu_kernels/conv2_depthwise.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/conv2_depthwise.avx2.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/layers/cpu_kernels/conv2_depthwise.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/conv2_depthwise.neon.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/layers/cpu_kernels/conv2_depthwise.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/conv2_depthwise.neon_fp16.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/layers/cpu_kernels/conv2_depthwise.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/conv2_depthwise.simd_declarations.hpp"] = [[
+#define CV_CPU_SIMD_FILENAME "modules/dnn/src/layers/cpu_kernels/conv2_depthwise.simd.hpp"
+#define CV_CPU_DISPATCH_MODE AVX
+#include "opencv2/core/private/cv_cpu_include_simd_declarations.hpp"
+
+#define CV_CPU_DISPATCH_MODE AVX2
+#include "opencv2/core/private/cv_cpu_include_simd_declarations.hpp"
+
+#define CV_CPU_DISPATCH_MODES_ALL AVX2, AVX, BASELINE
+
+#undef CV_CPU_SIMD_FILENAME
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/conv2_kernels.avx.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/layers/cpu_kernels/conv2_kernels.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/conv2_kernels.avx2.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/layers/cpu_kernels/conv2_kernels.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/conv2_kernels.neon.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/layers/cpu_kernels/conv2_kernels.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/conv2_kernels.neon_fp16.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/layers/cpu_kernels/conv2_kernels.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/conv2_kernels.simd_declarations.hpp"] = [[
+#define CV_CPU_SIMD_FILENAME "modules/dnn/src/layers/cpu_kernels/conv2_kernels.simd.hpp"
+#define CV_CPU_DISPATCH_MODE AVX
+#include "opencv2/core/private/cv_cpu_include_simd_declarations.hpp"
+
+#define CV_CPU_DISPATCH_MODE AVX2
+#include "opencv2/core/private/cv_cpu_include_simd_declarations.hpp"
+
+#define CV_CPU_DISPATCH_MODES_ALL AVX2, AVX, BASELINE
+
+#undef CV_CPU_SIMD_FILENAME
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/conv_block.avx.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/layers/cpu_kernels/conv_block.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/conv_block.avx2.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/layers/cpu_kernels/conv_block.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/conv_block.neon.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/layers/cpu_kernels/conv_block.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/conv_block.neon_fp16.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/layers/cpu_kernels/conv_block.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/conv_block.simd_declarations.hpp"] = [[
+#define CV_CPU_SIMD_FILENAME "modules/dnn/src/layers/cpu_kernels/conv_block.simd.hpp"
+#define CV_CPU_DISPATCH_MODE AVX
+#include "opencv2/core/private/cv_cpu_include_simd_declarations.hpp"
+
+#define CV_CPU_DISPATCH_MODE AVX2
+#include "opencv2/core/private/cv_cpu_include_simd_declarations.hpp"
+
+#define CV_CPU_DISPATCH_MODE NEON
+#include "opencv2/core/private/cv_cpu_include_simd_declarations.hpp"
+
+#define CV_CPU_DISPATCH_MODE NEON_FP16
+#include "opencv2/core/private/cv_cpu_include_simd_declarations.hpp"
+
+#define CV_CPU_DISPATCH_MODES_ALL NEON_FP16, NEON, AVX2, AVX, BASELINE
+
+#undef CV_CPU_SIMD_FILENAME
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/conv_depthwise.avx.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/layers/cpu_kernels/conv_depthwise.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/conv_depthwise.avx2.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/layers/cpu_kernels/conv_depthwise.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/conv_depthwise.lasx.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/layers/cpu_kernels/conv_depthwise.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/conv_depthwise.rvv.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/layers/cpu_kernels/conv_depthwise.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/conv_depthwise.simd_declarations.hpp"] = [[
+#define CV_CPU_SIMD_FILENAME "modules/dnn/src/layers/cpu_kernels/conv_depthwise.simd.hpp"
+#define CV_CPU_DISPATCH_MODE AVX
+#include "opencv2/core/private/cv_cpu_include_simd_declarations.hpp"
+
+#define CV_CPU_DISPATCH_MODE AVX2
+#include "opencv2/core/private/cv_cpu_include_simd_declarations.hpp"
+
+#define CV_CPU_DISPATCH_MODE RVV
+#include "opencv2/core/private/cv_cpu_include_simd_declarations.hpp"
+
+#define CV_CPU_DISPATCH_MODE LASX
+#include "opencv2/core/private/cv_cpu_include_simd_declarations.hpp"
+
+#define CV_CPU_DISPATCH_MODES_ALL LASX, RVV, AVX2, AVX, BASELINE
+
+#undef CV_CPU_SIMD_FILENAME
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/conv_winograd_f63.avx.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/layers/cpu_kernels/conv_winograd_f63.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/conv_winograd_f63.avx2.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/layers/cpu_kernels/conv_winograd_f63.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/conv_winograd_f63.neon.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/layers/cpu_kernels/conv_winograd_f63.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/conv_winograd_f63.neon_fp16.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/layers/cpu_kernels/conv_winograd_f63.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/conv_winograd_f63.simd_declarations.hpp"] = [[
+#define CV_CPU_SIMD_FILENAME "modules/dnn/src/layers/cpu_kernels/conv_winograd_f63.simd.hpp"
+#define CV_CPU_DISPATCH_MODE AVX
+#include "opencv2/core/private/cv_cpu_include_simd_declarations.hpp"
+
+#define CV_CPU_DISPATCH_MODE AVX2
+#include "opencv2/core/private/cv_cpu_include_simd_declarations.hpp"
+
+#define CV_CPU_DISPATCH_MODES_ALL AVX2, AVX, BASELINE
+
+#undef CV_CPU_SIMD_FILENAME
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/fast_gemm_kernels.avx.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/layers/cpu_kernels/fast_gemm_kernels.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/fast_gemm_kernels.avx2.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/layers/cpu_kernels/fast_gemm_kernels.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/fast_gemm_kernels.lasx.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/layers/cpu_kernels/fast_gemm_kernels.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/fast_gemm_kernels.neon.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/layers/cpu_kernels/fast_gemm_kernels.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/fast_gemm_kernels.simd_declarations.hpp"] = [[
+#define CV_CPU_SIMD_FILENAME "modules/dnn/src/layers/cpu_kernels/fast_gemm_kernels.simd.hpp"
+#define CV_CPU_DISPATCH_MODE AVX
+#include "opencv2/core/private/cv_cpu_include_simd_declarations.hpp"
+
+#define CV_CPU_DISPATCH_MODE AVX2
+#include "opencv2/core/private/cv_cpu_include_simd_declarations.hpp"
+
+#define CV_CPU_DISPATCH_MODE NEON
+#include "opencv2/core/private/cv_cpu_include_simd_declarations.hpp"
+
+#define CV_CPU_DISPATCH_MODE LASX
+#include "opencv2/core/private/cv_cpu_include_simd_declarations.hpp"
+
+#define CV_CPU_DISPATCH_MODES_ALL LASX, NEON, AVX2, AVX, BASELINE
+
+#undef CV_CPU_SIMD_FILENAME
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/gridsample_kernels.avx.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/layers/cpu_kernels/gridsample_kernels.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/gridsample_kernels.avx2.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/layers/cpu_kernels/gridsample_kernels.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/gridsample_kernels.lasx.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/layers/cpu_kernels/gridsample_kernels.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/gridsample_kernels.neon.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/layers/cpu_kernels/gridsample_kernels.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/gridsample_kernels.rvv.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/layers/cpu_kernels/gridsample_kernels.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/gridsample_kernels.simd_declarations.hpp"] = [[
+#define CV_CPU_SIMD_FILENAME "modules/dnn/src/layers/cpu_kernels/gridsample_kernels.simd.hpp"
+#define CV_CPU_DISPATCH_MODE AVX
+#include "opencv2/core/private/cv_cpu_include_simd_declarations.hpp"
+
+#define CV_CPU_DISPATCH_MODE AVX2
+#include "opencv2/core/private/cv_cpu_include_simd_declarations.hpp"
+
+#define CV_CPU_DISPATCH_MODE NEON
+#include "opencv2/core/private/cv_cpu_include_simd_declarations.hpp"
+
+#define CV_CPU_DISPATCH_MODE RVV
+#include "opencv2/core/private/cv_cpu_include_simd_declarations.hpp"
+
+#define CV_CPU_DISPATCH_MODE LASX
+#include "opencv2/core/private/cv_cpu_include_simd_declarations.hpp"
+
+#define CV_CPU_DISPATCH_MODES_ALL LASX, RVV, NEON, AVX2, AVX, BASELINE
+
+#undef CV_CPU_SIMD_FILENAME
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/nary_eltwise_kernels.avx.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/layers/cpu_kernels/nary_eltwise_kernels.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/nary_eltwise_kernels.avx2.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/layers/cpu_kernels/nary_eltwise_kernels.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/nary_eltwise_kernels.lasx.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/layers/cpu_kernels/nary_eltwise_kernels.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/nary_eltwise_kernels.neon.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/layers/cpu_kernels/nary_eltwise_kernels.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/nary_eltwise_kernels.rvv.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/layers/cpu_kernels/nary_eltwise_kernels.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/nary_eltwise_kernels.simd_declarations.hpp"] = [[
+#define CV_CPU_SIMD_FILENAME "modules/dnn/src/layers/cpu_kernels/nary_eltwise_kernels.simd.hpp"
+#define CV_CPU_DISPATCH_MODE AVX
+#include "opencv2/core/private/cv_cpu_include_simd_declarations.hpp"
+
+#define CV_CPU_DISPATCH_MODE AVX2
+#include "opencv2/core/private/cv_cpu_include_simd_declarations.hpp"
+
+#define CV_CPU_DISPATCH_MODE NEON
+#include "opencv2/core/private/cv_cpu_include_simd_declarations.hpp"
+
+#define CV_CPU_DISPATCH_MODE RVV
+#include "opencv2/core/private/cv_cpu_include_simd_declarations.hpp"
+
+#define CV_CPU_DISPATCH_MODE LASX
+#include "opencv2/core/private/cv_cpu_include_simd_declarations.hpp"
+
+#define CV_CPU_DISPATCH_MODES_ALL LASX, RVV, NEON, AVX2, AVX, BASELINE
+
+#undef CV_CPU_SIMD_FILENAME
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/reduce2_kernels.avx.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/layers/cpu_kernels/reduce2_kernels.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/reduce2_kernels.avx2.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/layers/cpu_kernels/reduce2_kernels.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/reduce2_kernels.lasx.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/layers/cpu_kernels/reduce2_kernels.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/reduce2_kernels.neon.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/layers/cpu_kernels/reduce2_kernels.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/reduce2_kernels.rvv.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/layers/cpu_kernels/reduce2_kernels.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/reduce2_kernels.simd_declarations.hpp"] = [[
+#define CV_CPU_SIMD_FILENAME "modules/dnn/src/layers/cpu_kernels/reduce2_kernels.simd.hpp"
+#define CV_CPU_DISPATCH_MODE AVX
+#include "opencv2/core/private/cv_cpu_include_simd_declarations.hpp"
+
+#define CV_CPU_DISPATCH_MODE AVX2
+#include "opencv2/core/private/cv_cpu_include_simd_declarations.hpp"
+
+#define CV_CPU_DISPATCH_MODE NEON
+#include "opencv2/core/private/cv_cpu_include_simd_declarations.hpp"
+
+#define CV_CPU_DISPATCH_MODE RVV
+#include "opencv2/core/private/cv_cpu_include_simd_declarations.hpp"
+
+#define CV_CPU_DISPATCH_MODE LASX
+#include "opencv2/core/private/cv_cpu_include_simd_declarations.hpp"
+
+#define CV_CPU_DISPATCH_MODES_ALL LASX, RVV, NEON, AVX2, AVX, BASELINE
+
+#undef CV_CPU_SIMD_FILENAME
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/transpose_kernels.avx.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/layers/cpu_kernels/transpose_kernels.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/transpose_kernels.avx2.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/layers/cpu_kernels/transpose_kernels.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/transpose_kernels.lasx.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/layers/cpu_kernels/transpose_kernels.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/transpose_kernels.neon.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/layers/cpu_kernels/transpose_kernels.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/transpose_kernels.rvv.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/layers/cpu_kernels/transpose_kernels.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/layers/cpu_kernels/transpose_kernels.simd_declarations.hpp"] = [[
+#define CV_CPU_SIMD_FILENAME "modules/dnn/src/layers/cpu_kernels/transpose_kernels.simd.hpp"
+#define CV_CPU_DISPATCH_MODE AVX
+#include "opencv2/core/private/cv_cpu_include_simd_declarations.hpp"
+
+#define CV_CPU_DISPATCH_MODE AVX2
+#include "opencv2/core/private/cv_cpu_include_simd_declarations.hpp"
+
+#define CV_CPU_DISPATCH_MODE NEON
+#include "opencv2/core/private/cv_cpu_include_simd_declarations.hpp"
+
+#define CV_CPU_DISPATCH_MODE RVV
+#include "opencv2/core/private/cv_cpu_include_simd_declarations.hpp"
+
+#define CV_CPU_DISPATCH_MODE LASX
+#include "opencv2/core/private/cv_cpu_include_simd_declarations.hpp"
+
+#define CV_CPU_DISPATCH_MODES_ALL LASX, RVV, NEON, AVX2, AVX, BASELINE
+
+#undef CV_CPU_SIMD_FILENAME
+]],
+                ["mcpp_generated/modules/dnn/layers/layers_common.avx.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/layers/layers_common.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/layers/layers_common.avx2.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/layers/layers_common.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/layers/layers_common.avx512_skx.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/layers/layers_common.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/layers/layers_common.lasx.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/layers/layers_common.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/layers/layers_common.neon.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/layers/layers_common.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/layers/layers_common.rvv.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/layers/layers_common.simd.hpp"
+]],
+                ["mcpp_generated/modules/dnn/layers/layers_common.simd_declarations.hpp"] = [[
+#define CV_CPU_SIMD_FILENAME "modules/dnn/src/layers/layers_common.simd.hpp"
+#define CV_CPU_DISPATCH_MODE AVX
+#include "opencv2/core/private/cv_cpu_include_simd_declarations.hpp"
+
+#define CV_CPU_DISPATCH_MODE AVX2
+#include "opencv2/core/private/cv_cpu_include_simd_declarations.hpp"
+
+#define CV_CPU_DISPATCH_MODE AVX512_SKX
+#include "opencv2/core/private/cv_cpu_include_simd_declarations.hpp"
+
+#define CV_CPU_DISPATCH_MODE RVV
+#include "opencv2/core/private/cv_cpu_include_simd_declarations.hpp"
+
+#define CV_CPU_DISPATCH_MODE LASX
+#include "opencv2/core/private/cv_cpu_include_simd_declarations.hpp"
+
+#define CV_CPU_DISPATCH_MODE NEON
+#include "opencv2/core/private/cv_cpu_include_simd_declarations.hpp"
+
+#define CV_CPU_DISPATCH_MODE SVE
+#include "opencv2/core/private/cv_cpu_include_simd_declarations.hpp"
+
+#define CV_CPU_DISPATCH_MODES_ALL SVE, NEON, LASX, RVV, AVX512_SKX, AVX2, AVX, BASELINE
+
+#undef CV_CPU_SIMD_FILENAME
+]],
+                ["mcpp_generated/modules/dnn/layers/layers_common.sve.cpp"] = [[
+
+#include "modules/dnn/src/precomp.hpp"
+#include "modules/dnn/src/layers/layers_common.simd.hpp"
 ]],
                 ["mcpp_generated/modules/highgui/opencv_highgui_config.hpp"] = [[
 // Auto-generated file
@@ -10191,6 +10870,7 @@ bool MLASCALL MlasHGemmSupported(CBLAS_TRANSPOSE, CBLAS_TRANSPOSE) { return fals
 /* #undef OPENCV_ENABLE_NONFREE */
 
 #define HAVE_OPENCV_CORE
+#define HAVE_OPENCV_DNN
 #define HAVE_OPENCV_FLANN
 #define HAVE_OPENCV_GEOMETRY
 #define HAVE_OPENCV_HIGHGUI
@@ -10275,6 +10955,12 @@ jpeg16	3rdparty/libjpeg-turbo/src/jutils.c
                 "mcpp_generated/modules/geometry",
                 "*/modules/imgproc/include",
                 "mcpp_generated/modules/imgproc",
+                "*/modules/dnn/include",
+                "mcpp_generated/modules/dnn",
+                "*/modules/dnn/misc/caffe",
+                "*/modules/dnn/misc/tensorflow",
+                "*/modules/dnn/misc/onnx",
+                "*/3rdparty/protobuf/src",
                 "*/3rdparty/libpng",
                 "*/modules/imgcodecs/include",
                 "mcpp_generated/modules/imgcodecs",

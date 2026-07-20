@@ -4,7 +4,7 @@
 // dnn feature assertion: blobFromImage produces a correctly-shaped and
 // correctly-valued NCHW blob (exercises dnn core + the whole protobuf/mlas
 // link closure), and an empty Net constructs. Linux-only (see mcpp.toml).
-#if defined(__linux__) || defined(__APPLE__)
+#if defined(__linux__) || defined(__APPLE__) || defined(_WIN32)
 #include <opencv2/core.hpp>
 #include <opencv2/dnn.hpp>
 #include <cstdio>
