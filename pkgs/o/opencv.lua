@@ -23,7 +23,12 @@
 -- emit COFF from it); `unifont` embeds the CJK font behind FontFace("uni") —
 -- `opencv = { features = ["dnn"] }`.
 --
--- Requires mcpp >= 0.0.101 (per-OS feature semantics, mcpp#253).
+-- Requires mcpp >= 0.0.102: per-OS feature semantics (mcpp#253, 0.0.101) plus
+-- the windows scan-deps command-line fix (mcpp#261, 0.0.102). As a consumed
+-- dependency the package's own TUs compile from under the ~124-char registry
+-- xpkgs path rather than a short checkout, which pushed the clang scan-deps
+-- command past cmd.exe's 8191-char ceiling under 0.0.101; 0.0.102 drops the
+-- `cmd /c` redirect wrapper (clang-scan-deps -o) and restores the 32767 limit.
 --
 package = {
     spec        = "1",
@@ -36,30 +41,30 @@ package = {
 
     xpm = {
         linux = {
-            ["0.0.7"] = {
+            ["0.0.8"] = {
                 url    = {
-                    GLOBAL = "https://github.com/Sunrisepeak/opencv-m/archive/refs/tags/v0.0.7.tar.gz",
-                    CN     = "https://gitcode.com/mcpp-res/opencv/releases/download/v0.0.7/opencv-m-0.0.7.tar.gz",
+                    GLOBAL = "https://github.com/Sunrisepeak/opencv-m/archive/refs/tags/v0.0.8.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/opencv/releases/download/v0.0.8/opencv-m-0.0.8.tar.gz",
                 },
-                sha256 = "a896d08d16810b20d749199ebfad8c89268896eb0c6a3ac8cbbb863aebe3c17d",
+                sha256 = "0025f7a686c52f15d0b4349499180ba528a07cf4f114b1d5424608711c145cd8",
             },
         },
         macosx = {
-            ["0.0.7"] = {
+            ["0.0.8"] = {
                 url    = {
-                    GLOBAL = "https://github.com/Sunrisepeak/opencv-m/archive/refs/tags/v0.0.7.tar.gz",
-                    CN     = "https://gitcode.com/mcpp-res/opencv/releases/download/v0.0.7/opencv-m-0.0.7.tar.gz",
+                    GLOBAL = "https://github.com/Sunrisepeak/opencv-m/archive/refs/tags/v0.0.8.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/opencv/releases/download/v0.0.8/opencv-m-0.0.8.tar.gz",
                 },
-                sha256 = "a896d08d16810b20d749199ebfad8c89268896eb0c6a3ac8cbbb863aebe3c17d",
+                sha256 = "0025f7a686c52f15d0b4349499180ba528a07cf4f114b1d5424608711c145cd8",
             },
         },
         windows = {
-            ["0.0.7"] = {
+            ["0.0.8"] = {
                 url    = {
-                    GLOBAL = "https://github.com/Sunrisepeak/opencv-m/archive/refs/tags/v0.0.7.tar.gz",
-                    CN     = "https://gitcode.com/mcpp-res/opencv/releases/download/v0.0.7/opencv-m-0.0.7.tar.gz",
+                    GLOBAL = "https://github.com/Sunrisepeak/opencv-m/archive/refs/tags/v0.0.8.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/opencv/releases/download/v0.0.8/opencv-m-0.0.8.tar.gz",
                 },
-                sha256 = "a896d08d16810b20d749199ebfad8c89268896eb0c6a3ac8cbbb863aebe3c17d",
+                sha256 = "0025f7a686c52f15d0b4349499180ba528a07cf4f114b1d5424608711c145cd8",
             },
         },
     },
