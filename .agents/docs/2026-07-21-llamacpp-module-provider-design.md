@@ -283,8 +283,20 @@ llamacpp 0.1.0
 - 内部包使用 llama.cpp upstream `b` tag;
 - 内部依赖全部精确锁定;
 - 同一 upstream 快照的所有包原子更新和发布;
-- 历史版本保留用于回退;
+- 公共 SemVer 历史保留用于回退;
 - 不自动追踪每个 upstream tag 或 commit。
+
+当前 mcpp `0.0.101` 的 xpkg 描述符对所有 xpm 版本共用一个 `mcpp` body 和
+依赖表，无法同时表达 `compat.llamacpp@b10069 -> compat.ggml-base@b10069`
+以及下一快照的同版本依赖。因此首版内部描述符只登记 `b10069`。在加入第二个
+内部快照前必须先完成一个独立决策并发布其前置能力:
+
+- 首选:xpkg 支持 version-scoped `mcpp`/dependency overlay，保持内部包名稳定;
+- 备选:内部包采用 snapshot-qualified identity，由每个公共 Form A release
+  精确依赖对应 cohort。
+
+在此前提未满足时，不得仅向 `xpm` 追加新 tag 并改写共享依赖/源列表，也不承诺
+从当前 index 对历史内部 tag 做 fresh rollback。
 
 公共版本规则:
 
@@ -320,6 +332,8 @@ llamacpp 0.1.1
 未经审阅静默进入构建。
 
 任何已支持平台或 backend 失败时，不发布新快照中的任何包，禁止内部包部分更新。
+审计发现源集合、flags 或内部依赖发生变化时，还必须先通过上述 version-scoped
+recipe/identity 门禁，不能让新 recipe 覆盖旧 tag。
 
 ## 9. 验证设计
 
@@ -328,7 +342,8 @@ llamacpp 0.1.1
 ```text
 tests/examples/llamacpp-module-cpu
 tests/examples/llamacpp-module-metal
-tests/negative/llamacpp-backends
+tests/examples/llamacpp-internal-cpu
+tests/llamacpp_backend_contract.sh
 ```
 
 ### CPU Consumer
@@ -354,7 +369,8 @@ tests/negative/llamacpp-backends
 ### 负向验证
 
 - Linux/Windows 请求 Metal;
-- macOS x86-64 请求 Metal;
+- macOS x86-64 请求 Metal;当前 target 仍为 planned 时，以 provider
+  `build.mcpp` 的 `MCPP_TARGET_ARCH=x86_64` 直接契约覆盖，target 支持后升级为 E2E;
 - backend 拼写错误;
 - 首版请求 CUDA;
 - 内部 provider/core 版本不一致。
