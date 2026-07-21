@@ -11,6 +11,18 @@ on:
   workflow_dispatch:
 
 env:
+  # 0.0.102: windows command-line ceiling (mcpp#261 — the clang scan rule got
+  # its P1689 JSON through shell redirection, which forced a `cmd /c` wrapper
+  # and with it cmd.exe's 8191-char limit; clang-scan-deps -o removes both, and
+  # $local_includes-carrying rules now fall back to response files). The pin
+  # matters here because a package consumed FROM the registry sits under a
+  # ~124-char xpkgs path instead of its own ~23-char checkout, which is what
+  # pushed the vendored-opencv scan command over the line. Also: purview-include
+  # depfile tracking extended to Clang (#257 — stale BMI reuse), OS-conditional
+  # `[build].flags` (#258), and per-OS splices keyed on the resolved target
+  # rather than the host (#254).
+  # 0.0.101: per-feature per-glob flags + per-OS features (mcpp#253) — what
+  # lets opencv select its dnn gemm backend per platform.
   # 0.0.99: feature dep/feat forwarding (mcpp#243 — a feature can open a
   # feature OF a dependency, e.g. opencv `dnn` forwarding compat.opencv/dnn);
   # vendored xlings 0.4.67 for the >=2 index_repo install fix (mcpp#238 /
@@ -35,7 +47,7 @@ env:
   # 0.0.94 fixed feature-gated `sources` under `mcpp test` (mcpp#218); 0.0.91
   # added standard = "c++fly" to the resolver grammar, so c++fly descriptors
   # get the lint WARN below, not a hard grammar-parse rejection.
-  MCPP_VERSION: "0.0.101"
+  MCPP_VERSION: "0.0.102"
 
 jobs:
   lint:
@@ -184,21 +196,21 @@ jobs:
             ext: tar.gz
             mcpp: bin/mcpp
             xlings: registry/bin/xlings
-            mcpp_version: "0.0.101"   # keep in sync with env.MCPP_VERSION
+            mcpp_version: "0.0.102"   # keep in sync with env.MCPP_VERSION
           - platform: macos
             os: macos-15
             suffix: macosx-arm64
             ext: tar.gz
             mcpp: bin/mcpp
             xlings: registry/bin/xlings
-            mcpp_version: "0.0.101"   # keep in sync with env.MCPP_VERSION
+            mcpp_version: "0.0.102"   # keep in sync with env.MCPP_VERSION
           - platform: windows
             os: windows-latest
             suffix: windows-x86_64
             ext: zip
             mcpp: bin/mcpp.exe
             xlings: registry/bin/xlings.exe
-            mcpp_version: "0.0.101"   # keep in sync with env.MCPP_VERSION
+            mcpp_version: "0.0.102"   # keep in sync with env.MCPP_VERSION
     env:
       MCPP_EFFECTIVE: ${{ matrix.mcpp_version }}
     steps:
