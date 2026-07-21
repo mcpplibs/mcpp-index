@@ -1,25 +1,40 @@
--- asio -- standalone Asio 1.38.1 exposed as the C++23 module `asio`
--- (Form B inline descriptor, separate-compilation mode).
+-- asio -- 将独立版 Asio 1.38.1 暴露为 C++23 模块 `asio`
+-- (Form B inline descriptor, separate-compilation mode)。
 --
--- Install and consume:
---     mcpp add asio@1.38.1
---     import std;
---     import asio;
+-- 注意事项
+--   * 使用 `mcpp add asio@1.38.1` 引入；消费者需显式写
+--     `import std; import asio;`，因为本包设置 import_std = false。
+--   * 本包只支持模块方式消费。同一 translation unit 不要混用
+--     `#include <asio.hpp>` 和 `import asio;`，避免 inline 定义与模块 BMI
+--     的 separate-compilation 定义产生 ODR 差异。
+--   * 默认 feature 显式传播 ASIO_STANDALONE、ASIO_SEPARATE_COMPILATION、
+--     ASIO_DISABLE_BOOST_CONTEXT_FIBER 和 ASIO_HAS_THREADS。Asio 头文件内部
+--     自动检测的其他 ASIO_HAS_* 宏不会由 `import asio;` 导出。
 --
--- The upstream 1.38.x release has no module interface unit. This descriptor
--- generates a reviewed `asio.cppm` wrapper and compiles upstream `src/asio.cpp`
--- with ASIO_SEPARATE_COMPILATION. `import std;` is required because this package
--- does not inject the standard library through the module boundary.
+-- 与 header-only Asio 的区别/限制
+--   * 上游 1.38.x 没有模块接口单元。本描述生成 `asio.cppm`，并只编译一次
+--     `*/src/asio.cpp` 中的非模板实现；首次构建需生成 BMI，增量构建可避免
+--     每个消费者 translation unit 重复解析整组 Asio 头文件。
+--   * 模块只暴露 wrapper 中明确 export 的声明，不等同于
+--     `#include <asio.hpp>` 的完整 API 表面。
+--   * asio::error_code 是 std::error_code 的别名；wrapper 导出
+--     asio::use_future 变量，但未导出 asio::use_future_t<Alloc> 类模板。
+--   * 依赖未导出 ASIO_HAS_* 宏、平台专用头文件或 Boost 扩展的代码，需要
+--     改用标准/操作系统能力检测或另行扩展模块 wrapper。
 --
--- This package is module-only. Textual `#include <asio.hpp>` consumption and
--- APIs not exported by the wrapper are outside its mcpp-index contract. The
--- wrapper intentionally excludes SSL/TLS, local/POSIX/Windows handle APIs,
--- serial ports, pipes, file I/O, stackful spawn, and other surfaces listed by
--- headers that it does not include.
---
--- ASIO_STANDALONE and ASIO_SEPARATE_COMPILATION are public build defines, but
--- preprocessor macros do not cross `import asio;`. Consumers should use C++ or
--- operating-system facilities instead of testing ASIO_HAS_* macros.
+-- 未导出的组件
+--   * SSL/TLS (`asio/ssl/*.hpp`)：需要 OpenSSL/wolfSSL 等外部依赖。
+--   * Unix 域套接字、POSIX 描述符和 Windows 句柄：
+--     `asio/local/*.hpp`、`asio/posix/*.hpp`、`asio/windows/*.hpp`。
+--   * 串口、pipe 和文件 I/O：`asio/serial_port.hpp`、
+--     `asio/*able_pipe.hpp`、`asio/stream_file.hpp`、
+--     `asio/random_access_file.hpp`。
+--   * spawn()/yield_context 有栈协程：需要 Boost.Context；本包禁用其自动
+--     检测，应改用 co_spawn + awaitable + use_awaitable。
+--   * deadline_timer、generic protocol、execution、traits、遗留宏式协程和
+--     streambuf：对应 `asio/deadline_timer.hpp`、`asio/generic/*.hpp`、
+--     `asio/execution/*.hpp`、`asio/traits/*.hpp`、`asio/yield.hpp`、
+--     `asio/coroutine.hpp`、`asio/streambuf.hpp`。
 package = {
     spec        = "1",
     namespace   = "",
