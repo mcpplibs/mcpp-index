@@ -1,8 +1,6 @@
 # Public `opencv` module package `unifont` FEATURE test: `opencv = { features =
-# ["unifont"] }` forwards compat.opencv/unifont (mcpp#243 — pure forward, no new
-# module surface), so FontFace("uni") renders CJK through `import opencv.cv;`.
-# Reuses the compat.opencv+unifont store artifact from the opencv-unifont member.
-# Linux-only; no-op main elsewhere.
+# ["unifont"] }` embeds the CJK font (no new module surface), so FontFace("uni")
+# renders CJK through `import opencv.cv;`. Exercised on linux and macOS.
 [package]
 name    = "opencv-module-unifont-tests"
 version = "0.1.0"
@@ -11,7 +9,7 @@ version = "0.1.0"
 default = { path = "../../.." }
 
 [target.'cfg(linux)'.dependencies]
-opencv = { version = "0.0.6", features = ["unifont"] }
+opencv = { version = "0.0.7", features = ["unifont"] }
 
 [target.'cfg(macos)'.dependencies]
-opencv = { version = "0.0.6", features = ["unifont"] }
+opencv = { version = "0.0.7", features = ["unifont"] }

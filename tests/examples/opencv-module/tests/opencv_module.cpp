@@ -2,7 +2,7 @@
 // (`import opencv.cv;`), pinned version, Mat/imgproc ops (incl. the
 // replacement operator surface: Size comparison via != crosses the module
 // boundary — the v0.0.1 regression scenario), PNG+JPEG codec roundtrips,
-// videoio registry. Linux-only (see mcpp.toml).
+// videoio registry.
 #if defined(__linux__) || defined(__APPLE__) || defined(_WIN32)
 import std;
 import opencv.cv;

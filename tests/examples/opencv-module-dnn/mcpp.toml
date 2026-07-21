@@ -1,9 +1,7 @@
 # Public `opencv` module package `dnn` FEATURE test: `opencv = { features =
-# ["dnn"] }` forwards compat.opencv/dnn (mcpp#243) AND compiles opencv-m's
-# opencv.dnn interface, so `import opencv.dnn;` is available. Reuses the
-# compat.opencv+dnn store artifact built by the opencv-dnn member (same feature
-# set — no extra heavy build). Linux-only (compat.opencv linux snapshot);
-# off-Linux the test compiles to a no-op main().
+# ["dnn"] }` builds the underlying dnn sources and compiles opencv-m's
+# opencv.dnn interface, so `import opencv.dnn;` is available. All three
+# platforms (mlas on linux/macOS, built-in fast_gemm on windows).
 [package]
 name    = "opencv-module-dnn-tests"
 version = "0.1.0"
@@ -12,15 +10,14 @@ version = "0.1.0"
 default = { path = "../../.." }
 
 [target.'cfg(linux)'.dependencies]
-opencv = { version = "0.0.6", features = ["dnn"] }
+opencv = { version = "0.0.7", features = ["dnn"] }
 
-# macOS: `import opencv.dnn;` on macOS-arm64 (opencv-m dnn feature is OS-neutral;
-# forwards compat.opencv/dnn which now has the per-OS NEON dnn payload).
+# macOS: `import opencv.dnn;` on macOS-arm64 (per-OS NEON dnn payload).
 [target.'cfg(macos)'.dependencies]
-opencv = { version = "0.0.6", features = ["dnn"] }
+opencv = { version = "0.0.7", features = ["dnn"] }
 
 # windows: `import opencv.dnn;` on windows-x86_64 (fast_gemm backend).
 [target.'cfg(windows)'.dependencies]
-opencv = { version = "0.0.6", features = ["dnn"] }
+opencv = { version = "0.0.7", features = ["dnn"] }
 
 

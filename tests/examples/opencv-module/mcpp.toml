@@ -1,27 +1,26 @@
 # Public `opencv` C++23-module package test (bare-name consumption from the
 # builtin default namespace — resolved against THIS checkout via the
 # member-level `[indices] default` redirect, mcpp >= 0.0.97; kept per-member
-# and single-entry because xlings breaks with >1 project index repo, mcpp#238). Replaces the
-# former tests/smoke_opencv_module.sh reseeding driver. The package is
-# linux-only (it pulls the linux-only compat.opencv source build); off-Linux
-# the test compiles to a no-op main().
+# and single-entry because xlings breaks with >1 project index repo, mcpp#238).
+# Since opencv 0.0.7 the package is single-repo: the OpenCV sources are
+# vendored in its own release tarball, so this member exercises the whole
+# source build on all three platforms.
 [package]
 name    = "opencv-module-tests"
 version = "0.1.0"
 
-# The module package's own transitive dep (compat.opencv) resolves from the
-# GLOBAL published compat index (the compat namespace is not redirected here
-# — see the mcpp#238 single-repo constraint); the compat descriptor itself is
-# pre-merge-validated by its dedicated member.
+# The package's only remaining transitive dep is compat.ffmpeg (videoio
+# backend), which resolves from the GLOBAL published compat index — the
+# compat namespace is not redirected here, see the mcpp#238 constraint.
 [indices]
 default = { path = "../../.." }
 
 [target.'cfg(linux)'.dependencies]
-opencv = "0.0.6"
+opencv = "0.0.7"
 
 [target.'cfg(macos)'.dependencies]
-opencv = "0.0.6"
+opencv = "0.0.7"
 
 # windows: import opencv.cv on windows-x86_64 (clang-cl; module tarball OS-neutral).
 [target.'cfg(windows)'.dependencies]
-opencv = "0.0.6"
+opencv = "0.0.7"
