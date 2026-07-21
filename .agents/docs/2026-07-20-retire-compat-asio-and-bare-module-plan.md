@@ -1,6 +1,12 @@
 # Asio Module-Only Package Migration Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **Historical execution record — completed locally on 2026-07-20**
+>
+> This plan was executed locally on branch `refactor/asio-module`. The implementation commits are `6dc11f3` (PR #73 revert) and `cab87d6` (canonical root module migration).
+>
+> Do not rerun this plan against the completed branch. The commands and checklists below are retained as a historical execution record.
+>
+> Validation was narrowed by the user to Asio-only: isolated macOS arm64 with pinned mcpp 0.0.101 passed 5/5. Full workspace/OpenCV validation was intentionally stopped; Linux/Windows remain unverified.
 
 **Goal:** 删除 `compat.asio` header-only 包，将现有 Asio module recipe 改为唯一根包 `asio@1.38.1`，并通过 `mcpp add asio@1.38.1` 消费。
 
