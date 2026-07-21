@@ -1,25 +1,13 @@
 #!/usr/bin/env python3
-"""Read-only audit of a llama.cpp upstream snapshot.
-Produces a deterministic JSON report of source sets, registry macros,
-Metal shader inputs, platform links, dialect exceptions, and public-header
-hashes.  Never edits a package descriptor.
-"""
+"""Read-only audit of a llama.cpp upstream snapshot."""
 from __future__ import annotations
 
-import argparse
-import hashlib
-import json
-import os
-import re
-import sys
+import argparse, hashlib, json, os, re, sys
 from collections import OrderedDict
 from pathlib import Path
 
 
-# ── helpers ────────────────────────────────────────────────────────────────
-
 def sha256_file(path: str | Path) -> str:
-    """Return the lowercase hex SHA-256 of *path*."""
     h = hashlib.sha256()
     with open(path, 'rb') as f:
         for chunk in iter(lambda: f.read(1 << 20), b''):
@@ -28,8 +16,6 @@ def sha256_file(path: str | Path) -> str:
 
 
 def safe_extract_tar(archive, destination: str):
-    """Extract *archive* (file-object) into *destination*, rejecting any
-    member whose resolved path would escape *destination*."""
     import tarfile
     dest = os.path.realpath(destination)
     os.makedirs(dest, exist_ok=True)
@@ -37,19 +23,13 @@ def safe_extract_tar(archive, destination: str):
         for member in tf.getmembers():
             resolved = os.path.realpath(os.path.join(dest, member.name))
             if os.path.commonpath([dest, resolved]) != dest:
-                raise ValueError(
-                    f"archive member escapes extraction directory: {member.name}")
-        # Re-open for safe extraction
+                raise ValueError(f"archive member escapes extraction directory: {member.name}")
         archive.seek(0)
         with tarfile.open(fileobj=archive, mode='r:*') as tf2:
             tf2.extractall(dest, filter='data')
 
 
-# ── CMake extraction (balanced-paren, multi-line) ──────────────────────────
-
 def _tokenize_cmake(text: str):
-    """Yield (type, value) tokens from *text* ignoring comments."""
-    # remove line comments (very basic – good enough for the cmake subsets we see)
     lines = []
     for ln in text.splitlines():
         idx = ln.find('#')
@@ -78,7 +58,6 @@ def _tokenize_cmake(text: str):
             yield (c, c)
             i += 1
             continue
-        # bare word / variable reference
         j = i
         while j < n and not text[j].isspace() and text[j] not in '()"':
             j += 1
@@ -86,13 +65,15 @@ def _tokenize_cmake(text: str):
         i = j
 
 
-def extract_cmake_call(text: str, callee: str, first_arg: str | None = None
+def extract_cmake_call(text: str, callee: str,
+                       first_arg: str | None = None
                        ) -> tuple[str | None, list[str]]:
-    """Return (name, [arg...]) for the first *callee*(name arg...)."""
     tokens = list(_tokenize_cmake(text))
     for i, (typ, val) in enumerate(tokens):
-        if typ != 'WORD' or val != callee: continue
-        if i + 1 >= len(tokens) or tokens[i + 1] != ('(', '('): continue
+        if typ != 'WORD' or val != callee:
+            continue
+        if i + 1 >= len(tokens) or tokens[i + 1] != ('(', '('):
+            continue
         depth = 1
         j = i + 2
         args: list[str] = []
@@ -100,36 +81,28 @@ def extract_cmake_call(text: str, callee: str, first_arg: str | None = None
             typ2, val2 = tokens[j]
             if typ2 == '(':
                 depth += 1
-                if depth == 1:  j += 1; continue
+                if depth == 1:
+                    j += 1
+                    continue
             elif typ2 == ')':
                 depth -= 1
-                if depth == 0: break
-            if depth == 1 and typ2 in ('WORD', 'STR'): args.append(val2)
+                if depth == 0:
+                    break
+            if depth == 1 and typ2 in ('WORD', 'STR'):
+                args.append(val2)
             j += 1
-        if not args: continue
-        if first_arg is not None and args[0] != first_arg: continue
+        if not args:
+            continue
+        if first_arg is not None and args[0] != first_arg:
+            continue
         return (args[0], args[1:])
     return (None, [])
 
 
-# ── source collection ─────────────────────────────────────────────────────
-
-def _find_files(root: str, ext: str) -> list[str]:
-    """Walk *root* and return relative paths of files matching *ext*."""
-    found = []
-    for dirpath, _dirnames, filenames in os.walk(root):
-        for fn in filenames:
-            if fn.endswith(ext):
-                rel = os.path.relpath(os.path.join(dirpath, fn), root)
-                found.append(rel)
-    return sorted(found)
-
-
-def _expand_glob(root: str, pattern: str) -> list[str]:
-    """Expand a single file-level GLOB pattern relative to *root*."""
+def _expand_glob(base: str, pattern: str) -> list[str]:
     directory = os.path.dirname(pattern)
     glob_pat = os.path.basename(pattern)
-    full_dir = os.path.join(root, directory)
+    full_dir = os.path.join(base, directory)
     if not os.path.isdir(full_dir):
         return []
     import fnmatch
@@ -140,98 +113,153 @@ def _expand_glob(root: str, pattern: str) -> list[str]:
     return sorted(result)
 
 
-# ── public API ─────────────────────────────────────────────────────────────
+def _read_cmake_forest(root: str) -> tuple[str, dict[str, str]]:
+    top = os.path.join(root, 'CMakeLists.txt')
+    with open(top, 'r') as f:
+        top_text = f.read() if os.path.isfile(top) else ''
+    subs: dict[str, str] = {}
+    for dirpath, _dirnames, filenames in os.walk(root):
+        if 'CMakeLists.txt' in filenames:
+            sub = os.path.relpath(dirpath, root)
+            if sub == '.':
+                continue
+            fp = os.path.join(dirpath, 'CMakeLists.txt')
+            with open(fp, 'r') as f:
+                subs[sub] = f.read()
+    return top_text, subs
 
-def collect_snapshot(
-    root: str,
-    tag: str,
-    commit: str,
-    url: str,
-    archive_sha256: str,
-) -> dict:
-    """Walk a local llama.cpp checkout at *root* and produce the audit report."""
-    cmake_path = os.path.join(root, 'CMakeLists.txt')
-    if not os.path.isfile(cmake_path):
-        raise FileNotFoundError(f"CMakeLists.txt not found at {cmake_path}")
-    with open(cmake_path, 'r') as f:
-        cmake_text = f.read()
 
-    # ── source sets (from CMake add_library / ggml_add_backend_library) ──
-    _, ggml_base = extract_cmake_call(cmake_text, 'add_library', 'ggml-base')
-    _, ggml_registry = extract_cmake_call(cmake_text, 'add_library', 'ggml')
-    _, ggml_metal = extract_cmake_call(cmake_text, 'ggml_add_backend_library', 'ggml-metal')
-    _, llama = extract_cmake_call(cmake_text, 'add_library', 'llama')
+def _find_gpu_backend_calls(text: str, name: str) -> list[str]:
+    """Find ggml_add_backend_library(NAME ...) calls, skipping function defs."""
+    results = []
+    for m in re.finditer(
+        r'^\s*ggml_add_backend_library\s*\(\s*(' + re.escape(name) + r')\b',
+        text, re.MULTILINE,
+    ):
+        before = text[:m.start()]
+        opens = before.count('function(')
+        closes = before.count('endfunction()')
+        if opens == closes:  # not inside a function definition
+            _, args = extract_cmake_call(
+                text[m.start():], 'ggml_add_backend_library', name)
+            if args:
+                results.extend(args)
+    return results
+
+
+def _find_files(root: str, ext: str) -> list[str]:
+    found = []
+    for dirpath, _dirnames, filenames in os.walk(root):
+        for fn in filenames:
+            if fn.endswith(ext):
+                rel = os.path.relpath(os.path.join(dirpath, fn), root)
+                found.append(rel)
+    return sorted(found)
+
+
+def collect_snapshot(root, tag, commit, url, archive_sha256):
+    top_text, sub_cmakes = _read_cmake_forest(root)
+    if not top_text and not sub_cmakes:
+        raise FileNotFoundError(f"No CMakeLists.txt found under {root}")
+
+    def _extract_from_forest(callee, first_arg, cmake_dir='.'):
+        for subdir, text in sub_cmakes.items():
+            name, args = extract_cmake_call(text, callee, first_arg)
+            if name is not None:
+                return name, [os.path.join(subdir, a) for a in args]
+        name, args = extract_cmake_call(top_text, callee, first_arg)
+        if name is not None:
+            return name, args
+        return None, []
+
+    _, ggml_base = _extract_from_forest('add_library', 'ggml-base')
+    _, ggml_registry = _extract_from_forest('add_library', 'ggml')
+    _, ggml_metal = _extract_from_forest('ggml_add_backend_library', 'ggml-metal')
+    _, ggml_cpu = _extract_from_forest('ggml_add_backend_library', 'ggml-cpu')
+    _, llama = _extract_from_forest('add_library', 'llama')
 
     # Expand GLOB in llama sources
     llama_expanded: list[str] = []
     model_files: list[str] = []
     for src in llama:
-        if '${LLAMA_MODELS_SOURCES}' in src or src.endswith('.cpp') is False and '*' in src:
-            # Extract GLOB pattern from CMakeLists.txt
-            _, glob_args = extract_cmake_call(cmake_text, 'file', 'GLOB')
-            if glob_args and len(glob_args) >= 2:
-                pattern = glob_args[1]
-                model_files = _expand_glob(root, pattern)
+        if '${LLAMA_MODELS_SOURCES}' in src:
+            for subdir, text in sub_cmakes.items():
+                _, glob_args = extract_cmake_call(text, 'file', 'GLOB')
+                if (glob_args and len(glob_args) >= 2 and
+                        glob_args[0] == 'LLAMA_MODELS_SOURCES'):
+                    pattern = glob_args[1].strip('"')
+                    model_dir = os.path.join(root, subdir)
+                    model_files = _expand_glob(model_dir, pattern)
+                    break
+            if not model_files:
+                _, glob_args = extract_cmake_call(top_text, 'file', 'GLOB')
+                if glob_args and len(glob_args) >= 2:
+                    model_files = _expand_glob(root, glob_args[1])
         elif src.endswith('.cpp') or src.endswith('.c'):
             llama_expanded.append(src)
 
-    # CPU sources (ggml-cpu target extraction from actual upstream CMake)
-    _, cpu_common = extract_cmake_call(cmake_text, 'add_library', 'ggml-cpu')
-    if not cpu_common:
-        # Try alternative name patterns used in different upstream versions
-        _, cpu_common = extract_cmake_call(cmake_text, 'add_library', 'ggml')
-    # Fallback: scan ggml/src for cpu-backend-impl source files
-    cpu_common = cpu_common if cpu_common else [
+    # CPU sources
+    # CPU sources: always use rglob for comprehensive listing
+    cpu_common_raw = [
         os.path.relpath(p, root)
-        for p in Path(root).rglob('ggml-cpu*.cpp')
+        for p in Path(root).glob('ggml/src/ggml-cpu*/**/*.cpp')
+    ] + [
+        os.path.relpath(p, root)
+        for p in Path(root).glob('ggml/src/ggml-cpu*/**/*.c')
     ]
-    cpu_arch_x86 = [os.path.relpath(p, root) for p in Path(root).rglob('ggml-cpu-amx*.cpp')]
-    cpu_arch_arm = [os.path.relpath(p, root) for p in Path(root).rglob('ggml-cpu-neon*.cpp')]
+    cpu_arch_x86 = [os.path.relpath(p, root)
+                    for p in Path(root).rglob('ggml-cpu-amx*.cpp')]
+    cpu_arch_arm = [os.path.relpath(p, root)
+                    for p in Path(root).rglob('ggml-cpu-aarch64*.cpp')]
+    cpu_filtered = [s for s in cpu_common_raw
+                    if 'ggml-cpu' in s or s not in ggml_base]
 
-    # ── registry macros ──
+    # Registry macros
     registry: dict[str, str] = {}
-    reg_path = os.path.join(root, 'ggml-backend-reg.cpp')
-    if os.path.isfile(reg_path):
-        with open(reg_path, 'r') as f:
-            reg_text = f.read()
-        for macro in ['GGML_USE_CPU', 'GGML_USE_METAL', 'GGML_USE_CUDA',
-                       'GGML_USE_VULKAN', 'GGML_USE_SYCL', 'GGML_USE_CANN']:
-            pat = re.compile(
-                r'#ifdef\s+' + macro + r'\s+.*?register_backend\((\w+)\(\)\)',
-                re.DOTALL)
-            m = pat.search(reg_text)
-            if m:
-                registry[macro] = m.group(1)
+    for candidate in ['ggml/src/ggml-backend-reg.cpp', 'ggml-backend-reg.cpp']:
+        reg_path = os.path.join(root, candidate)
+        if os.path.isfile(reg_path):
+            with open(reg_path, 'r') as f:
+                reg_text = f.read()
+            for macro in ['GGML_USE_CPU', 'GGML_USE_METAL', 'GGML_USE_CUDA',
+                           'GGML_USE_VULKAN', 'GGML_USE_SYCL', 'GGML_USE_CANN']:
+                # Match within a single #ifdef ... #endif block only
+                block_pat = re.compile(
+                    r'#ifdef\s+' + macro + r'\b[^\n]*\n(.*?)#endif',
+                    re.DOTALL)
+                for block_m in block_pat.finditer(reg_text):
+                    inner = block_m.group(1)
+                    rm = re.search(r'register_backend\((\w+)\(\)\)', inner)
+                    if rm:
+                        registry[macro] = rm.group(1)
+                        break
+            break
 
-    # ── Metal shader inputs ──
-    metal_dir = os.path.join(root, 'ggml', 'src', 'ggml-metal')
+    # Metal shader inputs
     metal_inputs: list[str] = []
-    if os.path.isdir(metal_dir):
-        metal_patterns = ['ggml-common.h', 'ggml-metal.metal', 'ggml-metal-impl.h']
-        for pat in metal_patterns:
-            # Check both locations (some versions have ggml-common.h in parent dir)
-            for base in [metal_dir, os.path.dirname(metal_dir)]:
-                full = os.path.join(base, pat)
-                if os.path.isfile(full):
-                    rel = os.path.relpath(full, root)
-                    if rel not in metal_inputs:
-                        metal_inputs.append(rel)
-                    break
+    for candidate_dir in [os.path.join(root, 'ggml', 'src', 'ggml-metal'),
+                          os.path.join(root, 'ggml-metal')]:
+        if os.path.isdir(candidate_dir):
+            for pat in ['ggml-common.h', 'ggml-metal.metal', 'ggml-metal-impl.h']:
+                for base in [candidate_dir, os.path.dirname(candidate_dir)]:
+                    full = os.path.join(base, pat)
+                    if os.path.isfile(full):
+                        rel = os.path.relpath(full, root)
+                        if rel not in metal_inputs:
+                            metal_inputs.append(rel)
+                        break
+            if metal_inputs:
+                break
     metal_inputs.sort()
 
-    # ── Metal frameworks ──
-    metal_frameworks = ['Foundation', 'Metal', 'MetalKit']
-
-    # ── C++20 dialect exceptions (model files requiring C++20 for concepts) ──
+    # C++20 exceptions
     cpp20_exceptions = []
-    for p in ['src/models/dflash.cpp', 'src/models/eagle3.cpp', 'src/models/t5.cpp']:
+    for p in ['src/models/dflash.cpp', 'src/models/eagle3.cpp',
+              'src/models/t5.cpp']:
         if os.path.isfile(os.path.join(root, p)):
             cpp20_exceptions.append(p)
 
-    # ── Platform links ──
-    platform_links = {'windows_cpu': ['advapi32']}
-
-    # ── Public header hashes ──
+    # Public header hashes
     header_hashes = {}
     for hdr in ['llama.h', 'ggml.h', 'ggml-cpu.h']:
         p = os.path.join(root, 'include', hdr)
@@ -241,16 +269,13 @@ def collect_snapshot(
     return OrderedDict([
         ('schema', 1),
         ('upstream', OrderedDict([
-            ('tag', tag),
-            ('commit', commit),
-            ('url', url),
-            ('sha256', archive_sha256),
+            ('tag', tag), ('commit', commit),
+            ('url', url), ('sha256', archive_sha256),
         ])),
         ('sources', OrderedDict([
             ('ggml_base', sorted(set(ggml_base))),
             ('ggml_registry', sorted(set(ggml_registry))),
-            ('ggml_cpu_common', sorted(set(
-                [s for s in cpu_common if s not in ggml_base]))),
+            ('ggml_cpu_common', sorted(set(cpu_filtered))),
             ('ggml_cpu_x86', sorted(set(cpu_arch_x86))),
             ('ggml_cpu_arm', sorted(set(cpu_arch_arm))),
             ('llama_core', sorted(set(llama_expanded))),
@@ -259,38 +284,32 @@ def collect_snapshot(
         ])),
         ('registry', registry),
         ('metal', OrderedDict([
-            ('frameworks', metal_frameworks),
+            ('frameworks', ['Foundation', 'Metal', 'MetalKit']),
             ('shader_inputs', metal_inputs),
         ])),
         ('dialect_exceptions', OrderedDict([
             ('c++20', cpp20_exceptions),
         ])),
-        ('platform_links', platform_links),
+        ('platform_links', {'windows_cpu': ['advapi32']}),
         ('public_header_sha256', header_hashes),
     ])
 
 
 def compare_reports(old: dict, new: dict) -> list[str]:
-    """Return a list of human-readable differences between two reports."""
     diffs = []
     for key in ['sources', 'registry', 'metal', 'dialect_exceptions',
-                 'platform_links']:
-        if old.get(key) != new.get(key):
-            diffs.append(f"{key} changed")
-    for key in ['public_header_sha256']:
+                 'platform_links', 'public_header_sha256']:
         if old.get(key) != new.get(key):
             diffs.append(f"{key} changed")
     return diffs
 
-
-# ── CLI ────────────────────────────────────────────────────────────────────
 
 def main() -> int:
     ap = argparse.ArgumentParser(description='Audit a llama.cpp snapshot')
     src = ap.add_mutually_exclusive_group(required=True)
     src.add_argument('--upstream', help='Local llama.cpp checkout directory')
     src.add_argument('--url', help='URL of the source tarball')
-    ap.add_argument('--sha256', help='Expected SHA-256 of the tarball (required with --url)')
+    ap.add_argument('--sha256', help='Expected SHA-256 of the tarball')
     ap.add_argument('--tag', required=True, help='Upstream tag')
     ap.add_argument('--commit', required=True, help='Upstream commit SHA')
     out = ap.add_mutually_exclusive_group()
@@ -306,10 +325,7 @@ def main() -> int:
     if args.upstream:
         root = os.path.abspath(args.upstream)
     else:
-        # Download and verify tarball
-        import tempfile
-        import urllib.request
-        print(f"Downloading {args.url} ...", file=sys.stderr)
+        import tempfile, urllib.request
         tmpdir = tempfile.mkdtemp(prefix='llamacpp-audit-')
         tarball = os.path.join(tmpdir, 'source.tar.gz')
         urllib.request.urlretrieve(args.url, tarball)
@@ -321,15 +337,13 @@ def main() -> int:
         os.makedirs(extract_root, exist_ok=True)
         with open(tarball, 'rb') as f:
             safe_extract_tar(f, extract_root)
-        # The tarball typically contains a single top-level directory
         entries = os.listdir(extract_root)
-        dirs = [e for e in entries if os.path.isdir(os.path.join(extract_root, e))]
+        dirs = [e for e in entries
+                if os.path.isdir(os.path.join(extract_root, e))]
         root = os.path.join(extract_root, dirs[0]) if dirs else extract_root
 
     report = collect_snapshot(
-        root=root,
-        tag=args.tag,
-        commit=args.commit,
+        root=root, tag=args.tag, commit=args.commit,
         url=args.url or 'file://' + root,
         archive_sha256=args.sha256 or 'unknown',
     )
@@ -361,7 +375,6 @@ def main() -> int:
     else:
         json.dump(report, sys.stdout, indent=2)
         print()
-
     return 0
 
 
