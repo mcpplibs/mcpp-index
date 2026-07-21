@@ -7765,6 +7765,14 @@ static const FFOutputFormat * const muxer_list[] = {
         },
         linux = {
             cflags = {
+                -- musl: <sys/ioctl.h> declares ioctl(int, int, ...) while glibc
+                -- (and ffmpeg's v4l2 wrappers) use unsigned long — gcc >= 14
+                -- makes the pointer-type mismatch a hard error by default.
+                -- Downgrade to a warning so x86_64-linux-musl consumer builds
+                -- (mcpp build --target x86_64-linux-musl) work; no effect on
+                -- glibc builds. Verified: full opencv-m + compat.ffmpeg musl
+                -- static build + tests green with only this change.
+                "-Wno-error=incompatible-pointer-types",
                 "-DPIC",
                 "-fomit-frame-pointer",
                 "-fno-math-errno",
