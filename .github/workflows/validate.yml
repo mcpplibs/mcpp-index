@@ -159,17 +159,14 @@ jobs:
   # The ~/.mcpp/registry cache carries the built compat packages (xpkgs) across
   # runs, so repeat builds are fast.
   #
-  # timeout-minutes is sized for the COLD build, not the cached path. compat.opencv
-  # is now a from-source OpenCV 5 build, and each feature variant re-keys the
-  # store into a full recompile, so a full run (forced whenever this workflow file
-  # changes — e.g. a version bump) serially builds several OpenCV variants on one
-  # runner: compat.opencv base + `unifont` + `dnn` feature members, plus the
-  # transition-window compat.opencv5 pulled by the opencv-module member (opencv-m
-  # still deps compat.opencv5 until its v0.0.3). That transition double-build goes
-  # away once opencv-m switches to compat.opencv and compat.opencv5 is retired;
-  # steady state is base+unifont+dnn, and the registry cache (restore-keys prefix
-  # below) amortizes even those across subsequent runs. 150 covers the one-time
-  # cold full build with headroom; it is a ceiling, not a target.
+  # timeout-minutes is sized for the COLD build, not the cached path. The opencv
+  # module package carries a from-source OpenCV 5 build, and each feature variant
+  # re-keys the store into a full recompile, so a full run (forced whenever this
+  # workflow file changes — e.g. a version bump) serially builds three OpenCV
+  # variants on one runner: the opencv-module base member plus the `unifont` and
+  # `dnn` feature members. The registry cache (restore-keys prefix below)
+  # amortizes those across subsequent runs. 150 covers the one-time cold full
+  # build with headroom; it is a ceiling, not a target.
   workspace:
     name: workspace (${{ matrix.platform }})
     runs-on: ${{ matrix.os }}
@@ -259,8 +256,9 @@ jobs:
       # Run the FULL workspace when the change can affect everything:
       # non-PR events (push to main, the nightly cron, dispatch), this
       # workflow file (it carries the mcpp version pins, so a version bump
-      # always re-validates every package), the workspace manifest, or
-      # shared test scripts. Docs-only changes select nothing.
+      # always re-validates every package), a non-member edit to the
+      # workspace manifest, or shared test scripts. Docs-only and tools/-only
+      # changes select nothing.
       # Note: bash 3.2 on macOS runners — no associative arrays here.
       - name: Select affected workspace members
         shell: bash
@@ -275,7 +273,7 @@ jobs:
           while IFS= read -r f; do
             [ -n "$f" ] || continue
             case "$f" in
-              .github/workflows/validate.yml|tests/*.sh|tools/*) full "$f" ;;
+              .github/workflows/validate.yml|tests/*.sh) full "$f" ;;
               mcpp.toml)
                 # Workspace manifest. Every new-package PR appends to the
                 # members list, so that alone must NOT force a full run:
@@ -301,7 +299,14 @@ jobs:
                   if grep -q "$lib" "$mt"; then add "$(basename "$(dirname "$mt")")"; hit=1; fi
                 done
                 [ "$hit" = 1 ] || echo "note: no workspace member exercises $f" ;;
-              *.md|docs/*|.agents/*|.github/*) : ;;
+              # tools/ holds OFFLINE descriptor-generation and publishing
+              # helpers (tools/compat-*/, tools/gtc/, publish_mcpp_index.sh).
+              # Nothing under it is consumed by a package build: when one of
+              # them actually changes a package, the generated pkgs/*.lua
+              # changes with it and the rule above selects the right members.
+              # So a tools/ edit alone selects nothing rather than forcing a
+              # full workspace rebuild.
+              *.md|docs/*|.agents/*|.github/*|tools/*) : ;;
               *) full "unclassified change: $f" ;;
             esac
           done <<EOF
