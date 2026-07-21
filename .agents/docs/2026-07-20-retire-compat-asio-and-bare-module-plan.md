@@ -2,7 +2,7 @@
 
 > **Historical execution record — completed locally on 2026-07-20**
 >
-> This plan was executed locally on branch `refactor/asio-module`. The implementation commits are `6dc11f3` (PR #73 revert) and `cab87d6` (canonical root module migration).
+> This plan was executed locally on branch `refactor/asio-module`. After rebasing onto `upstream/main`, the implementation commits are `a65002d` (PR #73 revert) and `4ff03bd` (canonical root module migration).
 >
 > Do not rerun this plan against the completed branch. The commands and checklists below are retained as a historical execution record.
 >
