@@ -1,0 +1,9 @@
+[package]
+name    = "llamacpp-internal-cpu"
+version = "0.1.0"
+
+[indices]
+compat = { path = "../../.." }
+
+[dependencies.compat]
+llamacpp = "b10069"
