@@ -244,5 +244,21 @@ package = {
         linux = {
             ldflags = { "-ldl" },
         },
+        macosx = {
+            features = {
+                ["backend-metal"] = {
+                    deps = {
+                        ["compat.ggml-metal"] = "b10069",
+                    },
+                    requires = { "ggml.accelerator" },
+                    flags = {
+                        {
+                            glob = "*/ggml/src/ggml-backend-reg.cpp",
+                            defines = { "GGML_USE_METAL" },
+                        },
+                    },
+                },
+            },
+        },
     },
 }
