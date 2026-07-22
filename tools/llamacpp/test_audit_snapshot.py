@@ -1,8 +1,14 @@
 """Unit tests for audit_snapshot.py — verified against a miniature CMake tree."""
+import contextlib
+import io
+import json
 import os
 import sys
+import tarfile
 import tempfile
 import unittest
+from pathlib import Path
+from unittest import mock
 
 # Ensure the tools/llamacpp directory is on the path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '.'))
@@ -154,6 +160,91 @@ add_library(llama llama.cpp ${LLAMA_MODELS_SOURCES})
         self.assertIn('ggml/src/ggml-common.h', report['metal']['shader_inputs'])
         self.assertIn('ggml/src/ggml-metal/ggml-metal.metal', report['metal']['shader_inputs'])
         self.assertIn('ggml/src/ggml-metal/ggml-metal-impl.h', report['metal']['shader_inputs'])
+
+    def _write_archive_and_report(self):
+        fixture_dir = tempfile.TemporaryDirectory()
+        archive = Path(fixture_dir.name) / 'llama.cpp-test.tar.gz'
+        with tarfile.open(archive, 'w:gz') as tf:
+            tf.add(self.root, arcname='llama.cpp-test')
+        digest = audit_snapshot.sha256_file(archive)
+        url = archive.as_uri()
+        report = audit_snapshot.collect_snapshot(
+            self.root,
+            tag='test',
+            commit='deadbeef',
+            url=url,
+            archive_sha256=digest,
+        )
+        report_path = Path(fixture_dir.name) / 'snapshot.json'
+        report_path.write_text(json.dumps(report, indent=2) + '\n')
+        return fixture_dir, report_path
+
+    def test_check_only_uses_identity_from_report(self):
+        fixture_dir, report_path = self._write_archive_and_report()
+        self.addCleanup(fixture_dir.cleanup)
+        with mock.patch.object(
+                sys, 'argv', ['audit_snapshot.py', '--check', str(report_path)]):
+            self.assertEqual(audit_snapshot.main(), 0)
+
+    def test_check_supports_local_upstream_override(self):
+        fixture_dir, report_path = self._write_archive_and_report()
+        self.addCleanup(fixture_dir.cleanup)
+        with mock.patch.object(
+                sys, 'argv', ['audit_snapshot.py', '--check', str(report_path),
+                              '--upstream', self.root]):
+            self.assertEqual(audit_snapshot.main(), 0)
+
+    def test_check_supports_url_and_sha_override(self):
+        fixture_dir, report_path = self._write_archive_and_report()
+        self.addCleanup(fixture_dir.cleanup)
+        report = json.loads(report_path.read_text())
+        original = Path(report['upstream']['url'].removeprefix('file://'))
+        controlled = original.with_name('controlled-source.tar.gz')
+        controlled.write_bytes(original.read_bytes())
+        with mock.patch.object(
+                sys, 'argv', ['audit_snapshot.py', '--check', str(report_path),
+                              '--url', controlled.as_uri(), '--sha256',
+                              report['upstream']['sha256']]):
+            self.assertEqual(audit_snapshot.main(), 0)
+
+    def test_check_rejects_incomplete_report_identity(self):
+        fixture_dir, report_path = self._write_archive_and_report()
+        self.addCleanup(fixture_dir.cleanup)
+        report = json.loads(report_path.read_text())
+        del report['upstream']['sha256']
+        report_path.write_text(json.dumps(report))
+        stderr = io.StringIO()
+        with mock.patch.object(
+                sys, 'argv', ['audit_snapshot.py', '--check', str(report_path),
+                              '--upstream', self.root]), \
+                contextlib.redirect_stderr(stderr), \
+                self.assertRaises(SystemExit):
+            audit_snapshot.main()
+        self.assertIn('missing upstream identity fields: sha256', stderr.getvalue())
+
+    def test_check_rejects_conflicting_explicit_identity(self):
+        fixture_dir, report_path = self._write_archive_and_report()
+        self.addCleanup(fixture_dir.cleanup)
+        stderr = io.StringIO()
+        with mock.patch.object(
+                sys, 'argv', ['audit_snapshot.py', '--check', str(report_path),
+                              '--upstream', self.root, '--tag', 'other']), \
+                contextlib.redirect_stderr(stderr), \
+                self.assertRaises(SystemExit):
+            audit_snapshot.main()
+        self.assertIn('--tag conflicts with report identity', stderr.getvalue())
+
+    def test_check_requires_complete_url_override(self):
+        fixture_dir, report_path = self._write_archive_and_report()
+        self.addCleanup(fixture_dir.cleanup)
+        stderr = io.StringIO()
+        with mock.patch.object(
+                sys, 'argv', ['audit_snapshot.py', '--check', str(report_path),
+                              '--url', 'file:///controlled.tar.gz']), \
+                contextlib.redirect_stderr(stderr), \
+                self.assertRaises(SystemExit):
+            audit_snapshot.main()
+        self.assertIn('--sha256 is required when using --url', stderr.getvalue())
 
 
 if __name__ == '__main__':

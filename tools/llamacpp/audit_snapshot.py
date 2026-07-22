@@ -297,7 +297,7 @@ def collect_snapshot(root, tag, commit, url, archive_sha256):
 
 def compare_reports(old: dict, new: dict) -> list[str]:
     diffs = []
-    for key in ['sources', 'registry', 'metal', 'dialect_exceptions',
+    for key in ['upstream', 'sources', 'registry', 'metal', 'dialect_exceptions',
                  'platform_links', 'public_header_sha256']:
         if old.get(key) != new.get(key):
             diffs.append(f"{key} changed")
@@ -306,33 +306,78 @@ def compare_reports(old: dict, new: dict) -> list[str]:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description='Audit a llama.cpp snapshot')
-    src = ap.add_mutually_exclusive_group(required=True)
+    src = ap.add_mutually_exclusive_group()
     src.add_argument('--upstream', help='Local llama.cpp checkout directory')
     src.add_argument('--url', help='URL of the source tarball')
     ap.add_argument('--sha256', help='Expected SHA-256 of the tarball')
-    ap.add_argument('--tag', required=True, help='Upstream tag')
-    ap.add_argument('--commit', required=True, help='Upstream commit SHA')
+    ap.add_argument('--tag', help='Upstream tag')
+    ap.add_argument('--commit', help='Upstream commit SHA')
     out = ap.add_mutually_exclusive_group()
     out.add_argument('--output', help='Write JSON report to this file')
     out.add_argument('--check', help='Regenerate and compare with this report file')
     out.add_argument('--compare', help='Compare OLD_REPORT with a new generation')
     args = ap.parse_args()
 
+    expected = None
+    identity = None
+    if args.check:
+        try:
+            with open(args.check, 'r') as f:
+                expected = json.load(f, object_pairs_hook=OrderedDict)
+        except (OSError, json.JSONDecodeError) as error:
+            ap.error(f'cannot load check report: {error}')
+        identity = expected.get('upstream')
+        if not isinstance(identity, dict):
+            ap.error('check report is missing upstream identity')
+        required = ('tag', 'commit', 'url', 'sha256')
+        missing = [key for key in required
+                   if not isinstance(identity.get(key), str)
+                   or not identity[key]]
+        if missing:
+            ap.error('check report is missing upstream identity fields: '
+                     + ', '.join(missing))
+        for option in ('tag', 'commit'):
+            explicit = getattr(args, option)
+            if explicit is not None and explicit != identity[option]:
+                ap.error(f'--{option} conflicts with report identity '
+                         f'({explicit!r} != {identity[option]!r})')
+
     if args.url and not args.sha256:
         ap.error('--sha256 is required when using --url')
+    if args.sha256 and not args.url:
+        ap.error('--sha256 requires --url')
+
+    if identity is not None:
+        tag = identity['tag']
+        commit = identity['commit']
+        report_url = identity['url']
+        report_sha256 = identity['sha256']
+    else:
+        if not args.upstream and not args.url:
+            ap.error('one of --upstream or --url is required without --check')
+        if not args.tag or not args.commit:
+            ap.error('--tag and --commit are required without --check')
+        tag = args.tag
+        commit = args.commit
+        report_url = args.url
+        report_sha256 = args.sha256
 
     root: str
+    temporary = None
     if args.upstream:
         root = os.path.abspath(args.upstream)
     else:
         import tempfile, urllib.request
-        tmpdir = tempfile.mkdtemp(prefix='llamacpp-audit-')
+        temporary = tempfile.TemporaryDirectory(prefix='llamacpp-audit-')
+        tmpdir = temporary.name
         tarball = os.path.join(tmpdir, 'source.tar.gz')
-        urllib.request.urlretrieve(args.url, tarball)
+        source_url = args.url or report_url
+        source_sha256 = args.sha256 or report_sha256
+        urllib.request.urlretrieve(source_url, tarball)
         actual = sha256_file(tarball)
-        if actual != args.sha256:
+        if actual != source_sha256:
             os.unlink(tarball)
-            sys.exit(f"SHA-256 mismatch: expected {args.sha256}, got {actual}")
+            sys.exit(f"SHA-256 mismatch: expected {source_sha256}, got {actual}")
         extract_root = os.path.join(tmpdir, 'extracted')
         os.makedirs(extract_root, exist_ok=True)
         with open(tarball, 'rb') as f:
@@ -342,11 +387,15 @@ def main() -> int:
                 if os.path.isdir(os.path.join(extract_root, e))]
         root = os.path.join(extract_root, dirs[0]) if dirs else extract_root
 
-    report = collect_snapshot(
-        root=root, tag=args.tag, commit=args.commit,
-        url=args.url or 'file://' + root,
-        archive_sha256=args.sha256 or 'unknown',
-    )
+    try:
+        report = collect_snapshot(
+            root=root, tag=tag, commit=commit,
+            url=report_url or 'file://' + root,
+            archive_sha256=report_sha256 or 'unknown',
+        )
+    finally:
+        if temporary is not None:
+            temporary.cleanup()
 
     if args.output:
         with open(args.output, 'w') as f:
@@ -354,8 +403,7 @@ def main() -> int:
             f.write('\n')
         print(f"Snapshot written to {args.output}", file=sys.stderr)
     elif args.check:
-        with open(args.check, 'r') as f:
-            expected = json.load(f, object_pairs_hook=OrderedDict)
+        assert expected is not None
         if expected == report:
             print("Snapshot matches.", file=sys.stderr)
         else:

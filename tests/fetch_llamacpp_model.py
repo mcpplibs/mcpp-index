@@ -1,9 +1,15 @@
 #!/usr/bin/env python3
 """Fetch the pinned GGUF test model with cryptographic verification."""
-import argparse, hashlib, os, sys, urllib.request
+import argparse
+import hashlib
+import os
+import sys
+import urllib.request
+from pathlib import Path
 
 _MODEL_URL = (
-    "https://huggingface.co/ggml-org/models/resolve/main/tinyllamas/"
+    "https://huggingface.co/ggml-org/models-moved/resolve/"
+    "499bc8821c6b12b4e53c5bffcb21ec206f212d81/tinyllamas/"
     "stories15M-q4_0.gguf"
 )
 _MODEL_SIZE = 19077344
@@ -18,33 +24,39 @@ def sha256_file(path: str) -> str:
     return h.hexdigest()
 
 
-def fetch(output: str) -> str:
-    # Reuse an existing valid file
+def fetch(output: str, *, url: str = _MODEL_URL,
+          expected_size: int = _MODEL_SIZE,
+          expected_sha256: str = _MODEL_SHA256) -> str:
+    output = os.path.abspath(output)
+    os.makedirs(os.path.dirname(output), exist_ok=True)
+
     if os.path.isfile(output):
         size = os.path.getsize(output)
         digest = sha256_file(output)
-        if size == _MODEL_SIZE and digest == _MODEL_SHA256:
+        if size == expected_size and digest == expected_sha256:
             print(f"Model already present and verified: {output}", file=sys.stderr)
             return output
-        else:
-            print(f"Existing file {output} (size={size}, sha256={digest}) "
-                  f"does not match expected (size={_MODEL_SIZE}, "
-                  f"sha256={_MODEL_SHA256}) — re-downloading",
-                  file=sys.stderr)
+        print(f"Existing file {output} (size={size}, sha256={digest}) "
+              f"does not match expected (size={expected_size}, "
+              f"sha256={expected_sha256}); re-downloading",
+              file=sys.stderr)
+
     tmp = output + ".tmp"
     try:
-        print(f"Downloading {_MODEL_URL} ...", file=sys.stderr)
-        urllib.request.urlretrieve(_MODEL_URL, tmp)
+        if os.path.exists(tmp):
+            os.unlink(tmp)
+        print(f"Downloading {url} ...", file=sys.stderr)
+        with urllib.request.urlopen(url) as response, open(tmp, "wb") as target:
+            while chunk := response.read(1 << 20):
+                target.write(chunk)
         actual_size = os.path.getsize(tmp)
-        if actual_size != _MODEL_SIZE:
-            os.unlink(tmp)
+        if actual_size != expected_size:
             raise RuntimeError(
-                f"Downloaded model size {actual_size} != expected {_MODEL_SIZE}")
+                f"Downloaded model size {actual_size} != expected {expected_size}")
         actual_sha = sha256_file(tmp)
-        if actual_sha != _MODEL_SHA256:
-            os.unlink(tmp)
+        if actual_sha != expected_sha256:
             raise RuntimeError(
-                f"Downloaded model SHA-256 {actual_sha} != expected {_MODEL_SHA256}")
+                f"Downloaded model SHA-256 {actual_sha} != expected {expected_sha256}")
         os.replace(tmp, output)
         print(f"Model verified and saved to {output}", file=sys.stderr)
     except BaseException:
@@ -56,29 +68,42 @@ def fetch(output: str) -> str:
 
 def self_test() -> None:
     import tempfile
-    td = tempfile.mkdtemp()
-    try:
-        # Acceptance
-        ok = os.path.join(td, "ok.gguf")
-        with open(ok, "wb") as f:
-            f.write(b"A" * 100)
-        ok_sha = hashlib.sha256(b"A" * 100).hexdigest()
-        # Rejection: wrong size
-        bad_size = os.path.join(td, "badsize.gguf")
-        with open(bad_size, "wb") as f:
-            f.write(b"short")
-        # Rejection: wrong digest
-        bad_hash = os.path.join(td, "badhash.gguf")
-        with open(bad_hash, "wb") as f:
-            f.write(b"A" * 100 + b"x")
-        bad_hash_sha = hashlib.sha256(b"A" * 100 + b"x").hexdigest()
-        # Test with local overrides
-        print(f"OK sha256: {ok_sha}", file=sys.stderr)
-        print(f"Bad hash sha256: {bad_hash_sha}", file=sys.stderr)
-        print("Self-test passed (local checks only)", file=sys.stderr)
-    finally:
-        import shutil
-        shutil.rmtree(td, ignore_errors=True)
+    with tempfile.TemporaryDirectory() as td:
+        payload = b"local pinned model payload\0" * 64
+        source = os.path.join(td, "source.gguf")
+        with open(source, "wb") as f:
+            f.write(payload)
+        url = Path(source).as_uri()
+        size = len(payload)
+        digest = hashlib.sha256(payload).hexdigest()
+
+        output = os.path.join(td, "model.gguf")
+        fetch(output, url=url, expected_size=size,
+              expected_sha256=digest)
+        fetch(output, url="https://invalid.example/reuse.gguf",
+              expected_size=size, expected_sha256=digest)
+
+        for label, rejected_size, rejected_digest in (
+                ("size", size + 1, digest),
+                ("digest", size, "0" * 64)):
+            rejected = os.path.join(td, f"reject-{label}.gguf")
+            try:
+                fetch(rejected, url=url, expected_size=rejected_size,
+                      expected_sha256=rejected_digest)
+            except RuntimeError:
+                if os.path.exists(rejected) or os.path.exists(rejected + ".tmp"):
+                    raise AssertionError(f"{label} rejection left output bytes")
+            else:
+                raise AssertionError(f"{label} mismatch was accepted")
+
+        with open(output, "wb") as f:
+            f.write(b"invalid existing output")
+        fetch(output, url=url, expected_size=size,
+              expected_sha256=digest)
+        if sha256_file(output) != digest or os.path.exists(output + ".tmp"):
+            raise AssertionError("atomic replacement did not produce verified output")
+
+        print("Self-test passed", file=sys.stderr)
 
 
 def main() -> int:
