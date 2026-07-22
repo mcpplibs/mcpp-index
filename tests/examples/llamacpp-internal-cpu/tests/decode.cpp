@@ -31,7 +31,7 @@ int main() {
     llama_model_params mparams = llama_model_default_params();
     mparams.n_gpu_layers = 0;
 
-    llama_model *model = llama_model_load(model_path, mparams);
+    llama_model *model = llama_model_load_from_file(model_path, mparams);
     if (!model) {
         std::fprintf(stderr, "failed to load model\n");
         llama_backend_free();
@@ -73,9 +73,9 @@ int main() {
     std::printf("sampled token: %d\n", sampled);
 
     // Validate token range
-    if (sampled < 0 || sampled >= llama_n_vocab(model)) {
+    if (sampled < 0 || sampled >= llama_vocab_n_tokens(llama_model_get_vocab(model))) {
         std::fprintf(stderr, "sampled token %d out of vocab range [0, %d)\n",
-                     sampled, llama_n_vocab(model));
+                     sampled, llama_vocab_n_tokens(llama_model_get_vocab(model)));
         llama_sampler_free(smpl);
         llama_free(ctx);
         llama_model_free(model);
