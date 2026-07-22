@@ -184,9 +184,34 @@ def descriptor_sources(descriptor: dict) -> list[str]:
     return sources
 
 
+def descriptor_sources_for_platform(descriptor: dict, platform: str) -> list[str]:
+    def collect(table: object, context: str) -> list[str]:
+        if not isinstance(table, dict):
+            return []
+        result = []
+        if "sources" in table:
+            result.extend(array(table["sources"], f"{context}.sources"))
+        features = table.get("features", {})
+        if isinstance(features, dict):
+            for feature_name, feature in features.items():
+                if isinstance(feature, dict) and "sources" in feature:
+                    result.extend(array(
+                        feature["sources"], f"{context}.features.{feature_name}.sources"))
+        return result
+
+    mcpp = get_path(descriptor, "mcpp")
+    return (collect(mcpp, f"{descriptor['name']}.mcpp")
+            + collect(mcpp.get(platform), f"{descriptor['name']}.mcpp.{platform}"))
+
+
 def check_cohort(descriptors: dict[str, dict], report: dict) -> None:
     identity = report["upstream"]
     tag = identity["tag"]
+    expected_urls = {
+        "GLOBAL": identity["url"],
+        "CN": (f"https://gitcode.com/mcpp-res/llamacpp/releases/download/{tag}/"
+               f"llama.cpp-{tag}.tar.gz"),
+    }
     expected_platforms = {
         "compat.ggml-base": {"linux", "macosx", "windows"},
         "compat.ggml-cpu": {"linux", "macosx", "windows"},
@@ -205,8 +230,7 @@ def check_cohort(descriptors: dict[str, dict], report: dict) -> None:
             require(release.get("sha256") == identity["sha256"],
                     f"{name}/{platform}/{tag} SHA drift")
             url = release.get("url")
-            global_url = url.get("GLOBAL") if isinstance(url, dict) else url
-            require(global_url == identity["url"],
+            require(url == expected_urls,
                     f"{name}/{platform}/{tag} URL drift")
 
 
@@ -221,7 +245,17 @@ def check_dependencies(descriptors: dict[str, dict], tag: str) -> None:
                         f"{name} dependency {dependency} must be exactly {tag}")
                 require(dependency in descriptors,
                         f"{name} has unexpected internal dependency {dependency}")
-                edges[name].add(dependency)
+                if path == ("deps",):
+                    edges[name].add(dependency)
+
+    expected_edges = {
+        "compat.ggml-base": set(),
+        "compat.ggml-cpu": {"compat.ggml-base"},
+        "compat.llamacpp": {"compat.ggml-base", "compat.ggml-cpu"},
+        "compat.ggml-metal": {"compat.ggml-base"},
+    }
+    require(edges == expected_edges,
+            f"internal dependency graph drift: expected {expected_edges}, got {edges}")
 
     visiting: set[str] = set()
     visited: set[str] = set()
@@ -250,18 +284,6 @@ def check_sources(descriptors: dict[str, dict], report: dict) -> None:
                 source = "src/" + source
             report_tus.add(source)
 
-    owners: dict[str, set[str]] = {}
-    for name, descriptor in descriptors.items():
-        for source in descriptor_sources(descriptor):
-            normalized = normalized_source(source, name)
-            if normalized is None:
-                continue
-            require(normalized in report_tus,
-                    f"{name} source is absent from snapshot report: {normalized}")
-            owners.setdefault(normalized, set()).add(name)
-    duplicate = {source: names for source, names in owners.items() if len(names) != 1}
-    require(not duplicate, f"upstream TU ownership drift: {duplicate}")
-
     exact_groups = {
         "ggml_base": "compat.ggml-base",
         "ggml_registry": "compat.llamacpp",
@@ -269,14 +291,33 @@ def check_sources(descriptors: dict[str, dict], report: dict) -> None:
         "models": "compat.llamacpp",
         "ggml_metal": "compat.ggml-metal",
     }
-    for group, expected_owner in exact_groups.items():
-        for source in report["sources"][group]:
-            if Path(source).suffix not in {".c", ".cc", ".cpp", ".m", ".mm"}:
+    for platform in ("linux", "macosx", "windows"):
+        owners: dict[str, list[str]] = {}
+        for name, descriptor in descriptors.items():
+            if platform not in descriptor["xpm"]:
                 continue
-            if group == "models" and not source.startswith("src/"):
-                source = "src/" + source
-            require(owners.get(source) == {expected_owner},
-                    f"{group} TU must have exactly one owner ({expected_owner}): {source}")
+            for source in descriptor_sources_for_platform(descriptor, platform):
+                normalized = normalized_source(source, name)
+                if normalized is None:
+                    continue
+                require(normalized in report_tus,
+                        f"{name} source is absent from snapshot report: {normalized}")
+                owners.setdefault(normalized, []).append(name)
+        duplicate = {source: names for source, names in owners.items() if len(names) != 1}
+        require(not duplicate,
+                f"duplicate upstream TU ownership on {platform}: {duplicate}")
+
+        for group, expected_owner in exact_groups.items():
+            if expected_owner == "compat.ggml-metal" and platform != "macosx":
+                continue
+            for source in report["sources"][group]:
+                if Path(source).suffix not in {".c", ".cc", ".cpp", ".m", ".mm"}:
+                    continue
+                if group == "models" and not source.startswith("src/"):
+                    source = "src/" + source
+                require(owners.get(source) == [expected_owner],
+                        f"{group} TU must have exactly one owner ({expected_owner}) "
+                        f"on {platform}: {source}")
 
     core_sources = descriptor_sources(descriptors["compat.llamacpp"])
     require("*/src/models/*.cpp" not in core_sources,
@@ -298,6 +339,30 @@ def all_define_sites(descriptors: dict[str, dict]) -> dict[str, list[tuple[str, 
                 continue
             for define in array(table["defines"], f"{name}.{path}.defines"):
                 sites.setdefault(define, []).append((name, path, table))
+    return sites
+
+
+def all_macro_sites(descriptors: dict[str, dict]) -> dict[str, list[tuple[str, tuple, str, dict]]]:
+    tracked = {
+        "GGML_USE_CPU", "GGML_USE_METAL",
+        "GGML_USE_CPU_REPACK", "GGML_USE_LLAMAFILE",
+    }
+    sites: dict[str, list[tuple[str, tuple, str, dict]]] = {}
+    for name, descriptor in descriptors.items():
+        for path, table in iter_tables(get_path(descriptor, "mcpp")):
+            for field in ("cflags", "cxxflags", "defines",
+                          "interface_defines", "public_defines"):
+                if field not in table:
+                    continue
+                for value in array(table[field], f"{name}.{path}.{field}"):
+                    macro = value
+                    if field in {"cflags", "cxxflags"}:
+                        if not value.startswith("-D"):
+                            continue
+                        macro = value[2:]
+                    macro = macro.split("=", 1)[0]
+                    if macro in tracked:
+                        sites.setdefault(macro, []).append((name, path, field, table))
     return sites
 
 
@@ -340,11 +405,18 @@ def check_registry_and_features(descriptors: dict[str, dict], report: dict) -> N
                         for item in ("-framework", framework)]
     require(metal_ldflags == expected_ldflags, "Metal framework linkage drift")
 
+    feature_sites = []
+    for name, descriptor in descriptors.items():
+        mcpp = descriptor["mcpp"]
+        if "backend-metal" in mcpp.get("features", {}):
+            feature_sites.append((name, "common"))
+        for platform in descriptor["xpm"]:
+            if "backend-metal" in mcpp.get(platform, {}).get("features", {}):
+                feature_sites.append((name, platform))
+    require(feature_sites == [("compat.llamacpp", "macosx")],
+            f"backend-metal feature placement drift: {feature_sites}")
+
     core = descriptors["compat.llamacpp"]["mcpp"]
-    for platform in ("linux", "windows"):
-        features = core.get(platform, {}).get("features", {})
-        require("backend-metal" not in features,
-                f"backend-metal must be absent from {platform} synthesis")
     feature = get_path(core, "macosx", "features", "backend-metal")
     require(feature.get("deps") == {"compat.ggml-metal": report["upstream"]["tag"]},
             "backend-metal provider dependency drift")
@@ -369,14 +441,42 @@ def check_cpu_private_macros(descriptors: dict[str, dict]) -> None:
         "GGML_USE_LLAMAFILE" in array(flag["defines"], "cpu.llamafile.defines")
         for flag in llamafile_flags),
         "llamafile macro must remain feature-scoped")
-    define_sites = all_define_sites(descriptors)
-    require("GGML_USE_CPU_REPACK" not in define_sites,
-            "CPU repack macro must not be an interface define")
-    for name, descriptor in descriptors.items():
-        interface = descriptor["mcpp"].get("interface_defines", {})
-        text = repr(interface)
-        require("GGML_USE_CPU_REPACK" not in text and "GGML_USE_LLAMAFILE" not in text,
-                f"{name} leaks a CPU implementation macro")
+
+    sites = all_macro_sites(descriptors)
+    cpu_registry = sites.get("GGML_USE_CPU", [])
+    require(len(cpu_registry) == 1, "GGML_USE_CPU must have one private registry site")
+    name, path, field, table = cpu_registry[0]
+    require(name == "compat.llamacpp" and path[:1] == ("flags",)
+            and field == "defines"
+            and table.get("glob") == "*/ggml/src/ggml-backend-reg.cpp",
+            "GGML_USE_CPU must remain on the core common registry flag")
+
+    metal_registry = sites.get("GGML_USE_METAL", [])
+    require(len(metal_registry) == 1, "GGML_USE_METAL must have one private registry site")
+    name, path, field, table = metal_registry[0]
+    require(name == "compat.llamacpp"
+            and path[:4] == ("macosx", "features", "backend-metal", "flags")
+            and field == "defines"
+            and table.get("glob") == "*/ggml/src/ggml-backend-reg.cpp",
+            "GGML_USE_METAL must remain on the core macOS registry flag")
+
+    repack_sites = sites.get("GGML_USE_CPU_REPACK", [])
+    require({(name, path, field) for name, path, field, _table in repack_sites} == {
+        ("compat.ggml-cpu", (), "cflags"),
+        ("compat.ggml-cpu", (), "cxxflags"),
+    } and len(repack_sites) == 2,
+            "GGML_USE_CPU_REPACK must remain in CPU private common compile flags")
+
+    llamafile_sites = sites.get("GGML_USE_LLAMAFILE", [])
+    require(len(llamafile_sites) == 2 and all(
+        name == "compat.ggml-cpu"
+        and path[:3] == ("features", "llamafile", "flags")
+        and field == "defines"
+        for name, path, field, _table in llamafile_sites
+    ), "GGML_USE_LLAMAFILE must remain in CPU private feature flags")
+    require({table.get("glob") for _name, _path, _field, table in llamafile_sites} == {
+        "*/ggml/src/ggml-cpu/**", "mcpp_generated/ggml-cpu_cpp.cpp",
+    }, "GGML_USE_LLAMAFILE private glob drift")
 
 
 def check_report_metadata_contracts(descriptors: dict[str, dict], report: dict) -> None:
