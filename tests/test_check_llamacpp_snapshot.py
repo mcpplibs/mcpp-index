@@ -68,6 +68,67 @@ class TestLlamacppSnapshotMutations(unittest.TestCase):
         sources[max(sources) + 1] = "*/ggml/src/ggml-backend-reg.cpp"
         self.assert_rejected(checker.check_sources, "duplicate")
 
+    def test_rejects_cpu_translation_unit_parked_in_disabled_feature(self):
+        cpu = self.descriptors["compat.ggml-cpu"]["mcpp"]
+        sources = cpu["sources"]
+        source = "*/ggml/src/ggml-cpu/ops.cpp"
+        remaining = [value for _, value in sorted(sources.items()) if value != source]
+        sources.clear()
+        sources.update(enumerate(remaining, start=1))
+        cpu["features"]["parked"] = {"sources": {1: source}}
+
+        with self.assertRaisesRegex(checker.CheckError, r"CPU TU set drift.*ops\.cpp"):
+            checker.check_sources(self.descriptors, self.report)
+
+    def test_rejects_cpu_translation_unit_when_default_implies_is_removed(self):
+        cpu = self.descriptors["compat.ggml-cpu"]["mcpp"]
+        del cpu["features"]["default"]["implies"]
+
+        with self.assertRaisesRegex(
+                checker.CheckError, r"CPU TU set drift.*llamafile/sgemm\.cpp"):
+            checker.check_sources(self.descriptors, self.report)
+
+    def test_rejects_unknown_default_implied_feature(self):
+        cpu = self.descriptors["compat.ggml-cpu"]["mcpp"]
+        cpu["features"]["default"]["implies"] = {1: "missing-feature"}
+
+        with self.assertRaisesRegex(
+                checker.CheckError, "implies unknown feature: missing-feature"):
+            checker.check_sources(self.descriptors, self.report)
+
+    def test_rejects_missing_cpu_translation_units(self):
+        mutations = {
+            "*/ggml/src/ggml-cpu/ops.cpp": "common",
+            "*/ggml/src/ggml-cpu/arch/x86/quants.c": "linux",
+            "*/ggml/src/ggml-cpu/arch/arm/quants.c": "macosx",
+        }
+        for source, scope in mutations.items():
+            with self.subTest(source=source, scope=scope):
+                self.descriptors = copy.deepcopy(self.original)
+                mcpp = self.descriptors["compat.ggml-cpu"]["mcpp"]
+                sources = mcpp["sources"] if scope == "common" else mcpp[scope]["sources"]
+                key = next(key for key, value in sources.items() if value == source)
+                del sources[key]
+                remaining = [sources[key] for key in sorted(sources)]
+                sources.clear()
+                sources.update(enumerate(remaining, start=1))
+                with self.assertRaisesRegex(checker.CheckError, "ggml_cpu"):
+                    checker.check_sources(self.descriptors, self.report)
+
+    def test_rejects_cpu_translation_units_from_the_wrong_architecture(self):
+        mutations = {
+            "linux": "*/ggml/src/ggml-cpu/arch/arm/quants.c",
+            "macosx": "*/ggml/src/ggml-cpu/arch/x86/quants.c",
+            "windows": "*/ggml/src/ggml-cpu/arch/arm/quants.c",
+        }
+        for platform, source in mutations.items():
+            with self.subTest(platform=platform, source=source):
+                self.descriptors = copy.deepcopy(self.original)
+                sources = self.descriptors["compat.ggml-cpu"]["mcpp"][platform]["sources"]
+                sources[max(sources) + 1] = source
+                with self.assertRaisesRegex(checker.CheckError, "CPU TU set drift"):
+                    checker.check_sources(self.descriptors, self.report)
+
     def test_rejects_backend_metal_on_another_descriptor(self):
         base = self.descriptors["compat.ggml-base"]["mcpp"]
         base.setdefault("features", {})["backend-metal"] = {}

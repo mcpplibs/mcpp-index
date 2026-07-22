@@ -184,6 +184,37 @@ def descriptor_sources(descriptor: dict) -> list[str]:
     return sources
 
 
+def _default_feature_closure(table: dict, context: str) -> set[str]:
+    features = table.get("features", {})
+    require(isinstance(features, dict), f"{context}.features must be a table")
+    if "default" not in features:
+        return set()
+
+    enabled: set[str] = set()
+    pending = ["default"]
+    while pending:
+        feature_name = pending.pop()
+        if feature_name in enabled:
+            continue
+        require(feature_name in features,
+                f"{context} implies unknown feature: {feature_name}")
+        feature = features[feature_name]
+        require(isinstance(feature, dict),
+                f"{context}.features.{feature_name} must be a table")
+        enabled.add(feature_name)
+
+        implies = feature.get("implies", {})
+        if isinstance(implies, str):
+            implied_features = [implies]
+        else:
+            implied_features = array(
+                implies, f"{context}.features.{feature_name}.implies")
+        require(all(isinstance(name, str) for name in implied_features),
+                f"{context}.features.{feature_name}.implies must contain feature names")
+        pending.extend(implied_features)
+    return enabled
+
+
 def descriptor_sources_for_platform(descriptor: dict, platform: str) -> list[str]:
     def collect(table: object, context: str) -> list[str]:
         if not isinstance(table, dict):
@@ -192,11 +223,11 @@ def descriptor_sources_for_platform(descriptor: dict, platform: str) -> list[str
         if "sources" in table:
             result.extend(array(table["sources"], f"{context}.sources"))
         features = table.get("features", {})
-        if isinstance(features, dict):
-            for feature_name, feature in features.items():
-                if isinstance(feature, dict) and "sources" in feature:
-                    result.extend(array(
-                        feature["sources"], f"{context}.features.{feature_name}.sources"))
+        for feature_name in _default_feature_closure(table, context):
+            feature = features[feature_name]
+            if "sources" in feature:
+                result.extend(array(
+                    feature["sources"], f"{context}.features.{feature_name}.sources"))
         return result
 
     mcpp = get_path(descriptor, "mcpp")
@@ -320,6 +351,11 @@ def check_sources(descriptors: dict[str, dict], report: dict) -> None:
         "models": "compat.llamacpp",
         "ggml_metal": "compat.ggml-metal",
     }
+    cpu_groups = {
+        "linux": ("ggml_cpu_common", "ggml_cpu_x86"),
+        "macosx": ("ggml_cpu_common", "ggml_cpu_arm"),
+        "windows": ("ggml_cpu_common", "ggml_cpu_x86"),
+    }
     for platform in ("linux", "macosx", "windows"):
         owners: dict[str, list[str]] = {}
         for name, descriptor in descriptors.items():
@@ -347,6 +383,21 @@ def check_sources(descriptors: dict[str, dict], report: dict) -> None:
                 require(owners.get(source) == [expected_owner],
                         f"{group} TU must have exactly one owner ({expected_owner}) "
                         f"on {platform}: {source}")
+        expected_cpu = {
+            source
+            for group in cpu_groups[platform]
+            for source in report["sources"][group]
+            if Path(source).suffix in {".c", ".cc", ".cpp", ".m", ".mm"}
+        }
+        actual_cpu = {
+            source
+            for source, names in owners.items()
+            if "compat.ggml-cpu" in names
+        }
+        require(actual_cpu == expected_cpu,
+                f"CPU TU set drift (ggml_cpu) on {platform}: "
+                f"missing={sorted(expected_cpu - actual_cpu)}, "
+                f"extra={sorted(actual_cpu - expected_cpu)}")
 
     core_sources = descriptor_sources(descriptors["compat.llamacpp"])
     require("*/src/models/*.cpp" not in core_sources,

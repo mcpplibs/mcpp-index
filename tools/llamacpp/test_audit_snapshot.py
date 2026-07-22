@@ -75,6 +75,8 @@ class TestCollectSnapshotMiniTree(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.root = self.tmp.name
         os.makedirs(os.path.join(self.root, 'ggml', 'src'), exist_ok=True)
+        os.makedirs(os.path.join(self.root, 'ggml', 'src', 'ggml-cpu', 'arch', 'x86'), exist_ok=True)
+        os.makedirs(os.path.join(self.root, 'ggml', 'src', 'ggml-cpu', 'arch', 'arm'), exist_ok=True)
         os.makedirs(os.path.join(self.root, 'ggml', 'src', 'ggml-metal'), exist_ok=True)
         os.makedirs(os.path.join(self.root, 'src', 'models'), exist_ok=True)
         os.makedirs(os.path.join(self.root, 'include'), exist_ok=True)
@@ -90,11 +92,33 @@ ggml_add_backend_library(ggml-metal
 file(GLOB LLAMA_MODELS_SOURCES "src/models/*.cpp")
 add_library(llama llama.cpp ${LLAMA_MODELS_SOURCES})
 ''')
+        cpu_cmake = os.path.join(
+            self.root, 'ggml', 'src', 'ggml-cpu', 'CMakeLists.txt')
+        with open(cpu_cmake, 'w') as f:
+            f.write('''function(ggml_add_cpu_backend_variant_impl tag_name)
+    list(APPEND GGML_CPU_SOURCES
+        ggml-cpu/ggml-cpu.c
+        ggml-cpu/ggml-cpu.cpp
+        ggml-cpu/ops.cpp)
+    if (GGML_SYSTEM_ARCH STREQUAL "ARM")
+        list(APPEND GGML_CPU_SOURCES ggml-cpu/arch/arm/quants.c)
+    elseif (GGML_SYSTEM_ARCH STREQUAL "x86")
+        list(APPEND GGML_CPU_SOURCES ggml-cpu/arch/x86/quants.c)
+    endif()
+endfunction()
+''')
         # Create source files
         for src in ['ggml.c', 'ggml.cpp', 'ggml-backend.cpp',
                     'ggml-backend-dl.cpp', 'ggml-backend-reg.cpp',
                     'ggml-metal.cpp', 'ggml-metal-device.m', 'ggml-metal-device.cpp',
                     'llama.cpp']:
+            open(os.path.join(self.root, src), 'w').close()
+        for src in [
+                'ggml/src/ggml-cpu/ggml-cpu.c',
+                'ggml/src/ggml-cpu/ggml-cpu.cpp',
+                'ggml/src/ggml-cpu/ops.cpp',
+                'ggml/src/ggml-cpu/arch/x86/quants.c',
+                'ggml/src/ggml-cpu/arch/arm/quants.c']:
             open(os.path.join(self.root, src), 'w').close()
         # Create model files (sorted names for deterministic order)
         for name in ['a.cpp', 'z.cpp']:
@@ -153,6 +177,17 @@ add_library(llama llama.cpp ${LLAMA_MODELS_SOURCES})
         # sorted order for ggml_metal sources
         self.assertEqual(report['sources']['ggml_metal'],
                          ['ggml-metal-device.cpp', 'ggml-metal-device.m', 'ggml-metal.cpp'])
+        self.assertEqual(report['sources']['ggml_cpu_common'], [
+            'ggml/src/ggml-cpu/ggml-cpu.c',
+            'ggml/src/ggml-cpu/ggml-cpu.cpp',
+            'ggml/src/ggml-cpu/ops.cpp',
+        ])
+        self.assertEqual(report['sources']['ggml_cpu_x86'], [
+            'ggml/src/ggml-cpu/arch/x86/quants.c',
+        ])
+        self.assertEqual(report['sources']['ggml_cpu_arm'], [
+            'ggml/src/ggml-cpu/arch/arm/quants.c',
+        ])
         # Registry markers
         self.assertEqual(report['registry']['GGML_USE_CPU'], 'ggml_backend_cpu_reg')
         self.assertEqual(report['registry']['GGML_USE_METAL'], 'ggml_backend_metal_reg')

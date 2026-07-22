@@ -99,6 +99,34 @@ def extract_cmake_call(text: str, callee: str,
     return (None, [])
 
 
+def extract_cmake_list_appends(text: str, variable: str) -> list[str]:
+    """Return literal sources appended to a CMake list variable."""
+    tokens = list(_tokenize_cmake(text))
+    result: list[str] = []
+    for i, (typ, val) in enumerate(tokens):
+        if typ != 'WORD' or val.lower() != 'list':
+            continue
+        if i + 1 >= len(tokens) or tokens[i + 1] != ('(', '('):
+            continue
+        depth = 1
+        j = i + 2
+        args: list[str] = []
+        while j < len(tokens) and depth > 0:
+            typ2, val2 = tokens[j]
+            if typ2 == '(':
+                depth += 1
+            elif typ2 == ')':
+                depth -= 1
+                if depth == 0:
+                    break
+            elif depth == 1 and typ2 in ('WORD', 'STR'):
+                args.append(val2)
+            j += 1
+        if len(args) >= 2 and args[0].upper() == 'APPEND' and args[1] == variable:
+            result.extend(args[2:])
+    return result
+
+
 def _expand_glob(base: str, pattern: str) -> list[str]:
     directory = os.path.dirname(pattern)
     glob_pat = os.path.basename(pattern)
@@ -157,6 +185,46 @@ def _find_files(root: str, ext: str) -> list[str]:
     return sorted(found)
 
 
+def _collect_cpu_sources(root: str, top_text: str,
+                         sub_cmakes: dict[str, str]) -> tuple[list[str], list[str], list[str]]:
+    common: set[str] = set()
+    x86: set[str] = set()
+    arm: set[str] = set()
+    cmakes = [('.', top_text), *sub_cmakes.items()]
+    for subdir, text in cmakes:
+        if 'GGML_CPU_SOURCES' not in text:
+            continue
+        for source in extract_cmake_list_appends(text, 'GGML_CPU_SOURCES'):
+            if '$' in source:
+                continue
+            candidates = (
+                Path(root) / source,
+                Path(root) / subdir / source,
+                Path(root) / subdir / '..' / source,
+            )
+            resolved = next((path.resolve() for path in candidates if path.is_file()), None)
+            if resolved is None or resolved.suffix not in {'.c', '.cc', '.cpp', '.m', '.mm'}:
+                continue
+            relative = resolved.relative_to(Path(root).resolve()).as_posix()
+            prefix = 'ggml/src/ggml-cpu/'
+            if not relative.startswith(prefix):
+                continue
+            cpu_relative = relative.removeprefix(prefix)
+            if cpu_relative.startswith('arch/x86/'):
+                x86.add(relative)
+            elif cpu_relative.startswith('arch/arm/'):
+                arm.add(relative)
+            elif (cpu_relative.startswith('arch/')
+                  or cpu_relative.startswith('kleidiai/')
+                  or cpu_relative.startswith('spacemit/')):
+                continue
+            else:
+                common.add(relative)
+    if not common or not x86 or not arm:
+        raise ValueError('cannot derive common/x86/arm GGML CPU sources from CMake')
+    return sorted(common), sorted(x86), sorted(arm)
+
+
 def collect_snapshot(root, tag, commit, url, archive_sha256):
     top_text, sub_cmakes = _read_cmake_forest(root)
     if not top_text and not sub_cmakes:
@@ -175,7 +243,6 @@ def collect_snapshot(root, tag, commit, url, archive_sha256):
     _, ggml_base = _extract_from_forest('add_library', 'ggml-base')
     _, ggml_registry = _extract_from_forest('add_library', 'ggml')
     _, ggml_metal = _extract_from_forest('ggml_add_backend_library', 'ggml-metal')
-    _, ggml_cpu = _extract_from_forest('ggml_add_backend_library', 'ggml-cpu')
     _, llama = _extract_from_forest('add_library', 'llama')
 
     # Expand GLOB in llama sources
@@ -198,21 +265,8 @@ def collect_snapshot(root, tag, commit, url, archive_sha256):
         elif src.endswith('.cpp') or src.endswith('.c'):
             llama_expanded.append(src)
 
-    # CPU sources
-    # CPU sources: always use rglob for comprehensive listing
-    cpu_common_raw = [
-        os.path.relpath(p, root)
-        for p in Path(root).glob('ggml/src/ggml-cpu*/**/*.cpp')
-    ] + [
-        os.path.relpath(p, root)
-        for p in Path(root).glob('ggml/src/ggml-cpu*/**/*.c')
-    ]
-    cpu_arch_x86 = [os.path.relpath(p, root)
-                    for p in Path(root).rglob('ggml-cpu-amx*.cpp')]
-    cpu_arch_arm = [os.path.relpath(p, root)
-                    for p in Path(root).rglob('ggml-cpu-aarch64*.cpp')]
-    cpu_filtered = [s for s in cpu_common_raw
-                    if 'ggml-cpu' in s or s not in ggml_base]
+    cpu_common, cpu_arch_x86, cpu_arch_arm = _collect_cpu_sources(
+        root, top_text, sub_cmakes)
 
     # Registry macros
     registry: dict[str, str] = {}
@@ -275,9 +329,9 @@ def collect_snapshot(root, tag, commit, url, archive_sha256):
         ('sources', OrderedDict([
             ('ggml_base', sorted(set(ggml_base))),
             ('ggml_registry', sorted(set(ggml_registry))),
-            ('ggml_cpu_common', sorted(set(cpu_filtered))),
-            ('ggml_cpu_x86', sorted(set(cpu_arch_x86))),
-            ('ggml_cpu_arm', sorted(set(cpu_arch_arm))),
+            ('ggml_cpu_common', cpu_common),
+            ('ggml_cpu_x86', cpu_arch_x86),
+            ('ggml_cpu_arm', cpu_arch_arm),
             ('llama_core', sorted(set(llama_expanded))),
             ('models', sorted(set(model_files))),
             ('ggml_metal', sorted(set(ggml_metal))),
