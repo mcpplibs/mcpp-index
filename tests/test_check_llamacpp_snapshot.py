@@ -226,6 +226,21 @@ class TestLlamacppSnapshotMutations(unittest.TestCase):
                         checker.CheckError, "absolute Xcode Metal tool path"):
                     checker.check_metal_build_contract(self.descriptors, self.report)
 
+    def test_rejects_process_launch_apis_in_metal_generator(self):
+        calls = (
+            'std::system("/Applications/Xcode.app/.../metal")',
+            'popen("metal", "r")',
+            'execl("/usr/bin/" "xcrun", "xcrun", "metal", nullptr)',
+            'posix_spawn(...)',
+        )
+        for call in calls:
+            with self.subTest(call=call):
+                self.descriptors = copy.deepcopy(self.original)
+                generated = self.descriptors["compat.ggml-metal"]["mcpp"]["generated_files"]
+                generated["build.mcpp"] += f"\n{call};\n"
+                with self.assertRaisesRegex(checker.CheckError, "process launch API"):
+                    checker.check_metal_build_contract(self.descriptors, self.report)
+
     def test_workflow_runs_checker_mutation_suite(self):
         workflow = checker.ROOT / ".github/workflows/validate.yml"
         ruby = r'''

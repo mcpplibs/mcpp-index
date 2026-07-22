@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -641,6 +642,12 @@ def check_metal_build_contract(descriptors: dict[str, dict], report: dict) -> No
     for tool in ("/usr/bin/xcrun", "/usr/bin/metal", "/usr/bin/metallib"):
         require(tool not in source,
                 f"forbidden absolute tool: {tool} (absolute Xcode Metal tool path)")
+    process_launch = re.search(
+        r"\b(?:(?:[A-Za-z_]\w*)::)*(?:system|popen|exec\w*|posix_spawn\w*)\s*\(",
+        source,
+    )
+    require(process_launch is None,
+            "compat.ggml-metal build.mcpp contains a forbidden process launch API")
     compiler = shutil.which(os.environ.get("CXX", "c++"))
     require(compiler is not None, "host C++ compiler not found for build.mcpp contract")
 
