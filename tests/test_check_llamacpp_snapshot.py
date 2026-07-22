@@ -80,6 +80,18 @@ class TestLlamacppSnapshotMutations(unittest.TestCase):
         with self.assertRaisesRegex(checker.CheckError, r"CPU TU set drift.*ops\.cpp"):
             checker.check_sources(self.descriptors, self.report)
 
+    def test_rejects_cpu_translation_unit_on_default_feature(self):
+        cpu = self.descriptors["compat.ggml-cpu"]["mcpp"]
+        sources = cpu["sources"]
+        source = "*/ggml/src/ggml-cpu/ops.cpp"
+        remaining = [value for _, value in sorted(sources.items()) if value != source]
+        sources.clear()
+        sources.update(enumerate(remaining, start=1))
+        cpu["features"]["default"]["sources"] = {1: source}
+
+        with self.assertRaisesRegex(checker.CheckError, r"CPU TU set drift.*ops\.cpp"):
+            checker.check_sources(self.descriptors, self.report)
+
     def test_rejects_cpu_translation_unit_when_default_implies_is_removed(self):
         cpu = self.descriptors["compat.ggml-cpu"]["mcpp"]
         del cpu["features"]["default"]["implies"]
@@ -102,6 +114,26 @@ class TestLlamacppSnapshotMutations(unittest.TestCase):
 
         with self.assertRaisesRegex(checker.CheckError, "implies must be a Lua array"):
             checker.check_sources(self.descriptors, self.report)
+
+    def test_accepts_platform_sources_appended_to_default_feature(self):
+        cpu = self.descriptors["compat.ggml-cpu"]["mcpp"]
+        implies = cpu["features"]["default"]["implies"]
+        implies[max(implies) + 1] = "arch-default"
+        cpu["features"]["arch-default"] = {}
+        platform_sources = {
+            "linux": "*/ggml/src/ggml-cpu/arch/x86/quants.c",
+            "macosx": "*/ggml/src/ggml-cpu/arch/arm/quants.c",
+            "windows": "*/ggml/src/ggml-cpu/arch/x86/repack.cpp",
+        }
+        for platform, source in platform_sources.items():
+            sources = cpu[platform]["sources"]
+            remaining = [value for _, value in sorted(sources.items()) if value != source]
+            sources.clear()
+            sources.update(enumerate(remaining, start=1))
+            features = cpu[platform].setdefault("features", {})
+            features["arch-default"] = {"sources": {1: source}}
+
+        checker.check_sources(self.descriptors, self.report)
 
     def test_rejects_missing_cpu_translation_units(self):
         mutations = {

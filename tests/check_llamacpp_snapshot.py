@@ -190,10 +190,19 @@ def _default_feature_closure(table: dict, context: str) -> set[str]:
     if "default" not in features:
         return set()
 
+    default = features["default"]
+    require(isinstance(default, dict),
+            f"{context}.features.default must be a table")
     enabled: set[str] = set()
-    pending = ["default"]
+    pending = array(
+        default.get("implies", {}),
+        f"{context}.features.default.implies")
+    require(all(isinstance(name, str) for name in pending),
+            f"{context}.features.default.implies must contain feature names")
     while pending:
         feature_name = pending.pop()
+        if feature_name == "default":
+            continue
         if feature_name in enabled:
             continue
         require(feature_name in features,
@@ -213,23 +222,49 @@ def _default_feature_closure(table: dict, context: str) -> set[str]:
 
 
 def descriptor_sources_for_platform(descriptor: dict, platform: str) -> list[str]:
-    def collect(table: object, context: str) -> list[str]:
-        if not isinstance(table, dict):
-            return []
-        result = []
-        if "sources" in table:
-            result.extend(array(table["sources"], f"{context}.sources"))
-        features = table.get("features", {})
-        for feature_name in _default_feature_closure(table, context):
-            feature = features[feature_name]
-            if "sources" in feature:
-                result.extend(array(
-                    feature["sources"], f"{context}.features.{feature_name}.sources"))
-        return result
-
     mcpp = get_path(descriptor, "mcpp")
-    return (collect(mcpp, f"{descriptor['name']}.mcpp")
-            + collect(mcpp.get(platform), f"{descriptor['name']}.mcpp.{platform}"))
+    context = f"{descriptor['name']}.mcpp"
+    platform_table = mcpp.get(platform, {})
+    require(isinstance(platform_table, dict),
+            f"{context}.{platform} must be a table")
+
+    result: list[str] = []
+    merged_fields: dict[str, dict[str, list]] = {}
+    for table, scope_context in (
+            (mcpp, context),
+            (platform_table, f"{context}.{platform}")):
+        if "sources" in table:
+            result.extend(array(table["sources"], f"{scope_context}.sources"))
+        features = table.get("features", {})
+        require(isinstance(features, dict),
+                f"{scope_context}.features must be a table")
+        for feature_name, feature in features.items():
+            require(isinstance(feature_name, str),
+                    f"{scope_context}.features keys must be feature names")
+            require(isinstance(feature, dict),
+                    f"{scope_context}.features.{feature_name} must be a table")
+            merged = merged_fields.setdefault(feature_name, {})
+            for field in ("implies", "sources"):
+                if field in feature:
+                    merged.setdefault(field, []).extend(array(
+                        feature[field],
+                        f"{scope_context}.features.{feature_name}.{field}"))
+
+    effective_features = {
+        feature_name: {
+            field: dict(enumerate(values, start=1))
+            for field, values in fields.items()
+        }
+        for feature_name, fields in merged_fields.items()
+    }
+    effective = {"features": effective_features}
+    for feature_name in _default_feature_closure(effective, context):
+        feature = effective_features[feature_name]
+        if "sources" in feature:
+            result.extend(array(
+                feature["sources"],
+                f"{context}.features.{feature_name}.sources"))
+    return result
 
 
 def check_cohort(descriptors: dict[str, dict], report: dict) -> None:

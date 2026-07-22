@@ -196,6 +196,20 @@ endfunction()
         self.assertIn('ggml/src/ggml-metal/ggml-metal.metal', report['metal']['shader_inputs'])
         self.assertIn('ggml/src/ggml-metal/ggml-metal-impl.h', report['metal']['shader_inputs'])
 
+    def test_rejects_unknown_cpu_source_variable(self):
+        cpu_cmake = Path(self.root) / 'ggml/src/ggml-cpu/CMakeLists.txt'
+        with cpu_cmake.open('a') as f:
+            f.write('\nlist(APPEND GGML_CPU_SOURCES ${NEW_DEFAULT_CPU_SOURCES})\n')
+
+        with self.assertRaisesRegex(
+                ValueError, 'unexpected CPU source variable.*NEW_DEFAULT_CPU_SOURCES'):
+            audit_snapshot.collect_snapshot(
+                self.root,
+                tag='test',
+                commit='deadbeef',
+                url='https://example.com/test.tar.gz',
+                archive_sha256='abc123')
+
     def _write_archive_and_report(self):
         fixture_dir = tempfile.TemporaryDirectory()
         archive = Path(fixture_dir.name) / 'llama.cpp-test.tar.gz'

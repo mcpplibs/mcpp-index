@@ -185,6 +185,13 @@ def _find_files(root: str, ext: str) -> list[str]:
     return sorted(found)
 
 
+IGNORED_CPU_SOURCE_VARIABLES = {
+    '${GGML_KLEIDIAI_SME_SOURCES}',
+    '${GGML_KLEIDIAI_SME2_SOURCES}',
+    '${GGML_KLEIDIAI_SOURCES}',
+}
+
+
 def _collect_cpu_sources(root: str, top_text: str,
                          sub_cmakes: dict[str, str]) -> tuple[list[str], list[str], list[str]]:
     common: set[str] = set()
@@ -196,7 +203,11 @@ def _collect_cpu_sources(root: str, top_text: str,
             continue
         for source in extract_cmake_list_appends(text, 'GGML_CPU_SOURCES'):
             if '$' in source:
-                continue
+                if source in IGNORED_CPU_SOURCE_VARIABLES:
+                    continue
+                raise ValueError(f'unexpected CPU source variable: {source}')
+            # Literal conditional sources are conservatively included. This audit is
+            # not a full CMake evaluator, so unknown variable expansions fail closed.
             candidates = (
                 Path(root) / source,
                 Path(root) / subdir / source,
