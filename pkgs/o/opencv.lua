@@ -41,30 +41,30 @@ package = {
 
     xpm = {
         linux = {
-            ["0.0.8"] = {
+            ["0.0.9"] = {
                 url    = {
-                    GLOBAL = "https://github.com/Sunrisepeak/opencv-m/archive/refs/tags/v0.0.8.tar.gz",
-                    CN     = "https://gitcode.com/mcpp-res/opencv/releases/download/v0.0.8/opencv-m-0.0.8.tar.gz",
+                    GLOBAL = "https://github.com/Sunrisepeak/opencv-m/archive/refs/tags/v0.0.9.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/opencv/releases/download/v0.0.9/opencv-m-0.0.9.tar.gz",
                 },
-                sha256 = "0025f7a686c52f15d0b4349499180ba528a07cf4f114b1d5424608711c145cd8",
+                sha256 = "888c45ad6b558d4172ac570ff97f3c931c8a3a229e294574da788221938d768a",
             },
         },
         macosx = {
-            ["0.0.8"] = {
+            ["0.0.9"] = {
                 url    = {
-                    GLOBAL = "https://github.com/Sunrisepeak/opencv-m/archive/refs/tags/v0.0.8.tar.gz",
-                    CN     = "https://gitcode.com/mcpp-res/opencv/releases/download/v0.0.8/opencv-m-0.0.8.tar.gz",
+                    GLOBAL = "https://github.com/Sunrisepeak/opencv-m/archive/refs/tags/v0.0.9.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/opencv/releases/download/v0.0.9/opencv-m-0.0.9.tar.gz",
                 },
-                sha256 = "0025f7a686c52f15d0b4349499180ba528a07cf4f114b1d5424608711c145cd8",
+                sha256 = "888c45ad6b558d4172ac570ff97f3c931c8a3a229e294574da788221938d768a",
             },
         },
         windows = {
-            ["0.0.8"] = {
+            ["0.0.9"] = {
                 url    = {
-                    GLOBAL = "https://github.com/Sunrisepeak/opencv-m/archive/refs/tags/v0.0.8.tar.gz",
-                    CN     = "https://gitcode.com/mcpp-res/opencv/releases/download/v0.0.8/opencv-m-0.0.8.tar.gz",
+                    GLOBAL = "https://github.com/Sunrisepeak/opencv-m/archive/refs/tags/v0.0.9.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/opencv/releases/download/v0.0.9/opencv-m-0.0.9.tar.gz",
                 },
-                sha256 = "0025f7a686c52f15d0b4349499180ba528a07cf4f114b1d5424608711c145cd8",
+                sha256 = "888c45ad6b558d4172ac570ff97f3c931c8a3a229e294574da788221938d768a",
             },
         },
     },
