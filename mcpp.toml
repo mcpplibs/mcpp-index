@@ -30,6 +30,7 @@ members = [
     "tests/examples/spdlog",
     "tests/examples/spdlog-compiled",
     "tests/examples/llamacpp-internal-cpu",
+    "tests/examples/llamacpp-internal-metal",
     "tests/examples/tinyhttps",
 ]
 

@@ -236,6 +236,29 @@ puts step.fetch('run')
             result.stdout,
         )
 
+    def test_internal_metal_member_is_wired_into_workspace_and_ci(self):
+        root_manifest = (checker.ROOT / "mcpp.toml").read_text()
+        metal_manifest = checker.ROOT / "tests/examples/llamacpp-internal-metal/mcpp.toml"
+        metal_test = checker.ROOT / "tests/examples/llamacpp-internal-metal/tests/decode.cpp"
+        self.assertIn('"tests/examples/llamacpp-internal-metal"', root_manifest)
+        self.assertTrue(metal_manifest.is_file())
+        self.assertTrue(metal_test.is_file())
+
+        manifest_text = metal_manifest.read_text()
+        test_text = metal_test.read_text()
+        self.assertIn('cfg(all(macos, arch = "aarch64"))', manifest_text)
+        self.assertIn('features = ["backend-metal"]', manifest_text)
+        self.assertIn("LLAMACPP_METAL_TEST", manifest_text)
+        self.assertIn("llama_supports_gpu_offload", test_text)
+        self.assertIn("ggml_backend_reg_by_name", test_text)
+        self.assertIn("n_gpu_layers", test_text)
+        self.assertIn("llama_decode", test_text)
+        self.assertIn(
+            '#error "LLAMACPP_METAL_TEST must be enabled on macOS ARM64"',
+            test_text,
+        )
+        self.assertIn("defined(__aarch64__) || defined(__arm64__)", test_text)
+
 
 if __name__ == "__main__":
     unittest.main()
