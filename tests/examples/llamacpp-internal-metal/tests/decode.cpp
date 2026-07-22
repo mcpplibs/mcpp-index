@@ -6,7 +6,9 @@
 
 #ifdef LLAMACPP_METAL_TEST
 
+#include <ggml-alloc.h>
 #include <ggml-backend.h>
+#include <ggml.h>
 #include <llama.h>
 
 #include <cstdio>
@@ -46,6 +48,61 @@ bool has_embedded_library(ggml_backend_reg_t reg) {
     return false;
 }
 
+bool run_metal_add_probe(ggml_backend_dev_t device) {
+    ggml_backend_t backend = ggml_backend_dev_init(device, nullptr);
+    if (!backend) {
+        return false;
+    }
+
+    ggml_init_params params = {};
+    params.mem_size = 1024 * 1024;
+    params.no_alloc = true;
+    ggml_context * context = ggml_init(params);
+    if (!context) {
+        ggml_backend_free(backend);
+        return false;
+    }
+
+    ggml_cgraph * graph = ggml_new_graph(context);
+    ggml_tensor * lhs = ggml_new_tensor_1d(context, GGML_TYPE_F32, 4);
+    ggml_tensor * rhs = ggml_new_tensor_1d(context, GGML_TYPE_F32, 4);
+    ggml_tensor * sum = ggml_add(context, lhs, rhs);
+    ggml_backend_buffer_t buffer = ggml_backend_alloc_ctx_tensors(context, backend);
+    if (!graph || !lhs || !rhs || !sum || !buffer) {
+        if (buffer) {
+            ggml_backend_buffer_free(buffer);
+        }
+        ggml_free(context);
+        ggml_backend_free(backend);
+        return false;
+    }
+    ggml_build_forward_expand(graph, sum);
+
+    const float lhs_values[] = {1.0F, -2.0F, 3.5F, 10.0F};
+    const float rhs_values[] = {4.0F, 5.0F, -1.5F, -3.0F};
+    ggml_backend_tensor_set(lhs, lhs_values, 0, sizeof(lhs_values));
+    ggml_backend_tensor_set(rhs, rhs_values, 0, sizeof(rhs_values));
+
+    bool passed = ggml_backend_graph_compute(backend, graph) == GGML_STATUS_SUCCESS;
+    float actual[4] = {};
+    if (passed) {
+        ggml_backend_synchronize(backend);
+        ggml_backend_tensor_get(sum, actual, 0, sizeof(actual));
+        const float expected[] = {5.0F, 3.0F, 2.0F, 7.0F};
+        for (size_t i = 0; i < 4; ++i) {
+            if (actual[i] != expected[i]) {
+                passed = false;
+                break;
+            }
+        }
+    }
+
+    ggml_backend_buffer_free(buffer);
+    ggml_free(context);
+    ggml_backend_free(backend);
+    return passed;
+}
+
 } // namespace
 
 int main() {
@@ -74,6 +131,10 @@ int main() {
     if (!llama_supports_gpu_offload()) {
         llama_backend_free();
         return fail("llama does not report GPU offload support");
+    }
+    if (!run_metal_add_probe(device)) {
+        llama_backend_free();
+        return fail("MTL F32 ADD graph did not execute correctly");
     }
 
     llama_model_params model_params = llama_model_default_params();
