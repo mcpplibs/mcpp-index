@@ -30,6 +30,12 @@
 -- command past cmd.exe's 8191-char ceiling under 0.0.101; 0.0.102 drops the
 -- `cmd /c` redirect wrapper (clang-scan-deps -o) and restores the 32767 limit.
 --
+-- 0.0.10: the per-glob flag tables moved into OS-conditional
+-- [target.'cfg(...)'.build.flags] sections (mcpp#258, same 0.0.102 floor) —
+-- entries whose predicate does not match the resolved target never enter the
+-- glob table, so consumer builds no longer emit the ~26 structural dead-glob
+-- warnings (windows stub globs + neon TUs on linux, symmetric elsewhere).
+--
 package = {
     spec        = "1",
     name        = "opencv",
@@ -41,6 +47,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.0.10"] = {
+                url    = {
+                    GLOBAL = "https://github.com/Sunrisepeak/opencv-m/archive/refs/tags/v0.0.10.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/opencv/releases/download/v0.0.10/opencv-m-0.0.10.tar.gz",
+                },
+                sha256 = "4a8cb551e6a9a1f39c2a70fc1fdd2719200a94fbb5b8d50f7e99e3e88c9ab801",
+            },
             ["0.0.9"] = {
                 url    = {
                     GLOBAL = "https://github.com/Sunrisepeak/opencv-m/archive/refs/tags/v0.0.9.tar.gz",
@@ -50,6 +63,13 @@ package = {
             },
         },
         macosx = {
+            ["0.0.10"] = {
+                url    = {
+                    GLOBAL = "https://github.com/Sunrisepeak/opencv-m/archive/refs/tags/v0.0.10.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/opencv/releases/download/v0.0.10/opencv-m-0.0.10.tar.gz",
+                },
+                sha256 = "4a8cb551e6a9a1f39c2a70fc1fdd2719200a94fbb5b8d50f7e99e3e88c9ab801",
+            },
             ["0.0.9"] = {
                 url    = {
                     GLOBAL = "https://github.com/Sunrisepeak/opencv-m/archive/refs/tags/v0.0.9.tar.gz",
@@ -59,6 +79,13 @@ package = {
             },
         },
         windows = {
+            ["0.0.10"] = {
+                url    = {
+                    GLOBAL = "https://github.com/Sunrisepeak/opencv-m/archive/refs/tags/v0.0.10.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/opencv/releases/download/v0.0.10/opencv-m-0.0.10.tar.gz",
+                },
+                sha256 = "4a8cb551e6a9a1f39c2a70fc1fdd2719200a94fbb5b8d50f7e99e3e88c9ab801",
+            },
             ["0.0.9"] = {
                 url    = {
                     GLOBAL = "https://github.com/Sunrisepeak/opencv-m/archive/refs/tags/v0.0.9.tar.gz",
