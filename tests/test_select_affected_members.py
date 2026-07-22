@@ -101,6 +101,42 @@ class TestLlamacppCohortSelection(unittest.TestCase):
 
             self.assertIn("MEMBERS=__ALL__", github_env.read_text().splitlines())
 
+    def test_deleted_member_directory_forces_full_run(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            member_manifest = repo / "tests/examples/removed/mcpp.toml"
+            member_manifest.parent.mkdir(parents=True)
+            (repo / "mcpp.toml").write_text(textwrap.dedent("""\
+                [workspace]
+                members = [
+                    "tests/examples/removed",
+                ]
+            """))
+            member_manifest.write_text("[package]\nname = \"removed\"\n")
+            subprocess.run(["git", "init", "-q"], cwd=repo, check=True)
+            subprocess.run(["git", "add", "."], cwd=repo, check=True)
+            subprocess.run([
+                "git", "-c", "user.name=Test", "-c",
+                "user.email=test@example.com", "commit", "-qm", "base",
+            ], cwd=repo, check=True)
+            member_manifest.unlink()
+            member_manifest.parent.rmdir()
+            subprocess.run(["git", "add", "-u"], cwd=repo, check=True)
+            subprocess.run([
+                "git", "-c", "user.name=Test", "-c",
+                "user.email=test@example.com", "commit", "-qm", "delete",
+            ], cwd=repo, check=True)
+
+            github_env = repo / "github-env"
+            env = os.environ.copy()
+            env["GITHUB_ENV"] = str(github_env)
+            subprocess.run(
+                ["bash", "-c", workflow_selector_script()], cwd=repo,
+                env=env, check=True, text=True, capture_output=True,
+            )
+
+            self.assertIn("MEMBERS=__ALL__", github_env.read_text().splitlines())
+
     def test_descriptor_changes_select_transitive_consumers(self):
         expected = {
             "pkgs/c/compat.ggml-base.lua": {

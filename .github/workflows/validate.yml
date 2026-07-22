@@ -328,9 +328,11 @@ jobs:
                 done ;;
               tests/examples/*)
                 m=${f#tests/examples/}; m=${m%%/*}
-                # A deleted/renamed member dir implies a mcpp.toml edit,
-                # which already forces a full run above.
-                [ -d "tests/examples/$m" ] && add "$m" ;;
+                if [ -d "tests/examples/$m" ]; then
+                  add "$m"
+                else
+                  full "deleted workspace member directory: $m"
+                fi ;;
               pkgs/*.lua|pkgs/*/*.lua)
                 hit=0
                 if ! selected=$(python tools/select_affected_members.py \
