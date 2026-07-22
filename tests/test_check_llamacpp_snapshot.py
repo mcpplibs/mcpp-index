@@ -259,6 +259,10 @@ puts step.fetch('run')
         self.assertIn("ggml_backend_synchronize", test_text)
         self.assertIn("ggml_backend_tensor_get", test_text)
         self.assertIn("GGML_STATUS_SUCCESS", test_text)
+        self.assertRegex(
+            test_text,
+            r'''(?m)^    if \(!run_metal_add_probe\(device\)\) \{\n        llama_backend_free\(\);\n        return fail\("MTL F32 ADD graph did not execute correctly"\);\n    \}$''',
+        )
         self.assertIn("n_gpu_layers", test_text)
         self.assertIn("llama_decode", test_text)
         self.assertIn(
