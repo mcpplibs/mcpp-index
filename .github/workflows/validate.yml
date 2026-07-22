@@ -119,6 +119,7 @@ jobs:
         run: |
           python3 -m unittest tools/llamacpp/test_audit_snapshot.py -v
           python3 -m unittest tests/test_fetch_llamacpp_model.py -v
+          python3 -m unittest tests/test_check_llamacpp_snapshot.py -v
           python3 tools/llamacpp/audit_snapshot.py \
             --check tools/llamacpp/snapshots/b10069.json
           python3 tests/check_llamacpp_snapshot.py

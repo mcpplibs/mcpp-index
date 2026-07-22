@@ -235,27 +235,56 @@ def check_cohort(descriptors: dict[str, dict], report: dict) -> None:
 
 
 def check_dependencies(descriptors: dict[str, dict], tag: str) -> None:
-    edges: dict[str, set[str]] = {name: set() for name in descriptors}
-    for name, descriptor in descriptors.items():
-        for path, table in iter_tables(get_path(descriptor, "mcpp")):
-            if not path or path[-1] != "deps":
-                continue
-            for dependency, version in table.items():
-                require(version == tag,
-                        f"{name} dependency {dependency} must be exactly {tag}")
-                require(dependency in descriptors,
-                        f"{name} has unexpected internal dependency {dependency}")
-                if path == ("deps",):
-                    edges[name].add(dependency)
+    common_edges: dict[str, set[str]] = {}
+    feature_dependencies: dict[tuple[str, str, str], dict[str, str]] = {}
 
-    expected_edges = {
+    def validate_deps(name: str, context: str, deps: object) -> dict[str, str]:
+        require(isinstance(deps, dict), f"{name} {context} deps must be a table")
+        for dependency, version in deps.items():
+            require(version == tag,
+                    f"{name} dependency {dependency} must be exactly {tag}")
+            require(dependency in descriptors,
+                    f"{name} has unexpected internal dependency {dependency}")
+        return deps
+
+    for name, descriptor in descriptors.items():
+        mcpp = get_path(descriptor, "mcpp")
+        common = validate_deps(name, "common", mcpp.get("deps", {}))
+        common_edges[name] = set(common)
+        for scope in ("common", "linux", "macosx", "windows"):
+            surface = mcpp if scope == "common" else mcpp.get(scope, {})
+            require(isinstance(surface, dict), f"{name} {scope} scope must be a table")
+            features = surface.get("features", {})
+            require(isinstance(features, dict), f"{name} {scope} features must be a table")
+            for feature_name, feature in features.items():
+                require(isinstance(feature, dict),
+                        f"{name} {scope}/{feature_name} feature must be a table")
+                if "deps" in feature:
+                    feature_dependencies[(name, scope, feature_name)] = validate_deps(
+                        name, f"{scope}/{feature_name} feature", feature["deps"])
+
+    expected_common_edges = {
         "compat.ggml-base": set(),
         "compat.ggml-cpu": {"compat.ggml-base"},
         "compat.llamacpp": {"compat.ggml-base", "compat.ggml-cpu"},
         "compat.ggml-metal": {"compat.ggml-base"},
     }
-    require(edges == expected_edges,
-            f"internal dependency graph drift: expected {expected_edges}, got {edges}")
+    require(common_edges == expected_common_edges,
+            f"internal dependency graph drift: expected {expected_common_edges}, "
+            f"got {common_edges}")
+    expected_feature_dependencies = {
+        ("compat.llamacpp", "macosx", "backend-metal"): {
+            "compat.ggml-metal": tag,
+        },
+    }
+    require(feature_dependencies == expected_feature_dependencies,
+            "internal feature dependency graph drift: "
+            f"expected {expected_feature_dependencies}, got {feature_dependencies}")
+
+    edges = {name: set(dependencies)
+             for name, dependencies in common_edges.items()}
+    for (name, _scope, _feature), dependencies in feature_dependencies.items():
+        edges[name].update(dependencies)
 
     visiting: set[str] = set()
     visited: set[str] = set()
@@ -354,15 +383,29 @@ def all_macro_sites(descriptors: dict[str, dict]) -> dict[str, list[tuple[str, t
                           "interface_defines", "public_defines"):
                 if field not in table:
                     continue
-                for value in array(table[field], f"{name}.{path}.{field}"):
+                values = array(table[field], f"{name}.{path}.{field}")
+                index = 0
+                while index < len(values):
+                    value = values[index]
+                    require(isinstance(value, str), f"{name}.{path}.{field} must contain strings")
                     macro = value
                     if field in {"cflags", "cxxflags"}:
-                        if not value.startswith("-D"):
+                        if value in {"-D", "/D"}:
+                            index += 1
+                            if index >= len(values):
+                                break
+                            macro = values[index]
+                            require(isinstance(macro, str),
+                                    f"{name}.{path}.{field} split define must be a string")
+                        elif value.startswith("-D") or value.startswith("/D"):
+                            macro = value[2:].strip()
+                        else:
+                            index += 1
                             continue
-                        macro = value[2:]
                     macro = macro.split("=", 1)[0]
                     if macro in tracked:
                         sites.setdefault(macro, []).append((name, path, field, table))
+                    index += 1
     return sites
 
 
@@ -410,7 +453,7 @@ def check_registry_and_features(descriptors: dict[str, dict], report: dict) -> N
         mcpp = descriptor["mcpp"]
         if "backend-metal" in mcpp.get("features", {}):
             feature_sites.append((name, "common"))
-        for platform in descriptor["xpm"]:
+        for platform in ("linux", "macosx", "windows"):
             if "backend-metal" in mcpp.get(platform, {}).get("features", {}):
                 feature_sites.append((name, platform))
     require(feature_sites == [("compat.llamacpp", "macosx")],

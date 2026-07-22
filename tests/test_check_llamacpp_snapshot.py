@@ -4,6 +4,7 @@ from __future__ import annotations
 import copy
 import importlib.util
 import json
+import subprocess
 import unittest
 from pathlib import Path
 
@@ -48,6 +49,20 @@ class TestLlamacppSnapshotMutations(unittest.TestCase):
         with self.assertRaisesRegex(checker.CheckError, "dependency graph"):
             checker.check_dependencies(self.descriptors, self.tag)
 
+    def test_rejects_dependency_under_arbitrary_feature(self):
+        base = self.descriptors["compat.ggml-base"]["mcpp"]
+        base.setdefault("features", {})["arbitrary"] = {
+            "deps": {"compat.ggml-cpu": self.tag},
+        }
+        with self.assertRaisesRegex(checker.CheckError, "feature dependency"):
+            checker.check_dependencies(self.descriptors, self.tag)
+
+    def test_requires_exact_optional_metal_dependency(self):
+        feature = self.descriptors["compat.llamacpp"]["mcpp"]["macosx"]["features"]["backend-metal"]
+        del feature["deps"]["compat.ggml-metal"]
+        with self.assertRaisesRegex(checker.CheckError, "feature dependency"):
+            checker.check_dependencies(self.descriptors, self.tag)
+
     def test_rejects_duplicate_tu_within_one_descriptor(self):
         sources = self.descriptors["compat.llamacpp"]["mcpp"]["sources"]
         sources[max(sources) + 1] = "*/ggml/src/ggml-backend-reg.cpp"
@@ -56,6 +71,11 @@ class TestLlamacppSnapshotMutations(unittest.TestCase):
     def test_rejects_backend_metal_on_another_descriptor(self):
         base = self.descriptors["compat.ggml-base"]["mcpp"]
         base.setdefault("features", {})["backend-metal"] = {}
+        self.assert_rejected(checker.check_registry_and_features, "backend-metal")
+
+    def test_rejects_backend_metal_in_scope_without_xpm(self):
+        metal = self.descriptors["compat.ggml-metal"]["mcpp"]
+        metal.setdefault("linux", {}).setdefault("features", {})["backend-metal"] = {}
         self.assert_rejected(checker.check_registry_and_features, "backend-metal")
 
     def test_rejects_llamafile_in_another_package_compile_flags(self):
@@ -82,6 +102,39 @@ class TestLlamacppSnapshotMutations(unittest.TestCase):
         }
         with self.assertRaisesRegex(checker.CheckError, "GGML_USE_LLAMAFILE"):
             checker.check_cpu_private_macros(self.descriptors)
+
+    def test_rejects_split_dash_d_macro(self):
+        flags = self.descriptors["compat.ggml-base"]["mcpp"]["cxxflags"]
+        flags[max(flags) + 1] = "-D"
+        flags[max(flags) + 1] = "GGML_USE_LLAMAFILE"
+        with self.assertRaisesRegex(checker.CheckError, "GGML_USE_LLAMAFILE"):
+            checker.check_cpu_private_macros(self.descriptors)
+
+    def test_rejects_windows_value_macro(self):
+        flags = self.descriptors["compat.ggml-base"]["mcpp"]["cxxflags"]
+        flags[max(flags) + 1] = "/DGGML_USE_CPU_REPACK=1"
+        with self.assertRaisesRegex(checker.CheckError, "GGML_USE_CPU_REPACK"):
+            checker.check_cpu_private_macros(self.descriptors)
+
+    def test_workflow_runs_checker_mutation_suite(self):
+        workflow = checker.ROOT / ".github/workflows/validate.yml"
+        ruby = r'''
+doc = YAML.load_file(ARGV[0])
+step = doc.fetch('jobs').fetch('lint').fetch('steps').find do |item|
+  item['name'] == 'Check llama.cpp snapshot cohort'
+end
+abort 'snapshot cohort step missing' unless step
+puts step.fetch('run')
+'''
+        result = subprocess.run(
+            ["ruby", "-ryaml", "-e", ruby, str(workflow)],
+            text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn(
+            "python3 -m unittest tests/test_check_llamacpp_snapshot.py -v",
+            result.stdout,
+        )
 
 
 if __name__ == "__main__":
