@@ -258,6 +258,9 @@ puts step.fetch('run')
             test_text,
         )
         self.assertIn("defined(__aarch64__) || defined(__arm64__)", test_text)
+        self.assertIn("defined(__APPLE__)", test_text)
+        self.assertIn("&& !defined(LLAMACPP_METAL_TEST)", test_text)
+        self.assertIn("#ifdef LLAMACPP_METAL_TEST", test_text)
 
 
 if __name__ == "__main__":
