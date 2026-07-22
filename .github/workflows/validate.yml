@@ -2,7 +2,7 @@ name: validate
 
 on:
   pull_request:
-    paths: ["pkgs/**/*.lua", "tests/**", "README.md", ".github/workflows/validate.yml"]
+    paths: ["pkgs/**/*.lua", "tests/**", "tools/llamacpp/**", "index.toml", "README.md", ".github/workflows/validate.yml"]
   push:
     branches: [main]
   schedule:
@@ -115,6 +115,13 @@ jobs:
           done
           [ $fail -eq 0 ] && echo "All package files valid."
           exit $fail
+      - name: Check llama.cpp snapshot cohort
+        run: |
+          python3 -m unittest tools/llamacpp/test_audit_snapshot.py -v
+          python3 -m unittest tests/test_fetch_llamacpp_model.py -v
+          python3 tools/llamacpp/audit_snapshot.py \
+            --check tools/llamacpp/snapshots/b10069.json
+          python3 tests/check_llamacpp_snapshot.py
       # ── Single-source-of-truth grammar check ─────────────────────────
       # `mcpp xpkg parse` uses EXACTLY the resolver's parser, so what
       # passes here is what builds for users of the pinned MCPP_VERSION.
@@ -339,6 +346,27 @@ jobs:
           echo "MEMBERS=$sel" >> "$GITHUB_ENV"
           echo "selected members: ${sel:-<none>}"
 
+      - name: Provision pinned llama.cpp model
+        shell: bash
+        run: |
+          need_model=0
+          if [ "$MEMBERS" = "__ALL__" ]; then
+            need_model=1
+          else
+            for member in $MEMBERS; do
+              case "$member" in
+                *llama*) need_model=1 ;;
+              esac
+            done
+          fi
+          if [ "$need_model" = 1 ]; then
+            model="$RUNNER_TEMP/stories15M-q4_0.gguf"
+            python3 tests/fetch_llamacpp_model.py --output "$model"
+            echo "LLAMACPP_TEST_MODEL=$model" >> "$GITHUB_ENV"
+          else
+            echo "No llama.cpp member selected; model provisioning is not required."
+          fi
+
       - name: mcpp test (workspace or affected members)
         shell: bash
         env:
@@ -359,4 +387,3 @@ jobs:
             done
             exit $rc
           fi
-
