@@ -318,6 +318,10 @@ jobs:
                              <(grep -v 'tests/examples/' mcpp.toml) >/dev/null; then
                   full "mcpp.toml non-member change"
                 fi
+                for p in $(comm -23 <(git show "$base:mcpp.toml" | grep -o 'tests/examples/[A-Za-z0-9._-]*' | sort -u) \
+                                    <(grep -o 'tests/examples/[A-Za-z0-9._-]*' mcpp.toml | sort -u)); do
+                  full "mcpp.toml removed workspace member: ${p#tests/examples/}"
+                done
                 for p in $(comm -13 <(git show "$base:mcpp.toml" | grep -o 'tests/examples/[A-Za-z0-9._-]*' | sort -u) \
                                     <(grep -o 'tests/examples/[A-Za-z0-9._-]*' mcpp.toml | sort -u)); do
                   add "${p#tests/examples/}"

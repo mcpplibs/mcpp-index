@@ -2,6 +2,10 @@
 from __future__ import annotations
 
 import importlib.util
+import os
+import subprocess
+import tempfile
+import textwrap
 import unittest
 from pathlib import Path
 
@@ -13,6 +17,19 @@ SPEC = importlib.util.spec_from_file_location("select_affected_members", SCRIPT)
 assert SPEC and SPEC.loader
 selector = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(selector)
+
+
+def workflow_selector_script() -> str:
+    workflow = WORKFLOW.read_text()
+    marker = "      - name: Select affected workspace members\n"
+    step = workflow.split(marker, 1)[1].split("      - name:", 1)[0]
+    script = step.split("        run: |\n", 1)[1]
+    script = textwrap.dedent(script)
+    return script.replace(
+        '${{ github.event_name }}', 'pull_request',
+    ).replace(
+        'base="origin/${{ github.base_ref }}"', 'base="HEAD^"',
+    )
 
 
 class TestLlamacppCohortSelection(unittest.TestCase):
@@ -44,6 +61,45 @@ class TestLlamacppCohortSelection(unittest.TestCase):
         self.assertNotIn(
             'echo "note: no workspace member exercises $f"', workflow,
         )
+
+    def test_removed_workspace_member_forces_full_run(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            manifest = repo / "mcpp.toml"
+            subprocess.run(["git", "init", "-q"], cwd=repo, check=True)
+            manifest.write_text(textwrap.dedent("""\
+                [workspace]
+                members = [
+                    "tests/examples/kept",
+                    "tests/examples/removed",
+                ]
+            """))
+            subprocess.run(["git", "add", "mcpp.toml"], cwd=repo, check=True)
+            subprocess.run([
+                "git", "-c", "user.name=Test", "-c",
+                "user.email=test@example.com", "commit", "-qm", "base",
+            ], cwd=repo, check=True)
+            manifest.write_text(textwrap.dedent("""\
+                [workspace]
+                members = [
+                    "tests/examples/kept",
+                ]
+            """))
+            subprocess.run(["git", "add", "mcpp.toml"], cwd=repo, check=True)
+            subprocess.run([
+                "git", "-c", "user.name=Test", "-c",
+                "user.email=test@example.com", "commit", "-qm", "remove",
+            ], cwd=repo, check=True)
+
+            github_env = repo / "github-env"
+            env = os.environ.copy()
+            env["GITHUB_ENV"] = str(github_env)
+            subprocess.run(
+                ["bash", "-c", workflow_selector_script()], cwd=repo,
+                env=env, check=True, text=True, capture_output=True,
+            )
+
+            self.assertIn("MEMBERS=__ALL__", github_env.read_text().splitlines())
 
     def test_descriptor_changes_select_transitive_consumers(self):
         expected = {
