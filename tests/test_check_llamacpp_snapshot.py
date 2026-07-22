@@ -261,6 +261,15 @@ puts step.fetch('run')
         self.assertIn("defined(__APPLE__)", test_text)
         self.assertIn("&& !defined(LLAMACPP_METAL_TEST)", test_text)
         self.assertIn("#ifdef LLAMACPP_METAL_TEST", test_text)
+        skip_guard = r'''#else
+
+#if defined(__APPLE__) \
+    && (defined(__aarch64__) || defined(__arm64__))
+#error "Metal smoke test cannot skip on macOS ARM64"
+#endif
+
+#include <cstdio>'''
+        self.assertIn(skip_guard, test_text)
 
 
 if __name__ == "__main__":

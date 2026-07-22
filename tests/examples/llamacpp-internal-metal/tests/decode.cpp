@@ -120,6 +120,11 @@ int main() {
 
 #else
 
+#if defined(__APPLE__) \
+    && (defined(__aarch64__) || defined(__arm64__))
+#error "Metal smoke test cannot skip on macOS ARM64"
+#endif
+
 #include <cstdio>
 
 int main() {
