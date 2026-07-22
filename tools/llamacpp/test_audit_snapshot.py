@@ -210,6 +210,21 @@ endfunction()
                 url='https://example.com/test.tar.gz',
                 archive_sha256='abc123')
 
+    def test_rejects_unresolved_cpu_translation_unit(self):
+        cpu_cmake = Path(self.root) / 'ggml/src/ggml-cpu/CMakeLists.txt'
+        with cpu_cmake.open('a') as f:
+            f.write(
+                '\nlist(APPEND GGML_CPU_SOURCES ggml-cpu/generated-default.cpp)\n')
+
+        with self.assertRaisesRegex(
+                ValueError, 'unresolved CPU source.*generated-default.cpp'):
+            audit_snapshot.collect_snapshot(
+                self.root,
+                tag='test',
+                commit='deadbeef',
+                url='https://example.com/test.tar.gz',
+                archive_sha256='abc123')
+
     def _write_archive_and_report(self):
         fixture_dir = tempfile.TemporaryDirectory()
         archive = Path(fixture_dir.name) / 'llama.cpp-test.tar.gz'

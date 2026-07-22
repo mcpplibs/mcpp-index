@@ -208,14 +208,16 @@ def _collect_cpu_sources(root: str, top_text: str,
                 raise ValueError(f'unexpected CPU source variable: {source}')
             # Literal conditional sources are conservatively included. This audit is
             # not a full CMake evaluator, so unknown variable expansions fail closed.
+            if Path(source).suffix not in {'.c', '.cc', '.cpp', '.m', '.mm'}:
+                continue
             candidates = (
                 Path(root) / source,
                 Path(root) / subdir / source,
                 Path(root) / subdir / '..' / source,
             )
             resolved = next((path.resolve() for path in candidates if path.is_file()), None)
-            if resolved is None or resolved.suffix not in {'.c', '.cc', '.cpp', '.m', '.mm'}:
-                continue
+            if resolved is None:
+                raise ValueError(f'unresolved CPU source: {source}')
             relative = resolved.relative_to(Path(root).resolve()).as_posix()
             prefix = 'ggml/src/ggml-cpu/'
             if not relative.startswith(prefix):
