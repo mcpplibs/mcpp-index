@@ -96,6 +96,13 @@ class TestLlamacppSnapshotMutations(unittest.TestCase):
                 checker.CheckError, "implies unknown feature: missing-feature"):
             checker.check_sources(self.descriptors, self.report)
 
+    def test_rejects_scalar_default_implies(self):
+        cpu = self.descriptors["compat.ggml-cpu"]["mcpp"]
+        cpu["features"]["default"]["implies"] = "llamafile"
+
+        with self.assertRaisesRegex(checker.CheckError, "implies must be a Lua array"):
+            checker.check_sources(self.descriptors, self.report)
+
     def test_rejects_missing_cpu_translation_units(self):
         mutations = {
             "*/ggml/src/ggml-cpu/ops.cpp": "common",

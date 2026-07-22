@@ -203,12 +203,9 @@ def _default_feature_closure(table: dict, context: str) -> set[str]:
                 f"{context}.features.{feature_name} must be a table")
         enabled.add(feature_name)
 
-        implies = feature.get("implies", {})
-        if isinstance(implies, str):
-            implied_features = [implies]
-        else:
-            implied_features = array(
-                implies, f"{context}.features.{feature_name}.implies")
+        implied_features = array(
+            feature.get("implies", {}),
+            f"{context}.features.{feature_name}.implies")
         require(all(isinstance(name, str) for name in implied_features),
                 f"{context}.features.{feature_name}.implies must contain feature names")
         pending.extend(implied_features)
