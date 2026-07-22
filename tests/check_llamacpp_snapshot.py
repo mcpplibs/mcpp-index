@@ -638,6 +638,9 @@ def check_metal_build_contract(descriptors: dict[str, dict], report: dict) -> No
     generated = get_path(descriptors["compat.ggml-metal"], "mcpp", "generated_files")
     source = generated.get("build.mcpp")
     require(isinstance(source, str) and source, "compat.ggml-metal build.mcpp is missing")
+    for tool in ("/usr/bin/xcrun", "/usr/bin/metal", "/usr/bin/metallib"):
+        require(tool not in source,
+                f"forbidden absolute tool: {tool} (absolute Xcode Metal tool path)")
     compiler = shutil.which(os.environ.get("CXX", "c++"))
     require(compiler is not None, "host C++ compiler not found for build.mcpp contract")
 

@@ -216,6 +216,16 @@ class TestLlamacppSnapshotMutations(unittest.TestCase):
         with self.assertRaisesRegex(checker.CheckError, "GGML_USE_CPU_REPACK"):
             checker.check_cpu_private_macros(self.descriptors)
 
+    def test_rejects_absolute_xcode_metal_tool_paths(self):
+        for tool in ("/usr/bin/xcrun", "/usr/bin/metal", "/usr/bin/metallib"):
+            with self.subTest(tool=tool):
+                self.descriptors = copy.deepcopy(self.original)
+                generated = self.descriptors["compat.ggml-metal"]["mcpp"]["generated_files"]
+                generated["build.mcpp"] += f"\n// {tool}\n"
+                with self.assertRaisesRegex(
+                        checker.CheckError, "absolute Xcode Metal tool path"):
+                    checker.check_metal_build_contract(self.descriptors, self.report)
+
     def test_workflow_runs_checker_mutation_suite(self):
         workflow = checker.ROOT / ".github/workflows/validate.yml"
         ruby = r'''
@@ -235,6 +245,28 @@ puts step.fetch('run')
             "python3 -m unittest tests/test_check_llamacpp_snapshot.py -v",
             result.stdout,
         )
+        self.assertIn(
+            "python3 -m unittest tests/test_select_affected_members.py -v",
+            result.stdout,
+        )
+
+        workflow_text = workflow.read_text()
+        self.assertIn("actions/setup-python@v5", workflow_text)
+        self.assertIn('python-version: "3.12"', workflow_text)
+        self.assertIn(
+            "if ! selected=$(python tools/select_affected_members.py",
+            workflow_text,
+        )
+        self.assertIn("for m in $selected; do", workflow_text)
+        self.assertIn("python tests/fetch_llamacpp_model.py", workflow_text)
+        self.assertIn('"tools/**"', workflow_text)
+        self.assertIn("Install Xcode Metal toolchain guard", workflow_text)
+        self.assertIn("metal|metallib)", workflow_text)
+        self.assertIn('exec /usr/bin/xcrun "$@"', workflow_text)
+        self.assertIn('"$guard_dir/metal" "$guard_dir/metallib"', workflow_text)
+        self.assertIn("Verify Xcode Metal toolchain was not invoked", workflow_text)
+        self.assertIn("always() && matrix.platform == 'macos'", workflow_text)
+        self.assertIn('test ! -s "$MCPP_XCODE_METAL_GUARD_LOG"', workflow_text)
 
     def test_internal_metal_member_is_wired_into_workspace_and_ci(self):
         root_manifest = (checker.ROOT / "mcpp.toml").read_text()
