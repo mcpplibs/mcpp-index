@@ -137,6 +137,46 @@ class TestLlamacppCohortSelection(unittest.TestCase):
 
             self.assertIn("MEMBERS=__ALL__", github_env.read_text().splitlines())
 
+    def test_renamed_path_forces_full_run(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = Path(td)
+            for member in ("a", "b"):
+                manifest = repo / f"tests/examples/{member}/mcpp.toml"
+                manifest.parent.mkdir(parents=True)
+                manifest.write_text(f"[package]\nname = \"{member}\"\n")
+            (repo / "mcpp.toml").write_text(textwrap.dedent("""\
+                [workspace]
+                members = [
+                    "tests/examples/a",
+                    "tests/examples/b",
+                ]
+            """))
+            (repo / "tests/examples/a/x.cpp").write_text("int value = 1;\n")
+            subprocess.run(["git", "init", "-q"], cwd=repo, check=True)
+            subprocess.run(["git", "add", "."], cwd=repo, check=True)
+            subprocess.run([
+                "git", "-c", "user.name=Test", "-c",
+                "user.email=test@example.com", "commit", "-qm", "base",
+            ], cwd=repo, check=True)
+            subprocess.run([
+                "git", "mv", "tests/examples/a/x.cpp",
+                "tests/examples/b/x.cpp",
+            ], cwd=repo, check=True)
+            subprocess.run([
+                "git", "-c", "user.name=Test", "-c",
+                "user.email=test@example.com", "commit", "-qm", "rename",
+            ], cwd=repo, check=True)
+
+            github_env = repo / "github-env"
+            env = os.environ.copy()
+            env["GITHUB_ENV"] = str(github_env)
+            subprocess.run(
+                ["bash", "-c", workflow_selector_script()], cwd=repo,
+                env=env, check=True, text=True, capture_output=True,
+            )
+
+            self.assertIn("MEMBERS=__ALL__", github_env.read_text().splitlines())
+
     def test_descriptor_changes_select_transitive_consumers(self):
         expected = {
             "pkgs/c/compat.ggml-base.lua": {
