@@ -90,7 +90,18 @@ jobs:
             if ! lua5.4 tests/check_mirror_urls.lua "$f"; then
               fail=1
             fi
-            # 5. c++fly admission policy (mcpp design 2026-07-14 §11-Q2, v1):
+            # 5. `name` must be the fully-qualified `<namespace>.<short>`.
+            #    The split form (namespace = "chriskohlhoff", name = "asio")
+            #    parses and passes `mcpp xpkg parse`, but xlings keys the index
+            #    on the literal `name` while mcpp asks for the reconstructed
+            #    FQN — they never meet, so the package is uninstallable on
+            #    every platform (mcpp-community/mcpp#278). This check is cheap
+            #    and catches in seconds what otherwise fails an hour into the
+            #    workspace job.
+            if ! lua5.4 tests/check_package_name.lua "$f"; then
+              fail=1
+            fi
+            # 6. c++fly admission policy (mcpp design 2026-07-14 §11-Q2, v1):
             #    c++fly means "toolchain's latest level + every experimental
             #    gate" — deliberately toolchain-dependent, so a published
             #    package built with it is not reproducible for consumers.

@@ -38,7 +38,15 @@
 package = {
     spec        = "1",
     namespace   = "chriskohlhoff",
-    name        = "asio",
+    -- `name` MUST be the fully-qualified `<namespace>.<short>`: xlings keys its
+    -- index on this literal (libxpkg build_index → entries[package.name]),
+    -- while mcpp asks for the FQN it reconstructs from the consumer's
+    -- `[dependencies.<ns>] <short>`. Writing the split form ("asio") is legal
+    -- per mcpp's own descriptor spec (manifest/xpkg.cppm canonical_xpkg_
+    -- identity normalizes both spellings) but registers the index entry under
+    -- `asio`, which no consumer request can ever hit → E_NOT_FOUND at install.
+    -- See mcpp-community/mcpp#278; the lint in validate.yml enforces this.
+    name        = "chriskohlhoff.asio",
     description = "Standalone asio exposed as the C++23 module `asio` (separate compilation)",
     licenses    = {"BSL-1.0"},
     repo        = "https://github.com/chriskohlhoff/asio",
