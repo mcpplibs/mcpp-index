@@ -5,7 +5,7 @@
 package = {
     spec        = "1",
     name        = "imgui",
-    namespace   = "",
+    namespace   = "mcpplibs",
     description = "C++23 module package for Dear ImGui core and GLFW/OpenGL3 backends",
     licenses    = {"MIT"},
     repo        = "https://github.com/mcpplibs/imgui-m",

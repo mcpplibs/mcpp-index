@@ -39,7 +39,7 @@
 package = {
     spec        = "1",
     name        = "opencv",
-    namespace   = "",
+    namespace   = "mcpplibs",
     description = "C++23 module package for OpenCV 5 (import opencv.cv) — vendored full source build, C++ API unchanged",
     licenses    = {"MIT"},   -- module layer; the vendored OpenCV itself is Apache-2.0
     repo        = "https://github.com/Sunrisepeak/opencv-m",

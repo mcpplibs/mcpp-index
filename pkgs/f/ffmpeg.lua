@@ -12,7 +12,7 @@
 package = {
     spec        = "1",
     name        = "ffmpeg",
-    namespace   = "",
+    namespace   = "mcpplibs",
     description = "C++23 module package for FFmpeg (import ffmpeg.av) — full source build via compat.ffmpeg, C API unchanged",
     licenses    = {"MIT"},   -- module layer; upstream via compat.ffmpeg is LGPL-2.1-or-later
     repo        = "https://github.com/mcpplibs/ffmpeg-m",
