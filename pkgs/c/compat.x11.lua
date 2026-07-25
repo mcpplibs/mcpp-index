@@ -640,10 +640,16 @@ local function write_config(installdir)
 end
 
 local function generate_ks_tables(installdir)
-    local proto_dir = pkginfo.install_dir("compat:compat.xorgproto", "2025.1")
+    -- Addressed by declared identity `<namespace>:<package.name>` — see the
+    -- same ladder in compat.xcb.lua. The trailing spellings are pre-SPEC-001.
+    local proto_dir = pkginfo.install_dir("compat:xorgproto", "2025.1")
+        or pkginfo.install_dir("compat:compat.xorgproto", "2025.1")
         or pkginfo.install_dir("compat.xorgproto", "2025.1")
-    if not proto_dir then
-        log.error("compat.xorgproto@2025.1 install dir not found")
+    -- `os.isdir` matters as much as the nil check: a miss can hand back a
+    -- plausible path that was never populated, and the keysym tables would
+    -- then be generated empty instead of the build failing here.
+    if not proto_dir or not os.isdir(proto_dir) then
+        log.error("xorgproto@2025.1 install dir not found")
         return false
     end
 

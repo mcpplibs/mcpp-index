@@ -122,6 +122,14 @@ jobs:
           done
           [ $fail -eq 0 ] && echo "All package files valid."
           exit $fail
+      # ── Whole-repository check (needs every descriptor at once) ──────
+      # An install() hook addressing a sibling package does so by
+      # `<namespace>:<literal package.name>`, and a miss returns nil rather
+      # than raising — so a stale spelling surfaces far downstream (a broken
+      # libxcb showed up as a libX11 link error). Verified across the repo
+      # because it needs the full set of declared identities.
+      - name: Lint cross-package references
+        run: lua5.4 tests/check_cross_package_refs.lua pkgs/*/*.lua
       # ── Single-source-of-truth grammar check ─────────────────────────
       # `mcpp xpkg parse` uses EXACTLY the resolver's parser, so what
       # passes here is what builds for users of the pinned MCPP_VERSION.

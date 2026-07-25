@@ -135,10 +135,17 @@ function install()
     os.tryrm(pkginfo.install_dir())
     os.mv(srcroot, pkginfo.install_dir())
 
-    local proto_dir = pkginfo.install_dir("compat:compat.xcb-proto", "1.17.0")
+    -- A cross-package lookup addresses the sibling by its DECLARED identity
+    -- `<namespace>:<package.name>`. Since SPEC-001 that is `compat:xcb-proto`;
+    -- the two `compat.xcb-proto` spellings below are the pre-SPEC-001 forms,
+    -- kept so this descriptor still resolves against an index that has not
+    -- migrated yet. Getting this wrong is silent until install time: the
+    -- lookup simply misses and codegen has no protocol XML to read.
+    local proto_dir = pkginfo.install_dir("compat:xcb-proto", "1.17.0")
+        or pkginfo.install_dir("compat:compat.xcb-proto", "1.17.0")
         or pkginfo.install_dir("compat.xcb-proto", "1.17.0")
     if not proto_dir or not os.isdir(proto_dir) then
-        log.error("compat.xcb-proto@1.17.0 install dir not found")
+        log.error("xcb-proto@1.17.0 install dir not found")
         return false
     end
 
