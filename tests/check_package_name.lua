@@ -1,29 +1,32 @@
--- Lint `package.name` against `package.namespace`.
+-- Lint `package.name` against `package.namespace` (mcpp SPEC-001 §3.2).
 --
--- Rule: a namespaced descriptor MUST spell `name` as the fully-qualified
--- `<namespace>.<short>`. The split form (namespace = "chriskohlhoff",
--- name = "asio") parses fine and passes `mcpp xpkg parse` — mcpp's own
--- identity layer normalizes both spellings to the same package — but it is
--- NOT installable from an index:
+-- Identity is the pair `(namespace, name)`: `namespace` is the dotted,
+-- hierarchical path and `name` is a SINGLE ATOMIC SEGMENT. All depth belongs
+-- in the namespace.
 --
---   * xlings/libxpkg keys the index on the literal `package.name`
---     (libxpkg build_index → entries[package.name]), so the entry lands
---     under `asio`;
---   * mcpp asks xlings for the FQN it reconstructs from the consumer's
---     `[dependencies.<ns>] <short>`, i.e. `chriskohlhoff.asio`
---     (mcpp src/build/prepare.cppm — "xlings resolves packages by the full
---     qualified name (ns.shortName) as it appears in the index's name field").
+--     namespace = "chriskohlhoff", name = "asio"          -- ok
+--     namespace = "mcpplibs.capi", name = "lua"           -- ok
+--     namespace = "compat",        name = "compat.zlib"   -- ok (legacy form)
+--     namespace = "mcpplibs",      name = "capi.lua"      -- REJECTED
 --
--- The two never meet → E_NOT_FOUND at install time, on every platform, after
--- the workspace job has already burned an hour. No consumer-side spelling can
--- work around it; the descriptor is the only place it can be fixed.
+-- Why the last one is rejected rather than reinterpreted: a `name` carrying
+-- dots the namespace does not account for describes a package whose namespace
+-- nobody declared. mcpp used to split such a name on its LAST dot and silently
+-- invent `(mcpplibs.capi, lua)`. Since 0.0.106 it refuses to guess.
 --
--- Upstream: mcpp-community/mcpp#278 (mcpp should either use the declared name
--- or reject the split form in `mcpp xpkg parse`). Until that lands, this lint
--- is the index's guard.
+-- LEGACY FORM: descriptors published before SPEC-001 repeat the namespace
+-- inside `name`. That prefix is stripped before judging, so they keep passing —
+-- the wire key is the literal `name` either way, so they stay installable
+-- unchanged.
 --
--- Zero-namespace packages (the public default-namespace module packages —
--- imgui / ffmpeg / opencv) are unaffected: their bare `name` IS the FQN.
+-- HISTORY: mcpp 0.0.105 briefly required the OPPOSITE (name must be the
+-- fully-qualified form). That was an encoding constraint, not a design rule: it
+-- existed only because mcpp re-derived the wire name instead of using the
+-- literal it had already read. See mcpp-community/mcpp#278 and mcpp
+-- docs/spec/package-identity.md.
+--
+-- mcpp >= 0.0.106 enforces the same rule inside `mcpp xpkg parse`; this lint is
+-- a cheaper, earlier second gate that runs before the pinned mcpp is fetched.
 --
 -- Usage: lua5.4 tests/check_package_name.lua <file.lua>
 
@@ -57,21 +60,33 @@ if type(ns) ~= "string" then
     os.exit(fail)
 end
 
+local shortName = name
 if ns ~= "" then
     local prefix = ns .. "."
-    if name:sub(1, #prefix) ~= prefix then
-        err(string.format(
-            "package.name must be the fully-qualified '<namespace>.<short>': " ..
-            "namespace = %q but name = %q — write name = %q. " ..
-            "The split form registers the index entry under %q, which no " ..
-            "consumer request can ever resolve (E_NOT_FOUND at install). " ..
-            "See mcpp-community/mcpp#278.",
-            ns, name, prefix .. name, name))
-    elseif #name == #prefix then
-        err(string.format(
-            "package.name = %q has an empty short name after the %q prefix",
-            name, prefix))
+    if name:sub(1, #prefix) == prefix then
+        if #name == #prefix then
+            err(string.format(
+                "package.name = %q has an empty short name after the %q prefix",
+                name, prefix))
+            os.exit(fail)
+        end
+        -- Legacy fully-qualified spelling: judge what follows the prefix.
+        shortName = name:sub(#prefix + 1)
     end
+end
+
+if shortName:find(".", 1, true) then
+    local head = shortName:match("^(.*)%.[^.]*$")
+    local tail = shortName:match("([^.]*)$")
+    local suggestedNs = (ns ~= "") and (ns .. "." .. head) or head
+    err(string.format(
+        "package.name must be a single atomic segment — the hierarchy belongs " ..
+        "in package.namespace. namespace = %q, name = %q leaves short name %q, " ..
+        "which still contains a '.'. Identity is (namespace, name): `namespace` " ..
+        "is the dotted path, `name` is ONE segment — so this names a namespace " ..
+        "nobody declared. Write namespace = %q, name = %q. See mcpp " ..
+        "docs/spec/package-identity.md §3.2.",
+        ns, name, shortName, suggestedNs, tail))
 end
 
 os.exit(fail)

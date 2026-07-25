@@ -63,7 +63,7 @@
 package = {
     spec        = "1",
     namespace   = "compat",
-    name        = "compat.eigen",
+    name        = "eigen",
     description = "C++ template library for linear algebra (header-only)",
     licenses    = {"MPL-2.0"},
     repo        = "https://gitlab.com/libeigen/eigen",

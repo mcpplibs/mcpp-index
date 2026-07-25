@@ -42,7 +42,7 @@
 package = {
     spec        = "1",
     namespace   = "fmtlib",
-    name        = "fmtlib.fmt",
+    name        = "fmt",
     description = "A modern formatting library for C++, exposed as C++23 module fmt",
     licenses    = {"MIT"},
     repo        = "https://github.com/fmtlib/fmt",

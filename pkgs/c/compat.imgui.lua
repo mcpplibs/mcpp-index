@@ -1,7 +1,7 @@
 package = {
     spec        = "1",
     namespace   = "compat",
-    name        = "compat.imgui",
+    name        = "imgui",
     description = "Dear ImGui immediate-mode GUI library core sources",
     licenses    = {"MIT"},
     repo        = "https://github.com/ocornut/imgui",

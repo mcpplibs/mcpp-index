@@ -1,7 +1,7 @@
 package = {
     spec        = "1",
     namespace   = "compat",
-    name        = "compat.xrender",
+    name        = "xrender",
     description = "X Rendering extension runtime library and public headers",
     licenses    = {"HPND-sell-variant"},
     repo        = "https://gitlab.freedesktop.org/xorg/lib/libxrender",

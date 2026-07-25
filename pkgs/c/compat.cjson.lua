@@ -11,7 +11,7 @@
 package = {
     spec        = "1",
     namespace   = "compat",
-    name        = "compat.cjson",
+    name        = "cjson",
     description = "Ultralightweight JSON parser in ANSI C",
     licenses    = {"MIT"},
     repo        = "https://github.com/DaveGamble/cJSON",

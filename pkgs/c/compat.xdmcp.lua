@@ -1,7 +1,7 @@
 package = {
     spec        = "1",
     namespace   = "compat",
-    name        = "compat.xdmcp",
+    name        = "xdmcp",
     description = "X Display Manager Control Protocol library",
     licenses    = {"MIT-Open-Group"},
     repo        = "https://gitlab.freedesktop.org/xorg/lib/libxdmcp",

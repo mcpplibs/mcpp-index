@@ -29,7 +29,7 @@
 package = {
     spec        = "1",
     namespace   = "marzer",
-    name        = "marzer.tomlplusplus",
+    name        = "tomlplusplus",
     description = "TOML config file parser and serializer for C++, exposed as C++23 module tomlplusplus",
     licenses    = {"MIT"},
     repo        = "https://github.com/marzer/tomlplusplus",

@@ -1,7 +1,7 @@
 package = {
     spec        = "1",
     namespace   = "compat",
-    name        = "compat.xtrans",
+    name        = "xtrans",
     description = "X.Org transport layer support headers used by Xlib",
     licenses    = {"HPND-sell-variant", "MIT", "MIT-Open-Group"},
     repo        = "https://gitlab.freedesktop.org/xorg/lib/libxtrans",

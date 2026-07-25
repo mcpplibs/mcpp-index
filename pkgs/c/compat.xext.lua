@@ -1,7 +1,7 @@
 package = {
     spec        = "1",
     namespace   = "compat",
-    name        = "compat.xext",
+    name        = "xext",
     description = "X11 miscellaneous extensions runtime library and public headers",
     licenses    = {"HPND-sell-variant", "ISC", "MIT", "MIT-Open-Group"},
     repo        = "https://gitlab.freedesktop.org/xorg/lib/libxext",

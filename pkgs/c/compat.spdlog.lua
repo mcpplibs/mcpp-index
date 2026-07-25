@@ -43,7 +43,7 @@
 package = {
     spec        = "1",
     namespace   = "compat",
-    name        = "compat.spdlog",
+    name        = "spdlog",
     description = "Fast C++ logging library (header-only by default, compiled via the `compiled` feature)",
     licenses    = {"MIT"},
     repo        = "https://github.com/gabime/spdlog",

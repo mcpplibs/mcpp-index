@@ -9,7 +9,7 @@
 -- the fully-qualified spelling. See mcpp-community/mcpp#278.
 package = {
     spec = "1",
-    name = "aimol.tensorvia-cpu",
+    name = "tensorvia-cpu",
     description = "CPU backend of Tensorvia, ported to C++23 modules",
     licenses = {"MIT"},
     repo = "https://github.com/Aimol-l/Tensorvia-cpu",

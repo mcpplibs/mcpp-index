@@ -1,7 +1,7 @@
 package = {
     spec        = "1",
     namespace   = "compat",
-    name        = "compat.bzip2",
+    name        = "bzip2",
     description = "A freely available high-quality data compressor",
     licenses    = {"bzip2-1.0.6"},
     repo        = "https://sourceware.org/bzip2/",

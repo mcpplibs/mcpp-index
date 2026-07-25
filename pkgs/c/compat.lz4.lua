@@ -1,7 +1,7 @@
 package = {
     spec        = "1",
     namespace   = "compat",
-    name        = "compat.lz4",
+    name        = "lz4",
     description = "LZ4 extremely fast compression",
     licenses    = {"BSD-2-Clause"},
     repo        = "https://github.com/lz4/lz4",

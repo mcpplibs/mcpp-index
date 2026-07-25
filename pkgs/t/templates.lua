@@ -6,7 +6,7 @@
 package = {
     spec        = "1",
     namespace = "mcpplibs",
-    name        = "mcpplibs.templates",
+    name        = "templates",
     description = "Minimal C++23 modular hello library",
     licenses    = {"Apache-2.0"},
     repo        = "https://github.com/mcpp-community/templates",

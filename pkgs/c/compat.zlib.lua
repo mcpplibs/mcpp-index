@@ -1,7 +1,7 @@
 package = {
     spec        = "1",
     namespace   = "compat",
-    name        = "compat.zlib",
+    name        = "zlib",
     description = "A compression library",
     licenses    = {"Zlib"},
     repo        = "https://github.com/madler/zlib",

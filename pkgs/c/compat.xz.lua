@@ -1,7 +1,7 @@
 package = {
     spec        = "1",
     namespace   = "compat",
-    name        = "compat.xz",
+    name        = "xz",
     description = "XZ Utils liblzma compression library",
     licenses    = {"0BSD"},
     repo        = "https://github.com/tukaani-project/xz",

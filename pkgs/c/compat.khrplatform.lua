@@ -1,7 +1,7 @@
 package = {
     spec        = "1",
     namespace   = "compat",
-    name        = "compat.khrplatform",
+    name        = "khrplatform",
     description = "Khronos KHR platform header for OpenGL/EGL compat packages",
     licenses    = {"Khronos"},
     repo        = "https://github.com/KhronosGroup/EGL-Registry",

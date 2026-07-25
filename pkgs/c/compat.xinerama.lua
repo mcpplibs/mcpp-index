@@ -1,7 +1,7 @@
 package = {
     spec        = "1",
     namespace   = "compat",
-    name        = "compat.xinerama",
+    name        = "xinerama",
     description = "Xinerama extension runtime library and public headers",
     licenses    = {"MIT-Open-Group"},
     repo        = "https://gitlab.freedesktop.org/xorg/lib/libxinerama",

@@ -1,7 +1,7 @@
 package = {
     spec        = "1",
     namespace   = "compat",
-    name        = "compat.libarchive",
+    name        = "libarchive",
     description = "Multi-format archive and compression library",
     licenses    = {"BSD-2-Clause", "BSD-3-Clause", "BSD-2-Clause-NetBSD", "CC0-1.0", "OpenSSL", "Apache-2.0", "public-domain"},
     repo        = "https://libarchive.org/",

@@ -1,7 +1,7 @@
 package = {
     spec        = "1",
     namespace   = "compat",
-    name        = "compat.xcursor",
+    name        = "xcursor",
     description = "X cursor management runtime library and public headers",
     licenses    = {"HPND-sell-variant"},
     repo        = "https://gitlab.freedesktop.org/xorg/lib/libxcursor",

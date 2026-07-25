@@ -1,7 +1,7 @@
 package = {
     spec        = "1",
     namespace   = "compat",
-    name        = "compat.glx-runtime",
+    name        = "glx-runtime",
     description = "Host GLVND/GLX/OpenGL runtime adapter for mcpp Linux window applications",
     licenses    = {"MIT"},
     repo        = "https://github.com/KhronosGroup/OpenGL-Registry",

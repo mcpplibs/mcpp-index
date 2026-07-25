@@ -1,7 +1,7 @@
 package = {
     spec        = "1",
     namespace   = "compat",
-    name        = "compat.xau",
+    name        = "xau",
     description = "X authorization file management library",
     licenses    = {"MIT-Open-Group"},
     repo        = "https://gitlab.freedesktop.org/xorg/lib/libxau",

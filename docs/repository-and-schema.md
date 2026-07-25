@@ -13,6 +13,7 @@ tests/examples/<member>/     每库测试工程(workspace 成员;<member> 为包
                              ([target.'cfg(...)'])
   tests/*.cpp                行为断言(独立 main,退出码非 0 即失败)
 tests/check_mirror_urls.lua  lint:GLOBAL+CN 表完整性,以及 CN 指向 mcpp-res
+tests/check_package_name.lua lint:身份形态(name 为单一原子段,层级归 namespace)
 tests/list_cn_urls.lua       抽取 CN url,供 mirror-cn-reachable 使用
 README.md                    索引说明与贡献入口
 .github/workflows/validate.yml   CI:lint / mirror-cn-reachable / workspace(3 平台矩阵)
@@ -36,6 +37,24 @@ tools/compat-ffmpeg/ 等      compat 大包的描述符再生成流水线
 ## 描述符 schema 速查(Form B inline)
 
 `package` 必填字段:`spec`、`namespace`、`name`、`description`、`licenses`、`repo`、`type="package"`、`xpm`、`mcpp`。
+
+### 包身份:`(namespace, name)`
+
+身份是二元组 —— **`namespace` 是点分层级路径,`name` 是单一原子段**。层级一律放 `namespace`(mcpp SPEC-001 §3.2,`docs/spec/package-identity.md`):
+
+```lua
+namespace = "compat",        name = "zlib"      -- ✅
+namespace = "mcpplibs.capi", name = "lua"       -- ✅ 多级命名空间
+namespace = "mcpplibs",      name = "capi.lua"  -- ❌ 短名仍带点
+```
+
+最后一种被拒绝而非重新解读:`name` 里多出的点描述的是一个**没人声明过的命名空间**。mcpp 曾按最后一个点切分、静默造出 `(mcpplibs.capi, lua)`,0.0.106 起改为拒绝。
+
+**兼容形态**:SPEC-001 之前发布的描述符把命名空间重复写在 `name` 里(`namespace="compat", name="compat.zlib"`),仍被接受 —— 前缀会先剥离再判定,wire key 是字面 `name`,两种写法都可安装。本仓已统一迁到短名形态。
+
+**同短名不同命名空间可共存**:本仓现有三对 —— `compat:imgui` 与默认命名空间的 `imgui`、`compat:ffmpeg` 与 `ffmpeg`、`compat:lua` 与 `mcpplibs.capi:lua`。需要 xlings ≥ 0.4.69([xlings#381](https://github.com/openxlings/xlings/issues/381));`(namespace, name)` 唯一即可,`name` 本身不必唯一。
+
+**文件名不参与解析**,可以任意。推荐 `<name>.lua` 或 `<namespace>.<name>.lua`(命中 mcpp 的快路径),但描述符按**声明的身份**被发现,叫别的名字也能解析。
 
 `xpm.<linux|macosx|windows>.<裸版本>`:
 
@@ -76,7 +95,9 @@ mcpp 跑 `xpkg parse`(strict:未知键即失败),所以需要更新文法/键的
 - 触发条件:PR(改动 `pkgs/**/*.lua`、`tests/**`、`README.md` 或本 workflow)、push 至 main、nightly cron、手动触发。
 - `env.MCPP_VERSION` 为全部 job 使用的 mcpp 版本,本地验证应与之对齐。
 - `lint`(始终运行):lua 语法 `loadfile(f,'t')`;须含 `spec=`/`name=`/`xpm=`;禁止前导 v 版本;执行
-  `check_mirror_urls.lua`;再用 CI pin 的 mcpp 对每个描述符跑 `mcpp xpkg parse`(strict,未知键即失败)。
+  `check_mirror_urls.lua`;执行 `check_package_name.lua`(身份形态,见上文「包身份」);再用 CI pin 的
+  mcpp 对每个描述符跑 `mcpp xpkg parse`(strict,未知键即失败)。mcpp ≥ 0.0.106 的 `xpkg parse` 自身
+  也强制身份形态,lua lint 因此是更早、更便宜的冗余闸门。
 - `mirror-cn-reachable`(始终运行):逐个 `curl` CN url,均须返回 200。
 - `workspace (linux|macos|windows)`:整个测试面就是一个 mcpp workspace,**唯一的构建/运行通道**——
   没有任何 shell 驱动的例外(公开模块包 imgui/ffmpeg/opencv/tinyhttps 也是普通成员,经成员级
@@ -96,6 +117,7 @@ for f in pkgs/*/*.lua; do
   for n in 'spec *=' 'name *=' 'xpm *='; do grep -q "$n" "$f" || { echo "MISS $n $f"; fail=1; }; done
   grep -nqE '\["v[0-9]+|\["[^"]+"\][[:space:]]*=[[:space:]]*"v[0-9]+' "$f" && { echo "LEADING-V $f"; fail=1; }
   lua5.4 tests/check_mirror_urls.lua "$f" >/dev/null 2>&1 || { echo "MIRROR $f"; fail=1; }
+  lua5.4 tests/check_package_name.lua "$f" || fail=1
 done
 [ $fail -eq 0 ] && echo "ALL LINT PASS"
 ```

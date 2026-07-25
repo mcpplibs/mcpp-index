@@ -4,7 +4,7 @@
 package = {
     spec        = "1",
     namespace = "mcpplibs",
-    name        = "mcpplibs.tinyhttps",
+    name        = "tinyhttps",
     description = "Minimal C++23 HTTP/HTTPS client with SSE streaming support",
     licenses    = {"Apache-2.0"},
     repo        = "https://github.com/mcpplibs/tinyhttps",

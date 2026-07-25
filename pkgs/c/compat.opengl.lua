@@ -1,7 +1,7 @@
 package = {
     spec        = "1",
     namespace   = "compat",
-    name        = "compat.opengl",
+    name        = "opengl",
     description = "Khronos OpenGL API headers for mcpp packages",
     licenses    = {"MIT"},
     repo        = "https://github.com/KhronosGroup/OpenGL-Registry",

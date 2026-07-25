@@ -9,7 +9,7 @@
 package = {
     spec        = "1",
     namespace = "compat",
-    name        = "compat.mbedtls",
+    name        = "mbedtls",
     description = "An open source, portable, easy to use, readable and flexible TLS library, and reference implementation of the PSA Cryptography API",
     licenses    = {"Apache-2.0"},
     repo        = "https://github.com/Mbed-TLS/mbedtls",

@@ -1,7 +1,7 @@
 package = {
     spec        = "1",
     namespace   = "compat",
-    name        = "compat.xorgproto",
+    name        = "xorgproto",
     description = "X.Org protocol headers for X11-based compat packages",
     licenses    = {},
     repo        = "https://gitlab.freedesktop.org/xorg/proto/xorgproto",

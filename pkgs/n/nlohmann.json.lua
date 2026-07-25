@@ -21,7 +21,7 @@
 package = {
     spec        = "1",
     namespace   = "nlohmann",
-    name        = "nlohmann.json",
+    name        = "json",
     description = "JSON for Modern C++, exposed as C++23 module nlohmann.json",
     licenses    = {"MIT"},
     repo        = "https://github.com/nlohmann/json",

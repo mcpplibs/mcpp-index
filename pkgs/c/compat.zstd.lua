@@ -1,7 +1,7 @@
 package = {
     spec        = "1",
     namespace   = "compat",
-    name        = "compat.zstd",
+    name        = "zstd",
     description = "Zstandard real-time compression algorithm",
     licenses    = {"BSD-3-Clause", "GPL-2.0-only"},
     repo        = "https://github.com/facebook/zstd",

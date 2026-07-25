@@ -7,7 +7,7 @@
 -- include_dirs_after (-idirafter, mcpp#249) so libc++ <version> is not shadowed
 -- by ffmpeg's VERSION file on case-insensitive macOS.
 package = {
-    spec = "1", namespace = "compat", name = "compat.ffmpeg",
+    spec = "1", namespace = "compat", name = "ffmpeg",
     description = "FFmpeg 8.1.2 multimedia libraries, full source build (LGPL profile, multi-platform)",
     licenses = {"LGPL-2.1-or-later"}, repo = "https://ffmpeg.org", type = "package",
     xpm = {

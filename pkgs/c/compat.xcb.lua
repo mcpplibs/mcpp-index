@@ -1,7 +1,7 @@
 package = {
     spec        = "1",
     namespace   = "compat",
-    name        = "compat.xcb",
+    name        = "xcb",
     description = "X C Binding core library built from upstream sources",
     licenses    = {"MIT"},
     repo        = "https://gitlab.freedesktop.org/xorg/lib/libxcb",

@@ -1,7 +1,7 @@
 package = {
     spec        = "1",
     namespace   = "compat",
-    name        = "compat.xcb-proto",
+    name        = "xcb-proto",
     description = "XCB protocol XML descriptions and xcbgen generator",
     licenses    = {"MIT"},
     repo        = "https://gitlab.freedesktop.org/xorg/proto/xcbproto",

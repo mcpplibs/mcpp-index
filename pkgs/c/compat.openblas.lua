@@ -33,7 +33,7 @@
 package = {
     spec        = "1",
     namespace   = "compat",
-    name        = "compat.openblas",
+    name        = "openblas",
     description = "OpenBLAS — optimized BLAS, built from source (BLAS-only, no Fortran/LAPACK)",
     licenses    = {"BSD-3-Clause"},
     repo        = "https://github.com/OpenMathLib/OpenBLAS",

@@ -4,7 +4,7 @@
 package = {
     spec        = "1",
     namespace = "mcpplibs",
-    name        = "mcpplibs.llmapi",
+    name        = "llmapi",
     description = "Modern C++ LLM API client with openai-compatible support",
     licenses    = {"Apache-2.0"},
     repo        = "https://github.com/mcpplibs/llmapi",

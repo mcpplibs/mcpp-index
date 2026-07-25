@@ -46,7 +46,7 @@ package = {
     -- identity normalizes both spellings) but registers the index entry under
     -- `asio`, which no consumer request can ever hit → E_NOT_FOUND at install.
     -- See mcpp-community/mcpp#278; the lint in validate.yml enforces this.
-    name        = "chriskohlhoff.asio",
+    name        = "asio",
     description = "Standalone asio exposed as the C++23 module `asio` (separate compilation)",
     licenses    = {"BSL-1.0"},
     repo        = "https://github.com/chriskohlhoff/asio",

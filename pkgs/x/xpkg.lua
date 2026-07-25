@@ -4,7 +4,7 @@
 package = {
     spec        = "1",
     namespace = "mcpplibs",
-    name        = "mcpplibs.xpkg",
+    name        = "xpkg",
     description = "C++23 reference implementation of the xpkg V1 spec — `import mcpplibs.xpkg;`",
     licenses    = {"Apache-2.0"},
     repo        = "https://github.com/openxlings/libxpkg",

@@ -1,7 +1,7 @@
 package = {
     spec        = "1",
     namespace   = "compat",
-    name        = "compat.glfw",
+    name        = "glfw",
     description = "GLFW windowing and input library built from upstream sources",
     licenses    = {"Zlib"},
     repo        = "https://github.com/glfw/glfw",

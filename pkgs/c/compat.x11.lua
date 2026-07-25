@@ -1,7 +1,7 @@
 package = {
     spec        = "1",
     namespace   = "compat",
-    name        = "compat.x11",
+    name        = "x11",
     description = "Xlib runtime library and public headers built from upstream sources",
     licenses    = {"BSD-1-Clause", "HPND-sell-variant", "ISC", "MIT", "MIT-Open-Group", "X11"},
     repo        = "https://gitlab.freedesktop.org/xorg/lib/libx11",
