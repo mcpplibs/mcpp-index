@@ -369,6 +369,18 @@ jobs:
           "$MCPP" test -p tests/examples/ffmpeg || rc=$?
           echo "=== ffmpeg member exit status: $rc ==="
           echo "=== free space after ==="; df -h . || true
+          # mcpp returns the xlings child's exit code, so 127 may well be
+          # xlings'. Drive xlings directly on the same package and show what it
+          # says — mcpp swallows the child's stderr on this path.
+          echo "=== locating xlings ==="
+          XL=$(find . "$HOME" -name 'xlings.exe' -path '*registry/bin*' 2>/dev/null | head -1)
+          echo "xlings: $XL"
+          if [ -n "$XL" ]; then
+            "$XL" --version || true
+            xrc=0
+            "$XL" install "compat:ffmpeg@8.1.2" -y || xrc=$?
+            echo "=== xlings direct exit status: $xrc ==="
+          fi
           exit $rc
           # No `timeout` wrapper: absent on macOS runners; job-level timeout-minutes bounds it.
           if [ "$MEMBERS" = "__ALL__" ]; then
