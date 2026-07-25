@@ -379,19 +379,26 @@ jobs:
           vrc=0
           MCPP_VERBOSE=1 "$MCPP" test -p tests/examples/ffmpeg 2>&1 | tail -60 || vrc=$?
           echo "=== verbose retry exit status: $vrc ==="
-          # Previous attempt was invalid: it used a RELATIVE ninja path and
-          # then cd'd, so bash could not find it — "No such file or directory",
-          # rc 127. Absolute paths only this time, and -C instead of cd. Also
-          # dump what mcpp itself recorded (target/.build_cache holds outputDir
-          # and the ninja program it intends to run).
-          echo "=== mcpp build cache ==="
-          cat tests/examples/ffmpeg/target/.build_cache 2>/dev/null || echo "(none)"
+          # Third attempt. The two before this failed on my own path mistakes
+          # (a relative ninja path, then looking under $HOME instead of the
+          # extracted release, which is the registry mcpp actually uses). List
+          # every candidate this time and require an absolute one.
+          echo "=== ninja candidates ==="
+          find "$PWD" "$HOME" -name 'ninja.exe' 2>/dev/null | head -5
+          NJ=$(find "$PWD" "$HOME" -name 'ninja.exe' 2>/dev/null | head -1)
           BN=$(find "$PWD/tests/examples/ffmpeg/target" -maxdepth 3 -name build.ninja 2>/dev/null | head -1)
-          NJ=$(find "$HOME/.mcpp/registry" -name 'ninja.exe' 2>/dev/null | head -1)
           echo "build.ninja: $BN"
           echo "ninja:       $NJ"
-          if [ -n "$NJ" ]; then "$NJ" --version || echo "(ninja --version failed rc=$?)"; fi
+          # cmd.exe caps a command line at 8191 chars and ninja spawns through
+          # it. ffmpeg is the only member big enough for that to bite, so
+          # measure rather than assume.
+          if [ -n "$BN" ]; then
+            echo "=== build.ninja size / longest line ==="
+            wc -c "$BN"
+            awk '{ if (length($0) > m) { m = length($0); ml = NR } } END { print "longest line: " m " chars (line " ml ")" }' "$BN"
+          fi
           if [ -n "$BN" ] && [ -n "$NJ" ]; then
+            "$NJ" --version || echo "(ninja --version failed rc=$?)"
             nrc=0
             "$NJ" -C "$(dirname "$BN")" -j2 2>&1 | tail -40 || nrc=$?
             echo "=== manual ninja exit status: $nrc ==="
