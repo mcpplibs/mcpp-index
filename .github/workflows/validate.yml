@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
 
 env:
-  # 0.0.106: SPEC-001 package identity (mcpp#280). `package.name` is a SINGLE
+  # 0.0.107: SPEC-001 package identity (mcpp#280). `package.name` is a SINGLE
   # ATOMIC SEGMENT — all hierarchy lives in `package.namespace` — and mcpp
   # addresses a package by the LITERAL name it read, so descriptors no longer
   # repeat their namespace inside `name`. This index is migrated to the short
@@ -57,7 +57,7 @@ env:
   # 0.0.94 fixed feature-gated `sources` under `mcpp test` (mcpp#218); 0.0.91
   # added standard = "c++fly" to the resolver grammar, so c++fly descriptors
   # get the lint WARN below, not a hard grammar-parse rejection.
-  MCPP_VERSION: "0.0.106"
+  MCPP_VERSION: "0.0.107"
 
 jobs:
   lint:
@@ -103,7 +103,7 @@ jobs:
             # 5. `name` must be a SINGLE ATOMIC SEGMENT; hierarchy belongs in
             #    `namespace` (mcpp SPEC-001 §3.2). The legacy fully-qualified
             #    spelling stays accepted. Cheap second gate: it runs before the
-            #    pinned mcpp is even downloaded, and mcpp >= 0.0.106 enforces
+            #    pinned mcpp is even downloaded, and mcpp >= 0.0.107 enforces
             #    the same rule inside `mcpp xpkg parse`.
             if ! lua5.4 tests/check_package_name.lua "$f"; then
               fail=1
@@ -222,21 +222,21 @@ jobs:
             ext: tar.gz
             mcpp: bin/mcpp
             xlings: registry/bin/xlings
-            mcpp_version: "0.0.106"   # keep in sync with env.MCPP_VERSION
+            mcpp_version: "0.0.107"   # keep in sync with env.MCPP_VERSION
           - platform: macos
             os: macos-15
             suffix: macosx-arm64
             ext: tar.gz
             mcpp: bin/mcpp
             xlings: registry/bin/xlings
-            mcpp_version: "0.0.106"   # keep in sync with env.MCPP_VERSION
+            mcpp_version: "0.0.107"   # keep in sync with env.MCPP_VERSION
           - platform: windows
             os: windows-latest
             suffix: windows-x86_64
             ext: zip
             mcpp: bin/mcpp.exe
             xlings: registry/bin/xlings.exe
-            mcpp_version: "0.0.106"   # keep in sync with env.MCPP_VERSION
+            mcpp_version: "0.0.107"   # keep in sync with env.MCPP_VERSION
     env:
       MCPP_EFFECTIVE: ${{ matrix.mcpp_version }}
     steps:
