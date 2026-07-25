@@ -60,151 +60,6 @@ env:
   MCPP_VERSION: "0.0.107"
 
 jobs:
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install lua
-        run: sudo apt-get install -y --no-install-recommends lua5.4
-      - name: Lint package descriptors
-        run: |
-          fail=0
-          for f in pkgs/*/*.lua; do
-            # 1. Lua syntax check — load (= compile) without executing.
-            #    `loadfile(name, 't')` rejects bytecode and parses text only.
-            if ! lua5.4 -e "assert(loadfile('$f', 't'))" >/dev/null 2>&1; then
-              echo "::error file=$f::lua syntax error"
-              fail=1
-            fi
-            # 2. xpkg V1 baseline: the file has to populate `package = { ... }`
-            #    with at least `spec`, `name`, and an `xpm` table. Form A vs
-            #    Form B (mcpp = "<path>" / mcpp = { ... }) is descriptor-author
-            #    choice and not enforced here.
-            for needle in 'spec *=' 'name *=' 'xpm *='; do
-              if ! grep -q "$needle" "$f"; then
-                echo "::error file=$f::missing required field ($needle)"
-                fail=1
-              fi
-            done
-            # 3. Package version identifiers and dependency versions should be
-            #    bare versions ("1.2.3"), not upstream tag names ("v1.2.3").
-            #    Download URLs may still contain refs/tags/v* when upstream
-            #    uses that tag spelling.
-            if grep -nE '\["v[0-9]+|\["[^"]+"\][[:space:]]*=[[:space:]]*"v[0-9]+' "$f"; then
-              echo "::error file=$f::version identifiers must not use a leading v"
-              fail=1
-            fi
-            # 4. Mirror table sanity: when a download `url` is written as a
-            #    { GLOBAL=..., CN=... } table, both regions must be present and
-            #    the CN entry must point at the gitcode mcpp-res mirror.
-            if ! lua5.4 tests/check_mirror_urls.lua "$f"; then
-              fail=1
-            fi
-            # 5. `name` must be a SINGLE ATOMIC SEGMENT; hierarchy belongs in
-            #    `namespace` (mcpp SPEC-001 §3.2). The legacy fully-qualified
-            #    spelling stays accepted. Cheap second gate: it runs before the
-            #    pinned mcpp is even downloaded, and mcpp >= 0.0.106 enforces
-            #    the same rule inside `mcpp xpkg parse`.
-            if ! lua5.4 tests/check_package_name.lua "$f"; then
-              fail=1
-            fi
-            # 6. c++fly admission policy (mcpp design 2026-07-14 §11-Q2, v1):
-            #    c++fly means "toolchain's latest level + every experimental
-            #    gate" — deliberately toolchain-dependent, so a published
-            #    package built with it is not reproducible for consumers.
-            #    Policy: WARN (never fail) and observe ecosystem usage before
-            #    deciding whether to tighten. Two spellings: `language = ` is
-            #    the descriptor's inline mcpp-segment key; `standard = ` covers
-            #    mcpp.toml content embedded in heredoc/generated_files blocks.
-            if grep -nE '\b(language|standard)[[:space:]]*=[[:space:]]*"c\+\+fly"' "$f" >/dev/null; then
-              echo "::warning file=$f::declares C++ standard \"c++fly\" (experimental playground mode) — toolchain-dependent and non-reproducible for consumers; published packages should pin a concrete standard (c++23/c++26)"
-            fi
-          done
-          [ $fail -eq 0 ] && echo "All package files valid."
-          exit $fail
-      # ── Whole-repository check (needs every descriptor at once) ──────
-      # An install() hook addressing a sibling package does so by
-      # `<namespace>:<literal package.name>`, and a miss returns nil rather
-      # than raising — so a stale spelling surfaces far downstream (a broken
-      # libxcb showed up as a libX11 link error). Verified across the repo
-      # because it needs the full set of declared identities.
-      - name: Lint cross-package references
-        run: lua5.4 tests/check_cross_package_refs.lua pkgs/*/*.lua
-      # ── Single-source-of-truth grammar check ─────────────────────────
-      # `mcpp xpkg parse` uses EXACTLY the resolver's parser, so what
-      # passes here is what builds for users of the pinned MCPP_VERSION.
-      # Strict by default: unknown mcpp-segment keys fail (they would be
-      # silently ignored at build time). This also mechanically enforces
-      # the rollout rule "floor first, new grammar after": descriptors
-      # needing a newer grammar cannot pass a lint pinned to an older mcpp.
-      - name: Download pinned mcpp
-        run: |
-          curl -L -fsS -o mcpp.tar.gz \
-            "https://github.com/mcpp-community/mcpp/releases/download/v${MCPP_VERSION}/mcpp-${MCPP_VERSION}-linux-x86_64.tar.gz"
-          tar -xzf mcpp.tar.gz
-          echo "MCPP=$PWD/mcpp-${MCPP_VERSION}-linux-x86_64/bin/mcpp" >> "$GITHUB_ENV"
-      - name: Parse descriptors with the resolver grammar (mcpp xpkg parse)
-        run: |
-          fail=0
-          for f in pkgs/*/*.lua; do
-            if ! "$MCPP" xpkg parse "$f" > /dev/null; then
-              echo "::error file=$f::mcpp xpkg parse failed (resolver grammar)"
-              fail=1
-            fi
-          done
-          [ $fail -eq 0 ] && echo "All descriptors parse with mcpp ${MCPP_VERSION}."
-          exit $fail
-
-  mirror-cn-reachable:
-    # Closed-loop guard for the CN mirror: every CN url referenced by a
-    # descriptor must be a live, downloadable gitcode release asset.
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install lua
-        run: sudo apt-get install -y --no-install-recommends lua5.4
-      - name: Check CN mirror assets are reachable
-        run: |
-          fail=0
-          # collect unique CN urls across all descriptors
-          : > /tmp/cn.tsv
-          for f in pkgs/*/*.lua; do
-            lua5.4 tests/list_cn_urls.lua "$f" >> /tmp/cn.tsv || true
-          done
-          sort -u /tmp/cn.tsv -o /tmp/cn.tsv
-          total=$(grep -c . /tmp/cn.tsv || true)
-          echo "checking $total CN mirror url(s)"
-          while IFS=$'\t' read -r url sha; do
-            [ -z "$url" ] && continue
-            # follow redirects; gitcode release assets resolve to object storage
-            code=$(curl -fsSL -o /dev/null -w '%{http_code}' --retry 2 --max-time 60 "$url" || echo "000")
-            if [ "$code" != "200" ]; then
-              echo "::error::CN mirror unreachable ($code): $url"
-              fail=1
-            else
-              echo "ok: $url"
-            fi
-          done < /tmp/cn.tsv
-          [ $fail -eq 0 ] && echo "All CN mirror urls reachable."
-          exit $fail
-
-  # ── The whole test surface, as a mcpp workspace ───────────────────────
-  # mcpp-index is a mcpp [workspace]; every per-library test project under
-  # tests/examples/ is a member. `mcpp test --workspace` builds + runs each
-  # member's tests/ (behavioral assertions) on each OS — members self-gate by
-  # `[target.'cfg(...)']` (e.g. the X11/glfw stack is linux-only, openblas is
-  # windows-only), so one command covers the matrix with no shell driver.
-  # The ~/.mcpp/registry cache carries the built compat packages (xpkgs) across
-  # runs, so repeat builds are fast.
-  #
-  # timeout-minutes is sized for the COLD build, not the cached path. The opencv
-  # module package carries a from-source OpenCV 5 build, and each feature variant
-  # re-keys the store into a full recompile, so a full run (forced whenever this
-  # workflow file changes — e.g. a version bump) serially builds three OpenCV
-  # variants on one runner: the opencv-module base member plus the `unifont` and
-  # `dnn` feature members. The registry cache (restore-keys prefix below)
-  # amortizes those across subsequent runs. 150 covers the one-time cold full
-  # build with headroom; it is a ceiling, not a target.
   workspace:
     name: workspace (${{ matrix.platform }})
     runs-on: ${{ matrix.os }}
@@ -213,30 +68,16 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Archive names are derived from env.MCPP_VERSION in the Download
-          # step — bumping the pin is a ONE-line change (hardcoded versions
-          # here once 404'd a pin bump).
-          - platform: linux
-            os: ubuntu-latest
-            suffix: linux-x86_64
-            ext: tar.gz
-            mcpp: bin/mcpp
-            xlings: registry/bin/xlings
-            mcpp_version: "0.0.107"   # keep in sync with env.MCPP_VERSION
-          - platform: macos
-            os: macos-15
-            suffix: macosx-arm64
-            ext: tar.gz
-            mcpp: bin/mcpp
-            xlings: registry/bin/xlings
-            mcpp_version: "0.0.107"   # keep in sync with env.MCPP_VERSION
+          # PROBE: only Windows, and pinned to the instrumented debug build
+          # published by mcpp's debug-win workflow (branch
+          # debug/win127-instrumentation, prerelease tag v0.0.107-dbg).
           - platform: windows
             os: windows-latest
             suffix: windows-x86_64
             ext: zip
             mcpp: bin/mcpp.exe
             xlings: registry/bin/xlings.exe
-            mcpp_version: "0.0.107"   # keep in sync with env.MCPP_VERSION
+            mcpp_version: "0.0.107-dbg"
     env:
       MCPP_EFFECTIVE: ${{ matrix.mcpp_version }}
     steps:
@@ -360,71 +201,8 @@ jobs:
           MCPP_INDEX_MIRROR: GLOBAL
         run: |
           "$MCPP" --version
-          # PROBE (do not merge): the Windows job dies with a bare 127 the
-          # instant compat:ffmpeg finishes downloading, printing nothing. Run
-          # that one member on its own, keep the shell alive past the failure,
-          # and record the exit status plus free disk on either side.
-          echo "=== free space before ==="; df -h . || true
+          echo "=== ffmpeg member, instrumented ==="
           rc=0
-          "$MCPP" test -p tests/examples/ffmpeg || rc=$?
+          "$MCPP" test -p tests/examples/ffmpeg 2>&1 | tail -120 || rc=$?
           echo "=== ffmpeg member exit status: $rc ==="
-          echo "=== free space after ==="; df -h . || true
-          # mcpp returns the xlings child's exit code, so 127 may well be
-          # xlings'. Drive xlings directly on the same package and show what it
-          # says — mcpp swallows the child's stderr on this path.
-          # MCPP_VERBOSE=1 prints the exact xlings invocation (xlings.cppm:923).
-          # This path otherwise swallows the child's stderr, which is why the
-          # 127 arrives with no output at all.
-          echo "=== retry under MCPP_VERBOSE ==="
-          vrc=0
-          MCPP_VERBOSE=1 "$MCPP" test -p tests/examples/ffmpeg 2>&1 | tail -60 || vrc=$?
-          echo "=== verbose retry exit status: $vrc ==="
-          # Third attempt. The two before this failed on my own path mistakes
-          # (a relative ninja path, then looking under $HOME instead of the
-          # extracted release, which is the registry mcpp actually uses). List
-          # every candidate this time and require an absolute one.
-          echo "=== ninja candidates ==="
-          find "$PWD" "$HOME" -name 'ninja.exe' 2>/dev/null | head -5
-          NJ=$(find "$PWD" "$HOME" -name 'ninja.exe' 2>/dev/null | head -1)
-          BN=$(find "$PWD/tests/examples/ffmpeg/target" -maxdepth 3 -name build.ninja 2>/dev/null | head -1)
-          echo "build.ninja: $BN"
-          echo "ninja:       $NJ"
-          # cmd.exe caps a command line at 8191 chars and ninja spawns through
-          # it. ffmpeg is the only member big enough for that to bite, so
-          # measure rather than assume.
-          if [ -n "$BN" ]; then
-            echo "=== build.ninja size / longest line ==="
-            wc -c "$BN"
-            awk '{ if (length($0) > m) { m = length($0); ml = NR } } END { print "longest line: " m " chars (line " ml ")" }' "$BN"
-          fi
-          if [ -n "$BN" ] && [ -n "$NJ" ]; then
-            "$NJ" --version || echo "(ninja --version failed rc=$?)"
-            nrc=0
-            "$NJ" -C "$(dirname "$BN")" -j2 2>&1 | tail -40 || nrc=$?
-            echo "=== manual ninja exit status: $nrc ==="
-          fi
-          echo "=== locating xlings ==="
-          XL=$(find . "$HOME" -name 'xlings.exe' -path '*registry/bin*' 2>/dev/null | head -1)
-          echo "xlings: $XL"
-          if [ -n "$XL" ]; then
-            "$XL" --version || true
-            xrc=0
-            "$XL" install "compat:ffmpeg@8.1.2" -y || xrc=$?
-            echo "=== xlings direct exit status: $xrc ==="
-          fi
           exit $rc
-          # No `timeout` wrapper: absent on macOS runners; job-level timeout-minutes bounds it.
-          if [ "$MEMBERS" = "__ALL__" ]; then
-            "$MCPP" test --workspace
-          elif [ -z "$MEMBERS" ]; then
-            echo "No workspace member affected by this change — nothing to test."
-          else
-            rc=0
-            for m in $MEMBERS; do
-              echo "::group::mcpp test -p $m"
-              "$MCPP" test -p "$m" || rc=1
-              echo "::endgroup::"
-            done
-            exit $rc
-          fi
-
