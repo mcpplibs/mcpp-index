@@ -302,8 +302,8 @@ jobs:
           full() { echo "MEMBERS=__ALL__" >> "$GITHUB_ENV"; echo "full run: $1"; exit 0; }
           [ "${{ github.event_name }}" = "pull_request" ] || full "event=${{ github.event_name }}"
           base="origin/${{ github.base_ref }}"
-          renamed_or_copied=$(git diff --find-renames --find-copies --name-status "$base"...HEAD | \
-            awk '$1 ~ /^[RC]/ && !found { line=$0; found=1 } END { if (found) print line }')
+          renamed_or_copied=$(git diff --find-renames --find-copies \
+            --diff-filter=RC --name-status "$base"...HEAD)
           [ -z "$renamed_or_copied" ] || full "renamed/copied path: $renamed_or_copied"
           changed=$(git diff --name-only "$base"...HEAD)
           printf 'changed files vs %s:\n%s\n' "$base" "$changed"

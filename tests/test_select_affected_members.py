@@ -137,7 +137,11 @@ class TestLlamacppCohortSelection(unittest.TestCase):
 
             self.assertIn("MEMBERS=__ALL__", github_env.read_text().splitlines())
 
-    def test_renamed_path_forces_full_run(self):
+    def test_renamed_path_forces_full_run_without_pipeline(self):
+        script = workflow_selector_script()
+        self.assertIn("--diff-filter=RC --name-status", script)
+        self.assertNotIn("awk '$1 ~ /^[RC]/", script)
+
         with tempfile.TemporaryDirectory() as td:
             repo = Path(td)
             for member in ("a", "b"):
@@ -151,12 +155,8 @@ class TestLlamacppCohortSelection(unittest.TestCase):
                     "tests/examples/b",
                 ]
             """))
-            sources = repo / "tests/examples/a/sources"
-            sources.mkdir()
-            for index in range(3000):
-                (sources / f"source_{index:04d}.cpp").write_text(
-                    f"int value_{index} = {index};\n"
-                )
+            source = repo / "tests/examples/a/x.cpp"
+            source.write_text("int value = 1;\n")
             subprocess.run(["git", "init", "-q"], cwd=repo, check=True)
             subprocess.run(["git", "add", "."], cwd=repo, check=True)
             subprocess.run([
@@ -164,8 +164,8 @@ class TestLlamacppCohortSelection(unittest.TestCase):
                 "user.email=test@example.com", "commit", "-qm", "base",
             ], cwd=repo, check=True)
             subprocess.run([
-                "git", "mv", "tests/examples/a/sources",
-                "tests/examples/b/sources",
+                "git", "mv", "tests/examples/a/x.cpp",
+                "tests/examples/b/x.cpp",
             ], cwd=repo, check=True)
             subprocess.run([
                 "git", "-c", "user.name=Test", "-c",
