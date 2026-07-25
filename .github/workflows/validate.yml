@@ -372,6 +372,13 @@ jobs:
           # mcpp returns the xlings child's exit code, so 127 may well be
           # xlings'. Drive xlings directly on the same package and show what it
           # says — mcpp swallows the child's stderr on this path.
+          # MCPP_VERBOSE=1 prints the exact xlings invocation (xlings.cppm:923).
+          # This path otherwise swallows the child's stderr, which is why the
+          # 127 arrives with no output at all.
+          echo "=== retry under MCPP_VERBOSE ==="
+          vrc=0
+          MCPP_VERBOSE=1 "$MCPP" test -p tests/examples/ffmpeg 2>&1 | tail -60 || vrc=$?
+          echo "=== verbose retry exit status: $vrc ==="
           echo "=== locating xlings ==="
           XL=$(find . "$HOME" -name 'xlings.exe' -path '*registry/bin*' 2>/dev/null | head -1)
           echo "xlings: $XL"
