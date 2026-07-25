@@ -1,13 +1,24 @@
 /// Internal CPU smoke test — loads pinned GGUF, decodes one batch, samples.
 /// Requires LLAMACPP_TEST_MODEL env var pointing to a valid GGUF file.
 
-#include <llama.h>
+import llama;
+
+#ifdef LLAMA_H
+#error "import llama leaked LLAMA_H"
+#endif
+
+#ifdef LLAMA_API
+#error "import llama leaked LLAMA_API"
+#endif
 
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
 
 int main() {
+    static_assert(LLAMA_DEFAULT_SEED == 0xFFFFFFFFu);
+    static_assert(LLAMA_TOKEN_NULL == llama_token{-1});
+
     const char *model_path = std::getenv("LLAMACPP_TEST_MODEL");
     if (!model_path || !*model_path) {
         std::fprintf(stderr, "LLAMACPP_TEST_MODEL not set or empty\n");

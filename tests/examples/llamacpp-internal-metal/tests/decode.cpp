@@ -6,6 +6,16 @@
 
 #ifdef LLAMACPP_METAL_TEST
 
+import llama;
+
+#ifdef LLAMA_H
+#error "import llama leaked LLAMA_H"
+#endif
+
+#ifdef LLAMA_API
+#error "import llama leaked LLAMA_API"
+#endif
+
 #include <ggml-alloc.h>
 #include <ggml-backend.h>
 #include <ggml.h>

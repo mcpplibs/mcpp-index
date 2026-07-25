@@ -3,7 +3,7 @@ name    = "llamacpp-internal-cpu"
 version = "0.1.0"
 
 [indices]
-compat = { path = "../../.." }
+ggml-org = { path = "../../.." }
 
-[dependencies.compat]
+[dependencies.ggml-org]
 llamacpp = "b10069"

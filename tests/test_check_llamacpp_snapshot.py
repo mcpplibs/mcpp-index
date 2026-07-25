@@ -1,4 +1,4 @@
-"""Mutation tests for the llama.cpp descriptor cohort gate."""
+"""Mutation tests for the ggml-org.llamacpp llama.cpp snapshot gate."""
 from __future__ import annotations
 
 import copy
@@ -32,223 +32,217 @@ class TestLlamacppSnapshotMutations(unittest.TestCase):
 
     def assert_rejected(self, function, pattern):
         with self.assertRaisesRegex(checker.CheckError, pattern):
-            function(self.descriptors, self.report)
+            if function is checker.check_dependencies:
+                function(self.descriptors, self.tag)
+            elif function in (checker.check_cpu_private_macros,
+                              checker.check_module_contract):
+                function(self.descriptors)
+            else:
+                function(self.descriptors, self.report)
 
-    def test_rejects_cn_url_drift(self):
-        release = self.descriptors["compat.ggml-base"]["xpm"]["linux"][self.tag]
-        release["url"]["CN"] = "https://example.invalid/mutated.tar.gz"
+    def test_uses_one_llamacpp_descriptor(self):
+        self.assertEqual(
+            checker.DESCRIPTORS,
+            {"ggml-org.llamacpp": checker.ROOT / "pkgs/g/ggml-org.llamacpp.lua"},
+        )
+        for removed in (
+            "compat.ggml-base.lua",
+            "compat.ggml-cpu.lua",
+            "compat.ggml-metal.lua",
+        ):
+            self.assertFalse((checker.ROOT / "pkgs/c" / removed).exists())
+
+    def test_rejects_cn_url_before_mirror_is_published(self):
+        release = self.descriptors["ggml-org.llamacpp"]["xpm"]["linux"][self.tag]
+        release["url"] = {
+            "GLOBAL": release["url"],
+            "CN": "https://gitcode.com/mcpp-res/llamacpp/releases/download/"
+                    f"{self.tag}/llama.cpp-{self.tag}.tar.gz",
+        }
         self.assert_rejected(checker.check_cohort, "URL")
 
-    def test_rejects_missing_required_dependency_edge(self):
-        del self.descriptors["compat.ggml-cpu"]["mcpp"]["deps"]["compat.ggml-base"]
-        with self.assertRaisesRegex(checker.CheckError, "dependency graph"):
-            checker.check_dependencies(self.descriptors, self.tag)
-
-    def test_rejects_extra_dependency_edge(self):
-        self.descriptors["compat.llamacpp"]["mcpp"]["deps"]["compat.ggml-metal"] = self.tag
-        with self.assertRaisesRegex(checker.CheckError, "dependency graph"):
-            checker.check_dependencies(self.descriptors, self.tag)
-
-    def test_rejects_dependency_under_arbitrary_feature(self):
-        base = self.descriptors["compat.ggml-base"]["mcpp"]
-        base.setdefault("features", {})["arbitrary"] = {
-            "deps": {"compat.ggml-cpu": self.tag},
+    def test_rejects_component_dependency(self):
+        self.descriptors["ggml-org.llamacpp"]["mcpp"]["deps"] = {
+            "compat.ggml-base": self.tag,
         }
-        with self.assertRaisesRegex(checker.CheckError, "feature dependency"):
-            checker.check_dependencies(self.descriptors, self.tag)
+        self.assert_rejected(checker.check_dependencies, "component packages")
 
-    def test_requires_exact_optional_metal_dependency(self):
-        feature = self.descriptors["compat.llamacpp"]["mcpp"]["macosx"]["features"]["backend-metal"]
-        del feature["deps"]["compat.ggml-metal"]
-        with self.assertRaisesRegex(checker.CheckError, "feature dependency"):
-            checker.check_dependencies(self.descriptors, self.tag)
+    def test_rejects_feature_provider_dependency(self):
+        feature = self.descriptors["ggml-org.llamacpp"]["mcpp"]["features"]["backend-metal"]
+        feature["deps"] = {"compat.ggml-metal": self.tag}
+        self.assert_rejected(checker.check_dependencies, "in-package feature")
 
-    def test_rejects_duplicate_tu_within_one_descriptor(self):
-        sources = self.descriptors["compat.llamacpp"]["mcpp"]["sources"]
+    def test_rejects_provider_capability(self):
+        self.descriptors["ggml-org.llamacpp"]["mcpp"]["provides"] = {1: "ggml.accelerator"}
+        self.assert_rejected(checker.check_dependencies, "provider capabilities")
+
+    def test_rejects_missing_default_translation_unit(self):
+        sources = self.descriptors["ggml-org.llamacpp"]["mcpp"]["sources"]
+        source = "*/ggml/src/ggml-cpu/ops.cpp"
+        key = next(key for key, value in sources.items() if value == source)
+        del sources[key]
+        remaining = [sources[key] for key in sorted(sources)]
+        sources.clear()
+        sources.update(enumerate(remaining, start=1))
+        self.assert_rejected(checker.check_sources, r"default TU set drift.*ops\.cpp")
+
+    def test_rejects_missing_cpu_architecture_translation_unit(self):
+        sources = self.descriptors["ggml-org.llamacpp"]["mcpp"]["linux"]["sources"]
+        del sources[max(sources)]
+        self.assert_rejected(checker.check_sources, "default TU set drift")
+
+    def test_rejects_cpu_translation_unit_in_disabled_feature(self):
+        mcpp = self.descriptors["ggml-org.llamacpp"]["mcpp"]
+        source = "*/ggml/src/ggml-cpu/ops.cpp"
+        sources = mcpp["sources"]
+        key = next(key for key, value in sources.items() if value == source)
+        del sources[key]
+        remaining = [sources[key] for key in sorted(sources)]
+        sources.clear()
+        sources.update(enumerate(remaining, start=1))
+        mcpp["features"]["parked"] = {"sources": {1: source}}
+        self.assert_rejected(checker.check_sources, r"default TU set drift.*ops\.cpp")
+
+    def test_rejects_default_metal_source(self):
+        sources = self.descriptors["ggml-org.llamacpp"]["mcpp"]["sources"]
+        sources[max(sources) + 1] = "*/ggml/src/ggml-metal/ggml-metal.cpp"
+        self.assert_rejected(checker.check_sources, "default TU set drift")
+
+    def test_rejects_missing_metal_translation_unit(self):
+        feature = self.descriptors["ggml-org.llamacpp"]["mcpp"]["features"]["backend-metal"]
+        del feature["sources"][max(feature["sources"])]
+        self.assert_rejected(checker.check_sources, "Metal TU set drift")
+
+    def test_rejects_duplicate_metal_translation_unit(self):
+        sources = self.descriptors["ggml-org.llamacpp"]["mcpp"]["features"]["backend-metal"]["sources"]
+        sources[max(sources) + 1] = "*/ggml/src/ggml-metal/ggml-metal.cpp"
+        self.assert_rejected(checker.check_sources, "duplicate Metal TU")
+
+    def test_rejects_duplicate_translation_unit(self):
+        sources = self.descriptors["ggml-org.llamacpp"]["mcpp"]["sources"]
         sources[max(sources) + 1] = "*/ggml/src/ggml-backend-reg.cpp"
         self.assert_rejected(checker.check_sources, "duplicate")
 
-    def test_rejects_cpu_translation_unit_parked_in_disabled_feature(self):
-        cpu = self.descriptors["compat.ggml-cpu"]["mcpp"]
-        sources = cpu["sources"]
-        source = "*/ggml/src/ggml-cpu/ops.cpp"
-        remaining = [value for _, value in sorted(sources.items()) if value != source]
-        sources.clear()
-        sources.update(enumerate(remaining, start=1))
-        cpu["features"]["parked"] = {"sources": {1: source}}
+    def test_rejects_model_wildcard(self):
+        sources = self.descriptors["ggml-org.llamacpp"]["mcpp"]["sources"]
+        key = next(key for key, value in sources.items() if value == "*/src/models/afmoe.cpp")
+        sources[key] = "*/src/models/*.cpp"
+        self.assert_rejected(checker.check_sources, "wildcard source")
 
-        with self.assertRaisesRegex(checker.CheckError, r"CPU TU set drift.*ops\.cpp"):
-            checker.check_sources(self.descriptors, self.report)
+    def test_rejects_backend_metal_on_platform_scope(self):
+        mcpp = self.descriptors["ggml-org.llamacpp"]["mcpp"]
+        mcpp.setdefault("linux", {})["features"] = {"backend-metal": {}}
+        self.assert_rejected(checker.check_registry_and_features, "feature placement")
 
-    def test_rejects_cpu_translation_unit_on_default_feature(self):
-        cpu = self.descriptors["compat.ggml-cpu"]["mcpp"]
-        sources = cpu["sources"]
-        source = "*/ggml/src/ggml-cpu/ops.cpp"
-        remaining = [value for _, value in sorted(sources.items()) if value != source]
-        sources.clear()
-        sources.update(enumerate(remaining, start=1))
-        cpu["features"]["default"]["sources"] = {1: source}
+    def test_rejects_backend_feature_contract_drift(self):
+        mutations = (
+            ("missing CPU", lambda features: features.pop("backend-cpu")),
+            ("extra feature", lambda features: features.update({"backend-cuda": {}})),
+            ("non-CPU default", lambda features: features["default"].update(
+                {"implies": {1: "backend-metal"}})),
+        )
+        for label, mutate in mutations:
+            mutated = copy.deepcopy(self.descriptors)
+            mutate(mutated["ggml-org.llamacpp"]["mcpp"]["features"])
+            with self.subTest(label=label):
+                with self.assertRaisesRegex(checker.CheckError, "CPU and Metal|select backend-cpu"):
+                    checker.check_registry_and_features(mutated, self.report)
 
-        with self.assertRaisesRegex(checker.CheckError, r"CPU TU set drift.*ops\.cpp"):
-            checker.check_sources(self.descriptors, self.report)
+    def test_rejects_registry_macro_outside_registry_source(self):
+        flags = self.descriptors["ggml-org.llamacpp"]["mcpp"]["flags"]
+        flags[max(flags) + 1] = {"glob": "*/src/llama.cpp", "defines": {1: "GGML_USE_CPU"}}
+        self.assert_rejected(checker.check_registry_and_features, "one registry-only owner")
 
-    def test_rejects_cpu_translation_unit_when_default_implies_is_removed(self):
-        cpu = self.descriptors["compat.ggml-cpu"]["mcpp"]
-        del cpu["features"]["default"]["implies"]
+    def test_rejects_cpu_repack_macro_removal(self):
+        flags = self.descriptors["ggml-org.llamacpp"]["mcpp"]["cflags"]
+        remaining = [value for _, value in sorted(flags.items())
+                     if value != "-DGGML_USE_CPU_REPACK"]
+        flags.clear()
+        flags.update(enumerate(remaining, start=1))
+        self.assert_rejected(checker.check_cpu_private_macros, "CPU repack")
 
-        with self.assertRaisesRegex(
-                checker.CheckError, r"CPU TU set drift.*llamafile/sgemm\.cpp"):
-            checker.check_sources(self.descriptors, self.report)
+    def test_rejects_llamafile_macro_removal(self):
+        flags = self.descriptors["ggml-org.llamacpp"]["mcpp"]["flags"]
+        key = next(key for key, value in flags.items()
+                   if value.get("glob") == "*/ggml/src/ggml-cpu/**")
+        del flags[key]
+        remaining = [flags[key] for key in sorted(flags)]
+        flags.clear()
+        flags.update(enumerate(remaining, start=1))
+        self.assert_rejected(checker.check_cpu_private_macros, "llamafile")
 
-    def test_rejects_unknown_default_implied_feature(self):
-        cpu = self.descriptors["compat.ggml-cpu"]["mcpp"]
-        cpu["features"]["default"]["implies"] = {1: "missing-feature"}
+    def test_rejects_generated_module_drift(self):
+        generated = self.descriptors["ggml-org.llamacpp"]["mcpp"]["generated_files"]
+        generated["mcpp_generated/llama.cppm"] += "\n// drift\n"
+        self.assert_rejected(checker.check_module_contract, "generated module input drift")
 
-        with self.assertRaisesRegex(
-                checker.CheckError, "implies unknown feature: missing-feature"):
-            checker.check_sources(self.descriptors, self.report)
+    def test_rejects_module_name_drift(self):
+        self.descriptors["ggml-org.llamacpp"]["mcpp"]["modules"] = {1: "wrong"}
+        self.assert_rejected(checker.check_module_contract, "exactly the llama module")
 
-    def test_rejects_scalar_default_implies(self):
-        cpu = self.descriptors["compat.ggml-cpu"]["mcpp"]
-        cpu["features"]["default"]["implies"] = "llamafile"
-
-        with self.assertRaisesRegex(checker.CheckError, "implies must be a Lua array"):
-            checker.check_sources(self.descriptors, self.report)
-
-    def test_accepts_platform_sources_appended_to_default_feature(self):
-        cpu = self.descriptors["compat.ggml-cpu"]["mcpp"]
-        implies = cpu["features"]["default"]["implies"]
-        implies[max(implies) + 1] = "arch-default"
-        cpu["features"]["arch-default"] = {}
-        platform_sources = {
-            "linux": "*/ggml/src/ggml-cpu/arch/x86/quants.c",
-            "macosx": "*/ggml/src/ggml-cpu/arch/arm/quants.c",
-            "windows": "*/ggml/src/ggml-cpu/arch/x86/repack.cpp",
+    def test_rejects_extra_target(self):
+        self.descriptors["ggml-org.llamacpp"]["mcpp"]["targets"]["extra"] = {
+            "kind": "lib",
         }
-        for platform, source in platform_sources.items():
-            sources = cpu[platform]["sources"]
-            remaining = [value for _, value in sorted(sources.items()) if value != source]
-            sources.clear()
-            sources.update(enumerate(remaining, start=1))
-            features = cpu[platform].setdefault("features", {})
-            features["arch-default"] = {"sources": {1: source}}
-
-        checker.check_sources(self.descriptors, self.report)
-
-    def test_rejects_missing_cpu_translation_units(self):
-        mutations = {
-            "*/ggml/src/ggml-cpu/ops.cpp": "common",
-            "*/ggml/src/ggml-cpu/arch/x86/quants.c": "linux",
-            "*/ggml/src/ggml-cpu/arch/arm/quants.c": "macosx",
-        }
-        for source, scope in mutations.items():
-            with self.subTest(source=source, scope=scope):
-                self.descriptors = copy.deepcopy(self.original)
-                mcpp = self.descriptors["compat.ggml-cpu"]["mcpp"]
-                sources = mcpp["sources"] if scope == "common" else mcpp[scope]["sources"]
-                key = next(key for key, value in sources.items() if value == source)
-                del sources[key]
-                remaining = [sources[key] for key in sorted(sources)]
-                sources.clear()
-                sources.update(enumerate(remaining, start=1))
-                with self.assertRaisesRegex(checker.CheckError, "ggml_cpu"):
-                    checker.check_sources(self.descriptors, self.report)
-
-    def test_rejects_cpu_translation_units_from_the_wrong_architecture(self):
-        mutations = {
-            "linux": "*/ggml/src/ggml-cpu/arch/arm/quants.c",
-            "macosx": "*/ggml/src/ggml-cpu/arch/x86/quants.c",
-            "windows": "*/ggml/src/ggml-cpu/arch/arm/quants.c",
-        }
-        for platform, source in mutations.items():
-            with self.subTest(platform=platform, source=source):
-                self.descriptors = copy.deepcopy(self.original)
-                sources = self.descriptors["compat.ggml-cpu"]["mcpp"][platform]["sources"]
-                sources[max(sources) + 1] = source
-                with self.assertRaisesRegex(checker.CheckError, "CPU TU set drift"):
-                    checker.check_sources(self.descriptors, self.report)
-
-    def test_rejects_backend_metal_on_another_descriptor(self):
-        base = self.descriptors["compat.ggml-base"]["mcpp"]
-        base.setdefault("features", {})["backend-metal"] = {}
-        self.assert_rejected(checker.check_registry_and_features, "backend-metal")
-
-    def test_rejects_backend_metal_in_scope_without_xpm(self):
-        metal = self.descriptors["compat.ggml-metal"]["mcpp"]
-        metal.setdefault("linux", {}).setdefault("features", {})["backend-metal"] = {}
-        self.assert_rejected(checker.check_registry_and_features, "backend-metal")
-
-    def test_rejects_llamafile_in_another_package_compile_flags(self):
-        flags = self.descriptors["compat.ggml-base"]["mcpp"]["cxxflags"]
-        flags[max(flags) + 1] = "-DGGML_USE_LLAMAFILE"
-        with self.assertRaisesRegex(checker.CheckError, "GGML_USE_LLAMAFILE"):
-            checker.check_cpu_private_macros(self.descriptors)
-
-    def test_rejects_cpu_repack_in_another_package_compile_flags(self):
-        flags = self.descriptors["compat.llamacpp"]["mcpp"]["cflags"]
-        flags[max(flags) + 1] = "-DGGML_USE_CPU_REPACK"
-        with self.assertRaisesRegex(checker.CheckError, "GGML_USE_CPU_REPACK"):
-            checker.check_cpu_private_macros(self.descriptors)
-
-    def test_rejects_registry_macro_in_raw_compile_flags(self):
-        flags = self.descriptors["compat.ggml-base"]["mcpp"]["cxxflags"]
-        flags[max(flags) + 1] = "-DGGML_USE_CPU"
-        with self.assertRaisesRegex(checker.CheckError, "GGML_USE_CPU"):
-            checker.check_cpu_private_macros(self.descriptors)
-
-    def test_rejects_implementation_macro_in_public_defines(self):
-        self.descriptors["compat.ggml-base"]["mcpp"]["public_defines"] = {
-            1: "GGML_USE_LLAMAFILE",
-        }
-        with self.assertRaisesRegex(checker.CheckError, "GGML_USE_LLAMAFILE"):
-            checker.check_cpu_private_macros(self.descriptors)
-
-    def test_rejects_split_dash_d_macro(self):
-        flags = self.descriptors["compat.ggml-base"]["mcpp"]["cxxflags"]
-        flags[max(flags) + 1] = "-D"
-        flags[max(flags) + 1] = "GGML_USE_LLAMAFILE"
-        with self.assertRaisesRegex(checker.CheckError, "GGML_USE_LLAMAFILE"):
-            checker.check_cpu_private_macros(self.descriptors)
-
-    def test_rejects_windows_value_macro(self):
-        flags = self.descriptors["compat.ggml-base"]["mcpp"]["cxxflags"]
-        flags[max(flags) + 1] = "/DGGML_USE_CPU_REPACK=1"
-        with self.assertRaisesRegex(checker.CheckError, "GGML_USE_CPU_REPACK"):
-            checker.check_cpu_private_macros(self.descriptors)
+        self.assert_rejected(checker.check_module_contract, "exactly one llama target")
 
     def test_rejects_absolute_xcode_metal_tool_paths(self):
+        generated = self.descriptors["ggml-org.llamacpp"]["mcpp"]["generated_files"]
         for tool in ("/usr/bin/xcrun", "/usr/bin/metal", "/usr/bin/metallib"):
+            mutated = copy.deepcopy(self.descriptors)
+            mutated["ggml-org.llamacpp"]["mcpp"]["generated_files"]["build.mcpp"] += (
+                f"\n// {tool}\n"
+            )
             with self.subTest(tool=tool):
-                self.descriptors = copy.deepcopy(self.original)
-                generated = self.descriptors["compat.ggml-metal"]["mcpp"]["generated_files"]
-                generated["build.mcpp"] += f"\n// {tool}\n"
-                with self.assertRaisesRegex(
-                        checker.CheckError, "absolute Xcode Metal tool path"):
-                    checker.check_metal_build_contract(self.descriptors, self.report)
+                with self.assertRaisesRegex(checker.CheckError, "absolute Xcode Metal tool path"):
+                    checker.check_metal_build_contract(mutated, self.report)
+        self.assertTrue(generated["build.mcpp"])
 
     def test_rejects_process_launch_apis_in_metal_generator(self):
         calls = (
-            'std::system("/Applications/Xcode.app/.../metal")',
+            'std::system("metal")',
             'popen("metal", "r")',
-            'execl("/usr/bin/" "xcrun", "xcrun", "metal", nullptr)',
+            'execl("xcrun", "xcrun", "metal", nullptr)',
             'posix_spawn(...)',
         )
         for call in calls:
             with self.subTest(call=call):
-                self.descriptors = copy.deepcopy(self.original)
-                generated = self.descriptors["compat.ggml-metal"]["mcpp"]["generated_files"]
-                generated["build.mcpp"] += f"\n{call};\n"
+                mutated = copy.deepcopy(self.descriptors)
+                mutated["ggml-org.llamacpp"]["mcpp"]["generated_files"]["build.mcpp"] += (
+                    f"\n{call};\n"
+                )
                 with self.assertRaisesRegex(checker.CheckError, "process launch API"):
-                    checker.check_metal_build_contract(self.descriptors, self.report)
+                    checker.check_metal_build_contract(mutated, self.report)
 
-    def test_workflow_runs_checker_mutation_suite(self):
+    def test_rejects_missing_metal_feature_gate(self):
+        mutated = copy.deepcopy(self.descriptors)
+        source = mutated["ggml-org.llamacpp"]["mcpp"]["generated_files"]["build.mcpp"]
+        mutated["ggml-org.llamacpp"]["mcpp"]["generated_files"]["build.mcpp"] = source.replace(
+            '    const char * enabled = std::getenv("MCPP_FEATURE_BACKEND_METAL");\n'
+            '    if (!enabled || std::string(enabled) != "1") return 0;\n',
+            "",
+        )
+        with self.assertRaisesRegex(checker.CheckError, "must no-op"):
+            checker.check_metal_build_contract(mutated, self.report)
+
+    def test_rejects_missing_feature_whitelist(self):
+        mutated = copy.deepcopy(self.descriptors)
+        source = mutated["ggml-org.llamacpp"]["mcpp"]["generated_files"]["build.mcpp"]
+        mutated["ggml-org.llamacpp"]["mcpp"]["generated_files"]["build.mcpp"] = source.replace(
+            "    if (int result = validate_features(); result != 0) return result;\n",
+            "",
+        )
+        with self.assertRaisesRegex(checker.CheckError, "must reject undeclared feature"):
+            checker.check_metal_build_contract(mutated, self.report)
+
+    def test_workflow_runs_snapshot_and_selection_suites(self):
         workflow = checker.ROOT / ".github/workflows/validate.yml"
         ruby = r'''
 doc = YAML.load_file(ARGV[0])
 step = doc.fetch('jobs').fetch('lint').fetch('steps').find do |item|
-  item['name'] == 'Check llama.cpp snapshot cohort'
+  item['name'] == 'Check ggml-org.llamacpp snapshot'
 end
-abort 'snapshot cohort step missing' unless step
+abort 'snapshot check step missing' unless step
 puts step.fetch('run')
 '''
         result = subprocess.run(
@@ -256,79 +250,19 @@ puts step.fetch('run')
             text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
         )
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn(
-            "python3 -m unittest tests/test_check_llamacpp_snapshot.py -v",
-            result.stdout,
-        )
-        self.assertIn(
-            "python3 -m unittest tests/test_select_affected_members.py -v",
-            result.stdout,
-        )
+        self.assertIn("python3 -m unittest tools/llamacpp/test_gen_exports.py -v", result.stdout)
+        self.assertIn("python3 -m unittest tests/test_check_llamacpp_snapshot.py -v", result.stdout)
+        self.assertIn("python3 -m unittest tests/test_select_affected_members.py -v", result.stdout)
+        self.assertIn("python3 tools/llamacpp/audit_snapshot.py", result.stdout)
+        self.assertIn("python3 tests/check_llamacpp_snapshot.py", result.stdout)
 
-        workflow_text = workflow.read_text()
-        self.assertIn("actions/setup-python@v5", workflow_text)
-        self.assertIn('python-version: "3.12"', workflow_text)
-        self.assertIn(
-            "if ! selected=$(python tools/select_affected_members.py",
-            workflow_text,
-        )
-        self.assertIn("for m in $selected; do", workflow_text)
-        self.assertIn("python tests/fetch_llamacpp_model.py", workflow_text)
-        self.assertIn('"tools/**"', workflow_text)
-        self.assertIn("Install Xcode Metal toolchain guard", workflow_text)
-        self.assertIn("metal|metallib)", workflow_text)
-        self.assertIn('exec /usr/bin/xcrun "$@"', workflow_text)
-        self.assertIn('"$guard_dir/metal" "$guard_dir/metallib"', workflow_text)
-        self.assertIn("Verify Xcode Metal toolchain was not invoked", workflow_text)
-        self.assertIn("always() && matrix.platform == 'macos'", workflow_text)
-        self.assertIn('test ! -s "$MCPP_XCODE_METAL_GUARD_LOG"', workflow_text)
-
-    def test_internal_metal_member_is_wired_into_workspace_and_ci(self):
+    def test_metal_member_consumes_merged_package(self):
         root_manifest = (checker.ROOT / "mcpp.toml").read_text()
         metal_manifest = checker.ROOT / "tests/examples/llamacpp-internal-metal/mcpp.toml"
-        metal_test = checker.ROOT / "tests/examples/llamacpp-internal-metal/tests/decode.cpp"
         self.assertIn('"tests/examples/llamacpp-internal-metal"', root_manifest)
-        self.assertTrue(metal_manifest.is_file())
-        self.assertTrue(metal_test.is_file())
-
-        manifest_text = metal_manifest.read_text()
-        test_text = metal_test.read_text()
-        self.assertIn('cfg(all(macos, arch = "aarch64"))', manifest_text)
-        self.assertIn('features = ["backend-metal"]', manifest_text)
-        self.assertIn("LLAMACPP_METAL_TEST", manifest_text)
-        self.assertIn("llama_supports_gpu_offload", test_text)
-        self.assertIn("ggml_backend_reg_by_name", test_text)
-        self.assertIn("#include <ggml-alloc.h>", test_text)
-        self.assertIn("run_metal_add_probe", test_text)
-        self.assertIn("ggml_backend_dev_init", test_text)
-        self.assertIn("ggml_backend_alloc_ctx_tensors", test_text)
-        self.assertIn("ggml_backend_graph_compute", test_text)
-        self.assertIn("ggml_backend_synchronize", test_text)
-        self.assertIn("ggml_backend_tensor_get", test_text)
-        self.assertIn("GGML_STATUS_SUCCESS", test_text)
-        self.assertRegex(
-            test_text,
-            r'''(?m)^    if \(!run_metal_add_probe\(device\)\) \{\n        llama_backend_free\(\);\n        return fail\("MTL F32 ADD graph did not execute correctly"\);\n    \}$''',
-        )
-        self.assertIn("n_gpu_layers", test_text)
-        self.assertIn("llama_decode", test_text)
-        self.assertIn(
-            '#error "LLAMACPP_METAL_TEST must be enabled on macOS ARM64"',
-            test_text,
-        )
-        self.assertIn("defined(__aarch64__) || defined(__arm64__)", test_text)
-        self.assertIn("defined(__APPLE__)", test_text)
-        self.assertIn("&& !defined(LLAMACPP_METAL_TEST)", test_text)
-        self.assertIn("#ifdef LLAMACPP_METAL_TEST", test_text)
-        skip_guard = r'''#else
-
-#if defined(__APPLE__) \
-    && (defined(__aarch64__) || defined(__arm64__))
-#error "Metal smoke test cannot skip on macOS ARM64"
-#endif
-
-#include <cstdio>'''
-        self.assertIn(skip_guard, test_text)
+        self.assertIn('features = ["backend-metal"]', metal_manifest.read_text())
+        self.assertNotIn("compat.ggml-metal", metal_manifest.read_text())
+        self.assertIn("import llama;", (checker.ROOT / "tests/examples/llamacpp-internal-metal/tests/decode.cpp").read_text())
 
 
 if __name__ == "__main__":

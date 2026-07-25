@@ -151,7 +151,12 @@ class TestLlamacppCohortSelection(unittest.TestCase):
                     "tests/examples/b",
                 ]
             """))
-            (repo / "tests/examples/a/x.cpp").write_text("int value = 1;\n")
+            sources = repo / "tests/examples/a/sources"
+            sources.mkdir()
+            for index in range(3000):
+                (sources / f"source_{index:04d}.cpp").write_text(
+                    f"int value_{index} = {index};\n"
+                )
             subprocess.run(["git", "init", "-q"], cwd=repo, check=True)
             subprocess.run(["git", "add", "."], cwd=repo, check=True)
             subprocess.run([
@@ -159,8 +164,8 @@ class TestLlamacppCohortSelection(unittest.TestCase):
                 "user.email=test@example.com", "commit", "-qm", "base",
             ], cwd=repo, check=True)
             subprocess.run([
-                "git", "mv", "tests/examples/a/x.cpp",
-                "tests/examples/b/x.cpp",
+                "git", "mv", "tests/examples/a/sources",
+                "tests/examples/b/sources",
             ], cwd=repo, check=True)
             subprocess.run([
                 "git", "-c", "user.name=Test", "-c",
@@ -170,31 +175,29 @@ class TestLlamacppCohortSelection(unittest.TestCase):
             github_env = repo / "github-env"
             env = os.environ.copy()
             env["GITHUB_ENV"] = str(github_env)
-            subprocess.run(
-                ["bash", "-c", workflow_selector_script()], cwd=repo,
-                env=env, check=True, text=True, capture_output=True,
+            result = subprocess.run(
+                ["bash", "-euo", "pipefail", "-c", workflow_selector_script()],
+                cwd=repo, env=env, text=True, capture_output=True,
             )
 
+            self.assertEqual(result.returncode, 0, result.stderr)
             self.assertIn("MEMBERS=__ALL__", github_env.read_text().splitlines())
 
     def test_descriptor_changes_select_transitive_consumers(self):
         expected = {
-            "pkgs/c/compat.ggml-base.lua": {
+            "pkgs/g/ggml-org.llamacpp.lua": {
                 "llamacpp-internal-cpu", "llamacpp-internal-metal",
-            },
-            "pkgs/c/compat.ggml-cpu.lua": {
-                "llamacpp-internal-cpu", "llamacpp-internal-metal",
-            },
-            "pkgs/c/compat.llamacpp.lua": {
-                "llamacpp-internal-cpu", "llamacpp-internal-metal",
-            },
-            "pkgs/c/compat.ggml-metal.lua": {
-                "llamacpp-internal-metal",
             },
         }
         for path, members in expected.items():
             with self.subTest(path=path):
                 self.assertEqual(selector.cohort_members(path), members)
+        for removed in (
+                "pkgs/c/compat.ggml-base.lua",
+                "pkgs/c/compat.ggml-cpu.lua",
+                "pkgs/c/compat.ggml-metal.lua"):
+            with self.subTest(descriptor=removed):
+                self.assertEqual(selector.cohort_members(removed), set())
 
     def test_non_cohort_descriptor_uses_manifest_references(self):
         manifests = {
@@ -232,16 +235,16 @@ class TestLlamacppCohortSelection(unittest.TestCase):
     def test_selection_is_deduplicated(self):
         manifests = {
             "llamacpp-internal-cpu": (
-                "[dependencies.compat]\nllamacpp = \"b10069\"\n"
+                "[dependencies.ggml-org]\nllamacpp = \"b10069\"\n"
             ),
             "llamacpp-internal-metal": (
-                "[target.'cfg(macos)'.dependencies.compat]\n"
+                "[target.'cfg(macos)'.dependencies.ggml-org]\n"
                 "llamacpp = { version = \"b10069\", "
                 "features = [\"backend-metal\"] }\n"
             ),
         }
         selected = selector.select_descriptor_members(
-            "pkgs/c/compat.llamacpp.lua", manifests,
+            "pkgs/g/ggml-org.llamacpp.lua", manifests,
         )
         self.assertEqual(selected, {
             "llamacpp-internal-cpu", "llamacpp-internal-metal",

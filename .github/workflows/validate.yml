@@ -115,9 +115,10 @@ jobs:
           done
           [ $fail -eq 0 ] && echo "All package files valid."
           exit $fail
-      - name: Check llama.cpp snapshot cohort
+      - name: Check ggml-org.llamacpp snapshot
         run: |
           python3 -m unittest tools/llamacpp/test_audit_snapshot.py -v
+          python3 -m unittest tools/llamacpp/test_gen_exports.py -v
           python3 -m unittest tests/test_fetch_llamacpp_model.py -v
           python3 -m unittest tests/test_check_llamacpp_snapshot.py -v
           python3 -m unittest tests/test_select_affected_members.py -v
@@ -302,7 +303,7 @@ jobs:
           [ "${{ github.event_name }}" = "pull_request" ] || full "event=${{ github.event_name }}"
           base="origin/${{ github.base_ref }}"
           renamed_or_copied=$(git diff --find-renames --find-copies --name-status "$base"...HEAD | \
-            awk '$1 ~ /^[RC]/ { print; exit }')
+            awk '$1 ~ /^[RC]/ && !found { line=$0; found=1 } END { if (found) print line }')
           [ -z "$renamed_or_copied" ] || full "renamed/copied path: $renamed_or_copied"
           changed=$(git diff --name-only "$base"...HEAD)
           printf 'changed files vs %s:\n%s\n' "$base" "$changed"

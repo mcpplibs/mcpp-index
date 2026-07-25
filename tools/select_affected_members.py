@@ -9,17 +9,8 @@ from typing import Mapping
 
 
 DESCRIPTOR_COHORTS = {
-    "compat.ggml-base.lua": {
+    "ggml-org.llamacpp.lua": {
         "llamacpp-internal-cpu", "llamacpp-internal-metal",
-    },
-    "compat.ggml-cpu.lua": {
-        "llamacpp-internal-cpu", "llamacpp-internal-metal",
-    },
-    "compat.llamacpp.lua": {
-        "llamacpp-internal-cpu", "llamacpp-internal-metal",
-    },
-    "compat.ggml-metal.lua": {
-        "llamacpp-internal-metal",
     },
     "compat.ffmpeg.lua": {
         "opencv", "opencv-dnn", "opencv-unifont",
@@ -54,7 +45,9 @@ def select_descriptor_members(
     descriptor_path: str | Path,
     manifests: Mapping[str, str],
 ) -> set[str]:
-    package_name = Path(descriptor_path).stem.removeprefix("compat.")
+    # Descriptors are named <namespace>.<package>.lua; consumer manifests
+    # declare the package token beneath the namespace table.
+    package_name = Path(descriptor_path).stem.rsplit(".", 1)[-1]
     selected = cohort_members(descriptor_path)
     for member, text in manifests.items():
         parsed = tomllib.loads(text)
