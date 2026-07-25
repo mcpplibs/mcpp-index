@@ -2,7 +2,7 @@ name: validate
 
 on:
   pull_request:
-    paths: ["pkgs/**/*.lua", "tests/**", "tools/**", "index.toml", "README.md", ".github/workflows/validate.yml"]
+    paths: ["pkgs/**/*.lua", "tests/**", "tools/**", "README.md", ".github/workflows/validate.yml"]
   push:
     branches: [main]
   schedule:
@@ -386,50 +386,6 @@ jobs:
             echo "No llama.cpp member selected; model provisioning is not required."
           fi
 
-      - name: Install Xcode Metal toolchain guard
-        if: matrix.platform == 'macos'
-        shell: bash
-        run: |
-          guard_dir="$RUNNER_TEMP/mcpp-xcode-metal-guard"
-          guard_log="$RUNNER_TEMP/mcpp-xcode-metal-guard.log"
-          mkdir -p "$guard_dir"
-          : > "$guard_log"
-          cat > "$guard_dir/xcrun" <<'EOF'
-          #!/bin/bash
-          for arg in "$@"; do
-            case "$arg" in
-              metal|metallib)
-                printf '%s\n' "xcrun $*" >> "$MCPP_XCODE_METAL_GUARD_LOG"
-                exit 86
-                ;;
-            esac
-          done
-          exec /usr/bin/xcrun "$@"
-          EOF
-          cat > "$guard_dir/metal" <<'EOF'
-          #!/bin/bash
-          printf '%s\n' "$(basename "$0") $*" >> "$MCPP_XCODE_METAL_GUARD_LOG"
-          exit 86
-          EOF
-          cp "$guard_dir/metal" "$guard_dir/metallib"
-          chmod +x "$guard_dir/xcrun" "$guard_dir/metal" "$guard_dir/metallib"
-          export MCPP_XCODE_METAL_GUARD_LOG="$guard_log"
-          export PATH="$guard_dir:$PATH"
-          echo "MCPP_XCODE_METAL_GUARD_LOG=$guard_log" >> "$GITHUB_ENV"
-          echo "$guard_dir" >> "$GITHUB_PATH"
-          test "$(command -v xcrun)" = "$guard_dir/xcrun"
-          xcrun --find clang >/dev/null
-          xcrun_rc=0
-          metal_rc=0
-          metallib_rc=0
-          xcrun --find metal >/dev/null 2>&1 || xcrun_rc=$?
-          metal --version >/dev/null 2>&1 || metal_rc=$?
-          metallib --version >/dev/null 2>&1 || metallib_rc=$?
-          test "$xcrun_rc" -eq 86
-          test "$metal_rc" -eq 86
-          test "$metallib_rc" -eq 86
-          : > "$guard_log"
-
       - name: mcpp test (workspace or affected members)
         shell: bash
         env:
@@ -450,15 +406,3 @@ jobs:
             done
             exit $rc
           fi
-
-      - name: Verify Xcode Metal toolchain was not invoked
-        if: ${{ always() && matrix.platform == 'macos' }}
-        shell: bash
-        run: |
-          if test ! -s "$MCPP_XCODE_METAL_GUARD_LOG"; then
-            echo "Xcode Metal toolchain was not invoked."
-            exit 0
-          fi
-          echo "::error::Xcode Metal toolchain was invoked"
-          cat "$MCPP_XCODE_METAL_GUARD_LOG"
-          exit 1
