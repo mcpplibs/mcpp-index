@@ -379,21 +379,21 @@ jobs:
           vrc=0
           MCPP_VERBOSE=1 "$MCPP" test -p tests/examples/ffmpeg 2>&1 | tail -60 || vrc=$?
           echo "=== verbose retry exit status: $vrc ==="
-          # The verbose run reached the ninja backend (the depfile warning is
-          # emitted while writing build.ninja) and then died 127 WITHOUT the
-          # "build failed" diagnostic that a ninja build error would produce.
-          # So drive ninja by hand and show everything: what got generated, the
-          # ninja binary, its output, its exit status.
-          echo "=== generated target dir ==="
-          find tests/examples/ffmpeg/target -maxdepth 3 -name build.ninja 2>/dev/null || true
-          BN=$(find tests/examples/ffmpeg/target -maxdepth 3 -name build.ninja 2>/dev/null | head -1)
-          NJ=$(find . -name 'ninja.exe' 2>/dev/null | head -1)
+          # Previous attempt was invalid: it used a RELATIVE ninja path and
+          # then cd'd, so bash could not find it — "No such file or directory",
+          # rc 127. Absolute paths only this time, and -C instead of cd. Also
+          # dump what mcpp itself recorded (target/.build_cache holds outputDir
+          # and the ninja program it intends to run).
+          echo "=== mcpp build cache ==="
+          cat tests/examples/ffmpeg/target/.build_cache 2>/dev/null || echo "(none)"
+          BN=$(find "$PWD/tests/examples/ffmpeg/target" -maxdepth 3 -name build.ninja 2>/dev/null | head -1)
+          NJ=$(find "$HOME/.mcpp/registry" -name 'ninja.exe' 2>/dev/null | head -1)
           echo "build.ninja: $BN"
-          echo "ninja: $NJ"
+          echo "ninja:       $NJ"
           if [ -n "$NJ" ]; then "$NJ" --version || echo "(ninja --version failed rc=$?)"; fi
           if [ -n "$BN" ] && [ -n "$NJ" ]; then
             nrc=0
-            (cd "$(dirname "$BN")" && "$NJ" -j2 2>&1 | tail -40) || nrc=$?
+            "$NJ" -C "$(dirname "$BN")" -j2 2>&1 | tail -40 || nrc=$?
             echo "=== manual ninja exit status: $nrc ==="
           fi
           echo "=== locating xlings ==="
