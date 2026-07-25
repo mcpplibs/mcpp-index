@@ -360,6 +360,16 @@ jobs:
           MCPP_INDEX_MIRROR: GLOBAL
         run: |
           "$MCPP" --version
+          # PROBE (do not merge): the Windows job dies with a bare 127 the
+          # instant compat:ffmpeg finishes downloading, printing nothing. Run
+          # that one member on its own, keep the shell alive past the failure,
+          # and record the exit status plus free disk on either side.
+          echo "=== free space before ==="; df -h . || true
+          rc=0
+          "$MCPP" test -p tests/examples/ffmpeg || rc=$?
+          echo "=== ffmpeg member exit status: $rc ==="
+          echo "=== free space after ==="; df -h . || true
+          exit $rc
           # No `timeout` wrapper: absent on macOS runners; job-level timeout-minutes bounds it.
           if [ "$MEMBERS" = "__ALL__" ]; then
             "$MCPP" test --workspace
