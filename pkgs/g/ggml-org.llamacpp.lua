@@ -22,29 +22,17 @@ package = {
                 url = "https://github.com/ggml-org/llama.cpp/archive/refs/tags/b10069.tar.gz",
                 sha256 = "293a7c65a11e2203c5468a06d0d0e8d21dfff16ad08712b16c61efbe0d93e097",
             },
-            ["b10107"] = {
-                url = "https://github.com/ggml-org/llama.cpp/archive/refs/tags/b10107.tar.gz",
-                sha256 = "1357f132823c713001664c8a86a6fcd3d495640a80d4c6d1521914c360f23a90",
-            },
         },
         macosx = {
             ["b10069"] = {
                 url = "https://github.com/ggml-org/llama.cpp/archive/refs/tags/b10069.tar.gz",
                 sha256 = "293a7c65a11e2203c5468a06d0d0e8d21dfff16ad08712b16c61efbe0d93e097",
             },
-            ["b10107"] = {
-                url = "https://github.com/ggml-org/llama.cpp/archive/refs/tags/b10107.tar.gz",
-                sha256 = "1357f132823c713001664c8a86a6fcd3d495640a80d4c6d1521914c360f23a90",
-            },
         },
         windows = {
             ["b10069"] = {
                 url = "https://github.com/ggml-org/llama.cpp/archive/refs/tags/b10069.tar.gz",
                 sha256 = "293a7c65a11e2203c5468a06d0d0e8d21dfff16ad08712b16c61efbe0d93e097",
-            },
-            ["b10107"] = {
-                url = "https://github.com/ggml-org/llama.cpp/archive/refs/tags/b10107.tar.gz",
-                sha256 = "1357f132823c713001664c8a86a6fcd3d495640a80d4c6d1521914c360f23a90",
             },
         },
     },
@@ -795,7 +783,6 @@ int main() try {
         "*/src/models/granite.cpp",
         "*/src/models/grok.cpp",
         "*/src/models/grovemoe.cpp",
-        "*/src/models/hunyuan-dense.cpp",
         "*/src/models/hunyuan-moe.cpp",
         "*/src/models/hunyuan-vl.cpp",
         "*/src/models/hy-v3.cpp",
@@ -810,7 +797,6 @@ int main() try {
         "*/src/models/lfm2moe.cpp",
         "*/src/models/llada-moe.cpp",
         "*/src/models/llada.cpp",
-        "*/src/models/llama-embed.cpp",
         "*/src/models/llama.cpp",
         "*/src/models/llama4.cpp",
         "*/src/models/maincoder.cpp",
@@ -821,7 +807,6 @@ int main() try {
         "*/src/models/mimo2.cpp",
         "*/src/models/minicpm.cpp",
         "*/src/models/minicpm3.cpp",
-        "*/src/models/minimax-m2.cpp",
         "*/src/models/mistral3.cpp",
         "*/src/models/mistral4.cpp",
         "*/src/models/modern-bert.cpp",
@@ -896,10 +881,6 @@ int main() try {
             { glob = "*/src/models/t5.cpp",      cxxflags = { "-std=c++20" } },
             { glob = "*/src/models/eagle3.cpp",  cxxflags = { "-std=c++20" } },
             { glob = "*/src/models/dflash.cpp",   cxxflags = { "-std=c++20" } },
-            { glob = "*/src/models/llama-embed.cpp",           cxxflags = { "-std=c++20" } },
-            { glob = "*/src/models/hunyuan-dense.cpp",   cxxflags = { "-std=c++20" } },
-            { glob = "*/src/models/laguna.cpp",          cxxflags = { "-std=c++20" } },
-            { glob = "*/src/models/minimax-m2.cpp",      cxxflags = { "-std=c++20" } },
         },
         linux = {
             sources = {
