@@ -188,6 +188,8 @@ int main() {
 #error "Metal smoke test cannot skip on macOS ARM64"
 #endif
 
+import std;
+
 int main() {
     std::cout << "Metal smoke test skipped on unsupported target\n";
     return 0;
