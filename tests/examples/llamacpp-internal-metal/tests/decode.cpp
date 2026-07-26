@@ -6,6 +6,8 @@
 
 #ifdef LLAMACPP_METAL_TEST
 
+import std;
+
 import llama;
 
 #ifdef LLAMA_H
@@ -16,14 +18,6 @@ import llama;
 #error "import llama leaked LLAMA_API"
 #endif
 
-#include <ggml-alloc.h>
-#include <ggml-backend.h>
-#include <ggml.h>
-#include <llama.h>
-
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
 #include <regex>
 #include <string>
 
@@ -34,12 +28,12 @@ std::string logs;
 void capture_log(enum ggml_log_level, const char * text, void *) {
     if (text) {
         logs += text;
-        std::fputs(text, stderr);
+        std::cerr << text;
     }
 }
 
 int fail(const char * message) {
-    std::fprintf(stderr, "Metal smoke test failed: %s\n", message);
+    std::cerr << "Metal smoke test failed: " << message << "\n";
     return 1;
 }
 
@@ -185,7 +179,7 @@ int main() {
         return fail("embedded Metal source path was not used");
     }
 
-    std::puts("Metal smoke test PASSED");
+    std::cout << "Metal smoke test PASSED\n";
     return 0;
 }
 
@@ -196,10 +190,8 @@ int main() {
 #error "Metal smoke test cannot skip on macOS ARM64"
 #endif
 
-#include <cstdio>
-
 int main() {
-    std::puts("Metal smoke test skipped on unsupported target");
+    std::cout << "Metal smoke test skipped on unsupported target\n";
     return 0;
 }
 

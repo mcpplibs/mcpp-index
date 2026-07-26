@@ -1,6 +1,8 @@
 /// Internal CPU smoke test — loads pinned GGUF, decodes one batch, samples.
 /// Requires LLAMACPP_TEST_MODEL env var pointing to a valid GGUF file.
 
+import std;
+
 import llama;
 
 #ifdef LLAMA_H
@@ -11,9 +13,6 @@ import llama;
 #error "import llama leaked LLAMA_API"
 #endif
 
-#include <cstdio>
-#include <cstdlib>
-#include <fstream>
 
 int main() {
     static_assert(LLAMA_DEFAULT_SEED == 0xFFFFFFFFu);
@@ -21,7 +20,7 @@ int main() {
 
     const char *model_path = std::getenv("LLAMACPP_TEST_MODEL");
     if (!model_path || !*model_path) {
-        std::fprintf(stderr, "LLAMACPP_TEST_MODEL not set or empty\n");
+        std::cerr << "LLAMACPP_TEST_MODEL not set or empty\n";
         return 1;
     }
 
@@ -29,11 +28,11 @@ int main() {
     {
         std::ifstream f(model_path, std::ios::binary | std::ios::ate);
         if (!f) {
-            std::fprintf(stderr, "cannot open model file: %s\n", model_path);
+            std::cerr << "cannot open model file: " << model_path << "\n";
             return 2;
         }
         auto sz = f.tellg();
-        std::fprintf(stderr, "model size: %lld bytes\n", (long long)sz);
+        std::cerr << "model size: " << sz << " bytes\n";
     }
 
     llama_backend_init();
@@ -44,12 +43,11 @@ int main() {
 
     llama_model *model = llama_model_load_from_file(model_path, mparams);
     if (!model) {
-        std::fprintf(stderr, "failed to load model\n");
+        std::cerr << "failed to load model\n";
         llama_backend_free();
         return 3;
     }
-    std::printf("model loaded: %llu params\n",
-                (unsigned long long)llama_model_n_params(model));
+    std::cout << "model loaded: " << llama_model_n_params(model) << " params\n";
 
     // Context params
     llama_context_params cparams = llama_context_default_params();
@@ -57,7 +55,7 @@ int main() {
 
     llama_context *ctx = llama_init_from_model(model, cparams);
     if (!ctx) {
-        std::fprintf(stderr, "failed to create context\n");
+        std::cerr << "failed to create context\n";
         llama_model_free(model);
         llama_backend_free();
         return 4;
@@ -68,25 +66,24 @@ int main() {
     int n_tokens = sizeof(tokens) / sizeof(tokens[0]);
     int ret = llama_decode(ctx, llama_batch_get_one(tokens, n_tokens));
     if (ret != 0) {
-        std::fprintf(stderr, "decode returned %d\n", ret);
+        std::cerr << "decode returned " << ret << "\n";
         llama_free(ctx);
         llama_model_free(model);
         llama_backend_free();
         return 5;
     }
-    std::printf("decode OK\n");
+    std::cout << "decode OK\n";
 
     // Sample one token
     llama_sampler *smpl = llama_sampler_chain_init(
         llama_sampler_chain_default_params());
     llama_sampler_chain_add(smpl, llama_sampler_init_greedy());
     llama_token sampled = llama_sampler_sample(smpl, ctx, -1);
-    std::printf("sampled token: %d\n", sampled);
+    std::cout << "sampled token: " << sampled << "\n";
 
     // Validate token range
     if (sampled < 0 || sampled >= llama_vocab_n_tokens(llama_model_get_vocab(model))) {
-        std::fprintf(stderr, "sampled token %d out of vocab range [0, %d)\n",
-                     sampled, llama_vocab_n_tokens(llama_model_get_vocab(model)));
+        std::cerr << "sampled token " << sampled << " out of vocab range [0, " << llama_vocab_n_tokens(llama_model_get_vocab(model)) << ")\n";
         llama_sampler_free(smpl);
         llama_free(ctx);
         llama_model_free(model);
@@ -99,6 +96,6 @@ int main() {
     llama_model_free(model);
     llama_backend_free();
 
-    std::printf("CPU smoke test PASSED\n");
+    std::cout << "CPU smoke test PASSED\n";
     return 0;
 }

@@ -64,6 +64,8 @@ package = {
 module;
 
 #include <llama.h>
+#include <ggml-backend.h>
+#include <ggml-alloc.h>
 
 #undef LLAMA_DEFAULT_SEED
 #undef LLAMA_TOKEN_NULL
@@ -171,6 +173,35 @@ export using ::ggml_opt_result_t;
 export using ::ggml_tensor;
 export using ::ggml_threadpool_t;
 export using ::ggml_type;
+export using ::GGML_BACKEND_DEVICE_TYPE_ACCEL;
+export using ::GGML_BACKEND_DEVICE_TYPE_CPU;
+export using ::GGML_BACKEND_DEVICE_TYPE_GPU;
+export using ::GGML_STATUS_SUCCESS;
+export using ::ggml_add;
+export using ::ggml_backend_alloc_ctx_tensors;
+export using ::ggml_backend_buffer_free;
+export using ::ggml_backend_buffer_t;
+export using ::ggml_backend_dev_init;
+export using ::ggml_backend_dev_type;
+export using ::ggml_backend_free;
+export using ::ggml_backend_get_features_t;
+export using ::ggml_backend_graph_compute;
+export using ::ggml_backend_reg_by_name;
+export using ::ggml_backend_reg_dev_count;
+export using ::ggml_backend_reg_dev_get;
+export using ::ggml_backend_reg_get_proc_address;
+export using ::ggml_backend_reg_t;
+export using ::ggml_backend_synchronize;
+export using ::ggml_backend_t;
+export using ::ggml_backend_tensor_get;
+export using ::ggml_backend_tensor_set;
+export using ::ggml_build_forward_expand;
+export using ::ggml_free;
+export using ::ggml_init;
+export using ::ggml_init_params;
+export using ::ggml_new_graph;
+export using ::ggml_new_tensor_1d;
+export using ::ggml_status;
 ]==],
             ["mcpp_generated/gen_exports/llama.inc"] = [==[
 export using ::LLAMA_ATTENTION_TYPE_CAUSAL;

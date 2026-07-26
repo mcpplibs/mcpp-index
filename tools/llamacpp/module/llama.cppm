@@ -1,6 +1,8 @@
 module;
 
 #include <llama.h>
+#include <ggml-backend.h>
+#include <ggml-alloc.h>
 
 #undef LLAMA_DEFAULT_SEED
 #undef LLAMA_TOKEN_NULL
