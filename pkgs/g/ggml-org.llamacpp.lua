@@ -881,6 +881,10 @@ int main() try {
             { glob = "*/src/models/t5.cpp",      cxxflags = { "-std=c++20" } },
             { glob = "*/src/models/eagle3.cpp",  cxxflags = { "-std=c++20" } },
             { glob = "*/src/models/dflash.cpp",   cxxflags = { "-std=c++20" } },
+            { glob = "*/src/models/hunyuan-dense.cpp",   cxxflags = { "-std=c++20" } },
+            { glob = "*/src/models/laguna.cpp",          cxxflags = { "-std=c++20" } },
+            { glob = "*/src/models/llama-embed.cpp",     cxxflags = { "-std=c++20" } },
+            { glob = "*/src/models/minimax-m2.cpp",      cxxflags = { "-std=c++20" } },
         },
         linux = {
             sources = {
