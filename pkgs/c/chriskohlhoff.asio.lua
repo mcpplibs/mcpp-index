@@ -150,6 +150,12 @@ module;
 #include <asio/experimental/use_promise.hpp>
 #include <asio/experimental/parallel_group.hpp>
 #include <asio/experimental/awaitable_operators.hpp>
+#ifdef MCPP_FEATURE_SSL
+#include <asio/ssl.hpp>
+#include <asio/ssl/context.hpp>
+#include <asio/ssl/stream.hpp>
+#include <asio/ssl/error.hpp>
+#endif
 
 export module asio;
 
@@ -241,6 +247,20 @@ using ::asio::this_coro::throw_if_cancelled;
 using ::asio::this_coro::reset_cancellation_state;
 }
 
+#ifdef MCPP_FEATURE_SSL
+export namespace asio::ssl {
+using ::asio::ssl::context;
+using ::asio::ssl::context_base;
+using ::asio::ssl::stream;
+using ::asio::ssl::verify_mode;
+using ::asio::ssl::verify_none;
+using ::asio::ssl::verify_peer;
+using ::asio::ssl::verify_fail_if_no_peer_cert;
+using ::asio::ssl::rfc2818_verification;
+using ::asio::ssl::host_name_verification;
+}
+#endif
+
 ]==],
         },
         sources = {
@@ -266,6 +286,11 @@ using ::asio::this_coro::reset_cancellation_state;
                     "ASIO_DISABLE_BOOST_CONTEXT_FIBER",
                     "ASIO_HAS_THREADS",
                 },
+            },
+            ["ssl"] = {
+                defines = { "MCPP_FEATURE_SSL" },
+                deps    = { ["compat.openssl"] = "3.5.1" },
+                sources = { "*/src/asio_ssl.cpp" },
             },
         },
         deps = {},
