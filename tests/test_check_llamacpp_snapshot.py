@@ -21,6 +21,10 @@ class TestLlamacppSnapshotMutations(unittest.TestCase):
     def setUpClass(cls):
         lua = checker.find_lua()
         cls.report = json.loads(checker.REPORT_PATH.read_text())
+        cls.secondary_reports = []
+        if checker.REPORT_PATH_B10107.is_file():
+            cls.secondary_reports.append(
+                json.loads(checker.REPORT_PATH_B10107.read_text()))
         cls.original = {
             name: checker.load_descriptor(lua, path)
             for name, path in checker.DESCRIPTORS.items()
@@ -37,6 +41,9 @@ class TestLlamacppSnapshotMutations(unittest.TestCase):
             elif function in (checker.check_cpu_private_macros,
                               checker.check_module_contract):
                 function(self.descriptors)
+            elif function in (checker.check_sources,
+                              checker.check_report_metadata_contracts):
+                function(self.descriptors, self.report, self.secondary_reports)
             else:
                 function(self.descriptors, self.report)
 

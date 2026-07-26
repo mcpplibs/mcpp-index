@@ -14,6 +14,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 REPORT_PATH = ROOT / "tools/llamacpp/snapshots/b10069.json"
+REPORT_PATH_B10107 = ROOT / "tools/llamacpp/snapshots/b10107.json"
 DESCRIPTORS = {
     "ggml-org.llamacpp": ROOT / "pkgs/g/ggml-org.llamacpp.lua",
 }
@@ -324,9 +325,13 @@ def _group_tus(report: dict, groups: tuple[str, ...]) -> set[str]:
     }
 
 
-def check_sources(descriptors: dict[str, dict], report: dict) -> None:
+def check_sources(descriptors: dict[str, dict], report: dict,
+                  secondary_reports: list[dict] | None = None) -> None:
     descriptor = descriptors["ggml-org.llamacpp"]
     report_tus = _report_tus(report)
+    if secondary_reports:
+        for sr in secondary_reports:
+            report_tus |= _report_tus(sr)
     default_groups = ("ggml_base", "ggml_registry", "ggml_cpu_common",
                       "llama_core", "models")
     arch_groups = {
@@ -340,15 +345,28 @@ def check_sources(descriptors: dict[str, dict], report: dict) -> None:
             normalized = normalized_source(source, "ggml-org.llamacpp")
             if normalized is None:
                 continue
-            require(normalized in report_tus,
-                    f"ggml-org.llamacpp source is absent from snapshot report: {normalized}")
+            if normalized not in report_tus:
+                # Model files may exist only in newer upstream versions
+                # (e.g. laguna.cpp added in b10107, absent from b10069).
+                # The final model-count check catches truly unknown files.
+                if not normalized.startswith("src/models/"):
+                    require(False,
+                            f"ggml-org.llamacpp source is absent from snapshot "
+                            f"report: {normalized}")
             require(normalized not in actual,
                     f"duplicate upstream TU ownership on {platform}: {normalized}")
             actual.add(normalized)
         expected = _group_tus(report, default_groups + arch_groups[platform])
-        require(actual == expected,
-                f"default TU set drift on {platform}: missing={sorted(expected - actual)}, "
-                f"extra={sorted(actual - expected)}")
+        if secondary_reports:
+            for sr in secondary_reports:
+                expected |= _group_tus(sr, default_groups + arch_groups[platform])
+        missing_from_descriptor = expected - actual
+        extra_in_descriptor = actual - expected
+        require(not missing_from_descriptor,
+                f"default TU set drift on {platform}: missing={sorted(missing_from_descriptor)}")
+        require(not extra_in_descriptor or all(
+            source.startswith("src/models/") for source in extra_in_descriptor
+        ), f"non-model default TU set drift on {platform}: extra={sorted(extra_in_descriptor)}")
 
     core_sources = descriptor_sources(descriptor)
     require("*/src/models/*.cpp" not in core_sources,
@@ -357,9 +375,16 @@ def check_sources(descriptors: dict[str, dict], report: dict) -> None:
         source.removeprefix("*/src/") for source in core_sources
         if source.startswith("*/src/models/")
     )
-    require(actual_models == report["sources"]["models"],
-            f"ggml-org.llamacpp model TU drift: expected {len(report['sources']['models'])}, "
-            f"got {len(actual_models)}")
+    # The descriptor may list models that exist only in newer upstream
+    # versions (e.g. laguna.cpp added in b10107).  Collect every model
+    # known to ANY snapshot so we only flag files that don't exist upstream.
+    all_snapshot_models = set(report["sources"]["models"])
+    if secondary_reports:
+        for sr in secondary_reports:
+            all_snapshot_models |= set(sr["sources"]["models"])
+    unknown = sorted(set(actual_models) - all_snapshot_models)
+    require(not unknown,
+            f"ggml-org.llamacpp model TU not in any snapshot: {unknown}")
 
     metal_source_list = [
         normalized_source(source, "ggml-org.llamacpp")
@@ -512,7 +537,8 @@ def check_cpu_private_macros(descriptors: dict[str, dict]) -> None:
             "GGML_USE_METAL must remain on the backend-metal registry flag")
 
 
-def check_report_metadata_contracts(descriptors: dict[str, dict], report: dict) -> None:
+def check_report_metadata_contracts(descriptors: dict[str, dict], report: dict,
+                                   secondary_reports: list[dict] | None = None) -> None:
     build_info = get_path(
         descriptors["ggml-org.llamacpp"], "mcpp", "generated_files",
         "mcpp_generated/ggml_build_info.h",
@@ -537,8 +563,19 @@ def check_report_metadata_contracts(descriptors: dict[str, dict], report: dict) 
             source = normalized_source(flag.get("glob", ""), "ggml-org.llamacpp")
             require(source is not None, "C++20 exception must target one upstream TU")
             cpp20_sources.append(source)
-    require(sorted(cpp20_sources) == report["dialect_exceptions"]["c++20"],
-            "C++20 dialect exception drift")
+    # The descriptor may declare c++20 exceptions for models that exist
+    # only in newer upstream versions (e.g. laguna.cpp added in b10107).
+    # Collect every c++20 exception known to ANY snapshot.
+    all_cpp20 = set(report["dialect_exceptions"]["c++20"])
+    if secondary_reports:
+        for sr in secondary_reports:
+            all_cpp20 |= set(sr["dialect_exceptions"]["c++20"])
+    unknown_cpp20 = sorted(set(cpp20_sources) - all_cpp20)
+    require(not unknown_cpp20,
+            f"C++20 dialect exception not in any snapshot: {unknown_cpp20}")
+    missing_cpp20 = sorted(all_cpp20 - set(cpp20_sources))
+    require(not missing_cpp20,
+            f"C++20 dialect exception drift: missing={missing_cpp20}")
 
 
 def check_metal_build_contract(descriptors: dict[str, dict], report: dict) -> None:
@@ -669,15 +706,18 @@ def check_module_contract(descriptors: dict[str, dict]) -> None:
 def main() -> int:
     try:
         report = json.loads(REPORT_PATH.read_text())
+        secondary_reports = []
+        if REPORT_PATH_B10107.is_file():
+            secondary_reports.append(json.loads(REPORT_PATH_B10107.read_text()))
         lua = find_lua()
         descriptors = {name: load_descriptor(lua, path)
                        for name, path in DESCRIPTORS.items()}
         check_cohort(descriptors, report)
         check_dependencies(descriptors, report["upstream"]["tag"])
-        check_sources(descriptors, report)
+        check_sources(descriptors, report, secondary_reports)
         check_registry_and_features(descriptors, report)
         check_cpu_private_macros(descriptors)
-        check_report_metadata_contracts(descriptors, report)
+        check_report_metadata_contracts(descriptors, report, secondary_reports)
         check_metal_build_contract(descriptors, report)
         check_module_contract(descriptors)
     except (CheckError, OSError, json.JSONDecodeError) as error:

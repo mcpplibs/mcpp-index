@@ -322,6 +322,8 @@ def collect_snapshot(root, tag, commit, url, archive_sha256):
     # C++20 exceptions
     cpp20_exceptions = []
     for p in ['src/models/dflash.cpp', 'src/models/eagle3.cpp',
+              'src/models/hunyuan-dense.cpp', 'src/models/laguna.cpp',
+              'src/models/llama-embed.cpp', 'src/models/minimax-m2.cpp',
               'src/models/t5.cpp']:
         if os.path.isfile(os.path.join(root, p)):
             cpp20_exceptions.append(p)
