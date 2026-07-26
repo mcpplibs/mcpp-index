@@ -252,9 +252,8 @@ export namespace asio::ssl {
 using ::asio::ssl::context;
 using ::asio::ssl::context_base;
 using ::asio::ssl::stream;
+using ::asio::ssl::stream_base;
 using ::asio::ssl::verify_mode;
-// verify_* are const int with internal linkage — can't export.
-// host_name_verification includes rfc2818 logic internally.
 using ::asio::ssl::host_name_verification;
 }
 #endif
