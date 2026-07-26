@@ -32,7 +32,8 @@ package = {
             },
         },
         macosx = {
-            deps = { "xim:make@latest" },
+            -- No xim:make dep: macOS ships GNU Make at /usr/bin/make;
+            -- resolve_make() falls back to PATH when the build dep is absent.
             ["3.5.1"] = {
                 url = {
                     GLOBAL = "https://github.com/openssl/openssl/releases/download/openssl-3.5.1/openssl-3.5.1.tar.gz",
