@@ -20,42 +20,30 @@ package = {
         linux = {
             ["b10069"] = {
                 url = "https://github.com/ggml-org/llama.cpp/archive/refs/tags/b10069.tar.gz",
-                sha256 = "1357f132823c713001664c8a86a6fcd3d495640a80d4c6d1521914c360f23a90",
+                sha256 = "293a7c65a11e2203c5468a06d0d0e8d21dfff16ad08712b16c61efbe0d93e097",
             },
-            ["b10069"] = {
-                url = "https://github.com/ggml-org/llama.cpp/archive/refs/tags/b10069.tar.gz",
-                sha256 = "1357f132823c713001664c8a86a6fcd3d495640a80d4c6d1521914c360f23a90",
-            },
-            ["b10069"] = {
-                url = "https://github.com/ggml-org/llama.cpp/archive/refs/tags/b10069.tar.gz",
+            ["b10107"] = {
+                url = "https://github.com/ggml-org/llama.cpp/archive/refs/tags/b10107.tar.gz",
                 sha256 = "1357f132823c713001664c8a86a6fcd3d495640a80d4c6d1521914c360f23a90",
             },
         },
         macosx = {
             ["b10069"] = {
                 url = "https://github.com/ggml-org/llama.cpp/archive/refs/tags/b10069.tar.gz",
-                sha256 = "1357f132823c713001664c8a86a6fcd3d495640a80d4c6d1521914c360f23a90",
+                sha256 = "293a7c65a11e2203c5468a06d0d0e8d21dfff16ad08712b16c61efbe0d93e097",
             },
-            ["b10069"] = {
-                url = "https://github.com/ggml-org/llama.cpp/archive/refs/tags/b10069.tar.gz",
-                sha256 = "1357f132823c713001664c8a86a6fcd3d495640a80d4c6d1521914c360f23a90",
-            },
-            ["b10069"] = {
-                url = "https://github.com/ggml-org/llama.cpp/archive/refs/tags/b10069.tar.gz",
+            ["b10107"] = {
+                url = "https://github.com/ggml-org/llama.cpp/archive/refs/tags/b10107.tar.gz",
                 sha256 = "1357f132823c713001664c8a86a6fcd3d495640a80d4c6d1521914c360f23a90",
             },
         },
         windows = {
             ["b10069"] = {
                 url = "https://github.com/ggml-org/llama.cpp/archive/refs/tags/b10069.tar.gz",
-                sha256 = "1357f132823c713001664c8a86a6fcd3d495640a80d4c6d1521914c360f23a90",
+                sha256 = "293a7c65a11e2203c5468a06d0d0e8d21dfff16ad08712b16c61efbe0d93e097",
             },
-            ["b10069"] = {
-                url = "https://github.com/ggml-org/llama.cpp/archive/refs/tags/b10069.tar.gz",
-                sha256 = "1357f132823c713001664c8a86a6fcd3d495640a80d4c6d1521914c360f23a90",
-            },
-            ["b10069"] = {
-                url = "https://github.com/ggml-org/llama.cpp/archive/refs/tags/b10069.tar.gz",
+            ["b10107"] = {
+                url = "https://github.com/ggml-org/llama.cpp/archive/refs/tags/b10107.tar.gz",
                 sha256 = "1357f132823c713001664c8a86a6fcd3d495640a80d4c6d1521914c360f23a90",
             },
         },
@@ -82,7 +70,7 @@ package = {
             ["mcpp_generated/ggml_build_info.h"] = [=[
 #pragma once
 #define GGML_VERSION "b10069"
-#define GGML_COMMIT "c0bc8591e8815c63cb01dd3f051a8b0df02501c9"
+#define GGML_COMMIT "178a6c44937154dc4c4eff0d166f4a044c4fceba"
 ]=],
             ["mcpp_generated/llama.cppm"] = [==[
 module;
