@@ -18,8 +18,6 @@ import llama;
 #error "import llama leaked LLAMA_API"
 #endif
 
-#include <regex>
-#include <string>
 
 namespace {
 
