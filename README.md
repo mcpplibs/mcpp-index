@@ -35,6 +35,7 @@ mcpp self config --mirror CN   # 切换至国内镜像,默认使用 GLOBAL 上�
 | 原生模块库(Form A) | [`mcpplibs.xpkg`](pkgs/x/xpkg.lua) · [`mcpplibs.tinyhttps`](pkgs/t/tinyhttps.lua) · [`tensorvia-cpu`](pkgs/t/tensorvia-cpu.lua) · [`ffmpeg`](pkgs/f/ffmpeg.lua)(模块层,源码经 `compat.ffmpeg` 直编) · [`opencv`](pkgs/o/opencv.lua)(单仓库:模块层与 OpenCV 5 全源码构建同在包内,索引侧只留本描述符) |
 | C 源码 compat(含 `features`) | [`compat.cjson`](pkgs/c/compat.cjson.lua) · [`compat.zlib`](pkgs/c/compat.zlib.lua) |
 | header-only(含 `features`) | [`compat.eigen`](pkgs/c/compat.eigen.lua) |
+| 单包多 major(形态随版本切换) | [`compat.catch2`](pkgs/c/compat.catch2.lua)(3.x 编 `src/catch2/` 出静态库;2.x 走 `single_include/` header-only) |
 | 外部构建系统(`install()` 从源码构建) | [`compat.openblas`](pkgs/c/compat.openblas.lua)(Make) · [`compat.openssl`](pkgs/c/compat.openssl.lua)(Perl Configure + Make,静态 libssl/libcrypto) |
 | 全源码直编(config 快照 + 源列表,零外部构建系统) | [`compat.ffmpeg`](pkgs/c/compat.ffmpeg.lua)(2281 TU 含 NASM 汇编,28 个目录 glob 声明) |
 | C++23 module wrapper | [`nlohmann.json`](pkgs/n/nlohmann.json.lua) · [`marzer.tomlplusplus`](pkgs/m/marzer.tomlplusplus.lua) |

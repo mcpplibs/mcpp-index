@@ -11,6 +11,8 @@ members = [
     "tests/examples/asio-module",
     "tests/examples/asio-ssl",
     "tests/examples/build-mcpp",
+    "tests/examples/catch2",
+    "tests/examples/catch2-v2",
     "tests/examples/cjson",
     "tests/examples/core",
     "tests/examples/eigen",

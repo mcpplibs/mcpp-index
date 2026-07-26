@@ -1,0 +1,12 @@
+# Catch2 v2 test project: depends on compat.catch2-v2 (header-only via this
+# repo's own index) and asserts behavior under `mcpp test`.
+# Part of the mcpp-index self-referential workspace.
+[package]
+name = "catch2-v2-tests"
+version = "0.1.0"
+
+[indices]
+compat = { path = "../../.." }
+
+[dependencies.compat]
+catch2-v2 = "2.13.10"
