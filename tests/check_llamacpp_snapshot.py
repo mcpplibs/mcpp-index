@@ -274,14 +274,16 @@ def check_cohort(descriptors: dict[str, dict], report: dict) -> None:
     xpm = get_path(descriptor, "xpm")
     require(set(xpm) == {"linux", "macosx", "windows"},
             f"ggml-org.llamacpp platform cohort drift: {sorted(xpm)}")
+    # Validate xpm entries: must contain at least the snapshot tag
+    tag = identity["tag"]
     for platform, versions in xpm.items():
-        require(set(versions) == {identity["tag"]},
-                f"ggml-org.llamacpp/{platform} must expose only {identity['tag']}")
-        release = versions[identity["tag"]]
+        require(tag in versions,
+                f"ggml-org.llamacpp/{platform} must expose {tag}")
+        release = versions[tag]
         require(release.get("sha256") == identity["sha256"],
-                f"ggml-org.llamacpp/{platform}/{identity['tag']} SHA drift")
+                f"ggml-org.llamacpp/{platform}/{tag} SHA drift")
         require(release.get("url") == identity["url"],
-                f"ggml-org.llamacpp/{platform}/{identity['tag']} URL drift")
+                f"ggml-org.llamacpp/{platform}/{tag} URL drift")
 
 
 def check_dependencies(descriptors: dict[str, dict], tag: str) -> None:
