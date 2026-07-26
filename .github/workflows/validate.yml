@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
 
 env:
-  # 0.0.102: windows command-line ceiling (mcpp#261 — the clang scan rule got
+  # 0.0.108: windows command-line ceiling (mcpp#261 — the clang scan rule got
   # its P1689 JSON through shell redirection, which forced a `cmd /c` wrapper
   # and with it cmd.exe's 8191-char limit; clang-scan-deps -o removes both, and
   # $local_includes-carrying rules now fall back to response files). The pin
@@ -47,7 +47,7 @@ env:
   # 0.0.94 fixed feature-gated `sources` under `mcpp test` (mcpp#218); 0.0.91
   # added standard = "c++fly" to the resolver grammar, so c++fly descriptors
   # get the lint WARN below, not a hard grammar-parse rejection.
-  MCPP_VERSION: "0.0.102"
+  MCPP_VERSION: "0.0.108"
 
 jobs:
   lint:
@@ -217,21 +217,21 @@ jobs:
             ext: tar.gz
             mcpp: bin/mcpp
             xlings: registry/bin/xlings
-            mcpp_version: "0.0.102"   # keep in sync with env.MCPP_VERSION
+            mcpp_version: "0.0.108"   # keep in sync with env.MCPP_VERSION
           - platform: macos
             os: macos-15
             suffix: macosx-arm64
             ext: tar.gz
             mcpp: bin/mcpp
             xlings: registry/bin/xlings
-            mcpp_version: "0.0.102"   # keep in sync with env.MCPP_VERSION
+            mcpp_version: "0.0.108"   # keep in sync with env.MCPP_VERSION
           - platform: windows
             os: windows-latest
             suffix: windows-x86_64
             ext: zip
             mcpp: bin/mcpp.exe
             xlings: registry/bin/xlings.exe
-            mcpp_version: "0.0.102"   # keep in sync with env.MCPP_VERSION
+            mcpp_version: "0.0.108"   # keep in sync with env.MCPP_VERSION
     env:
       MCPP_EFFECTIVE: ${{ matrix.mcpp_version }}
     steps:
