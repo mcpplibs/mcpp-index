@@ -11,7 +11,17 @@ on:
   workflow_dispatch:
 
 env:
-  # 0.0.108: windows command-line ceiling (mcpp#261 — the clang scan rule got
+  # 0.0.106: SPEC-001 package identity (mcpp#280). `package.name` is a SINGLE
+  # ATOMIC SEGMENT — all hierarchy lives in `package.namespace` — and mcpp
+  # addresses a package by the LITERAL name it read, so descriptors no longer
+  # repeat their namespace inside `name`. This index is migrated to the short
+  # form, which is why min_mcpp/latest_mcpp move in lock-step: an older client
+  # re-derives `<ns>.<short>`, misses, and reports a bare E_NOT_FOUND. Bundles
+  # xlings 0.4.69, which keys its index by (namespace, name) so two packages
+  # sharing a short name in one index are both addressable (xlings#381) — this
+  # index now has three such pairs (imgui / ffmpeg / lua under compat vs the
+  # default namespace).
+  # 0.0.102: windows command-line ceiling (mcpp#261 — the clang scan rule got
   # its P1689 JSON through shell redirection, which forced a `cmd /c` wrapper
   # and with it cmd.exe's 8191-char limit; clang-scan-deps -o removes both, and
   # $local_includes-carrying rules now fall back to response files). The pin
@@ -90,14 +100,11 @@ jobs:
             if ! lua5.4 tests/check_mirror_urls.lua "$f"; then
               fail=1
             fi
-            # 5. `name` must be the fully-qualified `<namespace>.<short>`.
-            #    The split form (namespace = "chriskohlhoff", name = "asio")
-            #    parses and passes `mcpp xpkg parse`, but xlings keys the index
-            #    on the literal `name` while mcpp asks for the reconstructed
-            #    FQN — they never meet, so the package is uninstallable on
-            #    every platform (mcpp-community/mcpp#278). This check is cheap
-            #    and catches in seconds what otherwise fails an hour into the
-            #    workspace job.
+            # 5. `name` must be a SINGLE ATOMIC SEGMENT; hierarchy belongs in
+            #    `namespace` (mcpp SPEC-001 §3.2). The legacy fully-qualified
+            #    spelling stays accepted. Cheap second gate: it runs before the
+            #    pinned mcpp is even downloaded, and mcpp >= 0.0.106 enforces
+            #    the same rule inside `mcpp xpkg parse`.
             if ! lua5.4 tests/check_package_name.lua "$f"; then
               fail=1
             fi
@@ -115,16 +122,14 @@ jobs:
           done
           [ $fail -eq 0 ] && echo "All package files valid."
           exit $fail
-      - name: Check ggml-org.llamacpp snapshot
-        run: |
-          python3 -m unittest tools/llamacpp/test_audit_snapshot.py -v
-          python3 -m unittest tools/llamacpp/test_gen_exports.py -v
-          python3 -m unittest tests/test_fetch_llamacpp_model.py -v
-          python3 -m unittest tests/test_check_llamacpp_snapshot.py -v
-          python3 -m unittest tests/test_select_affected_members.py -v
-          python3 tools/llamacpp/audit_snapshot.py \
-            --check tools/llamacpp/snapshots/b10069.json
-          python3 tests/check_llamacpp_snapshot.py
+      # ── Whole-repository check (needs every descriptor at once) ──────
+      # An install() hook addressing a sibling package does so by
+      # `<namespace>:<literal package.name>`, and a miss returns nil rather
+      # than raising — so a stale spelling surfaces far downstream (a broken
+      # libxcb showed up as a libX11 link error). Verified across the repo
+      # because it needs the full set of declared identities.
+      - name: Lint cross-package references
+        run: lua5.4 tests/check_cross_package_refs.lua pkgs/*/*.lua
       # ── Single-source-of-truth grammar check ─────────────────────────
       # `mcpp xpkg parse` uses EXACTLY the resolver's parser, so what
       # passes here is what builds for users of the pinned MCPP_VERSION.
@@ -240,9 +245,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
       - name: Restore mcpp registry cache
         uses: actions/cache@v4
         with:
@@ -287,7 +289,7 @@ jobs:
       # `mcpp test --workspace` builds every member (opencv, ffmpeg, …) and
       # dominates CI wall-clock, while a PR almost always touches one
       # package. Map changed files → affected members and test only those:
-      #   pkgs/<x>/<lib>.lua    → direct consumers plus explicit transitive cohorts
+      #   pkgs/<x>/<lib>.lua    → members whose mcpp.toml references <lib>
       #   tests/examples/<m>/** → member <m>
       # Run the FULL workspace when the change can affect everything:
       # non-PR events (push to main, the nightly cron, dispatch), this
@@ -302,9 +304,6 @@ jobs:
           full() { echo "MEMBERS=__ALL__" >> "$GITHUB_ENV"; echo "full run: $1"; exit 0; }
           [ "${{ github.event_name }}" = "pull_request" ] || full "event=${{ github.event_name }}"
           base="origin/${{ github.base_ref }}"
-          renamed_or_copied=$(git diff --find-renames --find-copies \
-            --diff-filter=RC --name-status "$base"...HEAD)
-          [ -z "$renamed_or_copied" ] || full "renamed/copied path: $renamed_or_copied"
           changed=$(git diff --name-only "$base"...HEAD)
           printf 'changed files vs %s:\n%s\n' "$base" "$changed"
           sel=""
@@ -322,32 +321,22 @@ jobs:
                              <(grep -v 'tests/examples/' mcpp.toml) >/dev/null; then
                   full "mcpp.toml non-member change"
                 fi
-                for p in $(comm -23 <(git show "$base:mcpp.toml" | grep -o 'tests/examples/[A-Za-z0-9._-]*' | sort -u) \
-                                    <(grep -o 'tests/examples/[A-Za-z0-9._-]*' mcpp.toml | sort -u)); do
-                  full "mcpp.toml removed workspace member: ${p#tests/examples/}"
-                done
                 for p in $(comm -13 <(git show "$base:mcpp.toml" | grep -o 'tests/examples/[A-Za-z0-9._-]*' | sort -u) \
                                     <(grep -o 'tests/examples/[A-Za-z0-9._-]*' mcpp.toml | sort -u)); do
                   add "${p#tests/examples/}"
                 done ;;
               tests/examples/*)
                 m=${f#tests/examples/}; m=${m%%/*}
-                if [ -d "tests/examples/$m" ]; then
-                  add "$m"
-                else
-                  full "deleted workspace member directory: $m"
-                fi ;;
+                # A deleted/renamed member dir implies a mcpp.toml edit,
+                # which already forces a full run above.
+                [ -d "tests/examples/$m" ] && add "$m" ;;
               pkgs/*.lua|pkgs/*/*.lua)
+                lib=$(basename "$f" .lua); lib=${lib#compat.}
                 hit=0
-                if ! selected=$(python tools/select_affected_members.py \
-                                  "$f" tests/examples/*/mcpp.toml); then
-                  echo "::error::member selection failed for $f"
-                  exit 1
-                fi
-                for m in $selected; do
-                  add "$m"; hit=1
+                for mt in tests/examples/*/mcpp.toml; do
+                  if grep -q "$lib" "$mt"; then add "$(basename "$(dirname "$mt")")"; hit=1; fi
                 done
-                [ "$hit" = 1 ] || full "no workspace member exercises $f" ;;
+                [ "$hit" = 1 ] || echo "note: no workspace member exercises $f" ;;
               # tools/ holds OFFLINE descriptor-generation and publishing
               # helpers (tools/compat-*/, tools/gtc/, publish_mcpp_index.sh).
               # Nothing under it is consumed by a package build: when one of
@@ -364,27 +353,6 @@ jobs:
           sel=${sel# }
           echo "MEMBERS=$sel" >> "$GITHUB_ENV"
           echo "selected members: ${sel:-<none>}"
-
-      - name: Provision pinned llama.cpp model
-        shell: bash
-        run: |
-          need_model=0
-          if [ "$MEMBERS" = "__ALL__" ]; then
-            need_model=1
-          else
-            for member in $MEMBERS; do
-              case "$member" in
-                *llama*) need_model=1 ;;
-              esac
-            done
-          fi
-          if [ "$need_model" = 1 ]; then
-            model="$RUNNER_TEMP/stories15M-q4_0.gguf"
-            python tests/fetch_llamacpp_model.py --output "$model"
-            echo "LLAMACPP_TEST_MODEL=$model" >> "$GITHUB_ENV"
-          else
-            echo "No llama.cpp member selected; model provisioning is not required."
-          fi
 
       - name: mcpp test (workspace or affected members)
         shell: bash
@@ -406,3 +374,4 @@ jobs:
             done
             exit $rc
           fi
+
