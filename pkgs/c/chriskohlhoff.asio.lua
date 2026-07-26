@@ -253,8 +253,15 @@ using ::asio::ssl::context;
 using ::asio::ssl::context_base;
 using ::asio::ssl::stream;
 using ::asio::ssl::stream_base;
+using ::asio::ssl::verify_context;
 using ::asio::ssl::verify_mode;
 using ::asio::ssl::host_name_verification;
+}
+
+export namespace asio::ssl::error {
+using ::asio::ssl::error::stream_errors;
+using ::asio::ssl::error::make_error_code;
+// stream_category is static const ref (internal linkage) — can't export.
 }
 #endif
 
