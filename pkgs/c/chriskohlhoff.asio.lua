@@ -253,11 +253,8 @@ using ::asio::ssl::context;
 using ::asio::ssl::context_base;
 using ::asio::ssl::stream;
 using ::asio::ssl::verify_mode;
-// verify_* have internal linkage (const int), can't export via 'using'.
-// Redeclare as inline constexpr backed by OpenSSL macros.
-export inline constexpr int verify_none                 = SSL_VERIFY_NONE;
-export inline constexpr int verify_peer                 = SSL_VERIFY_PEER;
-export inline constexpr int verify_fail_if_no_peer_cert = SSL_VERIFY_FAIL_IF_NO_PEER_CERT;
+// verify_* are const int with internal linkage — can't export.
+// host_name_verification includes rfc2818 logic internally.
 using ::asio::ssl::host_name_verification;
 }
 #endif
