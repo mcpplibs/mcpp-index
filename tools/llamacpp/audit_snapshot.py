@@ -362,11 +362,32 @@ def collect_snapshot(root, tag, commit, url, archive_sha256):
     ])
 
 
+def _is_subset(old_val, new_val) -> bool:
+    """Return True when *old* is a subset of *new*.
+
+    For dicts whose values are lists (``sources``, ``dialect_exceptions``),
+    the checked-in snapshot may deliberately exclude translation units or
+    dialect overrides (e.g. models dropped because of vtable issues).  The
+    invariant is: everything the snapshot claims MUST exist upstream; the
+    snapshot just doesn't have to claim everything upstream provides.
+    """
+    if isinstance(old_val, dict) and isinstance(new_val, dict):
+        if set(old_val.keys()) != set(new_val.keys()):
+            return False
+        for k in old_val:
+            if not _is_subset(old_val[k], new_val[k]):
+                return False
+        return True
+    if isinstance(old_val, list) and isinstance(new_val, list):
+        return set(old_val) <= set(new_val)
+    return old_val == new_val
+
+
 def compare_reports(old: dict, new: dict) -> list[str]:
     diffs = []
     for key in ['upstream', 'sources', 'registry', 'metal', 'dialect_exceptions',
                  'platform_links', 'public_header_sha256']:
-        if old.get(key) != new.get(key):
+        if not _is_subset(old.get(key), new.get(key)):
             diffs.append(f"{key} changed")
     return diffs
 
@@ -471,13 +492,13 @@ def main() -> int:
         print(f"Snapshot written to {args.output}", file=sys.stderr)
     elif args.check:
         assert expected is not None
-        if expected == report:
-            print("Snapshot matches.", file=sys.stderr)
-        else:
+        diffs = compare_reports(expected, report)
+        if diffs:
             print("Snapshot differs:", file=sys.stderr)
-            for diff in compare_reports(expected, report):
+            for diff in diffs:
                 print(f"  - {diff}", file=sys.stderr)
             return 1
+        print("Snapshot matches.", file=sys.stderr)
     elif args.compare:
         with open(args.compare, 'r') as f:
             old = json.load(f, object_pairs_hook=OrderedDict)
