@@ -91,7 +91,7 @@ bool run_metal_add_probe(ggml_backend_dev_t device) {
         ggml_backend_synchronize(backend);
         ggml_backend_tensor_get(sum, actual, 0, sizeof(actual));
         const float expected[] = {5.0F, 3.0F, 2.0F, 7.0F};
-        for (size_t i = 0; i < 4; ++i) {
+        for (std::size_t i = 0; i < 4; ++i) {
             if (actual[i] != expected[i]) {
                 passed = false;
                 break;
