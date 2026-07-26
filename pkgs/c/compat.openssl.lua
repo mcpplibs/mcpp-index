@@ -90,9 +90,13 @@ local function _install_impl()
     end
 
     local prefix = pkginfo.install_dir()
-    os.tryrm(prefix)
-    os.mv(srcroot, prefix)
-    os.cd(prefix)
+    local logf   = path.join(srcroot, "mcpp_openssl_build.log")
+
+    -- Build in the extracted source directory (srcroot) with --prefix
+    -- pointing to the clean install directory (prefix).  This avoids the
+    -- in-source "cp: source and dest are identical" failure that happens
+    -- when prefix == srcroot.
+    os.cd(srcroot)
 
     -- Static-only build: no shared libs, no DSO, no tests, no apps, no engine.
     -- `./config` auto-detects the target platform (equivalent to
@@ -100,16 +104,21 @@ local function _install_impl()
     local make  = resolve_make()
     local jobs  = (os.default_njob and os.default_njob()) or 4
     local flags = "no-shared no-dso no-tests no-apps no-engine"
-    local logf  = path.join(prefix, "mcpp_openssl_build.log")
     os.exec(string.format("bash -c %s", sh_quote(string.format(
-        "cd %s && ./config %s >> %s 2>&1",
-        sh_quote(prefix), flags, sh_quote(logf)))))
+        "cd %s && ./config --prefix=%s %s >> %s 2>&1",
+        sh_quote(srcroot), sh_quote(prefix), flags, sh_quote(logf)))))
     os.exec(string.format("bash -c %s", sh_quote(string.format(
         "cd %s && %s -j%d >> %s 2>&1",
-        sh_quote(prefix), make, jobs, sh_quote(logf)))))
+        sh_quote(srcroot), make, jobs, sh_quote(logf)))))
+
+    -- Install to the clean prefix directory.
+    -- Override RANLIB to use the system ranlib (which supports the macOS
+    -- `-c` flag).  LLVM's llvm-ranlib (injected into PATH by the toolchain)
+    -- rejects `-c`, which causes install_dev to fail.
+    os.tryrm(prefix)
     os.exec(string.format("bash -c %s", sh_quote(string.format(
-        "cd %s && %s install_sw >> %s 2>&1",
-        sh_quote(prefix), make, sh_quote(logf)))))
+        "cd %s && %s RANLIB=/usr/bin/ranlib install_sw >> %s 2>&1",
+        sh_quote(srcroot), make, sh_quote(logf)))))
 
     -- Verify the build produced the expected archives.
     local libdir   = path.join(prefix, "lib")
@@ -135,9 +144,13 @@ function install()
         log.error("compat.openssl: windows is not yet supported")
         return false
     end
-    local ok, err = pcall(_install_impl)
+    local ok, result = pcall(_install_impl)
     if not ok then
-        log.error("compat.openssl install() failed: %s", tostring(err))
+        log.error("compat.openssl install() failed: %s", tostring(result))
+        return false
+    end
+    if not result then
+        log.error("compat.openssl install() returned false")
         return false
     end
     return true
