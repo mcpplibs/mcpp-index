@@ -8,3 +8,4 @@ tests/examples/*/mcpp.lock
 tests/examples/build-mcpp/src/generated.cpp
 imgui.ini
 tests/examples/*/imgui.ini
+__pycache__/
