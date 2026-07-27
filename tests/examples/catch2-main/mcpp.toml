@@ -1,0 +1,16 @@
+# compat.catch2 at v3 — `main` FEATURE path: the package supplies the entry
+# point and this project deliberately defines no main(). If the feature stops
+# gating the generated TU in, this member fails with
+# `undefined reference to 'main'`.
+#
+# This cannot share a project with tests/examples/catch2: features are resolved
+# per consuming project, so one project cannot hold catch2 both with and
+# without `main` (same constraint as asio-ssl vs asio-module).
+#
+# The `compat` index redirect is inherited from the workspace root.
+[package]
+name = "catch2-main-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+catch2 = { version = "3.15.2", features = ["main"] }

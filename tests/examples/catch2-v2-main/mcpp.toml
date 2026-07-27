@@ -1,0 +1,13 @@
+# compat.catch2 at v2 — `main` FEATURE path: no main() and no
+# CATCH_CONFIG_MAIN here; both come from the package's generated TU. This is
+# also what exercises the ELSE branch of that TU's
+# __has_include(<catch2/catch_all.hpp>) discriminator — the v3 members only
+# ever take the THEN branch.
+#
+# The `compat` index redirect is inherited from the workspace root.
+[package]
+name = "catch2-v2-main-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+catch2 = { version = "2.13.10", features = ["main"] }

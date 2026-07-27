@@ -1,12 +1,13 @@
-# Catch2 v3 test project: depends on compat.catch2 (compiled from amalgamated
-# source via this repo's own index) and asserts behavior under `mcpp test`.
+# compat.catch2 at v3 — DEFAULT path: the package is a static library and this
+# project supplies its own main() via Catch::Session. Also pins down that
+# upstream's catch_main.cpp really is excluded — if the `!` negation stopped
+# working, this member would fail with `multiple definition of 'main'`.
+#
+# The `compat` index redirect is inherited from the workspace root.
 # Part of the mcpp-index self-referential workspace.
 [package]
 name = "catch2-tests"
 version = "0.1.0"
-
-[indices]
-compat = { path = "../../.." }
 
 [dependencies.compat]
 catch2 = "3.15.2"

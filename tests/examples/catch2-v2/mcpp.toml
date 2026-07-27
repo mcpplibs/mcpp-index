@@ -1,12 +1,13 @@
-# Catch2 v2 test project: depends on compat.catch2-v2 (header-only via this
-# repo's own index) and asserts behavior under `mcpp test`.
+# compat.catch2 at v2 — DEFAULT path: header-only, this project defines
+# CATCH_CONFIG_MAIN itself. This is the member that proves the single-package
+# union holds: at 2.13.10 the `*/src/catch2/**/*.cpp` glob must match nothing
+# and `*/single_include` must resolve, or the build picks up the wrong half.
+#
+# The `compat` index redirect is inherited from the workspace root.
 # Part of the mcpp-index self-referential workspace.
 [package]
 name = "catch2-v2-tests"
 version = "0.1.0"
 
-[indices]
-compat = { path = "../../.." }
-
 [dependencies.compat]
-catch2-v2 = "2.13.10"
+catch2 = "2.13.10"

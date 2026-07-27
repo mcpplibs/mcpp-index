@@ -1,109 +1,177 @@
 # Design doc: add Catch2 to mcpp-index
 
-Date: 2026-07-26
+Date: 2026-07-26 (revised 2026-07-27 — single package, see §"Revision")
 
 ## Source
 
 - Repo: [catchorg/Catch2](https://github.com/catchorg/Catch2)
 - License: BSL-1.0 (Boost Software License 1.0)
-- Upstream release model: amalgamated files published as GitHub release assets
 
 Catch2 has two major versions with incompatible APIs and source layouts:
 
-| Version | Source layout | Shape |
-|---------|--------------|-------|
-| v2.13.10 | `single_include/catch2/catch.hpp` (single amalgamated header) | **header-only** |
-| v3.15.2 | `src/catch2/**/*.{hpp,cpp}` (individual source files) | **C-source compat (static lib)** |
+| Version | Source layout | Resulting shape |
+|---------|--------------|-----------------|
+| 2.13.10 | `single_include/catch2/catch.hpp` (single amalgamated header) | **header-only** |
+| 3.15.2 | `src/catch2/**/*.{hpp,cpp}` (individual source files) | **static library** |
 
-The v2→v3 jump changed the repo layout completely (`single_include/` → `src/catch2/`),
-so the two versions cannot share a single `mcpp` block. Two separate packages are used:
+## Revision: one package, not two
 
-- `compat.catch2` — v3, C-source compat (static library from individual source files)
-- `compat.catch2-v2` — v2, header-only
+The first draft of this design shipped **two** packages, `compat.catch2` (v3)
+and `compat.catch2-v2` (v2), on the reasoning that "the v2→v3 jump changed the
+repo layout completely, so the two versions cannot share a single `mcpp`
+block."
 
-## Package shape decision
+The premise is right; the conclusion was not. The two layouts' globs are
+**disjoint**, so a single `mcpp` block can carry the **union** of both and let
+each version light up exactly one half:
 
-### compat.catch2 (v3)
+| glob | 2.13.10 | 3.15.2 |
+|---|---|---|
+| `*/single_include` | exists | absent |
+| `*/src/catch2/**/*.cpp` | **0 matches** — v2's only `src/` file is `src/catch_with_main.cpp`, *not* under `src/catch2/` | 107 |
+| `catch2/catch_all.hpp` | absent | exists |
 
-- **Shape**: C-source compat static library (same as compat.cjson / compat.gtest)
-- **Sources**: `*/src/catch2/**/*.cpp` — all Catch2 implementation files (107 TUs)
-- **include_dirs**: `{ "*/src", "mcpp_generated" }` — exposes `<catch2/catch_all.hpp>`
-  etc. from the source tree, and `catch2/catch_user_config.hpp` from generated files
-- **catch_user_config.hpp**: materialised via `generated_files` (normally
-  CMake-generated; provides `CATCH_CONFIG_DEFAULT_REPORTER` and
-  `CATCH_CONFIG_CONSOLE_WIDTH`). Both value-defines use `#ifndef` guards so
-  users can override them via `cxxflags = ["-DCATCH_CONFIG_DEFAULT_REPORTER=xml"]`
-  in their own `mcpp.toml`. Other boolean toggles (e.g. `CATCH_CONFIG_WCHAR`)
-  are auto-detected by `catch_compiler_capabilities.hpp` and can likewise be
-  forced on/off via `-D` flags.
-- **catch_main.cpp**: provides a default `main()`. Excluded from the default
-  source set via `!` negation (`"!*/src/catch2/internal/catch_main.cpp"`);
-  only compiled when `features = ["main"]` is requested (same pattern as
-  `compat.gtest`'s `main` feature gating `gtest_main.cc`)
+An `include_dirs` entry whose glob matches nothing is not an error, and a
+`sources` glob that matches nothing simply contributes no TUs — which is what
+makes the union safe. At 2.13.10 the package degenerates to header-only
+(`single_include` + an anchor TU); at 3.15.2 it is a 106-TU static library.
 
-### compat.catch2-v2 (v2)
+The last row doubles as a compile-time major discriminator:
+`__has_include(<catch2/catch_all.hpp>)`.
 
-- **Shape**: header-only (same as compat.eigen / compat.opengl)
-- **include_dirs**: `{ "*/single_include" }` — consumers `#include <catch2/catch.hpp>`
-- **Anchor**: trivial `.c` TU (`mcpp_generated/catch2_v2_anchor.c`) to give mcpp
-  a buildable lib target
-- **`main` feature**: gates a generated `main.cpp` that defines
-  `CATCH_CONFIG_MAIN` and includes `<catch2/catch.hpp>`, providing a ready-made
-  `main()`. Excluded by default
+### Why one package is the better shape regardless
 
-## Download URLs
+- **A version does not belong in `name`.** `catch2-v2` smuggles a major into
+  the atomic name segment that SPEC-001 identity reserves for the name alone —
+  the same anti-pattern the `compat.openssl` → `openssl` rename removed.
+- **Semver stops working across the split.** With two packages a consumer
+  cannot write `catch2 = "^3"`, and version resolution cannot see v2 and v3 as
+  the same library.
+- **Discovery.** One library should not answer to two package names.
+- **It is a one-way door.** Once `compat.catch2-v2` ships in a published index
+  artifact, withdrawing it is a breaking change. The decision had to be made
+  before merge, not after.
 
-Both packages use GitHub tag archive tarballs (not individual release assets)
-because xpm supports one URL per version.
+### Relationship to mcpp#290
 
-| Package | Version | GitHub archive URL | SHA256 |
-|---------|---------|--------------------|--------|
-| compat.catch2 | 3.15.2 | `https://github.com/catchorg/Catch2/archive/refs/tags/v3.15.2.tar.gz` | `acfae120892c2b67a74142d36d060c0caa96f1c3aaa8aabd96e19961163d0420` |
-| compat.catch2-v2 | 2.13.10 | `https://github.com/catchorg/Catch2/archive/refs/tags/v2.13.10.tar.gz` | `d54a712b7b1d7708bc7a819a8e6e47b2fde9536f487b89ccbca295072a7d9943` |
+[mcpp-community/mcpp#290](https://github.com/mcpp-community/mcpp/issues/290)
+asks for per-version `mcpp` build blocks. It is **not** a prerequisite here —
+the merge works on mcpp 0.0.109 today.
 
-### Individual release asset SHAs (for reference)
+Nor is Catch2 the case #290 argues from. That issue's motivating example
+(llama.cpp b10069 vs b10107) shares ~95% of its build rules and differs in a
+few source files. Catch2 v2/v3 share essentially *nothing* but boilerplate
+(`language`, `import_std`, `c_standard`, `targets`, `deps`); they merge only
+because their globs happen not to overlap.
 
-| File | Release URL | SHA256 |
-|------|------------|--------|
-| catch.hpp (v2.13.10) | `https://github.com/catchorg/Catch2/releases/download/v2.13.10/catch.hpp` | `3725c0f0a75f376a5005dde31ead0feb8f7da7507644c201b814443de8355170` |
-| catch_amalgamated.cpp (v3.15.2) | `https://github.com/catchorg/Catch2/releases/download/v3.15.2/catch_amalgamated.cpp` | `1ec0b0c0d6133f76fea521295be3e69e3aa5464ab92972897414ca59b7f674d5` |
-| catch_amalgamated.hpp (v3.15.2) | `https://github.com/catchorg/Catch2/releases/download/v3.15.2/catch_amalgamated.hpp` | `f0573f46ac989896a20c524085307b633f01c8e1cdbbe6d9b39f63827c2d6c5e` |
+That "happen not to" is the weak point, and it is exactly what #290 would fix:
+the disjointness is a property of two upstream trees, not something this
+descriptor can enforce. When #290 lands, this collapses into explicit
+`["2.x"]` / `["3.x"]` blocks and the implicit assumption disappears. Until
+then the premise is documented in the descriptor header and must be re-checked
+whenever a version is added.
 
-## CN mirror
+## Package shape
 
-Not configured yet — no `mcpp-res` write access. Using plain-string upstream URLs
-(no `{ GLOBAL=…, CN=… }` table). CN users will fall back to the upstream source.
-Mirrors can be added later by a maintainer.
+- **Sources**: anchor TU + `*/src/catch2/**/*.cpp` minus
+  `!*/src/catch2/internal/catch_main.cpp` (107 files, 106 compiled).
+- **include_dirs**: `{ "*/single_include", "*/src", "mcpp_generated" }`.
+- **Anchor** (`mcpp_generated/catch2_anchor.c`): required at v2, where the
+  sources glob matches nothing and a lib target still needs a TU. Same shape
+  as compat.eigen / compat.khrplatform. Inert at v3.
+- **catch_user_config.hpp**: materialised via `generated_files` (upstream ships
+  only `catch_user_config.hpp.in` and lets CMake fill it). Only the two VALUE
+  defines are mandatory — `CATCH_CONFIG_DEFAULT_REPORTER` and
+  `CATCH_CONFIG_CONSOLE_WIDTH`; every other entry in the `.in` is a
+  `#cmakedefine`, i.e. absent means "use the compiler-detected default". Both
+  are `#ifndef`-guarded so a consumer can override via `-D`. v2 never includes
+  this file. **Re-read the upstream `.in` when bumping v3** — a newly added
+  mandatory value-define would break silently here.
 
-## Test examples
+## The `main` feature
 
-- **tests/examples/catch2/**: v3 static library build. Includes
-  `<catch2/catch_all.hpp>`, provides own `main()` using
-  `Catch::Session().run()`, runs two `TEST_CASE`s.
-- **tests/examples/catch2-v2/**: v2 header-only. Defines `CATCH_CONFIG_MAIN` to
-  get a built-in main, includes `<catch2/catch.hpp>`, runs two `TEST_CASE`s
-  within a single TU.
+`features = ["main"]` compiles a **generated** TU that supplies a default entry
+point, branching on `__has_include(<catch2/catch_all.hpp>)` to pick the v3
+(`Catch::Session`) or v2 (`CATCH_CONFIG_MAIN`) spelling.
+
+It deliberately does **not** point at upstream's
+`src/catch2/internal/catch_main.cpp`. That was the first draft's approach and
+it does not work. Measured on mcpp 0.0.109:
+
+| descriptor form | default path | `features = ["main"]` |
+|---|---|---|
+| glob + `!` negation, feature → the negated path | ok | **FAIL** `undefined reference to 'main'` |
+| glob, no negation, feature → the globbed path | **FAIL** `multiple definition of 'main'` | ok |
+| glob + `!` negation + explicit re-add, feature → that path | ok | **FAIL** `undefined reference to 'main'` |
+| glob + `!` negation, feature → **generated TU** | ok | ok |
+
+Two mechanics behind that table:
+
+1. A `!` negation in `sources` is an **absolute** exclusion applied to the
+   final source set. A feature cannot add the path back — not even if the path
+   is also listed explicitly afterwards.
+2. Feature gating matches **literal** `sources` entries. A file pulled in by a
+   glob is not gated at all, so it lands in the default build.
+
+Together these mean the `compat.gtest` pattern does **not** transfer:
+`gtest_main.cc` is a literal `sources` entry, so listing it under a feature
+gates it. Under a glob the same idea silently breaks in one direction or the
+other. A generated TU sidesteps the conflict.
+
+Cost of not reusing upstream's file: no `LeakDetector` registration (a Windows
+CRT-debug nicety) and no `wmain` variant (reachable only under `_UNICODE` on
+Windows). Consumers needing either write their own `main()`.
+
+## Why this needs four workspace members
+
+Features are resolved **per consuming project**, so one project cannot hold
+`catch2` both with and without `main` (same constraint that forces `asio-ssl`
+to be separate from `asio-module`). Two majors × {default, `main` feature} = 4:
+
+| member | version | requests | what it would catch |
+|---|---|---|---|
+| `catch2` | 3.15.2 | — (own `main()`) | negation stops working → `multiple definition of 'main'` |
+| `catch2-main` | 3.15.2 | `features = ["main"]` | feature stops gating the TU in → `undefined reference to 'main'` |
+| `catch2-v2` | 2.13.10 | — (own `CATCH_CONFIG_MAIN`) | union bleeds across versions; `single_include` unresolved |
+| `catch2-v2-main` | 2.13.10 | `features = ["main"]` | the `__has_include` ELSE branch (v3 members only take THEN) |
+
+The first draft declared a `main` feature on both packages and covered
+**neither** — which is precisely why the broken feature passed CI. Every test
+body keeps a real `REQUIRE`, and Catch2 prints its assertion count on exit, so
+a TU that compiles to nothing cannot pass quietly.
+
+## Download URLs and mirrors
+
+GitHub tag archive tarballs (not the individual amalgamated release assets):
+xpm takes one URL per version, and the tag archive is the only form that
+carries both layouts. Neither archive contains symlinks, so the Windows
+extraction path is safe.
+
+| Version | GLOBAL | CN | SHA256 |
+|---|---|---|---|
+| 2.13.10 | `github.com/catchorg/Catch2/archive/refs/tags/v2.13.10.tar.gz` | `gitcode.com/mcpp-res/catch2/releases/download/2.13.10/catch2-2.13.10.tar.gz` | `d54a712b…9943` |
+| 3.15.2 | `github.com/catchorg/Catch2/archive/refs/tags/v3.15.2.tar.gz` | `gitcode.com/mcpp-res/catch2/releases/download/3.15.2/catch2-3.15.2.tar.gz` | `acfae120…0420` |
+
+CN assets were uploaded to the `mcpp-res` gitcode org and re-downloaded: both
+are byte-identical to the upstream archives (same sha256, same size), so the
+single recorded `sha256` covers either source.
 
 ## Verification
 
-- SHA256 computed twice (confirmed stable) via `sha256sum` on the codeload tarballs
-- File paths confirmed by `tar -tzf` against tag archives
-- Both packages pass `mcpp xpkg parse` lint
-- `mcpp test -p catch2` → **test result ok** (2 assertions in 2 test cases)
-- `mcpp test -p catch2-v2` → **test result ok** (2 assertions in 2 test cases)
-- Tested with mcpp 0.0.108 (matching CI `MCPP_VERSION`) on x86_64-windows-msvc
+Local, mcpp 0.0.109 (matching CI `MCPP_VERSION`), gcc@16.1.0, linux-x86_64:
+
+- `mcpp xpkg parse` on the descriptor: OK
+- `tests/check_mirror_urls.lua`: OK
+- All four members via `mcpp test -p`: ok
+- **Negative controls** (not committed): dropping `features = ["main"]` from
+  each `-main` member fails with `undefined reference to 'main'`, confirming
+  the feature is what supplies the entry point rather than something else.
+- Both tarballs re-downloaded from GLOBAL and CN and sha256-checked.
+
+CI covers linux / macOS / windows.
 
 ## Notes
 
-- Catch2 v3 static library requires `catch_user_config.hpp` (normally
-  CMake-generated). A minimal version is materialised via `generated_files` at
-  `mcpp_generated/catch2/catch_user_config.hpp` with `#ifndef` guards on the
-  two value-defines (`CATCH_CONFIG_DEFAULT_REPORTER` and
-  `CATCH_CONFIG_CONSOLE_WIDTH`), allowing users to override them via `-D` flags.
-- `catch_main.cpp` is gated via `!` negation in `sources` + feature listing,
-  following the exact `compat.gtest` pattern. No `-DCATCH_AMALGAMATED_CUSTOM_MAIN`
-  needed.
-- Catch2 v3 requires C++14 or later; v2 requires C++11; both compatible with
-  mcpp's `language = "c++23"`.
-- No `c_standard` needed for v3 (pure C++); anchor for v2 uses
-  `c_standard = "c11"`.
+- Catch2 v3 requires C++14, v2 requires C++11; both build under
+  `language = "c++23"`.
+- `c_standard = "c11"` is for the anchor TU.
