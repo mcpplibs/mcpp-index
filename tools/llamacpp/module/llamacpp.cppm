@@ -18,7 +18,7 @@ module;
 #undef LLAMA_STATE_SEQ_FLAGS_PARTIAL_ONLY
 #undef LLAMA_STATE_SEQ_FLAGS_ON_DEVICE
 
-export module llama;
+export module llamacpp;
 
 #include "gen_exports/required_ggml.inc"
 #include "gen_exports/llama.inc"

@@ -51,9 +51,11 @@ class TestGenerateExports(unittest.TestCase):
             fixture.write(
                 """\
 #define LLAMA_API
+#define DEPRECATED(func, hint) func __attribute__((deprecated(hint)))
 struct llama_model;
 enum llama_mode { LLAMA_MODE_A, LLAMA_MODE_B };
 LLAMA_API void llama_live(struct llama_model *);
+DEPRECATED(LLAMA_API void llama_legacy(struct llama_model *), "use llama_live");
 #define LLAMA_NUMBER 7
 """
             )
@@ -117,6 +119,17 @@ struct ggml_backend_buffer * ggml_backend_alloc_ctx_tensors(
         self.assertIn("export using ::llama_model;", llama)
         self.assertIn("export using ::llama_live;", llama)
         self.assertIn("export using ::LLAMA_MODE_A;", llama)
+
+    def test_generate_exports_includes_deprecated_llama_api(self):
+        llama, _, skipped = gen_exports.generate_exports(
+            upstream_dir=self.root,
+            include_dirs=[
+                os.path.join(self.root, "include"),
+                os.path.join(self.root, "ggml", "include"),
+            ],
+        )
+        self.assertIn("export using ::llama_legacy;", llama)
+        self.assertNotIn("deprecated function 'llama_legacy'", skipped)
 
     def test_generate_exports_skips_macros(self):
         _, _, skipped = gen_exports.generate_exports(

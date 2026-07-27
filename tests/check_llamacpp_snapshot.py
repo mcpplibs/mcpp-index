@@ -657,22 +657,22 @@ def check_module_contract(descriptors: dict[str, dict]) -> None:
     mcpp = get_path(descriptors["ggml-org.llamacpp"], "mcpp")
     require(mcpp.get("targets") == {"llama": {"kind": "lib"}},
             "ggml-org.llamacpp must expose exactly one llama target")
-    require(array(mcpp.get("modules"), "ggml-org.llamacpp.modules") == ["llama"],
-            "ggml-org.llamacpp must expose exactly the llama module")
+    require(array(mcpp.get("modules"), "ggml-org.llamacpp.modules") == ["llamacpp"],
+            "ggml-org.llamacpp must expose exactly the llamacpp module")
     generated = get_path(mcpp, "generated_files")
     for generated_name, source_name in (
-            ("mcpp_generated/llama.cppm", "llama.cppm"),
+            ("mcpp_generated/llamacpp.cppm", "llamacpp.cppm"),
             ("mcpp_generated/gen_exports/required_ggml.inc", "gen_exports/required_ggml.inc"),
             ("mcpp_generated/gen_exports/llama.inc", "gen_exports/llama.inc"),
     ):
         expected = (ROOT / "tools/llamacpp/module" / source_name).read_text()
         require(generated.get(generated_name) == expected,
                 f"generated module input drift: {generated_name}")
-    module = generated["mcpp_generated/llama.cppm"]
-    require("export module llama;" in module
+    module = generated["mcpp_generated/llamacpp.cppm"]
+    require("export module llamacpp;" in module
             and "#include <llama.h>" in module
             and "#include \"gen_exports/llama.inc\"" in module,
-            "llama module wrapper contract drift")
+            "llamacpp module wrapper contract drift")
 
 
 def main() -> int:

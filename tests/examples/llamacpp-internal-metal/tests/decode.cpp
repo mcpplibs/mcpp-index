@@ -8,14 +8,14 @@
 
 import std;
 
-import llama;
+import llamacpp;
 
 #ifdef LLAMA_H
-#error "import llama leaked LLAMA_H"
+#error "import llamacpp leaked LLAMA_H"
 #endif
 
 #ifdef LLAMA_API
-#error "import llama leaked LLAMA_API"
+#error "import llamacpp leaked LLAMA_API"
 #endif
 
 

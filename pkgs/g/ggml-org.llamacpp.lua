@@ -49,7 +49,7 @@ package = {
             "*/src",
             "mcpp_generated",
         },
-        modules = { "llama" },
+        modules = { "llamacpp" },
         generated_files = {
             ["mcpp_generated/ggml_cpp.cpp"] = "#include \"ggml.cpp\"\n",
             ["mcpp_generated/ggml-cpu_cpp.cpp"] = "#include \"ggml-cpu.cpp\"\n",
@@ -59,7 +59,7 @@ package = {
 #define GGML_VERSION "b10069"
 #define GGML_COMMIT "178a6c44937154dc4c4eff0d166f4a044c4fceba"
 ]=],
-            ["mcpp_generated/llama.cppm"] = [==[
+            ["mcpp_generated/llamacpp.cppm"] = [==[
 module;
 
 #include <llama.h>
@@ -80,7 +80,7 @@ module;
 #undef LLAMA_STATE_SEQ_FLAGS_PARTIAL_ONLY
 #undef LLAMA_STATE_SEQ_FLAGS_ON_DEVICE
 
-export module llama;
+export module llamacpp;
 
 #include "gen_exports/required_ggml.inc"
 #include "gen_exports/llama.inc"
@@ -320,6 +320,8 @@ export using ::llama_adapter_meta_count;
 export using ::llama_adapter_meta_key_by_index;
 export using ::llama_adapter_meta_val_str;
 export using ::llama_adapter_meta_val_str_by_index;
+export using ::llama_add_bos_token;
+export using ::llama_add_eos_token;
 export using ::llama_attach_threadpool;
 export using ::llama_attention_type;
 export using ::llama_backend_free;
@@ -335,6 +337,7 @@ export using ::llama_context;
 export using ::llama_context_default_params;
 export using ::llama_context_params;
 export using ::llama_context_type;
+export using ::llama_copy_state_data;
 export using ::llama_decode;
 export using ::llama_detach_threadpool;
 export using ::llama_detokenize;
@@ -342,6 +345,7 @@ export using ::llama_encode;
 export using ::llama_flash_attn_type;
 export using ::llama_flash_attn_type_name;
 export using ::llama_free;
+export using ::llama_free_model;
 export using ::llama_ftype;
 export using ::llama_ftype_name;
 export using ::llama_get_embeddings;
@@ -358,7 +362,10 @@ export using ::llama_get_sampled_logits_ith;
 export using ::llama_get_sampled_probs_count_ith;
 export using ::llama_get_sampled_probs_ith;
 export using ::llama_get_sampled_token_ith;
+export using ::llama_get_state_size;
 export using ::llama_init_from_model;
+export using ::llama_load_model_from_file;
+export using ::llama_load_session_file;
 export using ::llama_log_get;
 export using ::llama_log_set;
 export using ::llama_logit_bias;
@@ -428,11 +435,17 @@ export using ::llama_model_tensor_override;
 export using ::llama_n_batch;
 export using ::llama_n_ctx;
 export using ::llama_n_ctx_seq;
+export using ::llama_n_ctx_train;
+export using ::llama_n_embd;
+export using ::llama_n_head;
+export using ::llama_n_layer;
 export using ::llama_n_rs_seq;
 export using ::llama_n_seq_max;
 export using ::llama_n_threads;
 export using ::llama_n_threads_batch;
 export using ::llama_n_ubatch;
+export using ::llama_n_vocab;
+export using ::llama_new_context_with_model;
 export using ::llama_numa_init;
 export using ::llama_opt_epoch;
 export using ::llama_opt_init;
@@ -474,6 +487,7 @@ export using ::llama_sampler_init_adaptive_p;
 export using ::llama_sampler_init_dist;
 export using ::llama_sampler_init_dry;
 export using ::llama_sampler_init_grammar;
+export using ::llama_sampler_init_grammar_lazy;
 export using ::llama_sampler_init_grammar_lazy_patterns;
 export using ::llama_sampler_init_greedy;
 export using ::llama_sampler_init_infill;
@@ -493,6 +507,7 @@ export using ::llama_sampler_name;
 export using ::llama_sampler_reset;
 export using ::llama_sampler_sample;
 export using ::llama_sampler_seq_config;
+export using ::llama_save_session_file;
 export using ::llama_seq_id;
 export using ::llama_set_abort_callback;
 export using ::llama_set_adapter_cvec;
@@ -501,6 +516,8 @@ export using ::llama_set_causal_attn;
 export using ::llama_set_embeddings;
 export using ::llama_set_n_threads;
 export using ::llama_set_sampler;
+export using ::llama_set_state_data;
+export using ::llama_set_warmup;
 export using ::llama_split_mode;
 export using ::llama_split_path;
 export using ::llama_split_prefix;
@@ -526,13 +543,32 @@ export using ::llama_synchronize;
 export using ::llama_time_us;
 export using ::llama_token;
 export using ::llama_token_attr;
+export using ::llama_token_bos;
+export using ::llama_token_cls;
 export using ::llama_token_data;
 export using ::llama_token_data_array;
+export using ::llama_token_eos;
+export using ::llama_token_eot;
+export using ::llama_token_fim_mid;
+export using ::llama_token_fim_pad;
+export using ::llama_token_fim_pre;
+export using ::llama_token_fim_rep;
+export using ::llama_token_fim_sep;
+export using ::llama_token_fim_suf;
+export using ::llama_token_get_attr;
+export using ::llama_token_get_score;
+export using ::llama_token_get_text;
+export using ::llama_token_is_control;
+export using ::llama_token_is_eog;
+export using ::llama_token_nl;
+export using ::llama_token_pad;
+export using ::llama_token_sep;
 export using ::llama_token_to_piece;
 export using ::llama_token_type;
 export using ::llama_tokenize;
 export using ::llama_vocab;
 export using ::llama_vocab_bos;
+export using ::llama_vocab_cls;
 export using ::llama_vocab_eos;
 export using ::llama_vocab_eot;
 export using ::llama_vocab_fim_mid;
@@ -697,7 +733,7 @@ int main() try {
             "*/ggml/src/ggml-cpu/amx/amx.cpp",
             "*/ggml/src/ggml-cpu/amx/mmq.cpp",
             "*/ggml/src/ggml-cpu/llamafile/sgemm.cpp",
-            "mcpp_generated/llama.cppm",
+            "mcpp_generated/llamacpp.cppm",
             "*/src/llama.cpp",
             "*/src/llama-adapter.cpp",
             "*/src/llama-arch.cpp",

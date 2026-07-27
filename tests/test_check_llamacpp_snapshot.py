@@ -177,12 +177,18 @@ class TestLlamacppSnapshotMutations(unittest.TestCase):
 
     def test_rejects_generated_module_drift(self):
         generated = self.descriptors["ggml-org.llamacpp"]["mcpp"]["generated_files"]
-        generated["mcpp_generated/llama.cppm"] += "\n// drift\n"
+        generated["mcpp_generated/llamacpp.cppm"] += "\n// drift\n"
         self.assert_rejected(checker.check_module_contract, "generated module input drift")
+
+    def test_module_name_and_file_are_llamacpp(self):
+        mcpp = self.descriptors["ggml-org.llamacpp"]["mcpp"]
+        self.assertEqual(mcpp["modules"], {1: "llamacpp"})
+        module = mcpp["generated_files"]["mcpp_generated/llamacpp.cppm"]
+        self.assertIn("export module llamacpp;", module)
 
     def test_rejects_module_name_drift(self):
         self.descriptors["ggml-org.llamacpp"]["mcpp"]["modules"] = {1: "wrong"}
-        self.assert_rejected(checker.check_module_contract, "exactly the llama module")
+        self.assert_rejected(checker.check_module_contract, "exactly the llamacpp module")
 
     def test_rejects_extra_target(self):
         self.descriptors["ggml-org.llamacpp"]["mcpp"]["targets"]["extra"] = {
@@ -268,7 +274,7 @@ puts step.fetch('run')
         self.assertIn('"tests/examples/llamacpp-internal-metal"', root_manifest)
         self.assertIn('features = ["backend-metal"]', metal_manifest.read_text())
         self.assertNotIn("compat.ggml-metal", metal_manifest.read_text())
-        self.assertIn("import llama;", (checker.ROOT / "tests/examples/llamacpp-internal-metal/tests/decode.cpp").read_text())
+        self.assertIn("import llamacpp;", (checker.ROOT / "tests/examples/llamacpp-internal-metal/tests/decode.cpp").read_text())
 
 
 if __name__ == "__main__":
