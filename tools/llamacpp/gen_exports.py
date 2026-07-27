@@ -140,13 +140,7 @@ def generate_exports(upstream_dir, include_dirs=None):
                 src_line = llama_lines[line_no - 1]
             else:
                 src_line = ""
-            # Check for DeprecatedAttr
-            has_deprecated = any(
-                c.get("kind") == "DeprecatedAttr"
-                for c in node.get("inner", []))
-            if has_deprecated or "DEPRECATED" in src_line:
-                skipped.append(f"deprecated function '{name}'")
-            elif "LLAMA_API" in src_line:
+            if "LLAMA_API" in src_line:
                 llama_exports.append(f"export using ::{name};")
             # else: static/inline helpers, skip
 
