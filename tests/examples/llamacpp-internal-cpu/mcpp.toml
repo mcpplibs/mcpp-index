@@ -1,0 +1,9 @@
+[package]
+name    = "llamacpp-internal-cpu"
+version = "0.1.0"
+
+[indices]
+ggml-org = { path = "../../.." }
+
+[dependencies.ggml-org]
+llamacpp = "b10069"

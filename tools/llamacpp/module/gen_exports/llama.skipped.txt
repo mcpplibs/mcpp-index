@@ -1,0 +1,51 @@
+deprecated function 'llama_add_bos_token'
+deprecated function 'llama_add_eos_token'
+deprecated function 'llama_copy_state_data'
+deprecated function 'llama_free_model'
+deprecated function 'llama_get_state_size'
+deprecated function 'llama_load_model_from_file'
+deprecated function 'llama_load_session_file'
+deprecated function 'llama_n_ctx_train'
+deprecated function 'llama_n_embd'
+deprecated function 'llama_n_head'
+deprecated function 'llama_n_layer'
+deprecated function 'llama_n_vocab'
+deprecated function 'llama_new_context_with_model'
+deprecated function 'llama_sampler_init_grammar_lazy'
+deprecated function 'llama_save_session_file'
+deprecated function 'llama_set_state_data'
+deprecated function 'llama_set_warmup'
+deprecated function 'llama_token_bos'
+deprecated function 'llama_token_cls'
+deprecated function 'llama_token_eos'
+deprecated function 'llama_token_eot'
+deprecated function 'llama_token_fim_mid'
+deprecated function 'llama_token_fim_pad'
+deprecated function 'llama_token_fim_pre'
+deprecated function 'llama_token_fim_rep'
+deprecated function 'llama_token_fim_sep'
+deprecated function 'llama_token_fim_suf'
+deprecated function 'llama_token_get_attr'
+deprecated function 'llama_token_get_score'
+deprecated function 'llama_token_get_text'
+deprecated function 'llama_token_is_control'
+deprecated function 'llama_token_is_eog'
+deprecated function 'llama_token_nl'
+deprecated function 'llama_token_pad'
+deprecated function 'llama_token_sep'
+deprecated function 'llama_vocab_cls'
+macro LLAMA_API
+macro LLAMA_DEFAULT_SEED
+macro LLAMA_FILE_MAGIC_GGLA
+macro LLAMA_FILE_MAGIC_GGSN
+macro LLAMA_FILE_MAGIC_GGSQ
+macro LLAMA_H
+macro LLAMA_SESSION_MAGIC
+macro LLAMA_SESSION_VERSION
+macro LLAMA_STATE_SEQ_FLAGS_NONE
+macro LLAMA_STATE_SEQ_FLAGS_ON_DEVICE
+macro LLAMA_STATE_SEQ_FLAGS_PARTIAL_ONLY
+macro LLAMA_STATE_SEQ_FLAGS_SWA_ONLY
+macro LLAMA_STATE_SEQ_MAGIC
+macro LLAMA_STATE_SEQ_VERSION
+macro LLAMA_TOKEN_NULL

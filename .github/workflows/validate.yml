@@ -5,7 +5,7 @@ on:
     # mcpp.toml and index.toml carry the workspace member list, the inherited
     # [indices] redirect and the client version floor — a change to any of them
     # can break every member, so they gate the run like the descriptors do.
-    paths: ["pkgs/**/*.lua", "tests/**", "README.md", "mcpp.toml", "index.toml", ".github/workflows/validate.yml"]
+    paths: ["pkgs/**/*.lua", "tests/**", "tools/**", "README.md", "mcpp.toml", "index.toml", ".github/workflows/validate.yml"]
   push:
     branches: [main]
   schedule:
@@ -82,6 +82,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
       - name: Install lua
         run: sudo apt-get install -y --no-install-recommends lua5.4
       - name: Lint package descriptors
@@ -148,6 +151,21 @@ jobs:
       # because it needs the full set of declared identities.
       - name: Lint cross-package references
         run: lua5.4 tests/check_cross_package_refs.lua pkgs/*/*.lua
+      - name: Check ggml-org.llamacpp snapshot
+        run: |
+          python3 -m unittest tools/llamacpp/test_audit_snapshot.py -v
+          python3 -m unittest tools/llamacpp/test_gen_exports.py -v
+          python3 -m unittest tests/test_fetch_llamacpp_model.py -v
+          python3 -m unittest tests/test_llamacpp_package_contract.py -v
+          python3 -m unittest tests/test_check_llamacpp_snapshot.py -v
+          python3 tools/llamacpp/audit_snapshot.py \
+            --check tools/llamacpp/snapshots/b10069.json \
+            --check-exports tools/llamacpp/module/gen_exports \
+            --tag b10069 \
+            --commit 178a6c44937154dc4c4eff0d166f4a044c4fceba \
+            --url https://github.com/ggml-org/llama.cpp/archive/refs/tags/b10069.tar.gz \
+            --sha256 293a7c65a11e2203c5468a06d0d0e8d21dfff16ad08712b16c61efbe0d93e097
+          python3 tests/check_llamacpp_snapshot.py
       # ── Single-source-of-truth grammar check ─────────────────────────
       # `mcpp xpkg parse` uses EXACTLY the resolver's parser, so what
       # passes here is what builds for users of the pinned MCPP_VERSION.
@@ -263,6 +281,9 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
       - name: Restore mcpp registry cache
         uses: actions/cache@v4
         with:
@@ -349,12 +370,14 @@ jobs:
                 # which already forces a full run above.
                 [ -d "tests/examples/$m" ] && add "$m" ;;
               pkgs/*.lua|pkgs/*/*.lua)
-                lib=$(basename "$f" .lua); lib=${lib#compat.}
+                lib=$(basename "$f" .lua); lib=${lib##*.}
                 hit=0
                 for mt in tests/examples/*/mcpp.toml; do
-                  if grep -q "$lib" "$mt"; then add "$(basename "$(dirname "$mt")")"; hit=1; fi
+                  if grep -Eq "^[[:space:]]*([A-Za-z0-9_-]+\.)*${lib}[[:space:]]*=" "$mt"; then
+                    add "$(basename "$(dirname "$mt")")"; hit=1
+                  fi
                 done
-                [ "$hit" = 1 ] || echo "note: no workspace member exercises $f" ;;
+                [ "$hit" = 1 ] || full "no workspace member exercises $f" ;;
               # tools/ holds OFFLINE descriptor-generation and publishing
               # helpers (tools/compat-*/, tools/gtc/, publish_mcpp_index.sh).
               # Nothing under it is consumed by a package build: when one of
@@ -371,6 +394,46 @@ jobs:
           sel=${sel# }
           echo "MEMBERS=$sel" >> "$GITHUB_ENV"
           echo "selected members: ${sel:-<none>}"
+
+      - name: Cold-start llama.cpp package
+        shell: bash
+        run: |
+          package_store="ggml-org-x-ggml-org.llamacpp"
+          rm -rf "$HOME/.mcpp/registry/data/xpkgs/$package_store"
+          rm -rf ".mcpp/.xlings/data/xpkgs/$package_store"
+          members="$MEMBERS"
+          if [ "$members" = "__ALL__" ]; then
+            members="llamacpp-internal-cpu llamacpp-internal-metal"
+          fi
+          for member in $members; do
+            case "$member" in
+              *llama*)
+                rm -rf "tests/examples/$member/.mcpp/.xlings/data/xpkgs/$package_store"
+                rm -rf "tests/examples/$member/target/.build-mcpp/deps/ggml-org.llamacpp@b10069"
+                ;;
+            esac
+          done
+
+      - name: Provision pinned llama.cpp model
+        shell: bash
+        run: |
+          need_model=0
+          if [ "$MEMBERS" = "__ALL__" ]; then
+            need_model=1
+          else
+            for member in $MEMBERS; do
+              case "$member" in
+                *llama*) need_model=1 ;;
+              esac
+            done
+          fi
+          if [ "$need_model" = 1 ]; then
+            model="$RUNNER_TEMP/stories15M-q4_0.gguf"
+            python3 tests/fetch_llamacpp_model.py --output "$model"
+            echo "LLAMACPP_TEST_MODEL=$model" >> "$GITHUB_ENV"
+          else
+            echo "No llama.cpp member selected; model provisioning is not required."
+          fi
 
       - name: mcpp test (workspace or affected members)
         shell: bash

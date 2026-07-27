@@ -1,0 +1,12 @@
+[package]
+name    = "llamacpp-internal-metal"
+version = "0.1.0"
+
+[indices]
+ggml-org = { path = "../../.." }
+
+[target.'cfg(all(macos, arch = "aarch64"))'.dependencies.ggml-org]
+llamacpp = { version = "b10069", features = ["backend-metal"] }
+
+[target.'cfg(all(macos, arch = "aarch64"))'.build]
+cxxflags = ["-DLLAMACPP_METAL_TEST=1"]

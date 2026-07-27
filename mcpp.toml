@@ -25,6 +25,8 @@ members = [
     "tests/examples/imgui",
     "tests/examples/imgui-module",
     "tests/examples/imgui-window",
+    "tests/examples/llamacpp-internal-cpu",
+    "tests/examples/llamacpp-internal-metal",
     "tests/examples/marzer.tomlplusplus",
     "tests/examples/nlohmann.json",
     "tests/examples/openblas",
