@@ -923,20 +923,26 @@ int main() try {
             { glob = "*/src/models/llama-embed.cpp", cxxflags = { "-std=c++20" } },
             { glob = "*/src/models/minimax-m2.cpp", cxxflags = { "-std=c++20" } },
         },
-        linux = {
-            sources = {
-                "*/ggml/src/ggml-cpu/arch/x86/quants.c",
-                "*/ggml/src/ggml-cpu/arch/x86/repack.cpp",
+        target_cfg = {
+            ['cfg(arch = "x86_64")'] = {
+                sources = {
+                    "*/ggml/src/ggml-cpu/arch/x86/quants.c",
+                    "*/ggml/src/ggml-cpu/arch/x86/repack.cpp",
+                },
             },
+            ['cfg(arch = "aarch64")'] = {
+                sources = {
+                    "*/ggml/src/ggml-cpu/arch/arm/quants.c",
+                    "*/ggml/src/ggml-cpu/arch/arm/repack.cpp",
+                },
+            },
+        },
+        linux = {
             cflags   = { "-D_GNU_SOURCE" },
             cxxflags = { "-D_GNU_SOURCE" },
             ldflags  = { "-ldl", "-lpthread", "-lm" },
         },
         macosx = {
-            sources = {
-                "*/ggml/src/ggml-cpu/arch/arm/quants.c",
-                "*/ggml/src/ggml-cpu/arch/arm/repack.cpp",
-            },
             cflags   = { "-D_DARWIN_C_SOURCE" },
             cxxflags = { "-D_DARWIN_C_SOURCE" },
             ldflags = {
@@ -947,10 +953,6 @@ int main() try {
             },
         },
         windows = {
-            sources = {
-                "*/ggml/src/ggml-cpu/arch/x86/quants.c",
-                "*/ggml/src/ggml-cpu/arch/x86/repack.cpp",
-            },
             cflags   = { "-D_CRT_SECURE_NO_WARNINGS", "-DWIN32_LEAN_AND_MEAN" },
             cxxflags = { "-D_CRT_SECURE_NO_WARNINGS", "-DWIN32_LEAN_AND_MEAN" },
             ldflags  = { "-ladvapi32" },

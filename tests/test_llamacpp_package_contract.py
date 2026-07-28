@@ -25,6 +25,35 @@ class LlamaCppPackageContractTests(unittest.TestCase):
         self.assertIn('["b10069"]', text)
         self.assertNotIn('["b10107"]', text)
 
+    def test_cpu_architecture_sources_are_target_conditional(self):
+        text = DESCRIPTOR.read_text()
+        target_cfg_start = text.find("        target_cfg = {")
+        platform_start = text.find("        linux = {", target_cfg_start)
+
+        self.assertGreaterEqual(target_cfg_start, 0, "mcpp.target_cfg is missing")
+        self.assertGreater(
+            platform_start,
+            target_cfg_start,
+            "platform tables must follow mcpp.target_cfg",
+        )
+
+        target_cfg = text[target_cfg_start:platform_start]
+        platform_tables = text[platform_start:]
+        self.assertIn('[\'cfg(arch = "x86_64")\']', target_cfg)
+        self.assertIn('[\'cfg(arch = "aarch64")\']', target_cfg)
+
+        arch_sources = (
+            "*/ggml/src/ggml-cpu/arch/x86/quants.c",
+            "*/ggml/src/ggml-cpu/arch/x86/repack.cpp",
+            "*/ggml/src/ggml-cpu/arch/arm/quants.c",
+            "*/ggml/src/ggml-cpu/arch/arm/repack.cpp",
+        )
+        for source in arch_sources:
+            with self.subTest(source=source):
+                self.assertEqual(text.count(f'"{source}"'), 1)
+                self.assertIn(f'"{source}"', target_cfg)
+                self.assertNotIn(f'"{source}"', platform_tables)
+
     def test_consumers_resolve_b10069_from_this_checkout(self):
         for manifest in CONSUMERS:
             with self.subTest(manifest=manifest):

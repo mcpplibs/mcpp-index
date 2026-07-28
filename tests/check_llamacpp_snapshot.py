@@ -229,18 +229,27 @@ def _default_feature_closure(table: dict, context: str) -> set[str]:
     return enabled
 
 
-def descriptor_sources_for_platform(descriptor: dict, platform: str) -> list[str]:
+def descriptor_sources_for_target(
+        descriptor: dict, platform: str, arch: str) -> list[str]:
     mcpp = get_path(descriptor, "mcpp")
     context = f"{descriptor['name']}.mcpp"
     platform_table = mcpp.get(platform, {})
     require(isinstance(platform_table, dict),
             f"{context}.{platform} must be a table")
+    target_cfg = mcpp.get("target_cfg", {})
+    require(isinstance(target_cfg, dict),
+            f"{context}.target_cfg must be a table")
+    predicate = f'cfg(arch = "{arch}")'
+    target_table = target_cfg.get(predicate, {})
+    require(isinstance(target_table, dict),
+            f"{context}.target_cfg.{predicate} must be a table")
 
     result: list[str] = []
     merged_fields: dict[str, dict[str, list]] = {}
     for table, scope_context in (
             (mcpp, context),
-            (platform_table, f"{context}.{platform}")):
+            (platform_table, f"{context}.{platform}"),
+            (target_table, f"{context}.target_cfg.{predicate}")):
         if "sources" in table:
             result.extend(array(table["sources"], f"{scope_context}.sources"))
         features = table.get("features", {})
@@ -338,25 +347,33 @@ def check_sources(descriptors: dict[str, dict], report: dict) -> None:
     report_tus = _report_tus(report)
     default_groups = ("ggml_base", "ggml_registry", "ggml_cpu_common",
                       "llama_core", "models")
-    arch_groups = {
-        "linux": ("ggml_cpu_x86",),
-        "macosx": ("ggml_cpu_arm",),
-        "windows": ("ggml_cpu_x86",),
+    targets = (
+        ("linux-x86_64", "linux", "x86_64", "ggml_cpu_x86"),
+        ("linux-aarch64", "linux", "aarch64", "ggml_cpu_arm"),
+        ("macosx-aarch64", "macosx", "aarch64", "ggml_cpu_arm"),
+        ("windows-x86_64", "windows", "x86_64", "ggml_cpu_x86"),
+    )
+    target_cfg = get_path(descriptor, "mcpp", "target_cfg")
+    expected_predicates = {
+        'cfg(arch = "x86_64")',
+        'cfg(arch = "aarch64")',
     }
-    for platform in ("linux", "macosx", "windows"):
+    require(set(target_cfg) == expected_predicates,
+            f"CPU architecture source routing drift: {sorted(target_cfg)}")
+    for target, platform, arch, arch_group in targets:
         actual: set[str] = set()
-        for source in descriptor_sources_for_platform(descriptor, platform):
+        for source in descriptor_sources_for_target(descriptor, platform, arch):
             normalized = normalized_source(source, "ggml-org.llamacpp")
             if normalized is None:
                 continue
             require(normalized in report_tus,
                     f"ggml-org.llamacpp source is absent from snapshot report: {normalized}")
             require(normalized not in actual,
-                    f"duplicate upstream TU ownership on {platform}: {normalized}")
+                    f"duplicate upstream TU ownership on {target}: {normalized}")
             actual.add(normalized)
-        expected = _group_tus(report, default_groups + arch_groups[platform])
+        expected = _group_tus(report, default_groups + (arch_group,))
         require(actual == expected,
-                f"default TU set drift on {platform}: missing={sorted(expected - actual)}, "
+                f"default TU set drift on {target}: missing={sorted(expected - actual)}, "
                 f"extra={sorted(actual - expected)}")
 
     core_sources = descriptor_sources(descriptor)

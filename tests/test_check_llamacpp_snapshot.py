@@ -90,10 +90,19 @@ class TestLlamacppSnapshotMutations(unittest.TestCase):
         sources.update(enumerate(remaining, start=1))
         self.assert_rejected(checker.check_sources, r"default TU set drift.*ops\.cpp")
 
+    def test_accepts_target_conditional_cpu_architecture_sources(self):
+        checker.check_sources(self.descriptors, self.report)
+
     def test_rejects_missing_cpu_architecture_translation_unit(self):
-        sources = self.descriptors["ggml-org.llamacpp"]["mcpp"]["linux"]["sources"]
-        del sources[max(sources)]
-        self.assert_rejected(checker.check_sources, "default TU set drift")
+        for arch in ("x86_64", "aarch64"):
+            mutated = copy.deepcopy(self.descriptors)
+            sources = mutated["ggml-org.llamacpp"]["mcpp"]["target_cfg"][
+                f'cfg(arch = "{arch}")'
+            ]["sources"]
+            del sources[max(sources)]
+            with self.subTest(arch=arch):
+                with self.assertRaisesRegex(checker.CheckError, "default TU set drift"):
+                    checker.check_sources(mutated, self.report)
 
     def test_rejects_cpu_translation_unit_in_disabled_feature(self):
         mcpp = self.descriptors["ggml-org.llamacpp"]["mcpp"]
