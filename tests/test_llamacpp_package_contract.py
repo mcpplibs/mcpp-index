@@ -8,7 +8,9 @@ import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 DESCRIPTOR = ROOT / "pkgs/g/ggml-org.llamacpp.lua"
+INDEX = ROOT / "index.toml"
 WORKFLOW = ROOT / ".github/workflows/validate.yml"
+REQUIRED_MCPP = "2026.7.28.2"
 CONSUMERS = (
     ROOT / "tests/examples/llamacpp-internal-cpu/mcpp.toml",
     ROOT / "tests/examples/llamacpp-internal-metal/mcpp.toml",
@@ -115,8 +117,22 @@ class LlamaCppPackageContractTests(unittest.TestCase):
 
     def test_workflow_forces_cold_llamacpp_materialization(self):
         workflow = WORKFLOW.read_text()
-        self.assertIn("ggml-org-x-ggml-org.llamacpp", workflow)
+        self.assertIn('package_store="ggml-org-x-llamacpp"', workflow)
+        self.assertNotIn("ggml-org-x-ggml-org.llamacpp", workflow)
         self.assertIn("Cold-start llama.cpp package", workflow)
+
+    def test_linux_arm64_requires_the_self_contained_helper_release(self):
+        index = tomllib.loads(INDEX.read_text())["index"]
+        self.assertEqual(index["min_mcpp"], REQUIRED_MCPP)
+        self.assertEqual(index["latest_mcpp"], REQUIRED_MCPP)
+
+        workflow = WORKFLOW.read_text()
+        self.assertIn(f'MCPP_VERSION: "{REQUIRED_MCPP}"', workflow)
+        self.assertEqual(
+            workflow.count(f'mcpp_version: "{REQUIRED_MCPP}"'),
+            3,
+            "all active workspace matrix pins must match the index floor",
+        )
 
 
 if __name__ == "__main__":

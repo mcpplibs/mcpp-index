@@ -14,6 +14,10 @@ on:
   workflow_dispatch:
 
 env:
+  # 2026.7.28.2: mcpp#298 makes build.mcpp host helpers self-contained for
+  # musl and MinGW toolchains. This is required for ggml-org.llamacpp's
+  # Linux aarch64 source build, whose helper otherwise requires a missing
+  # musl dynamic loader on a glibc host.
   # 0.0.109: a bare dependency's wire address takes BOTH halves from the
   # descriptor the identity gate accepted (mcpp#286). This is the client-side
   # other half of the SPEC-001 migration below: mcpp used to take the NAME from
@@ -75,7 +79,7 @@ env:
   # 0.0.94 fixed feature-gated `sources` under `mcpp test` (mcpp#218); 0.0.91
   # added standard = "c++fly" to the resolver grammar, so c++fly descriptors
   # get the lint WARN below, not a hard grammar-parse rejection.
-  MCPP_VERSION: "0.0.109"
+  MCPP_VERSION: "2026.7.28.2"
 
 jobs:
   lint:
@@ -258,21 +262,21 @@ jobs:
             ext: tar.gz
             mcpp: bin/mcpp
             xlings: registry/bin/xlings
-            mcpp_version: "0.0.109"   # keep in sync with env.MCPP_VERSION
+            mcpp_version: "2026.7.28.2"   # keep in sync with env.MCPP_VERSION
           - platform: macos
             os: macos-15
             suffix: macosx-arm64
             ext: tar.gz
             mcpp: bin/mcpp
             xlings: registry/bin/xlings
-            mcpp_version: "0.0.109"   # keep in sync with env.MCPP_VERSION
+            mcpp_version: "2026.7.28.2"   # keep in sync with env.MCPP_VERSION
           - platform: windows
             os: windows-latest
             suffix: windows-x86_64
             ext: zip
             mcpp: bin/mcpp.exe
             xlings: registry/bin/xlings.exe
-            mcpp_version: "0.0.109"   # keep in sync with env.MCPP_VERSION
+            mcpp_version: "2026.7.28.2"   # keep in sync with env.MCPP_VERSION
     env:
       MCPP_EFFECTIVE: ${{ matrix.mcpp_version }}
     steps:
@@ -398,7 +402,7 @@ jobs:
       - name: Cold-start llama.cpp package
         shell: bash
         run: |
-          package_store="ggml-org-x-ggml-org.llamacpp"
+          package_store="ggml-org-x-llamacpp"
           rm -rf "$HOME/.mcpp/registry/data/xpkgs/$package_store"
           rm -rf ".mcpp/.xlings/data/xpkgs/$package_store"
           members="$MEMBERS"
