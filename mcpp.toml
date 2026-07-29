@@ -48,6 +48,7 @@ members = [
     "tests/examples/vulkan",
     "tests/examples/tray",
     "tests/examples/yyjson",
+    "tests/examples/magic_enum",
 ]
 
 # ── The index redirect, hoisted to the workspace root ───────────────────

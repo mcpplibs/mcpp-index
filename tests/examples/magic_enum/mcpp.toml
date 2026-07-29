@@ -1,0 +1,11 @@
+# magic_enum test project: consumes the C++23 module `magic_enum` and
+# asserts enum reflection under `mcpp test`.
+[indices]
+neargye = { path = "../../.." }
+
+[package]
+name = "magic_enum-tests"
+version = "0.1.0"
+
+[dependencies.neargye]
+magic_enum = "0.9.8"
