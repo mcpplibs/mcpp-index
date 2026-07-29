@@ -1,0 +1,16 @@
+# Resolve the public default-namespace package from this checkout.
+[indices]
+default = { path = "../../.." }
+
+[package]
+name    = "llamacpp-tests"
+version = "0.1.0"
+
+[target.'cfg(linux)'.dependencies]
+llamacpp = "0.1.0"
+
+[target.'cfg(macos)'.dependencies]
+llamacpp = "0.1.0"
+
+[target.'cfg(windows)'.dependencies]
+llamacpp = "0.1.0"

@@ -42,6 +42,8 @@ members = [
     "tests/examples/freetype",
     "tests/examples/glad",
     "tests/examples/libpng",
+    "tests/examples/llamacpp",
+    "tests/examples/llamacpp-metal",
     "tests/examples/md4c",
     "tests/examples/spdlog-compiled",
     "tests/examples/tinyhttps",

@@ -1,0 +1,10 @@
+# Metal is supported only by the macOS ARM64 leg of the workspace matrix.
+[indices]
+default = { path = "../../.." }
+
+[package]
+name    = "llamacpp-metal-tests"
+version = "0.1.0"
+
+[target.'cfg(macos)'.dependencies]
+llamacpp = { version = "0.1.0", features = ["backend-metal"] }
