@@ -28,20 +28,24 @@
 --   * Clang 20.1.7 (macOS CI's auto-installed default on macos-15) compiles
 --     the verbatim file (WITH `export import std;`) fine but the resulting
 --     test binary SIGSEGVs (exit 139) during static init of
---     `cfg::runner<reporter_junit<printer>>` — no "Suite '...'" output. A
---     macOS lldb backtrace pins it exactly:
---         frame #0: reporter_junit::reporter_junit at ut.hpp:1620:31
---         stop reason = EXC_BAD_ACCESS (code=1, address=0xffffffffffffffe8)
+--     `cfg::runner<reporter_junit<printer>>` — no "Suite '...'" output.
 --     ut.hpp:1620 is the member-init `std::streambuf* cout_save =
---     std::cout.rdbuf();`. The address -0x18 means `std::cout`'s vptr is
---     ZERO — the stream object was NEVER constructed. Root cause:
---     `export import std;` inside the module makes `std::cout` refer to the
---     module's OWN copy of the std stream entities, NOT libc++'s — an ODR
---     split between "the std module's std::cout" and "the libc++ library's
---     std::cout" (Apple libc++ does not merge module std entities the way
---     libstdc++/MSVC STL do). libc++'s `ios_base::Init` constructs the
---     library copy; the module's copy stays all-zero, so
---     `cfg`'s member-init `std::cout.rdbuf()` dereferences the null vptr.
+--     std::cout.rdbuf();` — the fault address 0xffffffffffffffe8 (-0x18)
+--     means `std::cout`'s vptr is ZERO: the stream object was never
+--     constructed. Root cause (verified from mcpp's link line, `__init_offsets`
+--     and a disassembly of iostream.cpp.o; filed as mcpp-community/mcpp#336,
+--     fixed in mcpp 2026.8.3.1): Mach-O has no priority-ordered initializer
+--     section, so the initializer pulled out of `libc++.a` lands LAST in link
+--     order; libc++'s `<iostream>` carries no `ios_base::Init` guard of its
+--     own (libstdc++ and the MSVC STL do — which is exactly why only macOS
+--     broke); and `std::ios_base::Init` is only forward-declared in libc++'s
+--     headers, so the standard's remedy for static-init order is not writable
+--     by users on libc++. This is NOT an ODR split: `nm` shows exactly one
+--     `std::cout` definition, and the crash reproduces with plain
+--     `#include <iostream>` + a global object, no modules involved at all.
+--     mcpp 2026.8.3.1 fixes it engine-side by linking a generated object FIRST
+--     whose constructor forces the streams up; until that mcpp is required,
+--     this descriptor works around it package-side (dev 4 below).
 --
 -- The FIX (matching how every other successful C++23 module package in this
 -- index — nlohmann.json, marzer.tomlplusplus, neargye.magic_enum — is built):
@@ -68,11 +72,10 @@
 -- with `BOOST_UT_CXX_MODULES=1`, so the `export namespace boost::...{...}`
 -- block ut.hpp opens at line 111 exports everything — with these deviations:
 --
---   dev 1. `export import std;` is DROPPED (the macOS ODR-split fix above),
---          and instead the global-module-fragment `#include`s every stdlib
---          header ut.hpp needs (its own includes at lines 73-104 still run,
---          the GMF list just guarantees they're all present and visible for
---          GCC's two-phase lookup).
+--   dev 1. `export import std;` is DROPPED, and instead the global-module-
+--          fragment `#include`s every stdlib header ut.hpp needs (its own
+--          includes at lines 73-104 still run, the GMF list just guarantees
+--          they're all present and visible for GCC's two-phase lookup).
 --   dev 2. Two compiler-compat shims:
 --          shim a: `using std::size_t;` — lifts `std::size_t` into the
 --                  global namespace so the unqualified `size_t` at ut.hpp
@@ -86,8 +89,20 @@
 --          is appended AFTER `#include "ut.hpp"`, lifted VERBATIM from
 --          upstream `master`. It is upstream's fix for a Clang module
 --          LINKAGE gap and is a harmless no-op on GCC/MSVC; it does NOT
---          address the macOS ODR-split (dev 1 does). Kept because upstream
+--          address the macOS crash (dev 4 does). Kept because upstream
 --          added it for a reason and it is cheap to carry.
+--   dev 4. A `std::ios_base::Init` object declared in the module purview
+--          BEFORE `#include "ut.hpp"` — the package-side macOS workaround for
+--          the libc++ static-init-order bug above (mcpp#336). `cfg`
+--          (ut.hpp:2247) is an `inline` variable, so under module attachment
+--          its initializer is emitted in THIS module TU; being declared
+--          earlier makes this construct's initializer precede cfg's in this
+--          object's `__init_offsets`, forcing libc++'s stream construction
+--          (`__start_std_streams()` via DoIOSInit) before cfg's member-init
+--          reads `std::cout.rdbuf()` (ut.hpp:1620). On libstdc++/MSVC STL it
+--          is a harmless no-op (they carry their own ios_base::Init guard),
+--          and it also protects macOS consumers still on older mcpp. Once
+--          mcpp ≥ 2026.8.3.1 is required, dev 4 can be dropped.
 --
 -- The base `ut.hpp` stays pinned to the reproducible v2.3.1 release tag —
 -- the shims add NO code of our own beyond what the compiler/runtime had to
@@ -157,20 +172,23 @@ package = {
         -- at the top of this descriptor:
         --   dev 1: `export import std;` DROPPED — global-module-fragment
         --          `#include`s of every stdlib header ut.hpp needs instead
-        --          (macOS ODR-split fix; see header comment).
+        --          (see header comment).
         --   dev 2: two compiler-compat shims (`using std::size_t;` for GCC;
         --          `__argc`/`__argv` define for Clang-on-Windows MSVC ABI).
         --   dev 3: post-v2.3.1 explicit-template-instantiation block (from
         --          upstream `master`) appended after `#include "ut.hpp"`.
+        --   dev 4: `std::ios_base::Init` construct BEFORE `#include "ut.hpp"`
+        --          — macOS libc++ static-init-order workaround (mcpp#336).
         -- Verdir-relative path, no glob — like nlohmann.json / marzer.tomlplusplus.
         generated_files = {
             ["mcpp_generated/boost.ut.cppm"] = [==[
 module;
 
 // Global-module-fragment: every stdlib header ut.hpp needs, so the module
-// TU sees the SAME std entities the library links (no `export import std;`
-// → no module-vs-library ODR split on std::cout — the macOS SIGSEGV fix)
-// AND GCC's module two-phase lookup finds the names it needs.
+// TU sees the SAME std entities the library links, and GCC's module
+// two-phase lookup finds the names it needs. (The macOS SIGSEGV is NOT an
+// ODR split — it is libc++'s missing ios_base::Init guard, mcpp#336 — and
+// is handled by the ios_base::Init construct below, before `#include "ut.hpp"`.)
 #include <cstddef>
 #include <algorithm>
 #include <array>
@@ -224,6 +242,21 @@ using std::size_t;
   #define __argv ((const char**)nullptr)
 #endif
 
+// ---- mcpp-index compat shim 3/3: macOS libc++ static-init order ------------
+// ut.hpp:2247 declares `cfg` as an `inline` variable, so under module
+// attachment its dynamic initializer is emitted in THIS module TU — and it
+// reads std::cout.rdbuf() (ut.hpp:1620) inside reporter_junit's constructor.
+// On macOS, libc++'s <iostream> carries no ios_base::Init guard of its own
+// and Mach-O has no priority-ordered init section (mcpp-community/mcpp#336):
+// the stream initializer pulled from libc++.a lands AFTER this TU's, leaving
+// std::cout all-zero when cfg's init runs (exit 139). Constructing a
+// std::ios_base::Init object HERE — declared before ut.hpp, hence before
+// cfg's init in this TU's initializer order — forces libc++'s
+// __start_std_streams() to run first, so std::cout is live when cfg's init
+// reads it. Harmless no-op on libstdc++/MSVC STL (they guard iostreams
+// themselves). Drop once mcpp >= 2026.8.3.1 is required (engine fix).
+std::ios_base::Init __mcpp_boost_ext_ut_ios_init;
+
 #define BOOST_UT_CXX_MODULES 1
 #include "ut.hpp"
 
@@ -239,8 +272,9 @@ using std::size_t;
 // `expect<bool>`) only IMPLICITLY instantiable. Explicitly instantiating
 // them forces emission — upstream's fix for a Clang module linkage gap.
 // NOTE: this does NOT fix the macOS crash (ut.hpp:1620 `std::cout.rdbuf()`
-// ODR split) — dev 1 (no `export import std;`) is the macOS fix. Both stay:
-// dev 1 is the ODR fix, dev 3 is upstream's verbatim linkage-gap fix.
+// reads a never-constructed libc++ stream — mcpp#336) — the ios_base::Init
+// construct above (shim 3/3) is the macOS workaround. Both stay:
+// shim 3/3 is the init-order fix, dev 3 is upstream's verbatim linkage-gap fix.
 // Once a >2.3.1 release ships this block, switch `sources` to
 // `*/include/boost/ut.cppm` and drop `generated_files`; these lines come
 // back with the verbatim upstream cppm.
