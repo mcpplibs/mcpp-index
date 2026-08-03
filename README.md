@@ -50,7 +50,7 @@ Two kinds of packages live here:
 | Multiple majors in one package (shape switches with the version) | [`compat.catch2`](pkgs/c/compat.catch2.lua) (3.x compiles `src/catch2/` into a static library; 2.x goes header-only through `single_include/`) |
 | External build system (`install()` builds from source) | [`compat.openblas`](pkgs/c/compat.openblas.lua) (Make) · [`compat.openssl`](pkgs/c/compat.openssl.lua) (Perl Configure + Make, static libssl/libcrypto) |
 | Whole-source direct build (config snapshot + source list, no external build system) | [`compat.ffmpeg`](pkgs/c/compat.ffmpeg.lua) (2281 TUs including NASM assembly, declared through 28 directory globs) |
-| C++23 module wrapper | [`nlohmann.json`](pkgs/n/nlohmann.json.lua) · [`marzer.tomlplusplus`](pkgs/m/marzer.tomlplusplus.lua) · [`neargye.magic_enum`](pkgs/n/neargye.magic_enum.lua) · [`boost-ext.ut`](pkgs/b/boost-ext.ut.lua) (upstream already ships `include/boost/ut.cppm` declaring `export module boost.ut;` — used verbatim, no `generated_files`; namespace `boost-ext` since it is NOT an official Boost library) |
+| C++23 module wrapper | [`nlohmann.json`](pkgs/n/nlohmann.json.lua) · [`marzer.tomlplusplus`](pkgs/m/marzer.tomlplusplus.lua) · [`neargye.magic_enum`](pkgs/n/neargye.magic_enum.lua) · [`boost-ext.ut`](pkgs/b/boost-ext.ut.lua) (upstream's own `include/boost/ut.cppm` reproduced verbatim but for one `__argc`/`__argv` shim that Clang-on-MSVC needs; namespace `boost-ext` since it is NOT an official Boost library) |
 
 ### Adding a package
 
