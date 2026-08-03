@@ -7,10 +7,10 @@
 # mcpp .agents/docs/2026-06-30-workspace-test-and-zero-shell-index-design.md.
 [workspace]
 members = [
-    "tests/examples/boost-ext.ut",
     "tests/examples/archive",
     "tests/examples/asio-module",
     "tests/examples/asio-ssl",
+    "tests/examples/boost-ext.ut",
     "tests/examples/build-mcpp",
     "tests/examples/catch2",
     "tests/examples/catch2-main",
