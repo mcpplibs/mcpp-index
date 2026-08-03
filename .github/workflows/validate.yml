@@ -14,12 +14,19 @@ on:
   workflow_dispatch:
 
 env:
-  # 2026.8.3.1: fixes the macOS static-init-order crash of module packages
-  # that construct std streams (mcpp#336) — mcpp links a generated object
-  # first whose constructor forces libc++'s streams up, so boost-ext.ut's
-  # macOS leg needs no package-side workaround. This pin is a CI-only move:
-  # index.toml's `min_mcpp` is a *syntax* contract and is NOT bumped for a
-  # behavior fix (it would E0006-gate every older-mcpp consumer of the index).
+  # 2026.8.3.1: on macOS, a global object that touches std::cout during static
+  # init crashes on sight (mcpp#336). Mach-O has no priority-ordered init
+  # section and libc++'s <iostream> carries no ios_base::Init guard of its own,
+  # so the streams are still all-zero when an archive member's initializer
+  # runs. mcpp now links a generated object FIRST whose constructor brings them
+  # up. It is not fixable package-side — std::ios_base::Init is only
+  # forward-declared in libc++'s <ios> — so boost-ext.ut genuinely requires
+  # this floor on macOS, and min_mcpp/latest_mcpp move with the pin as they
+  # always have (a consumer below the floor would get a segfault with no
+  # diagnostic, which is worse than E0006).
+  # 2026.8.3.3 is the pin rather than .3.1: .3.2/.3.3 are cross-compilation
+  # fixes (PE artifact naming, -static host-vs-target) that no leg of this
+  # matrix exercises, so taking the newest of the train costs nothing.
   # 0.0.109: a bare dependency's wire address takes BOTH halves from the
   # descriptor the identity gate accepted (mcpp#286). This is the client-side
   # other half of the SPEC-001 migration below: mcpp used to take the NAME from
@@ -81,7 +88,7 @@ env:
   # 0.0.94 fixed feature-gated `sources` under `mcpp test` (mcpp#218); 0.0.91
   # added standard = "c++fly" to the resolver grammar, so c++fly descriptors
   # get the lint WARN below, not a hard grammar-parse rejection.
-  MCPP_VERSION: "2026.8.3.1"
+  MCPP_VERSION: "2026.8.3.3"
 
 jobs:
   lint:
@@ -246,21 +253,21 @@ jobs:
             ext: tar.gz
             mcpp: bin/mcpp
             xlings: registry/bin/xlings
-            mcpp_version: "2026.8.3.1"   # keep in sync with env.MCPP_VERSION
+            mcpp_version: "2026.8.3.3"   # keep in sync with env.MCPP_VERSION
           - platform: macos
             os: macos-15
             suffix: macosx-arm64
             ext: tar.gz
             mcpp: bin/mcpp
             xlings: registry/bin/xlings
-            mcpp_version: "2026.8.3.1"   # keep in sync with env.MCPP_VERSION
+            mcpp_version: "2026.8.3.3"   # keep in sync with env.MCPP_VERSION
           - platform: windows
             os: windows-latest
             suffix: windows-x86_64
             ext: zip
             mcpp: bin/mcpp.exe
             xlings: registry/bin/xlings.exe
-            mcpp_version: "2026.8.3.1"   # keep in sync with env.MCPP_VERSION
+            mcpp_version: "2026.8.3.3"   # keep in sync with env.MCPP_VERSION
     env:
       MCPP_EFFECTIVE: ${{ matrix.mcpp_version }}
     steps:
@@ -406,6 +413,21 @@ jobs:
         shell: bash
         env:
           MCPP_INDEX_MIRROR: GLOBAL
+          # Dependencies build inside each member's own target/ instead of
+          # through the global package build cache (mcpp >= 2026.7.30.2).
+          # That cache is unusable here: mcpp#233's object-path disambiguation
+          # fires on basename collisions across the WHOLE build dir — i.e. on
+          # which packages the CONSUMER pulls in — while the cache key covers
+          # only the dependency itself, so one entry can hold two different
+          # layouts. `tests/examples/archive` pulls zlib AND bzip2 (both ship
+          # compress.c) and stores obj/compat_zlib/zlib-1.3.2/compress.o;
+          # every zlib consumer without bzip2 then asks the same key for a
+          # flat obj/compress.o and ninja dies at graph time with
+          # "missing and no known rule to make it". Reproduced both ways round
+          # on 2026.8.3.3 and filed as mcpp-community/mcpp#344; drop this once
+          # it lands. `local` still caches the std BMI, which is the expensive
+          # one — only package entries are bypassed.
+          MCPP_BUILD_CACHE: local
         run: |
           "$MCPP" --version
           # No `timeout` wrapper: absent on macOS runners; job-level timeout-minutes bounds it.
