@@ -7,9 +7,9 @@
 # and this member is what isolates a failure to openssl itself rather than to
 # the feature wiring around it.
 #
-# linux + macOS only: there is no windows xpm entry yet (prebuilt MSVC archives
-# unpublished), so on windows the member carries no dependency and the test
-# compiles to a no-op main().
+# All three platforms: windows now builds from the same tarball through
+# `perl Configure VC-WIN64A` + NMAKE, so the dependency and HAVE_OPENSSL are
+# declared there too and the test is a real test on every platform.
 [package]
 name    = "openssl-tests"
 version = "0.1.0"
@@ -24,4 +24,10 @@ cxxflags = ["-DHAVE_OPENSSL=1"]
 openssl = "3.5.1"
 
 [target.'cfg(macos)'.build]
+cxxflags = ["-DHAVE_OPENSSL=1"]
+
+[target.'cfg(windows)'.dependencies.compat]
+openssl = "3.5.1"
+
+[target.'cfg(windows)'.build]
 cxxflags = ["-DHAVE_OPENSSL=1"]

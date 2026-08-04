@@ -37,7 +37,15 @@
 -- Platforms:
 --   * linux/macosx — build a fully static libcrypto.a + libssl.a from source
 --     via install() hook (anchor-triggered build, same pattern as compat.openblas).
---   * windows — deferred (requires prebuilt MSVC libs uploaded to xlings-res).
+--   * windows — source build too, through OpenSSL's only x64 windows
+--     configuration: `perl Configure VC-WIN64A` + NMAKE. No prebuilt MSVC
+--     archive is uploaded anywhere; the same tarball every other platform uses
+--     is built in place. Note the HOST requirements this brings (see the
+--     windows xpm block and _install_windows_impl): perl, because xim:perl
+--     ships no windows build, and a Visual Studio C++ toolset, because
+--     VC-WIN64A's build_scheme is VC-common — an NMAKE makefile, which
+--     xim:make (GNU make, linux-only anyway) cannot drive. Both are probed
+--     with named errors rather than left to fail as an unreadable batch error.
 package = {
     spec        = "1",
     namespace   = "compat",
@@ -80,7 +88,20 @@ package = {
                 sha256 = "529043b15cffa5f36077a4d0af83f3de399807181d607441d734196d889b641f",
             },
         },
-        -- windows deferred (prebuilt zip not yet prepared)
+        windows = {
+            -- No build deps here, and that is not an oversight: xim:perl ships
+            -- no windows build ("The Windows answer is Strawberry Perl" — see
+            -- xim-pkgindex pkgs/p/perl.lua) and xim:make is linux-only, while
+            -- OpenSSL's x64 windows path needs NMAKE specifically. Both are
+            -- HOST requirements, probed with named errors in install().
+            ["3.5.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/openssl/openssl/releases/download/openssl-3.5.1/openssl-3.5.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openssl/releases/download/3.5.1/openssl-3.5.1.tar.gz",
+                },
+                sha256 = "529043b15cffa5f36077a4d0af83f3de399807181d607441d734196d889b641f",
+            },
+        },
     },
 
     mcpp = {
@@ -121,6 +142,21 @@ package = {
         -- this package built, so name resolution has nothing else to find, and
         -- libSystem already carries dl/pthread.
         macosx = { ldflags = { "-Llib", "-lssl", "-lcrypto" } },
+        -- Windows: `nmake install_sw` on a no-shared build lays down
+        -- lib\libssl.lib + lib\libcrypto.lib. Under the MSVC ABI the driver
+        -- maps -l<name> to <name>.lib, so the names carry their `lib` prefix
+        -- (this is NOT the unix convention where -lssl finds libssl). The
+        -- system imports are the set OpenSSL's own VC build links: ws2_32 for
+        -- sockets, crypt32 for the certificate store, advapi32/user32 for the
+        -- entropy and UI paths, and bcrypt for RtlGenRandom.
+        windows = {
+            ldflags = {
+                "-Llib",
+                "-llibssl",
+                "-llibcrypto",
+                "-lws2_32", "-lcrypt32", "-ladvapi32", "-luser32", "-lbcrypt",
+            },
+        },
     },
 }
 
@@ -352,13 +388,211 @@ local function _install_impl()
     return true
 end
 
-function install()
-    -- Windows is deferred: there is no windows xpm block, so version
-    -- resolution already fails before this point. Kept as a named error in
-    -- case a windows entry is added before this hook learns to build there.
-    if os.host() == "windows" then
-        log.error("compat.openssl: windows is not yet supported")
+-- Windows build. OpenSSL's only x64 windows configuration is VC-WIN64A
+-- (Configurations/10-main.conf; the clang-cl configs in 50-win-clang-cl.conf
+-- are Windows-on-ARM only), and its build_scheme is VC-common — i.e. the
+-- generated makefile is for NMAKE, not GNU make. So this path needs two things
+-- from the HOST that xim cannot supply: perl, and a Visual Studio developer
+-- environment for nmake.
+--
+-- Everything windows-specific lives in a generated .bat rather than being
+-- one-lined through `cmd /c`. Nesting quotes through cmd for a `call
+-- vcvars64.bat && perl Configure ... && nmake` chain is its own failure mode,
+-- and a script on disk is also what a maintainer can re-run by hand after a
+-- failed CI job.
+local function _install_windows_impl()
+    -- The log is opened FIRST and appended to at every step, before anything
+    -- that can fail. xlings swallows an install() hook's log.error on windows —
+    -- a failure surfaces only as a bare `E_INTERNAL: [openssl] failed:` — so
+    -- this file is the single channel that survives, and CI's "Dump install()
+    -- build logs on failure" step is what prints it. Without it a windows
+    -- failure is undebuggable from a CI run.
+    local prefix = pkginfo.install_dir()
+    os.tryrm(prefix)
+    os.mkdir(prefix)
+    local logf = path.join(prefix, "mcpp_openssl_build.log")
+    local bat  = path.join(prefix, "mcpp_openssl_build.bat")
+    local inner = path.join(prefix, "mcpp_openssl_inner.bat")
+
+    local function note(msg)
+        local fh = io.open(logf, "a")
+        if fh then fh:write("[mcpp] " .. tostring(msg) .. "\n"); fh:close() end
+    end
+    note("windows install() start; prefix=" .. tostring(prefix))
+
+    -- Every call below goes through this. The xlings sandbox exposes a SUBSET
+    -- of xmake's Lua API, and calling something outside it kills install()
+    -- silently — the first attempt died on os.curdir() with no message at all,
+    -- leaving only the line above in the log. `safe` turns that class of
+    -- failure into a log line naming the call.
+    local function safe(label, fn, fallback)
+        local ok, res = pcall(fn)
+        if not ok then
+            note("call failed: " .. label .. " -> " .. tostring(res))
+            return fallback
+        end
+        return res
+    end
+
+    local ifile = safe("pkginfo.install_file()", function() return pkginfo.install_file() end)
+    note("install_file=" .. tostring(ifile))
+    local srcroot = ifile and tostring(ifile):replace(".tar.gz", "")
+                            or ("openssl-" .. pkginfo.version())
+    if not os.isdir(srcroot) then
+        note("srcroot '" .. tostring(srcroot) .. "' is not a dir; falling back")
+        srcroot = "openssl-" .. pkginfo.version()
+    end
+    if not os.isdir(srcroot) then
+        note("FATAL: no source dir found. Entries beside it:")
+        local entries = safe("os.filedirs('*')", function() return os.filedirs("*") end, {})
+        for _, f in ipairs(entries) do note("   " .. tostring(f)) end
         return false
+    end
+    -- path.absolute() is NOT in the xlings sandbox (verified: "attempt to call
+    -- a nil value"), and it is not needed — pkginfo.install_file() already
+    -- returns an absolute path, so srcroot derived from it is absolute too.
+    -- cmd wants backslashes; the path arrives with both separators mixed.
+    srcroot = tostring(srcroot):gsub("/", "\\")
+    note("srcroot=" .. tostring(srcroot))
+
+    -- vswhere is installed with every VS 2017+ at a fixed location, and is the
+    -- supported way to find the toolset; hardcoding a VS path breaks on the
+    -- next release. `-products *` is required or Build Tools-only machines
+    -- (which is what CI images often are) report nothing.
+    -- The batch reports through the LOG, not through its exit code: the first
+    -- attempt came back ok=true from os.exec while having produced nothing and
+    -- written nothing, so that channel cannot be trusted here. Every step
+    -- announces itself into the log BEFORE running, and the script always
+    -- exits 0 after recording RESULT=<code>, which is what Lua then reads.
+    --
+    -- CRLF line endings are REQUIRED, and this was established the hard way.
+    -- io.writefile writes bytes verbatim (it does not translate \n), and with
+    -- an LF-only batch the run got as far as `call "%VCVARS%"` — the log even
+    -- shows "[vcvarsall.bat] Environment initialized for: 'x64'" — and then
+    -- stopped dead: no further echo, no RESULT, exit 0. cmd reads a batch by
+    -- FILE OFFSET and its bookkeeping assumes CRLF, so on returning from a
+    -- `call` it resumes at the wrong position and hits EOF. The symptom is a
+    -- script that "succeeds" having done nothing after the first call.
+    local logw  = tostring(logf):gsub("/", "\\")
+    local prefw = tostring(prefix):gsub("/", "\\")
+    local innerw = tostring(inner):gsub("/", "\\")
+    local envdump = path.join(prefix, "mcpp_vsenv.txt")
+    local envw = tostring(envdump):gsub("/", "\\")
+    io.writefile(inner, table.concat({
+        "@echo off",
+        -- vcvars is never `call`ed. Three runs showed the caller vanishing the
+        -- moment it finished — even from a child cmd — so instead it runs in a
+        -- cmd whose only job is to dump the resulting environment, and those
+        -- variables are imported here. This is the standard way build systems
+        -- capture a VS environment, and it does not depend on vcvars returning
+        -- to anyone. Note `&` rather than `&&`: `set` must run whatever exit
+        -- status vcvars leaves behind.
+        'echo [bat] capturing VS environment >> "' .. logw .. '" 2>&1',
+        'cmd /c ""%MCPP_VCVARS%" & set" > "' .. envw .. '" 2>>"' .. logw .. '"',
+        'if not exist "' .. envw .. '" ( echo [bat] no env dump produced >> "' .. logw .. '" & exit /b 13 )',
+        'for /f "usebackq tokens=1* delims==" %%a in ("' .. envw .. '") do set "%%a=%%b"',
+        'echo [bat] toolset ready >> "' .. logw .. '" 2>&1',
+        'cd /d "' .. srcroot .. '"',
+        'if errorlevel 1 exit /b 14',
+        'where perl >> "' .. logw .. '" 2>&1',
+        'where nmake >> "' .. logw .. '" 2>&1',
+        'echo [bat] configuring >> "' .. logw .. '" 2>&1',
+        'perl Configure VC-WIN64A no-shared no-tests no-apps no-engine no-dso --prefix="' .. prefw .. '" --openssldir="' .. prefw .. '\\ssl" >> "' .. logw .. '" 2>&1',
+        'if errorlevel 1 exit /b 20',
+        'echo [bat] building >> "' .. logw .. '" 2>&1',
+        'nmake >> "' .. logw .. '" 2>&1',
+        'if errorlevel 1 exit /b 21',
+        'echo [bat] installing >> "' .. logw .. '" 2>&1',
+        'nmake install_sw >> "' .. logw .. '" 2>&1',
+        'if errorlevel 1 exit /b 22',
+        "exit /b 0",
+    }, "\r\n") .. "\r\n")
+
+    -- Outer script: find the toolset, then hand the actual build to the inner
+    -- script in a CHILD cmd and record its exit code.
+    --
+    -- The child process is the whole point. Three runs in a row died silently
+    -- right after `call "%VCVARS%"` succeeded — the log even showed
+    -- "[vcvarsall.bat] Environment initialized for: 'x64'" — and then nothing:
+    -- no further echo, no RESULT, exit 0. Visual Studio's developer-prompt
+    -- script terminates the batch that calls it. Running it inside `cmd /c
+    -- <inner.bat>` means it can only take that child down, and the outer
+    -- script still runs to write RESULT. The vcvars path travels by ENVIRONMENT
+    -- VARIABLE rather than as an argument, because a child cmd inherits the
+    -- environment and that avoids another layer of quoting around a path with
+    -- spaces.
+    io.writefile(bat, table.concat({
+        "@echo off",
+        'echo [bat] started >> "' .. logw .. '" 2>&1',
+        'set "VSWHERE=%ProgramFiles(x86)%\\Microsoft Visual Studio\\Installer\\vswhere.exe"',
+        'echo [bat] vswhere=%VSWHERE% >> "' .. logw .. '" 2>&1',
+        'if not exist "%VSWHERE%" ( echo [bat] RESULT=10 vswhere missing >> "' .. logw .. '" & exit /b 0 )',
+        'for /f "usebackq tokens=*" %%i in (`"%VSWHERE%" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath`) do set "VSPATH=%%i"',
+        'echo [bat] vspath=%VSPATH% >> "' .. logw .. '" 2>&1',
+        'if not defined VSPATH ( echo [bat] RESULT=11 no VC toolset >> "' .. logw .. '" & exit /b 0 )',
+        'set "MCPP_VCVARS=%VSPATH%\\VC\\Auxiliary\\Build\\vcvars64.bat"',
+        'if not exist "%MCPP_VCVARS%" ( echo [bat] RESULT=12 no vcvars64 >> "' .. logw .. '" & exit /b 0 )',
+        'echo [bat] handing build to child cmd >> "' .. logw .. '" 2>&1',
+        'cmd /c "' .. innerw .. '"',
+        'echo [bat] RESULT=%errorlevel% >> "' .. logw .. '" 2>&1',
+        "exit /b 0",
+    }, "\r\n") .. "\r\n")
+
+    note("wrote " .. bat .. "; running it")
+    local batw = tostring(bat):gsub("/", "\\")
+    local ok, err = pcall(os.exec, string.format('cmd /c "%s"', batw))
+    note("os.exec ok=" .. tostring(ok) .. " err=" .. tostring(err)
+         .. " (advisory only -- RESULT= in this log decides)")
+
+    local content = ""
+    local rok, rdata = pcall(io.readfile, logf)
+    if rok and rdata then content = tostring(rdata) end
+    local result = content:match("%[bat%] RESULT=(%d+)")
+    note("batch RESULT=" .. tostring(result))
+    if result ~= "0" then
+        local tail = tail_lines(logf, 40) or "<no log; the failure was before the build started>"
+        log.error("%s", "compat.openssl: windows build failed (RESULT=" .. tostring(result) ..
+                  ")\nexit 10-13 = no Visual Studio C++ toolset found (vswhere/vcvars64), " ..
+                  "20-22 = Configure/nmake failed.\nHOST REQUIREMENTS on windows: perl " ..
+                  "(Strawberry Perl -- xim:perl has no windows build) and a Visual Studio " ..
+                  "C++ toolset for nmake.\n--- last 40 lines of " .. tostring(logf) ..
+                  " ---\n" .. tail)
+        return false
+    end
+
+    -- no-shared VC builds land libssl.lib / libcrypto.lib in <prefix>\lib.
+    local libdir = path.join(prefix, "lib")
+    note("checking " .. libdir)
+    if os.isdir(libdir) then
+        local produced = safe("os.files(lib/*)", function() return os.files(path.join(libdir, "*")) end, {})
+        for _, f in ipairs(produced) do note("   lib/ " .. tostring(f)) end
+    else
+        note("   (no lib/ directory was produced)")
+    end
+    if not os.isfile(path.join(libdir, "libssl.lib"))
+       or not os.isfile(path.join(libdir, "libcrypto.lib")) then
+        log.error("compat.openssl: windows build produced no libssl.lib / "
+               .. "libcrypto.lib under %s (see %s)", libdir, logf)
+        return false
+    end
+
+    io.writefile(path.join(prefix, "mcpp_openssl_anchor.c"),
+                 "int mcpp_compat_openssl_anchor(void) { return 0; }\n")
+    return true
+end
+
+function install()
+    if os.host() == "windows" then
+        local okw, resw = pcall(_install_windows_impl)
+        if not okw then
+            log.error("compat.openssl install() failed on windows: %s", tostring(resw))
+            return false
+        end
+        if not resw then
+            log.error("compat.openssl install() returned false on windows")
+            return false
+        end
+        return true
     end
     local ok, result = pcall(_install_impl)
     if not ok then
