@@ -255,13 +255,124 @@ jobs:
   # `dnn` feature members. The registry cache (restore-keys prefix below)
   # amortizes those across subsequent runs. 150 covers the one-time cold full
   # build with headroom; it is a ceiling, not a target.
+  # ── The plan, computed ONCE ───────────────────────────────────────────
+  # Was inlined in every workspace job — three runners each re-deriving the
+  # same answer. It now also has to be decided BEFORE the matrix exists,
+  # because the matrix's shard dimension depends on it: a full run fans out,
+  # a selective one does not.
+  select:
+    runs-on: ubuntu-latest
+    outputs:
+      members:     ${{ steps.fanout.outputs.members }}
+      shard_count: ${{ steps.fanout.outputs.shard_count }}
+      shards:      ${{ steps.fanout.outputs.shards }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      # ── Selective member testing ──────────────────────────────────────
+      # `mcpp test --workspace` builds every member (opencv, ffmpeg, …) and
+      # dominates CI wall-clock, while a PR almost always touches one
+      # package. Map changed files → affected members and test only those:
+      #   pkgs/<x>/<lib>.lua    → members whose mcpp.toml references <lib>
+      #   tests/examples/<m>/** → member <m>
+      # Run the FULL workspace when the change can affect everything:
+      # non-PR events (push to main, the nightly cron, dispatch), this
+      # workflow file (it carries the mcpp version pins, so a version bump
+      # always re-validates every package), a non-member edit to the
+      # workspace manifest, or shared test scripts. Docs-only and tools/-only
+      # changes select nothing.
+      # Note: bash 3.2 on macOS runners — no associative arrays here.
+      - name: Select affected workspace members
+        id: plan
+        shell: bash
+        run: |
+          full() { echo "MEMBERS=__ALL__" >> "$GITHUB_ENV"; echo "full run: $1"; exit 0; }
+          [ "${{ github.event_name }}" = "pull_request" ] || full "event=${{ github.event_name }}"
+          base="origin/${{ github.base_ref }}"
+          changed=$(git diff --name-only "$base"...HEAD)
+          printf 'changed files vs %s:\n%s\n' "$base" "$changed"
+          sel=""
+          add() { case " $sel " in *" $1 "*) ;; *) sel="$sel $1" ;; esac; }
+          while IFS= read -r f; do
+            [ -n "$f" ] || continue
+            case "$f" in
+              .github/workflows/validate.yml|tests/*.sh) full "$f" ;;
+              mcpp.toml)
+                # Workspace manifest. Every new-package PR appends to the
+                # members list, so that alone must NOT force a full run:
+                # select the added members; anything else in this file
+                # (indices, settings) affects everyone → full.
+                if ! diff -q <(git show "$base:mcpp.toml" | grep -v 'tests/examples/') \
+                             <(grep -v 'tests/examples/' mcpp.toml) >/dev/null; then
+                  full "mcpp.toml non-member change"
+                fi
+                for p in $(comm -13 <(git show "$base:mcpp.toml" | grep -o 'tests/examples/[A-Za-z0-9._-]*' | sort -u) \
+                                    <(grep -o 'tests/examples/[A-Za-z0-9._-]*' mcpp.toml | sort -u)); do
+                  add "${p#tests/examples/}"
+                done ;;
+              tests/examples/*)
+                m=${f#tests/examples/}; m=${m%%/*}
+                # A deleted/renamed member dir implies a mcpp.toml edit,
+                # which already forces a full run above.
+                [ -d "tests/examples/$m" ] && add "$m" ;;
+              pkgs/*.lua|pkgs/*/*.lua)
+                lib=$(basename "$f" .lua); lib=${lib#compat.}
+                hit=0
+                for mt in tests/examples/*/mcpp.toml; do
+                  if grep -q "$lib" "$mt"; then add "$(basename "$(dirname "$mt")")"; hit=1; fi
+                done
+                [ "$hit" = 1 ] || echo "note: no workspace member exercises $f" ;;
+              # tools/ holds OFFLINE descriptor-generation and publishing
+              # helpers (tools/compat-*/, tools/gtc/, publish_mcpp_index.sh).
+              # Nothing under it is consumed by a package build: when one of
+              # them actually changes a package, the generated pkgs/*.lua
+              # changes with it and the rule above selects the right members.
+              # So a tools/ edit alone selects nothing rather than forcing a
+              # full workspace rebuild.
+              *.md|docs/*|.agents/*|.github/*|tools/*) : ;;
+              *) full "unclassified change: $f" ;;
+            esac
+          done <<EOF
+          $changed
+          EOF
+          sel=${sel# }
+          echo "MEMBERS=$sel" >> "$GITHUB_ENV"
+          echo "selected members: ${sel:-<none>}"
+      # Sharding is for the FULL run only. A selective run is a handful of
+      # members; splitting it 8 ways would add 7 runners' worth of checkout,
+      # mcpp download and cache restore to save nothing.
+      - name: Decide the fan-out
+        id: fanout
+        shell: bash
+        run: |
+          if [ "$MEMBERS" = "__ALL__" ]; then
+            echo 'shards=[0,1,2,3,4,5,6,7]' >> "$GITHUB_OUTPUT"
+            echo 'shard_count=8'            >> "$GITHUB_OUTPUT"
+          else
+            echo 'shards=[0]'     >> "$GITHUB_OUTPUT"
+            echo 'shard_count=1'  >> "$GITHUB_OUTPUT"
+          fi
+          echo "members=$MEMBERS" >> "$GITHUB_OUTPUT"
+
   workspace:
-    name: workspace (${{ matrix.platform }})
+    # The shard is in the name only when there is more than one, so a
+    # selective run still reads "workspace (linux)".
+    name: workspace (${{ matrix.platform }}${{ needs.select.outputs.shard_count == '1' && '' || format(' {0}/{1}', matrix.shard, needs.select.outputs.shard_count) }})
+    needs: select
+    if: needs.select.outputs.members != ''
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 150
+    # Was 150 and a full linux run hit it exactly. One shard is ~1/8 of the
+    # work, so this is now a real ceiling rather than the thing that decides
+    # whether the job finishes.
+    timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:
+        # Fanned out ONLY for a full run — `shards` is [0] otherwise, which
+        # collapses this back to one job per platform.
+        shard: ${{ fromJSON(needs.select.outputs.shards) }}
+        platform: [linux, macos, windows]
         include:
           # Archive names are derived from env.MCPP_VERSION in the Download
           # step — bumping the pin is a ONE-line change (hardcoded versions
@@ -359,74 +470,29 @@ jobs:
       # plans, mcpp#232). The sandbox copy lands in ~/.mcpp/registry, so
       # the cache carries it across runs.
 
-      # ── Selective member testing ──────────────────────────────────────
-      # `mcpp test --workspace` builds every member (opencv, ffmpeg, …) and
-      # dominates CI wall-clock, while a PR almost always touches one
-      # package. Map changed files → affected members and test only those:
-      #   pkgs/<x>/<lib>.lua    → members whose mcpp.toml references <lib>
-      #   tests/examples/<m>/** → member <m>
-      # Run the FULL workspace when the change can affect everything:
-      # non-PR events (push to main, the nightly cron, dispatch), this
-      # workflow file (it carries the mcpp version pins, so a version bump
-      # always re-validates every package), a non-member edit to the
-      # workspace manifest, or shared test scripts. Docs-only and tools/-only
-      # changes select nothing.
-      # Note: bash 3.2 on macOS runners — no associative arrays here.
-      - name: Select affected workspace members
+      # ── This shard's slice of the plan ────────────────────────────────
+      # `select` decided WHAT runs; this decides which part of it runs HERE.
+      # Round-robin by position, which is what spreads the expensive members:
+      # opencv-module / -dnn / -unifont are adjacent in the list, so `% N`
+      # necessarily puts them on three different runners. A single job that
+      # builds all three spends 45+ minutes on opencv alone.
+      - name: Take this shard's members
         shell: bash
         run: |
-          full() { echo "MEMBERS=__ALL__" >> "$GITHUB_ENV"; echo "full run: $1"; exit 0; }
-          [ "${{ github.event_name }}" = "pull_request" ] || full "event=${{ github.event_name }}"
-          base="origin/${{ github.base_ref }}"
-          changed=$(git diff --name-only "$base"...HEAD)
-          printf 'changed files vs %s:\n%s\n' "$base" "$changed"
-          sel=""
-          add() { case " $sel " in *" $1 "*) ;; *) sel="$sel $1" ;; esac; }
-          while IFS= read -r f; do
-            [ -n "$f" ] || continue
-            case "$f" in
-              .github/workflows/validate.yml|tests/*.sh) full "$f" ;;
-              mcpp.toml)
-                # Workspace manifest. Every new-package PR appends to the
-                # members list, so that alone must NOT force a full run:
-                # select the added members; anything else in this file
-                # (indices, settings) affects everyone → full.
-                if ! diff -q <(git show "$base:mcpp.toml" | grep -v 'tests/examples/') \
-                             <(grep -v 'tests/examples/' mcpp.toml) >/dev/null; then
-                  full "mcpp.toml non-member change"
-                fi
-                for p in $(comm -13 <(git show "$base:mcpp.toml" | grep -o 'tests/examples/[A-Za-z0-9._-]*' | sort -u) \
-                                    <(grep -o 'tests/examples/[A-Za-z0-9._-]*' mcpp.toml | sort -u)); do
-                  add "${p#tests/examples/}"
-                done ;;
-              tests/examples/*)
-                m=${f#tests/examples/}; m=${m%%/*}
-                # A deleted/renamed member dir implies a mcpp.toml edit,
-                # which already forces a full run above.
-                [ -d "tests/examples/$m" ] && add "$m" ;;
-              pkgs/*.lua|pkgs/*/*.lua)
-                lib=$(basename "$f" .lua); lib=${lib#compat.}
-                hit=0
-                for mt in tests/examples/*/mcpp.toml; do
-                  if grep -q "$lib" "$mt"; then add "$(basename "$(dirname "$mt")")"; hit=1; fi
-                done
-                [ "$hit" = 1 ] || echo "note: no workspace member exercises $f" ;;
-              # tools/ holds OFFLINE descriptor-generation and publishing
-              # helpers (tools/compat-*/, tools/gtc/, publish_mcpp_index.sh).
-              # Nothing under it is consumed by a package build: when one of
-              # them actually changes a package, the generated pkgs/*.lua
-              # changes with it and the rule above selects the right members.
-              # So a tools/ edit alone selects nothing rather than forcing a
-              # full workspace rebuild.
-              *.md|docs/*|.agents/*|.github/*|tools/*) : ;;
-              *) full "unclassified change: $f" ;;
-            esac
-          done <<EOF
-          $changed
-          EOF
-          sel=${sel# }
-          echo "MEMBERS=$sel" >> "$GITHUB_ENV"
-          echo "selected members: ${sel:-<none>}"
+          plan='${{ needs.select.outputs.members }}'
+          if [ "$plan" = "__ALL__" ]; then
+            plan=$(grep -o 'tests/examples/[A-Za-z0-9._-]*' mcpp.toml \
+                   | sed 's|tests/examples/||' | sort -u | tr '\n' ' ')
+          fi
+          n=${{ needs.select.outputs.shard_count }}
+          mine=""; i=0
+          for m in $plan; do
+            [ $((i % n)) -eq ${{ matrix.shard }} ] && mine="$mine $m"
+            i=$((i + 1))
+          done
+          mine=${mine# }
+          echo "MEMBERS=$mine" >> "$GITHUB_ENV"
+          echo "shard ${{ matrix.shard }}/$n of $i member(s): ${mine:-<none>}"
 
       # ── Refresh the PUBLISHED index before testing ────────────────────
       # Most members resolve everything from this checkout, but a member that
@@ -483,9 +549,11 @@ jobs:
         run: |
           "$MCPP" --version
           # No `timeout` wrapper: absent on macOS runners; job-level timeout-minutes bounds it.
-          if [ "$MEMBERS" = "__ALL__" ]; then
-            "$MCPP" test --workspace
-          elif [ -z "$MEMBERS" ]; then
+          # One code path: the shard step above already expanded `__ALL__`
+          # into this runner's actual member names, so `mcpp test --workspace`
+          # — which would ignore the sharding and rebuild everything here — is
+          # gone.
+          if [ -z "$MEMBERS" ]; then
             echo "No workspace member affected by this change — nothing to test."
           else
             rc=0
