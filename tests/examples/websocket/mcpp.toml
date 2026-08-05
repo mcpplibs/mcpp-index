@@ -1,0 +1,15 @@
+# websocket test project: consumes compat.websocket and asserts client behavior
+# under `mcpp test`. Part of the mcpp-index self-referential workspace — the
+# workspace-root `[indices]` redirect points at this repo, so the dependency
+# resolves to the checked-in recipe (pkgs/c/compat.websocket.lua).
+#
+# The test is entirely OFFLINE and self-contained: it runs a minimal RFC 6455
+# echo server inside the test process (raw loopback sockets) and drives the
+# ix::WebSocket client against it, so it does not depend on the CI runner
+# having (or not having) network access or a WS server process.
+[package]
+name = "websocket-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+websocket = "12.0.1"

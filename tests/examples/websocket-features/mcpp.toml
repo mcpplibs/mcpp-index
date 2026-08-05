@@ -1,0 +1,17 @@
+# websocket-features test project: consumes compat.websocket with the `server`
+# and `zlib` features enabled and asserts them under `mcpp test`. Part of the
+# mcpp-index self-referential workspace — the workspace-root `[indices]`
+# redirect points at this repo, so the dependency resolves to the checked-in
+# recipe (pkgs/c/compat.websocket.lua).
+#
+# The test is entirely OFFLINE: it runs an ix::WebSocketServer (the `server`
+# feature) on loopback and drives the ix::WebSocket client against it, then
+# checks that per-message-deflate (the `zlib` feature) actually compresses on
+# the wire. The sibling member tests/examples/websocket covers the zero-dep
+# client with no features; this member exists to prove the features.
+[package]
+name = "websocket-features-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+websocket = { version = "12.0.1", features = ["server", "zlib"] }
