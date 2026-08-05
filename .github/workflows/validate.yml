@@ -20,16 +20,19 @@ on:
         default: global
 
 env:
-  # 2026.8.5.3 carries two things this workflow depends on:
+  # 2026.8.5.4 carries two things this workflow depends on:
   #   .5.1  `tools = [...]` — how a consumer asks for a dependency's
   #         `kind = "bin"` target, which tests/examples/protobuf-protoc is built
   #         on. Before it: "tools must be a string, inline dep table, or nested
   #         table".
-  #   .5.3  link response files separate objects by NEWLINES. link.exe caps a
-  #         response-file LINE at 128 KiB, and opencv-module / opencv-module-dnn
-  #         went past it on windows — after 795s / 1166s of compiling:
+  #   .5.4  windows links with lld. link.exe caps a response-file LINE at
+  #         128 KiB and opencv-module / opencv-module-dnn went past it —
   #             fatal error LNK1170: line in command file contains 135135 or
   #             more characters
+  #         after 795s / 1166s of compiling. .5.3 newline-separated OUR response
+  #         file, which was necessary but not sufficient: clang, acting as the
+  #         driver, writes a SECOND one for the linker that we do not control.
+  #         lld's response-file parser has no per-line limit at all.
   #         Together with re-enabling the global package cache below, this is
   #         what makes a green FULL run possible again: .5.3 removes the
   #         windows link failure, the cache removes the 150-minute timeout.
@@ -113,7 +116,7 @@ env:
   # 0.0.94 fixed feature-gated `sources` under `mcpp test` (mcpp#218); 0.0.91
   # added standard = "c++fly" to the resolver grammar, so c++fly descriptors
   # get the lint WARN below, not a hard grammar-parse rejection.
-  MCPP_VERSION: "2026.8.5.3"
+  MCPP_VERSION: "2026.8.5.4"
 
 jobs:
   lint:
@@ -389,21 +392,21 @@ jobs:
             ext: tar.gz
             mcpp: bin/mcpp
             xlings: registry/bin/xlings
-            mcpp_version: "2026.8.5.3"   # keep in sync with env.MCPP_VERSION
+            mcpp_version: "2026.8.5.4"   # keep in sync with env.MCPP_VERSION
           - platform: macos
             os: macos-15
             suffix: macosx-arm64
             ext: tar.gz
             mcpp: bin/mcpp
             xlings: registry/bin/xlings
-            mcpp_version: "2026.8.5.3"   # keep in sync with env.MCPP_VERSION
+            mcpp_version: "2026.8.5.4"   # keep in sync with env.MCPP_VERSION
           - platform: windows
             os: windows-latest
             suffix: windows-x86_64
             ext: zip
             mcpp: bin/mcpp.exe
             xlings: registry/bin/xlings.exe
-            mcpp_version: "2026.8.5.3"   # keep in sync with env.MCPP_VERSION
+            mcpp_version: "2026.8.5.4"   # keep in sync with env.MCPP_VERSION
     env:
       MCPP_EFFECTIVE: ${{ matrix.mcpp_version }}
     steps:
