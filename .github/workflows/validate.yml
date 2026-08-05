@@ -272,9 +272,8 @@ jobs:
   select:
     runs-on: ubuntu-latest
     outputs:
-      members:     ${{ steps.fanout.outputs.members }}
-      shard_count: ${{ steps.fanout.outputs.shard_count }}
-      shards:      ${{ steps.fanout.outputs.shards }}
+      members: ${{ steps.fanout.outputs.members }}
+      matrix:  ${{ steps.fanout.outputs.matrix }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -348,67 +347,62 @@ jobs:
           sel=${sel# }
           echo "MEMBERS=$sel" >> "$GITHUB_ENV"
           echo "selected members: ${sel:-<none>}"
-      # Sharding is for the FULL run only. A selective run is a handful of
-      # members; splitting it 8 ways would add 7 runners' worth of checkout,
-      # mcpp download and cache restore to save nothing.
+      # Sharding is for the FULL run only, and the shard count per platform is
+      # that platform's RUNNER CONCURRENCY — not a round number.
+      #
+      # Measured on this repo (24 jobs queued, 6 running):
+      #     macos 1 · linux 3 · windows 2
+      #
+      # That measurement is what makes over-sharding a real cost rather than a
+      # theoretical one: at concurrency 1, eight macOS shards run BACK TO BACK
+      # and each pays its own checkout + mcpp download + cache restore, so the
+      # split is strictly slower than not splitting. Wall-clock is
+      # ceil(shards / concurrency) x slowest-shard; shards beyond the
+      # concurrency only add fixed cost.
+      #
+      # Re-measure with:
+      #   gh api repos/<owner>/<repo>/actions/runs/<id>/jobs --paginate \
+      #     --jq '[.jobs[]|select(.status=="in_progress")]|length'
       - name: Decide the fan-out
         id: fanout
         shell: bash
         run: |
-          if [ "$MEMBERS" = "__ALL__" ]; then
-            echo 'shards=[0,1,2,3,4,5,6,7]' >> "$GITHUB_OUTPUT"
-            echo 'shard_count=8'            >> "$GITHUB_OUTPUT"
-          else
-            echo 'shards=[0]'     >> "$GITHUB_OUTPUT"
-            echo 'shard_count=1'  >> "$GITHUB_OUTPUT"
-          fi
+          full=0; [ "$MEMBERS" = "__ALL__" ] && full=1
+          emit() {   # platform os suffix ext mcpp xlings shards
+            for i in $(seq 0 $(( $7 - 1 ))); do
+              printf '{"platform":"%s","os":"%s","suffix":"%s","ext":"%s","mcpp":"%s","xlings":"%s","shard":%d,"shards":%d},' \
+                     "$1" "$2" "$3" "$4" "$5" "$6" "$i" "$7"
+            done
+          }
+          if [ "$full" = 1 ]; then ln=3; mn=1; wn=2; else ln=1; mn=1; wn=1; fi
+          {
+            printf '{"include":['
+            emit linux   ubuntu-latest  linux-x86_64   tar.gz bin/mcpp     registry/bin/xlings     "$ln"
+            emit macos   macos-15       macosx-arm64   tar.gz bin/mcpp     registry/bin/xlings     "$mn"
+            emit windows windows-latest windows-x86_64 zip    bin/mcpp.exe registry/bin/xlings.exe "$wn"
+            printf ']}'
+          } | sed 's/,]}/]}/' > /tmp/matrix.json
+          echo "matrix=$(cat /tmp/matrix.json)" >> "$GITHUB_OUTPUT"
           echo "members=$MEMBERS" >> "$GITHUB_OUTPUT"
+          cat /tmp/matrix.json
 
   workspace:
-    # The shard is in the name only when there is more than one, so a
-    # selective run still reads "workspace (linux)".
-    name: workspace (${{ matrix.platform }}${{ needs.select.outputs.shard_count == '1' && '' || format(' {0}/{1}', matrix.shard, needs.select.outputs.shard_count) }})
+    # The shard suffix appears only when the platform is actually split.
+    name: workspace (${{ matrix.platform }}${{ matrix.shards == 1 && '' || format(' {0}/{1}', matrix.shard, matrix.shards) }})
     needs: select
     if: needs.select.outputs.members != ''
     runs-on: ${{ matrix.os }}
-    # Was 150 and a full linux run hit it exactly. One shard is ~1/8 of the
-    # work, so this is now a real ceiling rather than the thing that decides
-    # whether the job finishes.
+    # One shard is a fraction of the work, so this is a real ceiling rather
+    # than the thing that decides whether the job finishes (a full linux run
+    # used to hit 150 exactly and get cancelled).
     timeout-minutes: 90
     strategy:
       fail-fast: false
-      matrix:
-        # Fanned out ONLY for a full run — `shards` is [0] otherwise, which
-        # collapses this back to one job per platform.
-        shard: ${{ fromJSON(needs.select.outputs.shards) }}
-        platform: [linux, macos, windows]
-        include:
-          # Archive names are derived from env.MCPP_VERSION in the Download
-          # step — bumping the pin is a ONE-line change (hardcoded versions
-          # here once 404'd a pin bump).
-          - platform: linux
-            os: ubuntu-latest
-            suffix: linux-x86_64
-            ext: tar.gz
-            mcpp: bin/mcpp
-            xlings: registry/bin/xlings
-            mcpp_version: "2026.8.5.4"   # keep in sync with env.MCPP_VERSION
-          - platform: macos
-            os: macos-15
-            suffix: macosx-arm64
-            ext: tar.gz
-            mcpp: bin/mcpp
-            xlings: registry/bin/xlings
-            mcpp_version: "2026.8.5.4"   # keep in sync with env.MCPP_VERSION
-          - platform: windows
-            os: windows-latest
-            suffix: windows-x86_64
-            ext: zip
-            mcpp: bin/mcpp.exe
-            xlings: registry/bin/xlings.exe
-            mcpp_version: "2026.8.5.4"   # keep in sync with env.MCPP_VERSION
+      # Whole matrix from `select`: the shard count is per-platform, because it
+      # tracks that platform's runner concurrency.
+      matrix: ${{ fromJSON(needs.select.outputs.matrix) }}
     env:
-      MCPP_EFFECTIVE: ${{ matrix.mcpp_version }}
+      MCPP_EFFECTIVE: ${{ env.MCPP_VERSION }}
     steps:
       # Full history: the member-selection step below diffs against the PR
       # base to decide which workspace members to test.
@@ -485,23 +479,28 @@ jobs:
       # opencv-module / -dnn / -unifont are adjacent in the list, so `% N`
       # necessarily puts them on three different runners. A single job that
       # builds all three spends 45+ minutes on opencv alone.
+      # ── This shard's slice ────────────────────────────────────────────
+      # `select` decided WHAT runs; tests/plan_shards.lua decides which part
+      # runs HERE — by MEASURED time (tests/member-timings.tsv, produced by the
+      # timings job below), longest-first, with dependency affinity breaking
+      # near-ties so members sharing a big dependency land together and build
+      # it once. Round-robin by position was the first version and balance was
+      # luck: it put ffmpeg, llamacpp-metal and opencv-module-unifont on one
+      # shard and nothing heavy on three others, and wall-clock is the slowest
+      # shard.
       - name: Take this shard's members
         shell: bash
         run: |
-          plan='${{ needs.select.outputs.members }}'
-          if [ "$plan" = "__ALL__" ]; then
-            plan=$(grep -o 'tests/examples/[A-Za-z0-9._-]*' mcpp.toml \
-                   | sed 's|tests/examples/||' | sort -u | tr '\n' ' ')
+          if ! command -v lua5.4 >/dev/null 2>&1; then
+            sudo apt-get install -y --no-install-recommends lua5.4 >/dev/null 2>&1 \
+              || brew install lua >/dev/null 2>&1 || true
           fi
-          n=${{ needs.select.outputs.shard_count }}
-          mine=""; i=0
-          for m in $plan; do
-            [ $((i % n)) -eq ${{ matrix.shard }} ] && mine="$mine $m"
-            i=$((i + 1))
-          done
-          mine=${mine# }
+          plan='${{ needs.select.outputs.members }}'
+          if [ "$plan" = "__ALL__" ]; then plan=""; fi
+          mine=$(lua5.4 tests/plan_shards.lua "${{ matrix.platform }}" \
+                   "${{ matrix.shard }}" "${{ matrix.shards }}" $plan)
           echo "MEMBERS=$mine" >> "$GITHUB_ENV"
-          echo "shard ${{ matrix.shard }}/$n of $i member(s): ${mine:-<none>}"
+          echo "shard ${{ matrix.shard }}/${{ matrix.shards }}: ${mine:-<none>}"
 
       # ── Refresh the PUBLISHED index before testing ────────────────────
       # Most members resolve everything from this checkout, but a member that
@@ -655,3 +654,29 @@ jobs:
 
           echo "_Total is the SUM across shards; wall-clock is the slowest shard._" \
             >> "$GITHUB_STEP_SUMMARY"
+
+          # The table that feeds the NEXT run's sharding. Emitted as an
+          # artifact rather than committed automatically: a number that
+          # rewrites itself on every run would make every diff noisy and would
+          # silently absorb a one-off slow runner. Refresh it deliberately —
+          # download this artifact and replace tests/member-timings.tsv when
+          # the numbers have actually moved.
+          {
+            echo "# <platform>\t<member>\t<seconds> — from run ${{ github.run_id }}"
+            echo "# refresh: download the member-timings artifact and replace this file"
+            for plat in linux macos windows; do
+              for f in timings/timings-$plat-*/timings.tsv; do
+                [ -f "$f" ] || continue
+                awk -F'\t' -v p="$plat" '{ printf "%s\t%s\t%s\n", p, $2, $1 }' "$f"
+              done
+            done
+          } | sort -u > member-timings.tsv
+          echo "wrote member-timings.tsv ($(grep -vc '^#' member-timings.tsv) rows)"
+
+      - name: Upload the timing table for the next run's sharding
+        if: always() && hashFiles('member-timings.tsv') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: member-timings
+          path: member-timings.tsv
+          retention-days: 90
