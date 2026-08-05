@@ -24,6 +24,8 @@ package = {
                     GLOBAL = "https://github.com/openxlings/libxpkg/archive/refs/tags/0.0.49.tar.gz",
                     CN     = "https://gitcode.com/mcpp-res/xpkg/releases/download/0.0.49/xpkg-0.0.49.tar.gz",
                 },
+                sha256 = "45f23d16aba01833cc38ad4a2a117ab2646d9c0edad5f4c9eafecc53a70457ff",
+            },
             ["0.0.48"] = {
                 url    = {
                     GLOBAL = "https://github.com/openxlings/libxpkg/archive/refs/tags/0.0.48.tar.gz",
@@ -37,8 +39,6 @@ package = {
                     CN     = "https://gitcode.com/mcpp-res/xpkg/releases/download/0.0.47/xpkg-0.0.47.tar.gz",
                 },
                 sha256 = "fe879e8f52ea5a7f316ca54bca1fa393febb8e2a23a3de852b0c2be1918a0be9",
-            },
-                sha256 = "45f23d16aba01833cc38ad4a2a117ab2646d9c0edad5f4c9eafecc53a70457ff",
             },
             ["0.0.46"] = {
                 url    = {
