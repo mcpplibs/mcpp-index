@@ -401,8 +401,6 @@ jobs:
       # Whole matrix from `select`: the shard count is per-platform, because it
       # tracks that platform's runner concurrency.
       matrix: ${{ fromJSON(needs.select.outputs.matrix) }}
-    env:
-      MCPP_EFFECTIVE: ${{ env.MCPP_VERSION }}
     steps:
       # Full history: the member-selection step below diffs against the PR
       # base to decide which workspace members to test.
@@ -432,7 +430,7 @@ jobs:
           # only a Git-Bash convenience.
           h=$(git ls-files -s -- 'pkgs/**/*.lua' 'tests/**' '.github/workflows/validate.yml' \
               | git hash-object --stdin)
-          echo "REGISTRY_CACHE_KEY=mcpp-registry-${{ runner.os }}-${{ env.MCPP_EFFECTIVE }}-$h" >> "$GITHUB_ENV"
+          echo "REGISTRY_CACHE_KEY=mcpp-registry-${{ runner.os }}-${{ env.MCPP_VERSION }}-$h" >> "$GITHUB_ENV"
       - name: Restore mcpp registry cache
         uses: actions/cache@v4
         with:
@@ -441,15 +439,15 @@ jobs:
           path: ~/.mcpp/registry
           key: ${{ env.REGISTRY_CACHE_KEY }}
           restore-keys: |
-            mcpp-registry-${{ runner.os }}-${{ env.MCPP_EFFECTIVE }}-
+            mcpp-registry-${{ runner.os }}-${{ env.MCPP_VERSION }}-
       - name: Download mcpp
         shell: bash
         env:
-          MCPP_ARCHIVE: mcpp-${{ env.MCPP_EFFECTIVE }}-${{ matrix.suffix }}.${{ matrix.ext }}
-          MCPP_ROOT: mcpp-${{ env.MCPP_EFFECTIVE }}-${{ matrix.suffix }}
+          MCPP_ARCHIVE: mcpp-${{ env.MCPP_VERSION }}-${{ matrix.suffix }}.${{ matrix.ext }}
+          MCPP_ROOT: mcpp-${{ env.MCPP_VERSION }}-${{ matrix.suffix }}
         run: |
           curl -L -fsS -o "$MCPP_ARCHIVE" \
-            "https://github.com/mcpp-community/mcpp/releases/download/v${MCPP_EFFECTIVE}/${MCPP_ARCHIVE}"
+            "https://github.com/mcpp-community/mcpp/releases/download/v${MCPP_VERSION}/${MCPP_ARCHIVE}"
           case "$MCPP_ARCHIVE" in
             *.zip) powershell -NoProfile -Command "Expand-Archive -Force -Path '${MCPP_ARCHIVE}' -DestinationPath '.'" ;;
             *)     tar -xzf "$MCPP_ARCHIVE" ;;
