@@ -19,8 +19,15 @@ tests/examples/<member>/     one test project per library (a workspace member; <
 tests/check_mirror_urls.lua  lint: GLOBAL+CN table completeness, and that CN points at mcpp-res
 tests/check_package_name.lua lint: identity shape (name is a single atomic segment, hierarchy belongs to namespace)
 tests/list_cn_urls.lua       extracts the CN urls for mirror-cn-reachable
+tests/run_members.sh         runs workspace members one at a time and times each. The entry point used both by CI
+                             and locally; see "Running workspace members locally" below
+tests/plan_shards.lua        assigns members to shards from measured times. Called once by the `select` job, and by
+                             run_members.sh --shard, so both produce the same split
+tests/member-timings.tsv     the measured per-member wall-clock plan_shards.lua reads. Refreshed deliberately from
+                             the member-timings artifact rather than written back on every run
 README.md                    index overview and contribution entry point (README.zh-CN.md is the Chinese version)
-.github/workflows/validate.yml   CI: lint / mirror-cn-reachable / workspace (a 3-platform matrix)
+.github/workflows/validate.yml   CI: lint / mirror-cn-reachable / select / workspace (sharded per platform on a full
+                             run) / timings
 .agents/docs/<date>-*.md     the design-document convention
 docs/                        contributor reference documentation (this directory; docs/zh/ holds the Chinese version)
 tools/gtc                    the gitcode CLI, see cn-mirror.md
@@ -150,7 +157,10 @@ locally with `mcpp xpkg parse pkgs/<x>/<name>.lua`.
 ## CI behavior (validate.yml)
 
 - Triggers: a PR (touching `pkgs/**/*.lua`, `tests/**`, either README, `mcpp.toml`, `index.toml` or this workflow),
-  a push to main, the nightly cron, and manual dispatch.
+  a push to main, the nightly cron, and manual dispatch. Dispatch takes a `cache` input — `global`, the default, or
+  `local`. Under `local` every member rebuilds every dependency from scratch, which isolates a member's own cost from
+  what it inherited from the members that ran before it; that is the condition per-member times should be compared
+  under, and it is also far slower.
 - `env.MCPP_VERSION` is the mcpp version every job uses; local verification should match it.
 - `lint` (always runs): lua syntax via `loadfile(f,'t')`; `spec=`/`name=`/`xpm=` must be present; leading-v versions
   are rejected; runs `check_mirror_urls.lua`; runs `check_package_name.lua` (identity shape, see "Package identity"
@@ -158,20 +168,54 @@ locally with `mcpp xpkg parse pkgs/<x>/<name>.lua`.
   fails). `xpkg parse` in mcpp >= 0.0.106 enforces the identity shape itself, which makes the lua lint an earlier and
   cheaper redundant gate.
 - `mirror-cn-reachable` (always runs): `curl`s each CN url; all must return 200.
-- `workspace (linux|macos|windows)`: the whole test surface is one mcpp workspace and the **only build/run channel** —
-  there is no shell-driven exception (the public module packages imgui/ffmpeg/opencv/tinyhttps are ordinary members
-  too, resolving from the checkout through a member-level `[indices] default = { path = "../../.." }`,
-  mcpp >= 0.0.97; members consuming `compat` inherit the root-level declaration, see "Index redirection" above).
+- `select`: decides the entire plan once and emits it to the runners as data. Three questions are answered here
+  rather than on each runner — which members run, how many shards each platform gets, and which members land on
+  which shard.
   - Selective member testing: on a PR, `git diff` maps changed files to the affected members
-    (`pkgs/<x>/<lib>.lua` → members whose mcpp.toml references `<lib>`; `tests/examples/<m>/**` → member `<m>`), and
-    only those run through `mcpp test -p <member>`; global changes — the workflow itself, the non-member part of the
-    workspace manifest, `tools/` and so on — go to a full `mcpp test --workspace`. push/nightly/dispatch are always
-    full runs.
+    (`pkgs/<x>/<lib>.lua` → members whose mcpp.toml references `<lib>`; `tests/examples/<m>/**` → member `<m>`).
+    A change that can affect everything selects the full workspace instead: a non-PR event, this workflow file, a
+    non-member edit to the workspace manifest, or a shared test script. Documentation-only and `tools/`-only changes
+    select nothing.
+  - Sharding applies to full runs only — a selective run is one job per platform. The shard count per platform is
+    that platform's **measured runner concurrency** (linux 3, macos 1, windows 2) rather than a round number.
+    Wall-clock is `ceil(shards / concurrency) × slowest-shard`, so shards beyond the concurrency remove no work and
+    each still pays its own checkout, mcpp download and cache restore. At concurrency 1, splitting macOS is strictly
+    slower than not splitting it. Re-measure with:
+    `gh api repos/<owner>/<repo>/actions/runs/<id>/jobs --paginate --jq '[.jobs[]|select(.status=="in_progress")]|length'`
+  - The assignment itself comes from `tests/plan_shards.lua`. It reads `tests/member-timings.tsv` and packs
+    longest-first onto the least-loaded shard; ties break toward the shard already holding members with overlapping
+    dependencies, because shards share no build cache and a dependency landing on two shards is built twice. A
+    member with no recorded time is charged the median, so a newly added member is assumed neither free nor huge.
+    Against round-robin on the real workspace the slowest linux shard falls from 4158s to 3706s and the spread from
+    47% to 15%. One floor no split can beat remains: the single slowest member, `grpc-module` at 1701s.
+  - Planning runs here, on linux, because it needs lua: windows has no apt or brew, and Homebrew installs `lua`
+    rather than `lua5.4`.
+- `workspace (<platform> <shard>/<count>)`: the whole test surface is one mcpp workspace and the **only build/run
+  channel** — there is no shell-driven exception (the public module packages imgui/ffmpeg/opencv/tinyhttps are
+  ordinary members too, resolving from the checkout through a member-level `[indices] default = { path = "../../.." }`,
+  mcpp >= 0.0.97; members consuming `compat` inherit the root-level declaration, see "Index redirection" above). The
+  shard suffix appears only where the platform is actually split.
+  - Members run through `tests/run_members.sh`, the same script used locally. A timing table that exists only in CI
+    cannot be consulted while deciding what to optimise, and a local harness that differs from CI measures something
+    else.
+  - The package build cache is global, which is mcpp's default. The step formerly set `MCPP_BUILD_CACHE: local` to
+    work around mcpp#344, in which one cache entry could hold two object layouts; mcpp 2026.8.3.4 keyed the cache per
+    package with the consumer-dependent layout included, so the reason no longer holds. Keeping the bypass was
+    expensive: under `local`, 59 members that largely share abseil, protobuf and opencv rebuilt each of them from
+    scratch, and a full linux run reached 2h30m — past the timeout, so it produced no result at all.
   - The `~/.mcpp/registry` cache carries the toolchains and the already-built compat packages, so a repeat run is
     incremental and fast. Its key is computed once, in a step of its own, from `git ls-files -s` over the tracked
     inputs — never with `hashFiles()`, which globs the working tree and would re-hash the multi-GB build output under
     `tests/examples/*/target` when actions/cache re-evaluates the key in its post (save) step (that blew past the
     runner's 120s template-evaluation cap on windows).
+  - The published index is refreshed before testing. Most members resolve everything from the checkout, but a member
+    redirecting a namespace other than `compat` takes the rest from the published index, whose snapshot is whatever
+    the pinned mcpp release vendored — older than main by construction, and never moved by anything else in the run.
+- `timings`: merges the per-shard timing artifacts into one ranking per platform in the run summary, and publishes
+  the combined table as the `member-timings` artifact. Sharding otherwise hides where the time goes, since each
+  runner reports only its own slice. The table is not committed automatically: a number that rewrites itself on
+  every run makes every diff noisy and silently absorbs a one-off slow runner. Refresh `tests/member-timings.tsv`
+  from that artifact when the numbers have actually moved.
 
 ## Reproducing lint locally (equivalent to the CI lint job)
 
@@ -186,6 +230,26 @@ for f in pkgs/*/*.lua; do
 done
 [ $fail -eq 0 ] && echo "ALL LINT PASS"
 ```
+
+## Running workspace members locally
+
+`tests/run_members.sh` is the entry point CI uses, so a local run measures the same thing under the same split:
+
+```bash
+bash tests/run_members.sh --all                             # every member
+bash tests/run_members.sh opencv-module protobuf            # named members
+bash tests/run_members.sh --all --shard 1/3                 # exactly what CI's linux shard 1 runs
+bash tests/run_members.sh --all --shard 0/2 --platform windows
+bash tests/run_members.sh --all --cache local               # bypass the package build cache
+```
+
+Shard indices are 0-based, and `--shard` delegates to `tests/plan_shards.lua` — the script the `select` job calls —
+so shard N locally holds the members shard N holds in CI. Without lua on `PATH` it falls back to round-robin and
+says so. `--platform` chooses which column of `tests/member-timings.tsv` to read and defaults to the host.
+
+`MCPP` selects the binary (default: `mcpp` on `PATH`); `MCPP_TIMINGS` names a file to append
+`<seconds>\t<member>\t<ok|FAIL>` rows to. The exit status is non-zero if any member failed, and the timing table
+prints either way — a run worth diagnosing is exactly the one where the times matter.
 
 ## After the merge
 

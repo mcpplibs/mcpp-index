@@ -18,8 +18,13 @@ tests/examples/<member>/     每库测试工程(workspace 成员;<member> 为包
 tests/check_mirror_urls.lua  lint:GLOBAL+CN 表完整性,以及 CN 指向 mcpp-res
 tests/check_package_name.lua lint:身份形态(name 为单一原子段,层级归 namespace)
 tests/list_cn_urls.lua       抽取 CN url,供 mirror-cn-reachable 使用
+tests/run_members.sh         逐个运行 workspace 成员并计时。CI 与本地共用的入口,见下文「本地运行 workspace 成员」
+tests/plan_shards.lua        依实测耗时将成员分配到各分片。由 `select` job 调用一次,`run_members.sh --shard`
+                             亦调用同一脚本,故两处得到同一划分
+tests/member-timings.tsv     plan_shards.lua 读取的逐成员实测墙钟。由 member-timings artifact 择时手工刷新,
+                             而非每次运行自动回写
 README.md                    索引说明与贡献入口(英文;中文版为 README.zh-CN.md)
-.github/workflows/validate.yml   CI:lint / mirror-cn-reachable / workspace(3 平台矩阵)
+.github/workflows/validate.yml   CI:lint / mirror-cn-reachable / select / workspace(全量时按平台分片)/ timings
 .agents/docs/<date>-*.md     设计文档惯例
 docs/                        贡献者参考文档(英文);docs/zh/ 为中文版(本目录)
 tools/gtc                    gitcode CLI,见 cn-mirror.md
@@ -115,25 +120,54 @@ mcpp 跑 `xpkg parse`(strict:未知键即失败),所以需要更新文法/键的
 ## CI 行为(validate.yml)
 
 - 触发条件:PR(改动 `pkgs/**/*.lua`、`tests/**`、两份 README 之一、`mcpp.toml`、`index.toml` 或本 workflow)、
-  push 至 main、nightly cron、手动触发。
+  push 至 main、nightly cron、手动触发。手动触发接受 `cache` 输入 —— `global`(默认)或 `local`。`local` 下
+  每个成员均从零重建其全部依赖,从而把成员自身的开销与它从先前成员处继承到的部分隔离开;逐成员耗时应在此
+  条件下比较,代价是显著更慢。
 - `env.MCPP_VERSION` 为全部 job 使用的 mcpp 版本,本地验证应与之对齐。
 - `lint`(始终运行):lua 语法 `loadfile(f,'t')`;须含 `spec=`/`name=`/`xpm=`;禁止前导 v 版本;执行
   `check_mirror_urls.lua`;执行 `check_package_name.lua`(身份形态,见上文「包身份」);再用 CI pin 的
   mcpp 对每个描述符跑 `mcpp xpkg parse`(strict,未知键即失败)。mcpp ≥ 0.0.106 的 `xpkg parse` 自身
   也强制身份形态,lua lint 因此是更早、更便宜的冗余闸门。
 - `mirror-cn-reachable`(始终运行):逐个 `curl` CN url,均须返回 200。
-- `workspace (linux|macos|windows)`:整个测试面就是一个 mcpp workspace,**唯一的构建/运行通道**——
+- `select`:一次性决定整个计划,并以数据形式下发给各 runner。三个问题在此处而非各 runner 上回答 ——
+  哪些成员要跑、每个平台分几片、哪些成员落在哪一片。
+  - 选择性成员测试:PR 时由 `git diff` 将改动文件映射到受影响成员
+    (`pkgs/<x>/<lib>.lua` → mcpp.toml 引用 `<lib>` 的成员;`tests/examples/<m>/**` → 成员 `<m>`)。
+    可能影响全部成员的改动则选中整个 workspace:非 PR 事件、本 workflow 文件、workspace 清单的非成员
+    部分、共享测试脚本。仅文档与仅 `tools/` 的改动不选中任何成员。
+  - 分片仅用于全量运行,选择性运行为每平台一个 job。每平台的分片数取该平台**实测的 runner 并发度**
+    (linux 3、macos 1、windows 2),而非取整数。墙钟为 `ceil(分片数 / 并发度) × 最慢分片`,故超出并发度
+    的分片不减少任何工作量,却各自仍要付出 checkout、mcpp 下载与缓存恢复的固定开销;并发度为 1 时,
+    对 macOS 分片严格慢于不分片。重新测量:
+    `gh api repos/<owner>/<repo>/actions/runs/<id>/jobs --paginate --jq '[.jobs[]|select(.status=="in_progress")]|length'`
+  - 分配本身由 `tests/plan_shards.lua` 给出:读取 `tests/member-timings.tsv`,按耗时降序依次放入当前负载
+    最小的分片;负载接近时优先选择已含有共同依赖成员的分片 —— 分片之间不共享构建缓存,同一依赖落在两片
+    上就要构建两次。无实测记录的成员按中位数计价,故新增成员既不被假定为零成本,也不被假定为极重。
+    在真实 workspace 上与轮转法相比,linux 最慢分片由 4158s 降至 3706s,离散度由 47% 降至 15%。有一条
+    任何划分都无法突破的下界:最慢的单个成员,`grpc-module` 为 1701s。
+  - 规划在此 linux job 内进行,因为它需要 lua:windows 上既无 apt 亦无 brew,而 Homebrew 安装的是 `lua`
+    而非 `lua5.4`。
+- `workspace (<平台> <分片>/<总数>)`:整个测试面就是一个 mcpp workspace,**唯一的构建/运行通道**——
   没有任何 shell 驱动的例外(公开模块包 imgui/ffmpeg/opencv/tinyhttps 也是普通成员,经成员级
   `[indices] default = { path = "../../.." }` 从 checkout 解析,mcpp ≥ 0.0.97;消费 `compat` 的
-  成员则继承根级声明,见上文「索引重定向」)。
-  - 选择性成员测试:PR 时由 `git diff` 将改动文件映射到受影响成员
-    (`pkgs/<x>/<lib>.lua` → mcpp.toml 引用 `<lib>` 的成员;`tests/examples/<m>/**` → 成员 `<m>`),
-    仅 `mcpp test -p <member>` 这些成员;workflow 本身、workspace 清单非成员部分、`tools/` 等
-    全局性改动 → `mcpp test --workspace` 全量。push/nightly/dispatch 恒为全量。
+  成员则继承根级声明,见上文「索引重定向」)。分片后缀仅在该平台确实被拆分时出现。
+  - 成员经 `tests/run_members.sh` 运行,该脚本亦即本地入口。只存在于 CI 的耗时表无法在决定优化对象时被
+    参考,而与 CI 不同的本地测量装置度量的是另一回事。
+  - 包构建缓存取全局,即 mcpp 的默认值。该步骤此前设 `MCPP_BUILD_CACHE: local` 以规避 mcpp#344 —— 同一
+    缓存条目可能持有两种对象布局;mcpp 2026.8.3.4 起缓存按包计键并纳入随消费方而变的布局,该理由已不成立。
+    保留该旁路的代价是实际的:`local` 之下,59 个大量共享 abseil、protobuf、opencv 的成员会各自从零重建
+    这些依赖,linux 全量运行达到 2h30m —— 超出超时上限,因而根本得不到结果。
   - `~/.mcpp/registry` 缓存携带工具链与已构建的 compat 包,重复运行增量很快。其 key 由独立步骤经
     `git ls-files -s` 就已跟踪的输入算出一次,而**不用** `hashFiles()`:后者按工作树 glob,而
     actions/cache 会在 post(save)步骤重新求值 key,届时 `tests/examples/*/target` 下的数 GB 构建产物
     也会被一并哈希 —— windows 上曾因此撞破 runner 的 120 秒模板求值上限。
+  - 测试前刷新已发布索引。多数成员的全部依赖都从本 checkout 解析,但重定向了 `compat` 之外命名空间的成员
+    会从已发布索引取其余部分,而该快照是所 pin 的 mcpp 发行版随附的那一份 —— 按构造即早于 main,且运行中
+    没有任何其他环节会推进它。
+- `timings`:将各分片的耗时 artifact 合并为每平台一份排名写入 run summary,并以 `member-timings` artifact
+  发布合并后的表。否则分片会掩盖时间的去向 —— 每个 runner 只报告自己那一片。该表不自动提交:每次运行都
+  改写自身的数字会让每份 diff 都充满噪声,并会悄悄吸收一次偶发的慢 runner。数字确实发生变化时,再据该
+  artifact 刷新 `tests/member-timings.tsv`。
 
 ## 本地 lint 复现(等价于 CI lint job)
 
@@ -148,6 +182,25 @@ for f in pkgs/*/*.lua; do
 done
 [ $fail -eq 0 ] && echo "ALL LINT PASS"
 ```
+
+## 本地运行 workspace 成员
+
+`tests/run_members.sh` 即 CI 使用的入口,故本地运行度量的是同一对象、同一划分:
+
+```bash
+bash tests/run_members.sh --all                             # 全部成员
+bash tests/run_members.sh opencv-module protobuf            # 指定成员
+bash tests/run_members.sh --all --shard 1/3                 # 与 CI 的 linux 分片 1 完全一致
+bash tests/run_members.sh --all --shard 0/2 --platform windows
+bash tests/run_members.sh --all --cache local               # 绕过包构建缓存
+```
+
+分片下标自 0 起。`--shard` 委托给 `tests/plan_shards.lua`,即 `select` job 所调用的同一脚本,因此本地的第 N
+片与 CI 的第 N 片持有相同成员;`PATH` 上没有 lua 时退回轮转法,并在输出中说明。`--platform` 选择读取
+`tests/member-timings.tsv` 的哪一列,缺省为宿主平台。
+
+`MCPP` 指定所用二进制(缺省为 `PATH` 上的 `mcpp`);`MCPP_TIMINGS` 指定追加 `<秒>\t<成员>\t<ok|FAIL>` 行的
+文件。任一成员失败则退出码非零,而耗时表两种情况下均会打印 —— 值得诊断的运行恰恰就是耗时重要的那一次。
 
 ## 合并后
 

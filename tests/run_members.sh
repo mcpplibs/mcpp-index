@@ -7,8 +7,15 @@
 #
 #   bash tests/run_members.sh --all
 #   bash tests/run_members.sh opencv-module protobuf
-#   bash tests/run_members.sh --all --shard 3/8
-#   bash tests/run_members.sh --all --cache local     # bypass the package cache
+#   bash tests/run_members.sh --all --shard 1/3                 # CI's linux shard 1
+#   bash tests/run_members.sh --all --shard 0/2 --platform windows
+#   bash tests/run_members.sh --all --cache local               # bypass the package cache
+#
+# --shard N/M reproduces the split CI runs: the assignment comes from
+# tests/plan_shards.lua, the same script CI's `select` job calls, so shard N
+# here holds the members shard N holds there. Shard indices are 0-based.
+# --platform selects which column of tests/member-timings.tsv to read and
+# defaults to the host.
 #
 # Env:
 #   MCPP              path to the mcpp binary (default: `mcpp` on PATH)
@@ -25,13 +32,23 @@ shard=""
 members=()
 all=0
 
+# Which column of tests/member-timings.tsv --shard reads. Defaults to the host,
+# because the host is the machine whose times are being reproduced.
+case "$(uname -s)" in
+    Linux)                   platform=linux   ;;
+    Darwin)                  platform=macos   ;;
+    MINGW*|MSYS*|CYGWIN*)    platform=windows ;;
+    *)                       platform=linux   ;;
+esac
+
 while [ $# -gt 0 ]; do
     case "$1" in
         --all)      all=1; shift ;;
         --shard)    shard="$2"; shift 2 ;;
+        --platform) platform="$2"; shift 2 ;;
         --cache)    cache="$2"; shift 2 ;;
         --timings)  timings="$2"; shift 2 ;;
-        -h|--help)  sed -n '2,20p' "$0"; exit 0 ;;
+        -h|--help)  sed -n '2,25p' "$0"; exit 0 ;;
         -*)         echo "unknown option: $1" >&2; exit 2 ;;
         *)          members+=("$1"); shift ;;
     esac
@@ -60,20 +77,38 @@ if [ "${#members[@]}" -eq 0 ]; then
     exit 2
 fi
 
-# --shard N/M keeps every M-th member starting at N. Round-robin by position,
-# which is what separates adjacent expensive members (opencv-module,
-# -dnn, -unifont) onto different runners.
+# --shard N/M selects shard N of M. The assignment is NOT decided here:
+# tests/plan_shards.lua owns it and CI's `select` job calls the same script.
+# Two implementations of one question drift apart, and a local shard that
+# splits differently from CI's measures a different split than the one being
+# tuned — which defeats the reason this script is shared in the first place.
+#
+# Round-robin remains as the fallback for a machine with no lua. It is worse
+# (it knows nothing about how long anything takes) but it is never wrong, and
+# it keeps --shard usable where plan_shards.lua cannot run.
 if [ -n "$shard" ]; then
     idx=${shard%%/*}
     cnt=${shard##*/}
-    picked=()
-    i=0
-    for m in "${members[@]}"; do
-        [ $((i % cnt)) -eq "$idx" ] && picked+=("$m")
-        i=$((i + 1))
+    lua=""
+    for cand in lua5.4 lua; do
+        command -v "$cand" >/dev/null 2>&1 && { lua=$cand; break; }
     done
+    picked=()
+    if [ -n "$lua" ]; then
+        for m in $("$lua" tests/plan_shards.lua "$platform" "$idx" "$cnt" "${members[@]}"); do
+            picked+=("$m")
+        done
+        how="measured split for $platform"
+    else
+        i=0
+        for m in "${members[@]}"; do
+            [ $((i % cnt)) -eq "$idx" ] && picked+=("$m")
+            i=$((i + 1))
+        done
+        how="round-robin — no lua on PATH, so times were not consulted"
+    fi
     members=("${picked[@]+"${picked[@]}"}")
-    echo "shard $idx/$cnt -> ${#members[@]} member(s)"
+    echo "shard $idx/$cnt ($how) -> ${#members[@]} member(s)"
 fi
 
 [ -n "$cache" ] && export MCPP_BUILD_CACHE="$cache"
