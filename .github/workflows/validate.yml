@@ -14,11 +14,21 @@ on:
   workflow_dispatch:
 
 env:
-  # 2026.8.5.1 is a FLOOR, not a routine bump: `tools = [...]` — how a consumer
-  # asks for a dependency's `kind = "bin"` target, which the new
-  # tests/examples/protobuf-protoc member is built on — does not parse before
-  # it ("tools must be a string, inline dep table, or nested table"). Note this
-  # does NOT move index.toml's min_mcpp: exposing compat.protobuf's `protoc`
+  # 2026.8.5.3 carries two things this workflow depends on:
+  #   .5.1  `tools = [...]` — how a consumer asks for a dependency's
+  #         `kind = "bin"` target, which tests/examples/protobuf-protoc is built
+  #         on. Before it: "tools must be a string, inline dep table, or nested
+  #         table".
+  #   .5.3  link response files separate objects by NEWLINES. link.exe caps a
+  #         response-file LINE at 128 KiB, and opencv-module / opencv-module-dnn
+  #         went past it on windows — after 795s / 1166s of compiling:
+  #             fatal error LNK1170: line in command file contains 135135 or
+  #             more characters
+  #         Together with re-enabling the global package cache below, this is
+  #         what makes a green FULL run possible again: .5.3 removes the
+  #         windows link failure, the cache removes the 150-minute timeout.
+  #
+  # Neither of them moves index.toml's min_mcpp: exposing compat.protobuf's `protoc`
   # target is additive, and 2026.8.3.3 still parses that descriptor with an
   # empty unknown_keys. The floor an index publishes decides whether older
   # clients keep working at all (mcpp#349), so it moves only when a descriptor
@@ -97,7 +107,7 @@ env:
   # 0.0.94 fixed feature-gated `sources` under `mcpp test` (mcpp#218); 0.0.91
   # added standard = "c++fly" to the resolver grammar, so c++fly descriptors
   # get the lint WARN below, not a hard grammar-parse rejection.
-  MCPP_VERSION: "2026.8.5.1"
+  MCPP_VERSION: "2026.8.5.3"
 
 jobs:
   lint:
@@ -262,21 +272,21 @@ jobs:
             ext: tar.gz
             mcpp: bin/mcpp
             xlings: registry/bin/xlings
-            mcpp_version: "2026.8.5.1"   # keep in sync with env.MCPP_VERSION
+            mcpp_version: "2026.8.5.3"   # keep in sync with env.MCPP_VERSION
           - platform: macos
             os: macos-15
             suffix: macosx-arm64
             ext: tar.gz
             mcpp: bin/mcpp
             xlings: registry/bin/xlings
-            mcpp_version: "2026.8.5.1"   # keep in sync with env.MCPP_VERSION
+            mcpp_version: "2026.8.5.3"   # keep in sync with env.MCPP_VERSION
           - platform: windows
             os: windows-latest
             suffix: windows-x86_64
             ext: zip
             mcpp: bin/mcpp.exe
             xlings: registry/bin/xlings.exe
-            mcpp_version: "2026.8.5.1"   # keep in sync with env.MCPP_VERSION
+            mcpp_version: "2026.8.5.3"   # keep in sync with env.MCPP_VERSION
     env:
       MCPP_EFFECTIVE: ${{ matrix.mcpp_version }}
     steps:
@@ -446,29 +456,30 @@ jobs:
         shell: bash
         env:
           MCPP_INDEX_MIRROR: GLOBAL
-          # Dependencies build inside each member's own target/ instead of
-          # through the global package build cache (mcpp >= 2026.7.30.2).
-          # That cache is unusable here: mcpp#233's object-path disambiguation
-          # fires on basename collisions across the WHOLE build dir — i.e. on
-          # which packages the CONSUMER pulls in — while the cache key covers
-          # only the dependency itself, so one entry can hold two different
-          # layouts. `tests/examples/archive` pulls zlib AND bzip2 (both ship
-          # compress.c) and stores obj/compat_zlib/zlib-1.3.2/compress.o;
-          # every zlib consumer without bzip2 then asks the same key for a
-          # flat obj/compress.o and ninja dies at graph time with
-          # "missing and no known rule to make it". Reproduced both ways round
-          # on 2026.8.3.3 and filed as mcpp-community/mcpp#344. `local` still
-          # caches the std BMI, which is the expensive one — only package
-          # entries are bypassed.
+          # The GLOBAL package build cache is on (mcpp >= 2026.7.30.2), which
+          # is the default — this step used to set `MCPP_BUILD_CACHE: local`
+          # and no longer does.
           #
-          # STATUS: #344 landed in 2026.8.3.4 (per-package Merkle keys that
-          # cover the consumer-dependent layout), so as of the pin above this
-          # bypass is no longer required. It is kept here deliberately:
-          # re-enabling the global package cache changes how EVERY member
-          # builds, and that deserves its own PR where a failure is
-          # unambiguous rather than being attributed to whatever else shipped
-          # alongside it.
-          MCPP_BUILD_CACHE: local
+          # That bypass existed for mcpp#344: object-path disambiguation fires
+          # on basename collisions across the WHOLE build dir — i.e. on what
+          # the CONSUMER pulls in — while the cache key covered only the
+          # dependency, so one entry could hold two layouts and ninja died at
+          # graph time with "missing and no known rule to make it". #344
+          # landed in 2026.8.3.4 with per-package Merkle keys that cover the
+          # consumer-dependent layout, so the reason is gone.
+          #
+          # Keeping it cost real time, and the full run is where it showed:
+          # with `local`, EVERY member recompiles EVERY dependency from
+          # scratch. 59 members that mostly share abseil / protobuf / opencv
+          # meant the same sources were built over and over —
+          #
+          #   linux    2h30m -> cancelled at the 150-minute timeout
+          #   windows  2h20m
+          #   macos    1h26m
+          #
+          # — and a workspace cannot be validated by a job that cannot finish.
+          # With the cache on, a given (package, version, features, toolchain)
+          # is built once per run and every later member hits it.
         run: |
           "$MCPP" --version
           # No `timeout` wrapper: absent on macOS runners; job-level timeout-minutes bounds it.
