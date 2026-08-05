@@ -501,6 +501,35 @@ package = {
             -- here each package carries its own compile flags, so it has to be
             -- stated. No extra import libs: -ladvapi32 arrives with abseil.
             cxxflags = { "-DNOMINMAX", "-DWIN32_LEAN_AND_MEAN", "-D_CRT_SECURE_NO_WARNINGS" },
+
+            -- NO `protoc` TARGET ON WINDOWS — a platform `targets` replaces the
+            -- top-level one, so this drops the tool while keeping the library.
+            --
+            -- Not a protobuf problem and not a flags problem: the tool SUB-BUILD
+            -- fails there. In the same CI run, tests/examples/protobuf,
+            -- protobuf-upb and protobuf-gzip all pass on windows — the very same
+            -- abseil + protobuf sources, built as an ordinary dependency. Only
+            -- the sub-build dies, and only on three abseil TUs whose `.ddi` scan
+            -- outputs never appear:
+            --
+            --   error: building host tool 'compat.protobuf:protoc' failed
+            --   error: cannot read 'obj/compat_abseil/…/absl/time/internal/test_util.cc.ddi'
+            --   …/cctz/src/time_zone_posix.cc.ddi, …/cctz/src/zone_info_source.cc.ddi
+            --
+            -- It is NOT path length (MAX_PATH was the obvious guess and it is
+            -- wrong: those three relative paths are 31/46/47 chars, while
+            -- absl/container/internal/hashtablez_sampler_force_weak_definition.cc
+            -- at 67 compiles fine in the same sub-build). The sub-build's inner
+            -- ninja output is summarized, so the underlying scan error is not in
+            -- the log and the cause is UNKNOWN.
+            --
+            -- Declaring the target on a platform where it cannot be built would
+            -- hand users a failure with no explanation. Left off until the
+            -- sub-build issue is diagnosed on a windows host; nothing else about
+            -- this descriptor is windows-gated.
+            targets = {
+                ["protobuf"] = { kind = "lib" },
+            },
         },
     },
 }

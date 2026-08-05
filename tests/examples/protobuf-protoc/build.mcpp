@@ -29,6 +29,11 @@ static std::string well_known_types_dir() {
 }
 
 int main() {
+    // No `protoc` target on windows (see the descriptor's windows block), so
+    // there is nothing to declare and no include dir to add. Returning 0 keeps
+    // the member building; tests/codegen.cpp compiles to a visible skip.
+    if (std::string(mcpp::target_os()) == "windows") return 0;
+
     const std::string root = mcpp::manifest_dir();
     const std::string out  = mcpp::out_dir();
 
