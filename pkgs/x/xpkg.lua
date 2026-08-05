@@ -12,6 +12,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.0.50"] = {
+                url    = {
+                    GLOBAL = "https://github.com/openxlings/libxpkg/archive/refs/tags/0.0.50.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/xpkg/releases/download/0.0.50/xpkg-0.0.50.tar.gz",
+                },
+                sha256 = "add16d5c36796b5550f55924dc5eae7a17dcb20a33fd07aa77cd95d0899b3e5e",
+            },
             ["0.0.49"] = {
                 url    = {
                     GLOBAL = "https://github.com/openxlings/libxpkg/archive/refs/tags/0.0.49.tar.gz",
