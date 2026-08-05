@@ -29,6 +29,17 @@
 -- Missing timing → the median, so a newly added member is neither assumed
 -- free nor assumed huge. No table at all → falls back to round-robin, which
 -- is worse but never wrong.
+--
+-- Measured on the real workspace (linux, 3 shards), LPT against round-robin:
+--
+--     round-robin  4158 / 3027 / 2822   slowest 4158s
+--     LPT          3706 / 3152 / 3149   slowest 3706s
+--
+-- 452s off the wall-clock, and the spread drops from 47% to 15%.
+--
+-- There is a floor no split can beat: the single slowest member. grpc-module
+-- alone is 1701s, so linux cannot finish faster than that however many shards
+-- there are — which is the number to look at before adding more.
 
 local platform    = arg[1] or error("usage: plan_shards.lua <platform> <shard> <count> [members...]")
 local shardIndex  = tonumber(arg[2]) or error("shard index must be a number")
