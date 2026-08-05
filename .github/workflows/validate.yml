@@ -274,10 +274,13 @@ jobs:
     outputs:
       members: ${{ steps.fanout.outputs.members }}
       matrix:  ${{ steps.fanout.outputs.matrix }}
+      plan:    ${{ steps.plan_shards.outputs.plan }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: Install lua
+        run: sudo apt-get install -y --no-install-recommends lua5.4
       # ── Selective member testing ──────────────────────────────────────
       # `mcpp test --workspace` builds every member (opencv, ffmpeg, …) and
       # dominates CI wall-clock, while a PR almost always touches one
@@ -386,6 +389,40 @@ jobs:
           echo "members=$MEMBERS" >> "$GITHUB_OUTPUT"
           cat /tmp/matrix.json
 
+      # The split is computed ONCE, here, and shipped to the runners as data.
+      # It used to run on each runner, which needed lua5.4 on all three
+      # platforms — windows has no apt or brew, and macOS's brew installs
+      # `lua`, not `lua5.4`, so every non-linux shard died with
+      # `lua5.4: command not found` after 16 seconds. Deciding once is also
+      # simply correct: one plan, not three runners each re-deriving it.
+      - name: Plan the shards
+        id: plan_shards
+        shell: bash
+        run: |
+          plan='${{ steps.fanout.outputs.members }}'
+          [ "$plan" = "__ALL__" ] && plan=""
+          {
+            printf '{'
+            first=1
+            for spec in linux:$(jq -r '[.include[]|select(.platform=="linux")]|length' /tmp/matrix.json) \
+                        macos:$(jq -r '[.include[]|select(.platform=="macos")]|length' /tmp/matrix.json) \
+                        windows:$(jq -r '[.include[]|select(.platform=="windows")]|length' /tmp/matrix.json); do
+              p=${spec%%:*}; n=${spec##*:}
+              [ "$first" = 1 ] || printf ','
+              first=0
+              printf '"%s":{' "$p"
+              for i in $(seq 0 $((n - 1))); do
+                [ "$i" = 0 ] || printf ','
+                m=$(lua5.4 tests/plan_shards.lua "$p" "$i" "$n" $plan)
+                printf '"%s":"%s"' "$i" "$m"
+              done
+              printf '}'
+            done
+            printf '}'
+          } > /tmp/plan.json
+          echo "plan=$(cat /tmp/plan.json)" >> "$GITHUB_OUTPUT"
+          jq . /tmp/plan.json
+
   workspace:
     # The shard suffix appears only when the platform is actually split.
     name: workspace (${{ matrix.platform }}${{ matrix.shards == 1 && '' || format(' {0}/{1}', matrix.shard, matrix.shards) }})
@@ -478,25 +515,12 @@ jobs:
       # necessarily puts them on three different runners. A single job that
       # builds all three spends 45+ minutes on opencv alone.
       # ── This shard's slice ────────────────────────────────────────────
-      # `select` decided WHAT runs; tests/plan_shards.lua decides which part
-      # runs HERE — by MEASURED time (tests/member-timings.tsv, produced by the
-      # timings job below), longest-first, with dependency affinity breaking
-      # near-ties so members sharing a big dependency land together and build
-      # it once. Round-robin by position was the first version and balance was
-      # luck: it put ffmpeg, llamacpp-metal and opencv-module-unifont on one
-      # shard and nothing heavy on three others, and wall-clock is the slowest
-      # shard.
+      # Already decided by `select` (measured-time bin packing, see
+      # tests/plan_shards.lua). Arrives as data, so a runner needs no lua.
       - name: Take this shard's members
         shell: bash
         run: |
-          if ! command -v lua5.4 >/dev/null 2>&1; then
-            sudo apt-get install -y --no-install-recommends lua5.4 >/dev/null 2>&1 \
-              || brew install lua >/dev/null 2>&1 || true
-          fi
-          plan='${{ needs.select.outputs.members }}'
-          if [ "$plan" = "__ALL__" ]; then plan=""; fi
-          mine=$(lua5.4 tests/plan_shards.lua "${{ matrix.platform }}" \
-                   "${{ matrix.shard }}" "${{ matrix.shards }}" $plan)
+          mine='${{ fromJSON(needs.select.outputs.plan)[matrix.platform][format('{0}', matrix.shard)] }}'
           echo "MEMBERS=$mine" >> "$GITHUB_ENV"
           echo "shard ${{ matrix.shard }}/${{ matrix.shards }}: ${mine:-<none>}"
 
