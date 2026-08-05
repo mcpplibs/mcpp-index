@@ -12,6 +12,12 @@ on:
     # nightly full regression — exercises every workspace member regardless of diff
     - cron: "0 6 * * *"
   workflow_dispatch:
+    inputs:
+      cache:
+        description: "Package build cache — 'local' rebuilds every dependency per member, which is what the timing table should be read against when comparing"
+        type: choice
+        options: [global, local]
+        default: global
 
 env:
   # 2026.8.5.3 carries two things this workflow depends on:
@@ -553,17 +559,26 @@ jobs:
           # into this runner's actual member names, so `mcpp test --workspace`
           # — which would ignore the sharding and rebuild everything here — is
           # gone.
+          #
+          # tests/run_members.sh is the SAME script you run locally. A timing
+          # table that only exists in CI cannot be used while deciding what to
+          # optimise, and a local harness that differs from CI measures
+          # something else.
           if [ -z "$MEMBERS" ]; then
             echo "No workspace member affected by this change — nothing to test."
           else
-            rc=0
-            for m in $MEMBERS; do
-              echo "::group::mcpp test -p $m"
-              "$MCPP" test -p "$m" || rc=1
-              echo "::endgroup::"
-            done
-            exit $rc
+            MCPP_TIMINGS="$PWD/timings.tsv" bash tests/run_members.sh $MEMBERS
           fi
+
+      # Per-shard timings, merged by the `timings` job below. `always()`: a
+      # run that failed is exactly when knowing where the time went matters.
+      - name: Upload this shard's timings
+        if: always() && hashFiles('timings.tsv') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: timings-${{ matrix.platform }}-${{ matrix.shard }}
+          path: timings.tsv
+          retention-days: 14
 
       # install()-driven packages (openssl, openblas) build through their own
       # Make/Configure system, whose output xim's interface mode swallows; a
@@ -583,3 +598,57 @@ jobs:
             echo "::endgroup::"
           done < <(find tests/examples "$HOME/.mcpp/registry" -name 'mcpp_*_build.log' 2>/dev/null)
           [ "$found" = 1 ] || echo "no install() build logs found"
+
+  # ── Where the time went ───────────────────────────────────────────────
+  # Sharding hides the cost: eight runners each report their own slice, and
+  # nobody can see which members actually dominate. This merges them into one
+  # ranking per platform, in the run summary, so the next optimisation starts
+  # from measurement instead of a guess.
+  #
+  # `always()` — a failed run is exactly when this is worth reading.
+  timings:
+    needs: [select, workspace]
+    if: always() && needs.select.outputs.members != ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: timings-*
+          path: timings
+        continue-on-error: true
+      - name: Rank members by wall-clock
+        shell: bash
+        run: |
+          shopt -s nullglob
+          files=(timings/*/timings.tsv)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "no timing data (every shard skipped or failed before testing)" \
+              >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          # Artifact name carries the platform: timings-<platform>-<shard>.
+          for plat in linux macos windows; do
+            rows=$(mktemp)
+            for f in timings/timings-$plat-*/timings.tsv; do
+              [ -f "$f" ] && cat "$f" >> "$rows"
+            done
+            [ -s "$rows" ] || { rm -f "$rows"; continue; }
+
+            total=$(awk -F'\t' '{s += $1} END {print s+0}' "$rows")
+            count=$(wc -l < "$rows")
+            {
+              echo "### $plat — ${count} member(s), ${total}s of member wall-clock"
+              echo
+              echo "| rank | seconds | share | member | result |"
+              echo "|---:|---:|---:|---|---|"
+              sort -rn "$rows" | awk -F'\t' -v tot="$total" '
+                { pct = tot > 0 ? ($1 * 100 / tot) : 0
+                  printf "| %d | %s | %.1f%% | `%s` | %s |\n", NR, $1, pct, $2, $3 }'
+              echo
+            } >> "$GITHUB_STEP_SUMMARY"
+            rm -f "$rows"
+          done
+
+          echo "_Total is the SUM across shards; wall-clock is the slowest shard._" \
+            >> "$GITHUB_STEP_SUMMARY"
