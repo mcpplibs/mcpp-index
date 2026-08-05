@@ -47,6 +47,7 @@ members = [
     "tests/examples/protobuf",
     "tests/examples/protobuf-upb",
     "tests/examples/protobuf-gzip",
+    "tests/examples/protobuf-protoc",
     "tests/examples/opencv-module",
     "tests/examples/opencv-module-dnn",
     "tests/examples/opencv-module-unifont",

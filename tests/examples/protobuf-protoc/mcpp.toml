@@ -1,0 +1,23 @@
+# protobuf `protoc` target member — the compiler, not the runtime.
+#
+# The sibling tests/examples/protobuf covers the runtime and deliberately uses
+# NO generated code. This member is its complement: every line of the message
+# API it touches was emitted, during this build, by a protoc that mcpp built
+# from the SAME descriptor that provides the runtime being linked.
+#
+# That co-provenance is the point. protoc and libprotobuf must agree on the
+# generated-code ABI, and a mismatch there is a runtime failure, not a build
+# error. Here it is not expressible: `tools = ["protoc"]` makes the tool's
+# version the dependency's version.
+[package]
+name     = "protobuf-protoc-tests"
+version  = "0.1.0"
+standard = "c++23"
+
+[dependencies.compat]
+# One dependency, two roles: `features` shapes what gets LINKED (the runtime),
+# `tools` asks for a host binary out of the same package. `protoc` pulls in
+# libprotoc's 138 TUs and needs `upb` for the upb generator's runtime — the
+# descriptor's `required_features` states that, so asking for the tool is
+# enough and this manifest does not have to know it.
+protobuf = { version = "35.1", tools = ["protoc"] }

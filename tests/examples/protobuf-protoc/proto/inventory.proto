@@ -1,0 +1,37 @@
+// Small on purpose, but it exercises the generator features that break first
+// when protoc and the linked runtime disagree: nested messages, an enum, a
+// repeated message field, a map, oneof, and a well-known-type import.
+syntax = "proto3";
+
+package inventory;
+
+import "google/protobuf/timestamp.proto";
+
+enum Grade {
+  GRADE_UNKNOWN = 0;
+  GRADE_A = 1;
+  GRADE_B = 2;
+}
+
+message Item {
+  string sku = 1;
+  int32 quantity = 2;
+  Grade grade = 3;
+
+  message Dimensions {
+    double width = 1;
+    double height = 2;
+  }
+  Dimensions dimensions = 4;
+
+  oneof source {
+    string supplier = 5;
+    string warehouse = 6;
+  }
+}
+
+message Inventory {
+  repeated Item items = 1;
+  map<string, int32> totals_by_grade = 2;
+  google.protobuf.Timestamp updated_at = 3;
+}

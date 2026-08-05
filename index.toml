@@ -7,5 +7,15 @@
 # "floor first, new grammar after" rollout rule mechanically.
 [index]
 spec        = "1"
+#
+# These two move independently, and the 2026.8.5.1 CI pin is why. `min_mcpp` is
+# a GATE — an older client that fails it cannot open this index at all
+# (mcpp#349), so it moves only when a descriptor genuinely stops being readable
+# by the older grammar. Exposing compat.protobuf's `protoc` target did not do
+# that: 2026.8.3.3 still parses the descriptor with an empty `unknown_keys`.
+# What needs 2026.8.5.1 is the CONSUMER spelling `tools = [...]`, which lives
+# in a consumer's own mcpp.toml — including this repo's
+# tests/examples/protobuf-protoc, hence the CI pin. `latest_mcpp` is an
+# advisory hint with no gate behaviour, and tracks what CI validates against.
 min_mcpp    = "2026.8.3.3"
-latest_mcpp = "2026.8.3.3"
+latest_mcpp = "2026.8.5.1"

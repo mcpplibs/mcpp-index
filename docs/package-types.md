@@ -18,6 +18,7 @@ combined as needed.
 | **E. Whole-source direct build with a generated config** | upstream generates its config header through configure/CMake; here a snapshot of it lands in `generated_files` | `pkgs/c/compat.libpng.lua`, `compat.curl.lua`, `compat.sdl2.lua`, `compat.ffmpeg.lua` | `generated_files` + `include_dirs` |
 | **F. Shared-library compat** | has to be the **only** copy of that `.so` in the process (third parties `dlopen` it) | the X11 family such as `pkgs/c/compat.x11.lua`, and `compat.vulkan.lua` (linux) | `targets = { kind = "shared", soname = … }` |
 | **G. Host runtime adaptation** | things that cannot be vendored, such as drivers — only a symlink farm plus metadata | `pkgs/c/compat.glx-runtime.lua`, `compat.vulkan-runtime.lua` | `runtime.library_dirs` / `capabilities` |
+| **H. Host tool provider** | the upstream tarball also holds a **code generator** consumers run at build time | `pkgs/c/compat.protobuf.lua` (`protoc`) | a `targets` entry with `kind = "bin"` + `main`, plus `required_features` |
 
 For the complete sample index, see the
 [Reference examples table in the root README](../README.md#reference-examples-lua-descriptors).
@@ -199,6 +200,50 @@ Two details that keep biting:
   `dlopen` asks for.
 - **The closure has to be complete.** A farm holding `libxcb.so.1` but not the `libXau.so.6` it depends on shadows the
   host copy that would otherwise have resolved, and the executable simply fails to start.
+
+## H. Host tool provider (`compat.protobuf`'s `protoc`)
+
+Some tarballs hold both a library and the code generator that emits code against it. Declare the generator as a second
+target, and consumers ask for it with `tools = [...]` (mcpp 2026.8.5.1+):
+
+```lua
+targets = {
+    ["protobuf"] = { kind = "lib" },
+    ["protoc"]   = { kind = "bin",
+                     main = "*/src/google/protobuf/compiler/main.cc",
+                     required_features = { "protoc", "upb" } },
+},
+features = {
+    ["protoc"] = { sources = { … the compiler's own sources … } },
+},
+```
+
+```toml
+# consumer side — one dependency, two roles
+compat.protobuf = { version = "35.1", tools = ["protoc"] }
+```
+
+mcpp then builds that target **for the build machine** in a nested sub-build and hands the path to the consumer's
+`build.mcpp` through `mcpp::dep_bin("protobuf", "protoc")`. This is the whole reason the shape is worth naming: the
+tool's version **is** the dependency's version, so a generator/runtime mismatch — a *runtime* failure everywhere else,
+and the classic protobuf footgun — is not expressible. Under `mcpp build --target <triple>` the tool is still built for
+the host, because a code generator has to run here.
+
+Four things to get right:
+
+- **Gate the compiler's sources behind a feature**, and name it in the target's `required_features`. Consumers who only
+  link the library must not pay for the generator's TUs; consumers who ask for the tool must not have to know which
+  features it needs. `compat.protobuf`'s `protoc` also requires `upb`, because libprotoc's upb generator links the upb
+  runtime — get that wrong and it fails at **link** time with missing `upb_*` symbols.
+- **Transcribe the source list from upstream**, exactly as for a library — protobuf's 138 entries come from
+  `libprotoc_srcs` in its own `src/file_lists.cmake`.
+- **`main` needs the same `*/` wrap glob as `sources`**; it is expanded the same way.
+- **A generator that reads data files at runtime still needs a path to them.** protoc does not embed the well-known
+  types: `import "google/protobuf/timestamp.proto"` is read from disk. Consumers derive that directory from
+  `mcpp::dep_dir("protobuf")` — see `tests/examples/protobuf-protoc/build.mcpp`.
+
+The matching member is `tests/examples/protobuf-protoc`, and it is the complement of `tests/examples/protobuf`: that
+one deliberately uses no generated code, this one is generated code end to end.
 
 ---
 

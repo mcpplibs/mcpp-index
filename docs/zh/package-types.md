@@ -16,6 +16,7 @@ A–D 是四种**基础**形态,先按它们判定;E–G 是在基础形态之�
 | **E. 生成 config 的全源码直编** | 上游用 configure/CMake 生成配置头,此处以 `generated_files` 落一份快照 | `pkgs/c/compat.libpng.lua`、`compat.curl.lua`、`compat.sdl2.lua`、`compat.ffmpeg.lua` | `generated_files` + `include_dirs` |
 | **F. 共享库 compat** | 必须是**唯一**的那个 `.so`(会被第三方 `dlopen`) | `pkgs/c/compat.x11.lua` 等 X11 家族、`compat.vulkan.lua`(linux) | `targets = { kind = "shared", soname = … }` |
 | **G. 宿主运行时适配** | 驱动之类无法 vendor 的东西,只做符号链接农场 + 元数据 | `pkgs/c/compat.glx-runtime.lua`、`compat.vulkan-runtime.lua` | `runtime.library_dirs` / `capabilities` |
+| **H. 宿主工具提供方** | 上游 tarball 里除了库,还带着消费者在构建期要跑的**代码生成器** | `pkgs/c/compat.protobuf.lua`(`protoc`) | `targets` 里一条 `kind = "bin"` + `main`,配 `required_features` |
 
 完整的样例索引见[根 README 的「参考示例」表](../../README.zh-CN.md#参考示例lua-描述符)。
 
@@ -183,6 +184,48 @@ runtime = {
   链接器不可见,而恰好是 `dlopen` 要的。
 - **闭包必须完整**。农场里有 `libxcb.so.1` 却没有它依赖的 `libXau.so.6`,会遮蔽掉本来能解析的宿主副本,可执行
   文件直接起不来。
+
+## H. 宿主工具提供方(`compat.protobuf` 的 `protoc`)
+
+有些 tarball 里同时装着一个库,和「针对这个库生成代码」的那个生成器。把生成器声明成第二个 target,
+消费者用 `tools = [...]` 索取(mcpp 2026.8.5.1 起):
+
+```lua
+targets = {
+    ["protobuf"] = { kind = "lib" },
+    ["protoc"]   = { kind = "bin",
+                     main = "*/src/google/protobuf/compiler/main.cc",
+                     required_features = { "protoc", "upb" } },
+},
+features = {
+    ["protoc"] = { sources = { … 编译器自身的源码 … } },
+},
+```
+
+```toml
+# 消费者侧 —— 一条依赖,两种角色
+compat.protobuf = { version = "35.1", tools = ["protoc"] }
+```
+
+mcpp 会在一次嵌套子构建里把这个 target 编成**构建机**的二进制,并把路径经
+`mcpp::dep_bin("protobuf", "protoc")` 交给消费者的 `build.mcpp`。这个形态值得单列的全部理由在于:
+工具的版本**就是**那条依赖的版本,于是「生成器与运行时版本错配」——在别处是**运行期**才炸、也正是
+protobuf 最经典的坑——在这里**语法上无法表达**。`mcpp build --target <triple>` 下工具仍为宿主构建,
+因为代码生成器必须在本机跑。
+
+四个要点:
+
+- **把编译器的源码关进一个 feature**,并在 target 的 `required_features` 里写明。只链库的消费者不该为
+  生成器的 TU 买单;索取工具的消费者也不该需要知道它要哪些 feature。`compat.protobuf` 的 `protoc` 还
+  必须要 `upb`,因为 libprotoc 的 upb 生成器要链 upb 运行时——搞错了会在**链接期**缺一批 `upb_*` 符号。
+- **源码列表照旧逐条转录自上游**:protobuf 这 138 项来自它自己的 `src/file_lists.cmake` 的 `libprotoc_srcs`。
+- **`main` 和 `sources` 一样需要 `*/` 那层 wrap glob**,展开方式相同。
+- **运行期还要读数据文件的生成器,仍然需要一个路径**。protoc 并不内嵌 well-known types:
+  `import "google/protobuf/timestamp.proto"` 是从磁盘读的。消费者用 `mcpp::dep_dir("protobuf")` 推出那个
+  目录——见 `tests/examples/protobuf-protoc/build.mcpp`。
+
+对应的成员是 `tests/examples/protobuf-protoc`,它与 `tests/examples/protobuf` 互为补集:那个刻意**不用**
+任何生成代码,这个从头到尾都是生成代码。
 
 ---
 

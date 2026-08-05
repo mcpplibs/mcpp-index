@@ -14,6 +14,15 @@ on:
   workflow_dispatch:
 
 env:
+  # 2026.8.5.1 is a FLOOR, not a routine bump: `tools = [...]` — how a consumer
+  # asks for a dependency's `kind = "bin"` target, which the new
+  # tests/examples/protobuf-protoc member is built on — does not parse before
+  # it ("tools must be a string, inline dep table, or nested table"). Note this
+  # does NOT move index.toml's min_mcpp: exposing compat.protobuf's `protoc`
+  # target is additive, and 2026.8.3.3 still parses that descriptor with an
+  # empty unknown_keys. The floor an index publishes decides whether older
+  # clients keep working at all (mcpp#349), so it moves only when a descriptor
+  # genuinely stops being readable — which is not the case here.
   # 2026.8.3.1: on macOS, a global object that touches std::cout during static
   # init crashes on sight (mcpp#336). Mach-O has no priority-ordered init
   # section and libc++'s <iostream> carries no ios_base::Init guard of its own,
@@ -88,7 +97,7 @@ env:
   # 0.0.94 fixed feature-gated `sources` under `mcpp test` (mcpp#218); 0.0.91
   # added standard = "c++fly" to the resolver grammar, so c++fly descriptors
   # get the lint WARN below, not a hard grammar-parse rejection.
-  MCPP_VERSION: "2026.8.3.3"
+  MCPP_VERSION: "2026.8.5.1"
 
 jobs:
   lint:
@@ -253,21 +262,21 @@ jobs:
             ext: tar.gz
             mcpp: bin/mcpp
             xlings: registry/bin/xlings
-            mcpp_version: "2026.8.3.3"   # keep in sync with env.MCPP_VERSION
+            mcpp_version: "2026.8.5.1"   # keep in sync with env.MCPP_VERSION
           - platform: macos
             os: macos-15
             suffix: macosx-arm64
             ext: tar.gz
             mcpp: bin/mcpp
             xlings: registry/bin/xlings
-            mcpp_version: "2026.8.3.3"   # keep in sync with env.MCPP_VERSION
+            mcpp_version: "2026.8.5.1"   # keep in sync with env.MCPP_VERSION
           - platform: windows
             os: windows-latest
             suffix: windows-x86_64
             ext: zip
             mcpp: bin/mcpp.exe
             xlings: registry/bin/xlings.exe
-            mcpp_version: "2026.8.3.3"   # keep in sync with env.MCPP_VERSION
+            mcpp_version: "2026.8.5.1"   # keep in sync with env.MCPP_VERSION
     env:
       MCPP_EFFECTIVE: ${{ matrix.mcpp_version }}
     steps:
@@ -448,9 +457,17 @@ jobs:
           # every zlib consumer without bzip2 then asks the same key for a
           # flat obj/compress.o and ninja dies at graph time with
           # "missing and no known rule to make it". Reproduced both ways round
-          # on 2026.8.3.3 and filed as mcpp-community/mcpp#344; drop this once
-          # it lands. `local` still caches the std BMI, which is the expensive
-          # one — only package entries are bypassed.
+          # on 2026.8.3.3 and filed as mcpp-community/mcpp#344. `local` still
+          # caches the std BMI, which is the expensive one — only package
+          # entries are bypassed.
+          #
+          # STATUS: #344 landed in 2026.8.3.4 (per-package Merkle keys that
+          # cover the consumer-dependent layout), so as of the pin above this
+          # bypass is no longer required. It is kept here deliberately:
+          # re-enabling the global package cache changes how EVERY member
+          # builds, and that deserves its own PR where a failure is
+          # unambiguous rather than being attributed to whatever else shipped
+          # alongside it.
           MCPP_BUILD_CACHE: local
         run: |
           "$MCPP" --version

@@ -1,0 +1,69 @@
+// Generate inventory.pb.{h,cc} with the protoc this build produced.
+//
+// The work is DECLARED, not done here: `mcpp::action` makes it an edge in the
+// build graph, so it re-runs exactly when the .proto changes and a failure is
+// attributed to the edge rather than to "build.mcpp exited 1".
+#include <filesystem>
+#include <string>
+
+import mcpp;
+
+namespace fs = std::filesystem;
+
+// protoc does NOT embed the well-known types. `import
+// "google/protobuf/timestamp.proto"` is read from disk like any other import,
+// and the files ship inside the protobuf package this project already depends
+// on. Probe for the directory that actually contains descriptor.proto instead
+// of hardcoding the tarball's wrap-directory name, which is a packaging
+// artifact and not part of any contract.
+static std::string well_known_types_dir() {
+    const std::string base = mcpp::dep_dir("protobuf");
+    if (base.empty()) return {};
+    std::error_code ec;
+    for (const auto& entry : fs::directory_iterator(base, ec)) {
+        const fs::path src = entry.path() / "src";
+        if (fs::exists(src / "google" / "protobuf" / "descriptor.proto", ec))
+            return src.generic_string();
+    }
+    return {};
+}
+
+int main() {
+    const std::string root = mcpp::manifest_dir();
+    const std::string out  = mcpp::out_dir();
+
+    const char* protoc = mcpp::dep_bin("protobuf", "protoc");
+    if (!protoc || !*protoc) {
+        std::fputs("no protoc: declare  protobuf = { version = \"35.1\", "
+                   "tools = [\"protoc\"] }\n", stderr);
+        return 1;
+    }
+
+    const std::string wkt = well_known_types_dir();
+    if (wkt.empty()) {
+        std::fputs("cannot locate the well-known .proto files in the protobuf "
+                   "package\n", stderr);
+        return 1;
+    }
+
+    const std::string proto = root + "/proto/inventory.proto";
+
+    // The .pb.h is declared alongside the .pb.cc because the test includes it
+    // and it must therefore be PRODUCED by this edge. mcpp knows a header is
+    // not a translation unit and keeps it out of the compile set.
+    mcpp::action gen;
+    gen.id          = "protoc:inventory";
+    gen.role        = "source";
+    gen.description = "protoc -> inventory";
+    gen.arg(protoc)
+       .arg(("-I" + root + "/proto").c_str())
+       .arg(("-I" + wkt).c_str())
+       .arg(("--cpp_out=" + out).c_str())
+       .arg(proto.c_str())
+       .input(proto.c_str())
+       .output((out + "/inventory.pb.cc").c_str())
+       .output((out + "/inventory.pb.h").c_str())
+       .submit();
+
+    mcpp::include_dir(out.c_str());
+}

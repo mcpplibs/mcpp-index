@@ -14,14 +14,22 @@
 --      source list covers linux/macosx/windows and the three xpm blocks share
 --      a single tarball and sha256.
 --
--- SCOPE — runtime only. This package builds upstream's `libprotobuf` target
--- (79 TUs), i.e. what a program that *uses* generated code needs: messages,
--- reflection, descriptors, text/JSON formats, the well-known types. It does
--- NOT build `libprotoc` (a further 157 TUs) and ships no protoc binary, so it
--- does not generate .pb.cc from .proto. Consumers either check in
--- protoc-generated sources or build them with the official upstream protoc
--- release (protoc-35.1-<platform>.zip); wiring that into an mcpp build belongs
--- to a build.mcpp step, not to this descriptor.
+-- SCOPE — runtime by default, compiler on request. This package builds
+-- upstream's `libprotobuf` target (79 TUs) unconditionally: messages,
+-- reflection, descriptors, text/JSON formats, the well-known types — what a
+-- program that *uses* generated code needs.
+--
+-- Since mcpp 2026.8.5.1 it ALSO offers `protoc` as a host tool, behind the
+-- `protoc` feature (upstream's `libprotoc`, 138 further TUs). A consumer that
+-- only links the runtime compiles none of them:
+--
+--     compat.protobuf = { version = "35.1", tools = ["protoc"] }
+--
+-- That replaces the old advice of "check in protoc output, or fetch the
+-- official protoc-35.1-<platform>.zip and keep its version in step by hand".
+-- Keeping it in step by hand is precisely the failure this removes: a protoc
+-- that disagrees with the runtime fails at RUNTIME, and here the tool's
+-- version IS this package's version, so the mismatch cannot be expressed.
 --
 -- Version numbering follows upstream verbatim: `35.1` is the protobuf release,
 -- and it is what gRPC 1.83.0 pins (its third_party/protobuf submodule is
@@ -194,13 +202,187 @@ package = {
             "*/third_party/utf8_range/utf8_range.c",
         },
 
-        targets = { ["protobuf"] = { kind = "lib" } },
+        targets = {
+            ["protobuf"] = { kind = "lib" },
+            -- #355 (mcpp 2026.8.5.1+): protoc as a HOST tool a consumer can ask
+            -- for, so it never has to supply a matching one by hand:
+            --
+            --   compat.protobuf = { version = "35.1", tools = ["protoc"] }
+            --
+            -- The version axis is what matters here. protoc generating code for
+            -- a DIFFERENT protobuf runtime than the one being linked fails at
+            -- RUNTIME, not at compile time, and is the single nastiest thing
+            -- about hand-managed protobuf codegen. Because the tool's version
+            -- IS this package's version, that mismatch is not expressible.
+            --
+            -- `required_features` is a GATE in an ordinary build (the target is
+            -- simply absent) and an INPUT in a tool sub-build (the target is
+            -- what was asked for, so mcpp activates them). Both are needed:
+            -- `protoc` for libprotoc itself, `upb` because libprotoc's upb
+            -- generator links the upb runtime — leaving it out fails at LINK
+            -- with undefined upb_* symbols.
+            ["protoc"] = {
+                kind              = "bin",
+                main              = "*/src/google/protobuf/compiler/main.cc",
+                required_features = { "protoc", "upb" },
+            },
+        },
 
         -- protobuf's public headers #include "absl/…" directly, so Abseil is
         -- part of this package's interface, not an implementation detail.
         deps = { ["compat.abseil"] = "20250512.1" },
 
         features = {
+            -- #355: libprotoc — the protobuf COMPILER library, which the `protoc`
+            -- target links. 138 TUs, transcribed from upstream's own
+            -- `src/file_lists.cmake` `libprotoc_srcs` (not hand-picked), and with
+            -- ZERO overlap against the runtime source set above: importer.cc and
+            -- parser.cc are already there.
+            --
+            -- Off by default, and that is the whole point — a consumer that only
+            -- links the protobuf runtime must not compile these.
+            ["protoc"] = {
+                sources = {
+        "*/src/google/protobuf/compiler/code_generator.cc",
+        "*/src/google/protobuf/compiler/code_generator_lite.cc",
+        "*/src/google/protobuf/compiler/command_line_interface.cc",
+        "*/src/google/protobuf/compiler/cpp/enum.cc",
+        "*/src/google/protobuf/compiler/cpp/extension.cc",
+        "*/src/google/protobuf/compiler/cpp/field.cc",
+        "*/src/google/protobuf/compiler/cpp/field_chunk.cc",
+        "*/src/google/protobuf/compiler/cpp/field_generators/cord_field.cc",
+        "*/src/google/protobuf/compiler/cpp/field_generators/enum_field.cc",
+        "*/src/google/protobuf/compiler/cpp/field_generators/map_field.cc",
+        "*/src/google/protobuf/compiler/cpp/field_generators/message_field.cc",
+        "*/src/google/protobuf/compiler/cpp/field_generators/primitive_field.cc",
+        "*/src/google/protobuf/compiler/cpp/field_generators/string_field.cc",
+        "*/src/google/protobuf/compiler/cpp/field_generators/string_view_field.cc",
+        "*/src/google/protobuf/compiler/cpp/file.cc",
+        "*/src/google/protobuf/compiler/cpp/generator.cc",
+        "*/src/google/protobuf/compiler/cpp/helpers.cc",
+        "*/src/google/protobuf/compiler/cpp/ifndef_guard.cc",
+        "*/src/google/protobuf/compiler/cpp/message.cc",
+        "*/src/google/protobuf/compiler/cpp/message_layout_helper.cc",
+        "*/src/google/protobuf/compiler/cpp/namespace_printer.cc",
+        "*/src/google/protobuf/compiler/cpp/parse_function_generator.cc",
+        "*/src/google/protobuf/compiler/cpp/service.cc",
+        "*/src/google/protobuf/compiler/cpp/tracker.cc",
+        "*/src/google/protobuf/compiler/csharp/csharp_doc_comment.cc",
+        "*/src/google/protobuf/compiler/csharp/csharp_enum.cc",
+        "*/src/google/protobuf/compiler/csharp/csharp_enum_field.cc",
+        "*/src/google/protobuf/compiler/csharp/csharp_field_base.cc",
+        "*/src/google/protobuf/compiler/csharp/csharp_generator.cc",
+        "*/src/google/protobuf/compiler/csharp/csharp_helpers.cc",
+        "*/src/google/protobuf/compiler/csharp/csharp_map_field.cc",
+        "*/src/google/protobuf/compiler/csharp/csharp_message.cc",
+        "*/src/google/protobuf/compiler/csharp/csharp_message_field.cc",
+        "*/src/google/protobuf/compiler/csharp/csharp_primitive_field.cc",
+        "*/src/google/protobuf/compiler/csharp/csharp_reflection_class.cc",
+        "*/src/google/protobuf/compiler/csharp/csharp_repeated_enum_field.cc",
+        "*/src/google/protobuf/compiler/csharp/csharp_repeated_message_field.cc",
+        "*/src/google/protobuf/compiler/csharp/csharp_repeated_primitive_field.cc",
+        "*/src/google/protobuf/compiler/csharp/csharp_source_generator_base.cc",
+        "*/src/google/protobuf/compiler/csharp/csharp_wrapper_field.cc",
+        "*/src/google/protobuf/compiler/csharp/names.cc",
+        "*/src/google/protobuf/compiler/java/context.cc",
+        "*/src/google/protobuf/compiler/java/doc_comment.cc",
+        "*/src/google/protobuf/compiler/java/field_common.cc",
+        "*/src/google/protobuf/compiler/java/file.cc",
+        "*/src/google/protobuf/compiler/java/full/enum.cc",
+        "*/src/google/protobuf/compiler/java/full/enum_field.cc",
+        "*/src/google/protobuf/compiler/java/full/extension.cc",
+        "*/src/google/protobuf/compiler/java/full/generator_factory.cc",
+        "*/src/google/protobuf/compiler/java/full/make_field_gens.cc",
+        "*/src/google/protobuf/compiler/java/full/map_field.cc",
+        "*/src/google/protobuf/compiler/java/full/message.cc",
+        "*/src/google/protobuf/compiler/java/full/message_builder.cc",
+        "*/src/google/protobuf/compiler/java/full/message_field.cc",
+        "*/src/google/protobuf/compiler/java/full/primitive_field.cc",
+        "*/src/google/protobuf/compiler/java/full/service.cc",
+        "*/src/google/protobuf/compiler/java/full/string_field.cc",
+        "*/src/google/protobuf/compiler/java/generator.cc",
+        "*/src/google/protobuf/compiler/java/helpers.cc",
+        "*/src/google/protobuf/compiler/java/internal_helpers.cc",
+        "*/src/google/protobuf/compiler/java/java_features.pb.cc",
+        "*/src/google/protobuf/compiler/java/lite/enum.cc",
+        "*/src/google/protobuf/compiler/java/lite/enum_field.cc",
+        "*/src/google/protobuf/compiler/java/lite/extension.cc",
+        "*/src/google/protobuf/compiler/java/lite/generator_factory.cc",
+        "*/src/google/protobuf/compiler/java/lite/make_field_gens.cc",
+        "*/src/google/protobuf/compiler/java/lite/map_field.cc",
+        "*/src/google/protobuf/compiler/java/lite/message.cc",
+        "*/src/google/protobuf/compiler/java/lite/message_builder.cc",
+        "*/src/google/protobuf/compiler/java/lite/message_field.cc",
+        "*/src/google/protobuf/compiler/java/lite/primitive_field.cc",
+        "*/src/google/protobuf/compiler/java/lite/string_field.cc",
+        "*/src/google/protobuf/compiler/java/message_serialization.cc",
+        "*/src/google/protobuf/compiler/java/name_resolver.cc",
+        "*/src/google/protobuf/compiler/java/names.cc",
+        "*/src/google/protobuf/compiler/java/shared_code_generator.cc",
+        "*/src/google/protobuf/compiler/kotlin/field.cc",
+        "*/src/google/protobuf/compiler/kotlin/file.cc",
+        "*/src/google/protobuf/compiler/kotlin/generator.cc",
+        "*/src/google/protobuf/compiler/kotlin/message.cc",
+        "*/src/google/protobuf/compiler/objectivec/enum.cc",
+        "*/src/google/protobuf/compiler/objectivec/enum_field.cc",
+        "*/src/google/protobuf/compiler/objectivec/extension.cc",
+        "*/src/google/protobuf/compiler/objectivec/field.cc",
+        "*/src/google/protobuf/compiler/objectivec/file.cc",
+        "*/src/google/protobuf/compiler/objectivec/generator.cc",
+        "*/src/google/protobuf/compiler/objectivec/helpers.cc",
+        "*/src/google/protobuf/compiler/objectivec/import_writer.cc",
+        "*/src/google/protobuf/compiler/objectivec/line_consumer.cc",
+        "*/src/google/protobuf/compiler/objectivec/map_field.cc",
+        "*/src/google/protobuf/compiler/objectivec/message.cc",
+        "*/src/google/protobuf/compiler/objectivec/message_field.cc",
+        "*/src/google/protobuf/compiler/objectivec/names.cc",
+        "*/src/google/protobuf/compiler/objectivec/oneof.cc",
+        "*/src/google/protobuf/compiler/objectivec/primitive_field.cc",
+        "*/src/google/protobuf/compiler/objectivec/tf_decode_data.cc",
+        "*/src/google/protobuf/compiler/php/names.cc",
+        "*/src/google/protobuf/compiler/php/php_generator.cc",
+        "*/src/google/protobuf/compiler/plugin.cc",
+        "*/src/google/protobuf/compiler/plugin.pb.cc",
+        "*/src/google/protobuf/compiler/python/generator.cc",
+        "*/src/google/protobuf/compiler/python/helpers.cc",
+        "*/src/google/protobuf/compiler/python/pyi_generator.cc",
+        "*/src/google/protobuf/compiler/retention.cc",
+        "*/src/google/protobuf/compiler/ruby/rbs_generator.cc",
+        "*/src/google/protobuf/compiler/ruby/ruby_generator.cc",
+        "*/src/google/protobuf/compiler/rust/accessors/accessor_case.cc",
+        "*/src/google/protobuf/compiler/rust/accessors/accessors.cc",
+        "*/src/google/protobuf/compiler/rust/accessors/default_value.cc",
+        "*/src/google/protobuf/compiler/rust/accessors/map.cc",
+        "*/src/google/protobuf/compiler/rust/accessors/repeated_field.cc",
+        "*/src/google/protobuf/compiler/rust/accessors/singular_cord.cc",
+        "*/src/google/protobuf/compiler/rust/accessors/singular_message.cc",
+        "*/src/google/protobuf/compiler/rust/accessors/singular_scalar.cc",
+        "*/src/google/protobuf/compiler/rust/accessors/singular_string.cc",
+        "*/src/google/protobuf/compiler/rust/accessors/unsupported_field.cc",
+        "*/src/google/protobuf/compiler/rust/accessors/with_presence.cc",
+        "*/src/google/protobuf/compiler/rust/context.cc",
+        "*/src/google/protobuf/compiler/rust/crate_mapping.cc",
+        "*/src/google/protobuf/compiler/rust/enum.cc",
+        "*/src/google/protobuf/compiler/rust/extension.cc",
+        "*/src/google/protobuf/compiler/rust/generator.cc",
+        "*/src/google/protobuf/compiler/rust/message.cc",
+        "*/src/google/protobuf/compiler/rust/naming.cc",
+        "*/src/google/protobuf/compiler/rust/oneof.cc",
+        "*/src/google/protobuf/compiler/rust/relative_path.cc",
+        "*/src/google/protobuf/compiler/rust/rust_field_type.cc",
+        "*/src/google/protobuf/compiler/rust/rust_keywords.cc",
+        "*/src/google/protobuf/compiler/rust/upb_helpers.cc",
+        "*/src/google/protobuf/compiler/subprocess.cc",
+        "*/src/google/protobuf/compiler/versions.cc",
+        "*/src/google/protobuf/compiler/zip_writer.cc",
+        "*/upb_generator/common.cc",
+        "*/upb_generator/common/names.cc",
+        "*/upb_generator/file_layout.cc",
+        "*/upb_generator/minitable/names.cc",
+        "*/upb_generator/minitable/names_internal.cc",
+        "*/upb_generator/plugin.cc",
+                },
+            },
             -- GzipInputStream / GzipOutputStream. io/gzip_stream.cc is wrapped
             -- head-to-toe in `#if HAVE_ZLIB`, so by default it compiles to an
             -- empty TU and the package carries no zlib dependency at all;
