@@ -1,0 +1,17 @@
+# CLI11 test project: consumes compat.CLI11 (header-only command line parser)
+# from this repo's own index and asserts real argv parsing under `mcpp test`.
+# Part of the mcpp-index self-referential workspace: the `compat` redirect is
+# declared at the workspace root and inherited here, so the dependency
+# resolves to the checked-in recipe (pkgs/c/compat.CLI11.lua) rather than to
+# the published remote index.
+#
+# The dependency is spelled QUALIFIED (`[dependencies.compat]`) on purpose:
+# the index redirect is keyed by the REQUEST's namespace, so a bare
+# `CLI11 = "2.7.2"` would ask under the default namespace, resolve from the
+# published index, and quietly stop testing this checkout.
+[package]
+name = "cli11-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+CLI11 = "2.7.2"

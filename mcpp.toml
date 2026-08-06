@@ -19,6 +19,7 @@ members = [
     "tests/examples/catch2-v2",
     "tests/examples/catch2-v2-main",
     "tests/examples/cjson",
+    "tests/examples/cli11",
     "tests/examples/core",
     "tests/examples/curl",
     "tests/examples/eigen",
