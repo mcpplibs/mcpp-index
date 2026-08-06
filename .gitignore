@@ -8,3 +8,6 @@ tests/examples/*/mcpp.lock
 tests/examples/build-mcpp/src/generated.cpp
 imgui.ini
 tests/examples/*/imgui.ini
+
+# 本地 git worktree(逐包验证时开的),不属于索引内容
+.worktrees/

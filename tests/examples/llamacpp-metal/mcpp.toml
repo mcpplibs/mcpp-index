@@ -1,10 +1,10 @@
 # Metal is supported only by the macOS ARM64 leg of the workspace matrix.
 [indices]
-default = { path = "../../.." }
+ggml-org = { path = "../../.." }
 
 [package]
 name    = "llamacpp-metal-tests"
 version = "0.1.0"
 
-[target.'cfg(macos)'.dependencies]
-llamacpp = { version = "0.1.0", features = ["backend-metal"] }
+[target.'cfg(macos)'.dependencies.ggml-org]
+llamacpp = { version = "b10069", features = ["backend-metal"] }

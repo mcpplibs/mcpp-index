@@ -13,7 +13,7 @@ name    = "opencv-module-unifont-tests"
 version = "0.1.0"
 
 [target.'cfg(linux)'.dependencies.opencv]
-opencv = { version = "0.0.9", features = ["unifont"] }
+opencv = { version = "5.0.0", features = ["unifont"] }
 
 [target.'cfg(macos)'.dependencies.opencv]
-opencv = { version = "0.0.9", features = ["unifont"] }
+opencv = { version = "5.0.0", features = ["unifont"] }

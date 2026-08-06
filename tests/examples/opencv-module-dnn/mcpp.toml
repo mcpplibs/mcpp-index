@@ -14,14 +14,14 @@ name    = "opencv-module-dnn-tests"
 version = "0.1.0"
 
 [target.'cfg(linux)'.dependencies.opencv]
-opencv = { version = "0.0.10", features = ["dnn"] }
+opencv = { version = "5.0.0", features = ["dnn"] }
 
 # macOS: `import opencv.dnn;` on macOS-arm64 (per-OS NEON dnn payload).
 [target.'cfg(macos)'.dependencies.opencv]
-opencv = { version = "0.0.10", features = ["dnn"] }
+opencv = { version = "5.0.0", features = ["dnn"] }
 
 # windows: `import opencv.dnn;` on windows-x86_64 (fast_gemm backend).
 [target.'cfg(windows)'.dependencies.opencv]
-opencv = { version = "0.0.10", features = ["dnn"] }
+opencv = { version = "5.0.0", features = ["dnn"] }
 
 
