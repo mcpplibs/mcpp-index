@@ -31,28 +31,28 @@ package = {
         linux = {
             ["1.83.0"] = {
                 url = {
-                    GLOBAL = "https://github.com/mcpplibs/grpc-m/archive/refs/tags/v1.83.0-2.tar.gz",
-                    CN     = "https://gitcode.com/mcpp-res/grpc/releases/download/1.83.0/grpc-m-1.83.0-2.tar.gz",
+                    GLOBAL = "https://github.com/mcpplibs/grpc-m/archive/refs/tags/v1.83.0-3.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/grpc/releases/download/1.83.0/grpc-m-1.83.0-3.tar.gz",
                 },
-                sha256 = "9083a85879f67b726d68130ca8374e791e3cc73f9fff8d324cde11314c70b06e",
+                sha256 = "9a0514a325e348fb013a89bb7b1acb9b41f42d5e9f3c92cee8be788e1e48d74f",
             },
         },
         macosx = {
             ["1.83.0"] = {
                 url = {
-                    GLOBAL = "https://github.com/mcpplibs/grpc-m/archive/refs/tags/v1.83.0-2.tar.gz",
-                    CN     = "https://gitcode.com/mcpp-res/grpc/releases/download/1.83.0/grpc-m-1.83.0-2.tar.gz",
+                    GLOBAL = "https://github.com/mcpplibs/grpc-m/archive/refs/tags/v1.83.0-3.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/grpc/releases/download/1.83.0/grpc-m-1.83.0-3.tar.gz",
                 },
-                sha256 = "9083a85879f67b726d68130ca8374e791e3cc73f9fff8d324cde11314c70b06e",
+                sha256 = "9a0514a325e348fb013a89bb7b1acb9b41f42d5e9f3c92cee8be788e1e48d74f",
             },
         },
         windows = {
             ["1.83.0"] = {
                 url = {
-                    GLOBAL = "https://github.com/mcpplibs/grpc-m/archive/refs/tags/v1.83.0-2.tar.gz",
-                    CN     = "https://gitcode.com/mcpp-res/grpc/releases/download/1.83.0/grpc-m-1.83.0-2.tar.gz",
+                    GLOBAL = "https://github.com/mcpplibs/grpc-m/archive/refs/tags/v1.83.0-3.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/grpc/releases/download/1.83.0/grpc-m-1.83.0-3.tar.gz",
                 },
-                sha256 = "9083a85879f67b726d68130ca8374e791e3cc73f9fff8d324cde11314c70b06e",
+                sha256 = "9a0514a325e348fb013a89bb7b1acb9b41f42d5e9f3c92cee8be788e1e48d74f",
             },
         },
     },
