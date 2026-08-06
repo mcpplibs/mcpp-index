@@ -39,3 +39,10 @@ grpc = { version = "1.83.0", features = ["codegen"] }
 
 [target.'cfg(macos)'.build]
 cxxflags = ["-DHAVE_GRPC=1"]
+
+# windows carries the RULE but not gRPC itself, so build.mcpp compiles (its
+# `import grpcgen;` cannot be conditional) and then returns early. grpcgen is a
+# pure C++23 rule package — no openssl, no platform-limited dependency — which
+# is why it is available here while grpc is not.
+[target.'cfg(windows)'.dependencies.mcpplibs]
+grpcgen = { version = "1.83.0", host-module = true }
