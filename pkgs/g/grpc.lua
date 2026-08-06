@@ -6,9 +6,10 @@
 -- 索引(#151),满打满算一天,唯一的消费者是本仓的 tests/examples/grpc-module。
 -- 为一天的历史留一份永久重复条目不划算。
 --
--- 归档换成 v1.83.0-2:`src/` / `include/` / `third_party/` 与 v1.83.0 逐字节相同,
--- 多出的只有 plugin/(grpc_cpp_plugin)与 rules/(grpcgen)。v1.83.0 的 sha256 已
--- 经发布过,移动 tag 会让它校验失败(mcpp#349:发布数据不得让程序失效),故另起。
+-- 归档现为 v1.83.0-3。历次重打包中 `src/` / `include/` / `third_party/` 与
+-- v1.83.0 逐字节相同,变的只有 plugin/(grpc_cpp_plugin)、rules/(grpcgen)
+-- 与本包 manifest 的 codegen feature。已发布过的 sha256 不能靠移动 tag 复用
+-- (mcpp#349:发布数据不得让程序失效),所以每次重打包都另起一个 tag。
 -- Form A descriptor: the public gRPC package ships its own mcpp.toml, so this
 -- file carries metadata and a download address and nothing else. mcpp's default
 -- lookup finds <verdir>/*/mcpp.toml inside the GitHub source tarball wrap.

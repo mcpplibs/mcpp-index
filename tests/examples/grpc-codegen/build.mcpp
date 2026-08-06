@@ -1,0 +1,10 @@
+// One line, and it finds every .proto under proto/ by itself.
+//
+// The rule comes from the `grpcgen` package, which this project does NOT
+// declare: `grpc = { features = ["codegen"] }` re-exports it, along with
+// protoc and grpc_cpp_plugin. Which tools gRPC codegen needs is the gRPC
+// package's knowledge.
+import mcpp;
+import grpcgen;
+
+int main() { return grpcgen::generate_all() ? 0 : 1; }

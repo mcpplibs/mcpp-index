@@ -7,9 +7,13 @@
 # resolve from the published index, which is the point: this member proves the
 # descriptor works against the real dependency set.
 #
-# NO protoc output anywhere: gRPC's codegen needs host tools mcpp cannot hand a
-# consumer, so this exercises the module surface instead. grpc-m's own
-# examples/helloworld covers the generated-stub path end to end.
+# NO protoc output anywhere: this member exercises the MODULE surface. Codegen
+# is a separate member, tests/examples/grpc-codegen, which declares one
+# dependency and lets the grpc package hand it the whole toolchain.
+#
+# (This used to read "gRPC's codegen needs host tools mcpp cannot hand a
+# consumer". That stopped being true in mcpp 2026.8.6.2 — `reexport = true`
+# is exactly the mechanism for handing them over.)
 [package]
 name = "grpc-module-tests"
 version = "0.1.0"
