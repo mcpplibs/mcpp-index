@@ -132,7 +132,7 @@ export import std;
 // MinGW GCC 16.1 has no unqualified ::size_t for ut.hpp's uses (ut.hpp:1916
 // et al), and `export import std;` alone does not expose std::size_t under
 // the plain name on that toolchain. Module-local alias, never exported.
-#if __has_include(<unistd.h>) and __has_include(<sys/wait.h>)
+#if not (__has_include(<unistd.h>) or __has_include(<sys/wait.h>))
 using size_t = std::size_t;
 #endif
 
