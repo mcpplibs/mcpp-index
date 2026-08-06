@@ -8,8 +8,8 @@
 --     `#include <asio.hpp>` 和 `import asio;`，避免 inline 定义与模块 BMI
 --     的 separate-compilation 定义产生 ODR 差异。
 --   * 默认 feature 显式传播 ASIO_STANDALONE、ASIO_SEPARATE_COMPILATION、
---     ASIO_DISABLE_BOOST_CONTEXT_FIBER 和 ASIO_HAS_THREADS。Asio 头文件内部
---     自动检测的其他 ASIO_HAS_* 宏不会由 `import asio;` 导出。
+--     ASIO_DISABLE_BOOST_CONTEXT_FIBER、ASIO_HAS_THREADS 和 ASIO_NO_IOSTREAM。
+--     Asio 头文件内部自动检测的其他 ASIO_HAS_* 宏不会由 `import asio;` 导出。
 --
 -- 与 header-only Asio 的区别/限制
 --   * 上游 1.38.x 没有模块接口单元。本描述生成 `asio.cppm`，并只编译一次
@@ -35,6 +35,9 @@
 --     streambuf：对应 `asio/deadline_timer.hpp`、`asio/generic/*.hpp`、
 --     `asio/execution/*.hpp`、`asio/traits/*.hpp`、`asio/yield.hpp`、
 --     `asio/coroutine.hpp`、`asio/streambuf.hpp`。
+--   * iostream/streambuf 适配：模块禁用 ASIO 的 iostream 表面，避免 libc++
+--     `<print>` 同时进入 `std` 与 `asio` 两个 BMI 后破坏 `std::println`；
+--     因此基于 streambuf 的 read_at/write_at 重载也不可用。
 package = {
     spec        = "1",
     namespace   = "chriskohlhoff",
@@ -289,6 +292,7 @@ using ::asio::ssl::error::make_error_code;
                     "ASIO_SEPARATE_COMPILATION",
                     "ASIO_DISABLE_BOOST_CONTEXT_FIBER",
                     "ASIO_HAS_THREADS",
+                    "ASIO_NO_IOSTREAM",
                 },
             },
             ["ssl"] = {

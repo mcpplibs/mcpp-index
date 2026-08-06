@@ -1,9 +1,14 @@
 // Surface/smoke coverage: exported types, completion tokens, and vocabulary
 // types are usable across the module boundary.
 import std;
+import fmt;
 import asio;
 
 int main() {
+    // 回归：导入 Asio 后，libc++ 的 println 仍应保持可用。
+    std::println("asio module println");
+    std::println("asio module println {}", 42);
+
     // --- buffer / address (existing) ---
     std::array<char, 4> src{'m', 'c', 'p', 'p'};
     asio::const_buffer cb = asio::buffer(src);

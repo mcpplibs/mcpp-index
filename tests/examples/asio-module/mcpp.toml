@@ -13,3 +13,6 @@ version = "0.1.0"
 
 [dependencies.chriskohlhoff]
 asio = "1.38.1"
+
+[dependencies.fmtlib]
+fmt = "12.2.0"
