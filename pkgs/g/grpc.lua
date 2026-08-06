@@ -1,3 +1,14 @@
+-- 命名空间说的是这个库是谁的,不是谁打的包 —— gRPC 是 grpc/grpc 的,本仓库只是
+-- vendored 它的源码并加了 module 层。`mcpplibs` 是 mcpp 的默认命名空间
+-- (`kDefaultNamespace`),不是这个问题的答案。规则见 mcpp-index#163。
+--
+-- 与其余四个包不同,这条是**就地迁移**而非"旧的冻结 + 新增":它 2026-08-05 才进
+-- 索引(#151),满打满算一天,唯一的消费者是本仓的 tests/examples/grpc-module。
+-- 为一天的历史留一份永久重复条目不划算。
+--
+-- 归档换成 v1.83.0-2:`src/` / `include/` / `third_party/` 与 v1.83.0 逐字节相同,
+-- 多出的只有 plugin/(grpc_cpp_plugin)与 rules/(grpcgen)。v1.83.0 的 sha256 已
+-- 经发布过,移动 tag 会让它校验失败(mcpp#349:发布数据不得让程序失效),故另起。
 -- Form A descriptor: the public gRPC package ships its own mcpp.toml, so this
 -- file carries metadata and a download address and nothing else. mcpp's default
 -- lookup finds <verdir>/*/mcpp.toml inside the GitHub source tarball wrap.
@@ -37,7 +48,7 @@
 package = {
     spec        = "1",
     name        = "grpc",
-    namespace   = "mcpplibs",
+    namespace   = "grpc",
     description = "gRPC 1.83.0 — vendored upstream source build with import grpc; (abseil/protobuf/re2/c-ares/OpenSSL come from this index)",
     licenses    = {"Apache-2.0"},
     repo        = "https://github.com/mcpplibs/grpc-m",
@@ -47,19 +58,19 @@ package = {
         linux = {
             ["1.83.0"] = {
                 url = {
-                    GLOBAL = "https://github.com/mcpplibs/grpc-m/archive/refs/tags/v1.83.0.tar.gz",
-                    CN     = "https://gitcode.com/mcpp-res/grpc/releases/download/1.83.0/grpc-m-1.83.0.tar.gz",
+                    GLOBAL = "https://github.com/mcpplibs/grpc-m/archive/refs/tags/v1.83.0-2.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/grpc/releases/download/1.83.0/grpc-m-1.83.0-2.tar.gz",
                 },
-                sha256 = "99cf3bda0a4e025f674f08dd68183538c2f655c3f72a55e1e2c1f4e05a282f43",
+                sha256 = "9083a85879f67b726d68130ca8374e791e3cc73f9fff8d324cde11314c70b06e",
             },
         },
         macosx = {
             ["1.83.0"] = {
                 url = {
-                    GLOBAL = "https://github.com/mcpplibs/grpc-m/archive/refs/tags/v1.83.0.tar.gz",
-                    CN     = "https://gitcode.com/mcpp-res/grpc/releases/download/1.83.0/grpc-m-1.83.0.tar.gz",
+                    GLOBAL = "https://github.com/mcpplibs/grpc-m/archive/refs/tags/v1.83.0-2.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/grpc/releases/download/1.83.0/grpc-m-1.83.0-2.tar.gz",
                 },
-                sha256 = "99cf3bda0a4e025f674f08dd68183538c2f655c3f72a55e1e2c1f4e05a282f43",
+                sha256 = "9083a85879f67b726d68130ca8374e791e3cc73f9fff8d324cde11314c70b06e",
             },
         },
         -- No windows block, and the reason is a DEPENDENCY rather than gRPC:

@@ -7,21 +7,21 @@
 # than merging with it, which is what keeps this to ONE project index repo —
 # two repos pointing at the same tree make every lookup ambiguous.
 [indices]
-default = { path = "../../.." }
+opencv = { path = "../../.." }
 
 [package]
 name    = "opencv-module-dnn-tests"
 version = "0.1.0"
 
-[target.'cfg(linux)'.dependencies]
+[target.'cfg(linux)'.dependencies.opencv]
 opencv = { version = "0.0.10", features = ["dnn"] }
 
 # macOS: `import opencv.dnn;` on macOS-arm64 (per-OS NEON dnn payload).
-[target.'cfg(macos)'.dependencies]
+[target.'cfg(macos)'.dependencies.opencv]
 opencv = { version = "0.0.10", features = ["dnn"] }
 
 # windows: `import opencv.dnn;` on windows-x86_64 (fast_gemm backend).
-[target.'cfg(windows)'.dependencies]
+[target.'cfg(windows)'.dependencies.opencv]
 opencv = { version = "0.0.10", features = ["dnn"] }
 
 

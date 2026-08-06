@@ -116,7 +116,18 @@ env:
   # 0.0.94 fixed feature-gated `sources` under `mcpp test` (mcpp#218); 0.0.91
   # added standard = "c++fly" to the resolver grammar, so c++fly descriptors
   # get the lint WARN below, not a hard grammar-parse rejection.
-  MCPP_VERSION: "2026.8.5.4"
+  # 2026.8.6.1 是本次身份迁移的**前置**,不是顺手升级。
+  #
+  # `Fetcher::install_path(ns, shortName, version)` 的 legacy 扫描此前匹配任何以
+  # `-x-<shortName>` 结尾的目录、不看命名空间,于是查 `ocornut:imgui@1.92.8` 会拿到
+  # `compat-x-imgui/1.92.8` —— 另一个仅仅短名相同的包。它一直够不到,是因为 module
+  # 层用打包计数(imgui@0.0.6)而 compat 用上游版本(compat.imgui@1.92.8),版本永远
+  # 不撞;本次把 module 层对齐到上游之后它们重合了。mcpp#364 修掉了它。
+  #
+  # index.toml 的 min_mcpp **不动**。两个会撞的 compat 邻居都是 Form B,所以旧客户端
+  # 撞上时是响亮报错而不是静默用错包;下限是一道让整个索引对旧客户端失效的闸门
+  # (mcpp#349),只该在描述符真的读不动时抬。这里读得动,差的是解析得对。
+  MCPP_VERSION: "2026.8.6.1"
 
 jobs:
   lint:

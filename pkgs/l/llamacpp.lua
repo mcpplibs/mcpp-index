@@ -1,3 +1,15 @@
+-- ⚠️ 已冻结 —— 本条目不再接收新版本。
+--
+-- 本包已迁往 `ggml-org:llamacpp@b10069`(见 pkgs/g/ggml-org.llamacpp.lua),理由是命名空间说的是这个库是谁的、
+-- 版本说的是你拿到的是哪一版上游;`mcpplibs` 是 mcpp 的默认命名空间,两者都不是它
+-- 该表达的东西。规则与全生态迁移表:mcpp-index#163。
+--
+-- 这里保留而不删除:已经在用 `mcpplibs:llamacpp` 的消费者继续解析得到它。新版本只在新条目下
+-- 发布。迁移方式是把依赖写成限定形式 ——
+--
+--     [dependencies.ggml-org]
+--     llamacpp = "b10069"
+--
 -- Form A descriptor: llama.cpp-m ships its own mcpp.toml and a vendored,
 -- pinned llama.cpp checkpoint. The default lookup finds that manifest inside
 -- the GitHub tag archive. CPU is the default backend; Metal is an additive

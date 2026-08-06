@@ -12,11 +12,11 @@
 # than merging with it, which is what keeps this to ONE project index repo —
 # two repos pointing at the same tree make every lookup ambiguous.
 [indices]
-default = { path = "../../.." }
+ocornut = { path = "../../.." }
 
 [package]
 name    = "imgui-module-tests"
 version = "0.1.0"
 
-[target.'cfg(linux)'.dependencies]
-imgui = "0.0.1"
+[target.'cfg(linux)'.dependencies.ocornut]
+imgui = "1.92.8"

@@ -8,7 +8,7 @@
 # than merging with it, which is what keeps this to ONE project index repo —
 # two repos pointing at the same tree make every lookup ambiguous.
 [indices]
-default = { path = "../../.." }
+ffmpeg = { path = "../../.." }
 
 [package]
 name    = "ffmpeg-module-tests"
@@ -18,11 +18,11 @@ version = "0.1.0"
 # GLOBAL published compat index: this member redirects `default`, and a
 # member-level [indices] replaces the root's `compat` rather than adding to
 # it. The compat descriptor itself is pre-merge-validated by its own member.
-[target.'cfg(linux)'.dependencies]
-ffmpeg = "0.0.3"
+[target.'cfg(linux)'.dependencies.ffmpeg]
+ffmpeg = "8.1.2"
 
-[target.'cfg(macos)'.dependencies]
-ffmpeg = "0.0.3"
+[target.'cfg(macos)'.dependencies.ffmpeg]
+ffmpeg = "8.1.2"
 
-[target.'cfg(windows)'.dependencies]
-ffmpeg = "0.0.3"
+[target.'cfg(windows)'.dependencies.ffmpeg]
+ffmpeg = "8.1.2"

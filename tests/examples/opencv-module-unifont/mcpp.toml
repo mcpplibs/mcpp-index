@@ -6,14 +6,14 @@
 # than merging with it, which is what keeps this to ONE project index repo —
 # two repos pointing at the same tree make every lookup ambiguous.
 [indices]
-default = { path = "../../.." }
+opencv = { path = "../../.." }
 
 [package]
 name    = "opencv-module-unifont-tests"
 version = "0.1.0"
 
-[target.'cfg(linux)'.dependencies]
+[target.'cfg(linux)'.dependencies.opencv]
 opencv = { version = "0.0.9", features = ["unifont"] }
 
-[target.'cfg(macos)'.dependencies]
+[target.'cfg(macos)'.dependencies.opencv]
 opencv = { version = "0.0.9", features = ["unifont"] }

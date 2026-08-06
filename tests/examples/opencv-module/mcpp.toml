@@ -9,7 +9,7 @@
 # than merging with it, which is what keeps this to ONE project index repo —
 # two repos pointing at the same tree make every lookup ambiguous.
 [indices]
-default = { path = "../../.." }
+opencv = { path = "../../.." }
 
 [package]
 name    = "opencv-module-tests"
@@ -20,12 +20,12 @@ version = "0.1.0"
 # member redirects `default`, and a member-level [indices] replaces the
 # root's `compat` rather than adding to it. The compat descriptor itself is
 # pre-merge-validated by its own dedicated member.
-[target.'cfg(linux)'.dependencies]
-opencv = "0.0.10"
+[target.'cfg(linux)'.dependencies.opencv]
+opencv = "5.0.0"
 
-[target.'cfg(macos)'.dependencies]
-opencv = "0.0.10"
+[target.'cfg(macos)'.dependencies.opencv]
+opencv = "5.0.0"
 
 # windows: import opencv.cv on windows-x86_64 (clang-cl; module tarball OS-neutral).
-[target.'cfg(windows)'.dependencies]
-opencv = "0.0.10"
+[target.'cfg(windows)'.dependencies.opencv]
+opencv = "5.0.0"
