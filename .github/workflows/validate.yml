@@ -404,7 +404,40 @@ jobs:
                      "$1" "$2" "$3" "$4" "$5" "$6" "$i" "$7"
             done
           }
-          if [ "$full" = 1 ]; then ln=3; mn=1; wn=2; else ln=1; mn=1; wn=1; fi
+          # Shard count follows the WORK, not the full/partial flag.
+          #
+          # It used to be binary — full run: linux 3, anything else: linux 1 —
+          # which reads "a partial run is small". It is not: touching a widely
+          # consumed descriptor selects every member that consumes it. This
+          # PR's `pkgs/c/compat.openssl.lua` selected four (grpc-codegen,
+          # grpc-module, asio-ssl, openssl), one shard got all of them, and
+          # linux was cancelled at exactly 1h30m — the job cap — with
+          # grpc-codegen (3563s) and grpc-module (1701s) back to back. Nothing
+          # was broken; the plan just could not fit.
+          #
+          # tests/member-timings.tsv already holds the measured cost of every
+          # member, and plan_shards.lua already packs by it (LPT). So size the
+          # fan-out from the same table: sum this run's members and give linux
+          # a shard per ~45 minutes of work, capped at 3 (above that, runner
+          # concurrency and the per-shard setup eat the gain — see the
+          # measurement in the comment above). macOS stays at 1: its
+          # concurrency is 1, so extra shards there run back to back.
+          if [ "$full" = 1 ]; then
+            ln=3; mn=1; wn=2
+          else
+            secs=$(lua5.4 -e '
+              local want = {}
+              for m in (os.getenv("MEMBERS") or ""):gmatch("%S+") do want[m] = true end
+              local total = 0
+              for line in io.lines("tests/member-timings.tsv") do
+                local p, m, s = line:match("^(%S+)\t(%S+)\t(%d+)$")
+                if p == "linux" and m and want[m] then total = total + tonumber(s) end
+              end
+              print(total)')
+            ln=$(( secs / 2700 + 1 )); [ "$ln" -gt 3 ] && ln=3
+            mn=1; wn=1
+            echo "linux work: ${secs}s (measured) -> $ln shard(s)"
+          fi
           {
             printf '{"include":['
             emit linux   ubuntu-latest  linux-x86_64   tar.gz bin/mcpp     registry/bin/xlings     "$ln"
