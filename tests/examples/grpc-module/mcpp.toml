@@ -18,20 +18,19 @@
 name = "grpc-module-tests"
 version = "0.1.0"
 
-# linux + macOS only: the package has no windows xpm entry (its compat.openssl
+# unix only: the package has no windows xpm entry (its compat.openssl
 # dependency has none yet), so on windows this member carries no dependency at
 # all and the test compiles to a no-op main() — the same shape
 # tests/examples/openssl uses for the same underlying reason.
-[target.'cfg(linux)'.dependencies.grpc]
+#
+# One `cfg(unix)` rather than a linux block and an identical macos block: the
+# condition is a single fact ("gRPC resolves everywhere except windows"), so it
+# should be written once. mcpp evaluates `unix` as family == "unix"
+# (src/build/prepare.cppm, alongside any()/all()/not()).
+[target.'cfg(unix)'.dependencies.grpc]
 grpc = "1.83.0"
 
-[target.'cfg(linux)'.build]
-cxxflags = ["-DHAVE_GRPC=1"]
-
-[target.'cfg(macos)'.dependencies.grpc]
-grpc = "1.83.0"
-
-[target.'cfg(macos)'.build]
+[target.'cfg(unix)'.build]
 cxxflags = ["-DHAVE_GRPC=1"]
 
 [indices]

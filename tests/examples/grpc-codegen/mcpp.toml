@@ -28,16 +28,14 @@
 name    = "grpc-codegen-tests"
 version = "0.1.0"
 
-[target.'cfg(linux)'.dependencies.grpc]
+# `cfg(unix)`, not one block per OS: the condition is "everywhere gRPC
+# resolves", and what excludes windows is compat.openssl having no xpm entry
+# there — a single fact, so a single predicate. mcpp evaluates `unix` as
+# family == "unix" (src/build/prepare.cppm, alongside any()/all()/not()).
+[target.'cfg(unix)'.dependencies.grpc]
 grpc = { version = "1.83.0", features = ["codegen"] }
 
-[target.'cfg(linux)'.build]
-cxxflags = ["-DHAVE_GRPC=1"]
-
-[target.'cfg(macos)'.dependencies.grpc]
-grpc = { version = "1.83.0", features = ["codegen"] }
-
-[target.'cfg(macos)'.build]
+[target.'cfg(unix)'.build]
 cxxflags = ["-DHAVE_GRPC=1"]
 
 # windows carries the RULE but not gRPC itself, so build.mcpp compiles (its
