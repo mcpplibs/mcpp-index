@@ -27,16 +27,30 @@ package = {
     -- pass, because llvmpipe renders one too.
     xpm = {
         linux = {
+            -- The whole hermetic graphics stack. A RUNTIME dep, not a build
+            -- one: nothing here compiles against it, the produced consumer
+            -- loads it.
+            --
+            -- PLATFORM level, beside the version entries rather than inside
+            -- one. Every other recipe in both indexes places it here, and the
+            -- first attempt at this change put it inside the 2026.08.08 entry:
+            -- the descriptor parsed, the stack was never installed, and the
+            -- install failed on the required-library check -- an error naming
+            -- libGL.so.1 rather than the misplaced key. Whether a per-version
+            -- `deps` is rejected or merely unread was not determined; what is
+            -- established is that it does not take effect.
+            --
+            -- It therefore also applies to the legacy 2026.06.03 entry below,
+            -- which does not use it. That costs a consumer still pinned there
+            -- a download it will not read, and the alternative -- deleting the
+            -- published version -- would break them outright.
+            deps = { runtime = { "xim:graphics" } },
             ["2026.08.08"] = {
                 url    = {
                     GLOBAL = "https://raw.githubusercontent.com/KhronosGroup/OpenGL-Registry/a30033d3e812c9bf10094f1010374a6b15e192eb/README.adoc",
                     CN     = "https://gitcode.com/mcpp-res/glx-runtime/releases/download/2026.08.08/glx-runtime-2026.08.08.adoc",
                 },
                 sha256 = "ea68efce197e68413ebb62c51ab4bccfb2309a2fca776d31b49d972f59f3640e",
-                -- The whole hermetic graphics stack. A RUNTIME dep, not a
-                -- build one: nothing here compiles against it, the produced
-                -- consumer loads it.
-                deps = { runtime = { "xim:graphics" } },
             },
             -- Kept so already-published consumers pinned to it keep resolving.
             -- It sources libGL from the HOST and is the configuration behind
