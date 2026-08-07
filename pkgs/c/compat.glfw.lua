@@ -80,7 +80,7 @@ package = {
                 "src/posix_module.c",
             },
             deps = {
-                ["compat.glx-runtime"] = "2026.06.03",
+                ["compat.glx-runtime"] = "2026.08.08",
                 ["compat.x11"]       = "1.8.13",
                 ["compat.xcursor"]   = "1.2.3",
                 ["compat.xext"]      = "1.3.7",
