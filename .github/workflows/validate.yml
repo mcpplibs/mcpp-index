@@ -575,41 +575,6 @@ jobs:
         run: |
           "$MCPP" index update
 
-      # ── The toolchain is job setup, not the first member's problem ──────
-      # mcpp installs a default toolchain on first use ("First run no
-      # toolchain configured — installing gcc@16.1.0"). Without this step
-      # that one-time, job-wide install lands inside whichever member the
-      # shard happens to run first, and it lands there under THAT member's
-      # environment — for a member with custom `[indices]`, a project-local
-      # xlings home under <member>/.mcpp/.xlings.
-      #
-      # That made the outcome depend on member ORDER. tests/examples/
-      # grpc-codegen, first in its shard, died in compat.openssl's install()
-      # with `stdlib.h: No such file or directory`: openssl builds through
-      # its own Makefile with a bare `gcc`, so it takes the header search
-      # from the xvm shim's `--sysroot`, which resolved to the project-local
-      # subos — a tree with an empty usr/include. The very same member
-      # passed on macOS (openssl uses /usr/bin/cc there) and on windows, and
-      # its sibling grpc-module, running SECOND with the toolchain already
-      # in place, built the same openssl fine.
-      #
-      # A trivial project with no `[indices]` puts the toolchain in the
-      # shared home, once, in its own process, before any member runs. It is
-      # also just honest CI: a job should provision its environment
-      # explicitly rather than inherit it from a test that ran earlier.
-      - name: Install the toolchain (so no member absorbs the first-run install)
-        shell: bash
-        env:
-          MCPP_INDEX_MIRROR: GLOBAL
-        run: |
-          # mktemp -d, not $RUNNER_TEMP: on windows that variable is a native
-          # path (D:\a\_temp) and this step runs under bash.
-          warm="$(mktemp -d)"
-          mkdir -p "$warm/src"
-          printf '[package]\nname = "toolchain-warmup"\nversion = "0.1.0"\n' > "$warm/mcpp.toml"
-          printf 'int main() { return 0; }\n' > "$warm/src/main.cpp"
-          cd "$warm" && "$MCPP" build
-
       - name: mcpp test (workspace or affected members)
         shell: bash
         env:
