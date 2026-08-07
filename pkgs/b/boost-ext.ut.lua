@@ -6,11 +6,11 @@
 --
 -- The upstream release tarball ships an official module interface unit at
 -- `include/boost/ut.cppm` (`export module boost.ut;`). This descriptor
--- reproduces that file through `generated_files` with EXACTLY ONE deviation —
+-- reproduces that file through `generated_files` with exactly TWO deviations —
 -- everything else, including `export import std;`, is upstream's own bytes in
 -- upstream's own order.
 --
--- The one deviation: Clang on the MSVC ABI (`*-pc-windows-msvc`, this index's
+-- The first deviation: Clang on the MSVC ABI (`*-pc-windows-msvc`, this index's
 -- Windows default toolchain — llvm@20.1.7, NOT mingw, NOT cl.exe) rejects
 -- upstream's file with
 --     ut.hpp:688:29: error: use of undeclared identifier '__argc'
@@ -25,11 +25,17 @@
 -- reassigned from `main()`'s argv at runtime, so the stand-in values are never
 -- read.
 --
+-- The second deviation is a MinGW-specific fix: GCC 16.1 on
+-- `*-pc-windows-mingw` provides no unqualified `::size_t`, which ut.hpp
+-- reaches for (ut.hpp:1916 et al), and `export import std;` alone does not
+-- surface `std::size_t` under the plain name on that toolchain. The wrapper
+-- adds a module-local `using size_t = std::size_t;` before the include —
+-- never exported, and a no-op everywhere `::size_t` exists.
+--
 -- That is the whole delta. In particular this descriptor does NOT:
 --   * drop `export import std;` — keeping upstream's spelling is what makes
---     GCC 16.1 accept ut.hpp's unqualified `size_t` (ut.hpp:1916 et al) and
---     the `literals` using-block with no `-Wno-template-body` and no
---     hand-written global-module-fragment include list;
+--     GCC 16.1 accept the `literals` using-block with no `-Wno-template-body`
+--     and no hand-written global-module-fragment include list;
 --   * carry the post-v2.3.1 explicit-template-instantiation block from
 --     upstream `master` — it is in no release tag, and the macOS crash it was
 --     tried against turned out to be a toolchain-side problem (below).
@@ -108,7 +114,8 @@ package = {
         modules      = { "boost.ut" },
         include_dirs = { "*/include/boost" },
         -- Upstream's v2.3.1 include/boost/ut.cppm, reproduced verbatim apart
-        -- from the __argc / __argv shim documented at the top of this file.
+        -- from the __argc / __argv shim and the size_t alias documented at
+        -- the top of this file.
         -- Verdir-relative path, no glob.
         generated_files = {
             ["mcpp_generated/boost.ut.cppm"] = [==[
@@ -122,7 +129,14 @@ module;
 export module boost.ut;
 export import std;
 
-// ---- the only mcpp-index deviation from upstream v2.3.1's ut.cppm ---------
+// MinGW GCC 16.1 has no unqualified ::size_t for ut.hpp's uses (ut.hpp:1916
+// et al), and `export import std;` alone does not expose std::size_t under
+// the plain name on that toolchain. Module-local alias, never exported.
+#if not (__has_include(<unistd.h>) or __has_include(<sys/wait.h>))
+using size_t = std::size_t;
+#endif
+
+// ---- the mcpp-index deviations from upstream v2.3.1's ut.cppm ---------------
 // ut.hpp:687 is `#if defined(_MSC_VER)` and references the MSVC builtins
 // __argc / __argv. Clang on the MSVC ABI (this index's Windows default,
 // *-pc-windows-msvc) sets _MSC_VER but does not provide them; the adjacent

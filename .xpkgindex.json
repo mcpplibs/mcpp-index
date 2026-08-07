@@ -1,32 +1,232 @@
 {
   "site": {
-    "title": "mcpp Package Index",
-    "description": "Modular C++23 packages for the mcpp build tool",
-    "logo": "mcpp Package Index"
+    "title": {
+      "en": "mcpp Package Index",
+      "zh": "mcpp 包索引",
+      "zh-Hant": "mcpp 套件索引"
+    },
+    "description": {
+      "en": "Modular C++23 packages for the mcpp build tool",
+      "zh": "面向 mcpp 构建工具的模块化 C++23 包",
+      "zh-Hant": "給 mcpp 建置工具使用的模組化 C++23 套件"
+    },
+    "logo": "mcpp index"
   },
   "links": {
-    "github": "https://github.com/mcpp-community/mcpp-index",
+    "github": "https://github.com/mcpplibs/mcpp-index",
+    "website": "https://mcpp.d2learn.org",
     "custom": [
-      {"label": "mcpp",          "url": "https://github.com/mcpp-community/mcpp"},
-      {"label": "xpkg V1 spec",  "url": "https://github.com/d2learn/xim-pkgindex/blob/main/docs/V1/xpackage-spec.md"},
-      {"label": "mcpp ext",      "url": "https://github.com/mcpp-community/mcpp/blob/main/docs/04-schema-xpkg-extension.md"}
+      {
+        "label": "mcpp",
+        "url": "https://github.com/mcpp-community/mcpp"
+      },
+      {
+        "label": "xlings",
+        "url": "https://github.com/openxlings/xlings"
+      },
+      {
+        "label": {
+          "en": "xpkg V1 spec",
+          "zh": "xpkg V1 规范",
+          "zh-Hant": "xpkg V1 規範"
+        },
+        "url": "https://github.com/openxlings/xim-pkgindex/blob/main/docs/V1/xpackage-spec.md"
+      },
+      {
+        "label": {
+          "en": "mcpp ext",
+          "zh": "mcpp 扩展字段",
+          "zh-Hant": "mcpp 擴充欄位"
+        },
+        "url": "https://github.com/mcpp-community/mcpp/blob/main/docs/04-schema-xpkg-extension.md"
+      }
     ]
   },
   "about": {
     "project_name": "mcpp",
     "project_url": "https://github.com/mcpp-community/mcpp",
-    "description": "Modern C++23 build & package management tool — modules-first, xlings-driven, single-binary install",
-    "maintainers": ["mcpp-community"],
+    "description": {
+      "en": "Modern C++23 build & package management tool — modules-first, xlings-driven, single-binary install",
+      "zh": "现代 C++23 构建与包管理工具 —— 模块优先、由 xlings 驱动、单文件安装",
+      "zh-Hant": "現代 C++23 建置與套件管理工具 —— 模組優先、由 xlings 驅動、單一執行檔安裝"
+    },
+    "maintainers": [
+      "mcpp-community"
+    ],
     "license": "Apache-2.0"
   },
   "theme": {
-    "primary_color": "#00d4ff",
-    "style": "dark"
+    "accent": "#5b46d6",
+    "style": "auto",
+    "tones": {
+      "module": "#5b46d6",
+      "header": "#52606d",
+      "tool": "#b8690f"
+    },
+    "dark": {
+      "accent": "#9b8bfa",
+      "tones": {
+        "module": "#9b8bfa",
+        "header": "#a7b6c7",
+        "tool": "#e0a260"
+      }
+    }
   },
-  "install_command_template": "mcpp add {name}@{version}",
   "pkgs_dir": "pkgs",
-  "install_commands": {
-    "unix":    "curl -fsSL https://github.com/mcpp-community/mcpp/releases/latest/download/install.sh | bash",
-    "windows": "iwr https://github.com/mcpp-community/mcpp/releases/latest/download/install.sh -useb | bash"
+  "growth": {
+    "total_label": {
+      "en": "all packages",
+      "zh": "全部包",
+      "zh-Hant": "全部套件"
+    },
+    "series": [
+      {
+        "label": "import",
+        "facet": "surface",
+        "value": "module",
+        "tone": "module"
+      },
+      {
+        "label": "mcpplibs",
+        "facet": "namespace",
+        "value": "mcpplibs"
+      }
+    ]
+  },
+  "base_url": "https://mcpplibs.github.io/mcpp-index",
+  "languages": [
+    "en",
+    "zh",
+    "zh-Hant"
+  ],
+  "install_command_template": "mcpp add {ref}@{version}",
+  "install": {
+    "primary": {
+      "label": {
+        "en": "Install mcpp",
+        "zh": "安装 mcpp",
+        "zh-Hant": "安裝 mcpp"
+      },
+      "command": "xlings install mcpp -y"
+    },
+    "summary": {
+      "en": "Don't have xlings yet?",
+      "zh": "还没装 xlings?",
+      "zh-Hant": "還沒安裝 xlings?"
+    },
+    "os": [
+      {
+        "id": "unix",
+        "os": "Linux / macOS",
+        "command": "curl -fsSL https://d2learn.org/xlings-install.sh | bash"
+      },
+      {
+        "id": "windows",
+        "os": "Windows · PowerShell",
+        "command": "irm https://d2learn.org/xlings-install.ps1.txt | iex"
+      }
+    ]
+  },
+  "plugins": [
+    ".xpkgindex/plugins/mcpp.py"
+  ],
+  "docs": {
+    "landing": "quick-start",
+    "entries": [
+      {
+        "slug": "quick-start",
+        "title": {
+          "en": "Quick start",
+          "zh": "快速开始",
+          "zh-Hant": "快速開始"
+        },
+        "path": "docs/quick-start.md",
+        "translations": {
+          "zh": "docs/zh/quick-start.md"
+        }
+      },
+      {
+        "slug": "contributing",
+        "title": {
+          "en": "Adding a package",
+          "zh": "新增一个包",
+          "zh-Hant": "新增一個套件"
+        },
+        "path": "docs/README.md",
+        "translations": {
+          "zh": "docs/zh/README.md"
+        }
+      },
+      {
+        "slug": "package-types",
+        "title": {
+          "en": "The four library shapes",
+          "zh": "四种库形态",
+          "zh-Hant": "四種函式庫形態"
+        },
+        "path": "docs/package-types.md",
+        "translations": {
+          "zh": "docs/zh/package-types.md"
+        }
+      },
+      {
+        "slug": "cn-mirror",
+        "title": {
+          "en": "CN mirror loop",
+          "zh": "国内镜像流程",
+          "zh-Hant": "中國鏡像流程"
+        },
+        "path": "docs/cn-mirror.md",
+        "translations": {
+          "zh": "docs/zh/cn-mirror.md"
+        }
+      },
+      {
+        "slug": "repository-and-schema",
+        "title": "Repository & schema",
+        "path": "docs/repository-and-schema.md"
+      }
+    ],
+    "cta": {
+      "eyebrow": {
+        "en": "New here?",
+        "zh": "第一次用?",
+        "zh-Hant": "第一次用?"
+      },
+      "title": {
+        "en": "Quick start",
+        "zh": "快速开始",
+        "zh-Hant": "快速開始"
+      },
+      "description": {
+        "en": "Install mcpp, create a project, add a library from this index, run it.",
+        "zh": "装好 mcpp,建个项目,从索引里加一个库,跑起来。",
+        "zh-Hant": "裝好 mcpp,建個專案,從索引裡加一個函式庫,跑起來。"
+      },
+      "lines": [
+        "mcpp new hello",
+        "mcpp add nlohmann.json@3.12.0",
+        "mcpp run"
+      ],
+      "action": {
+        "en": "Read the guide",
+        "zh": "看指南",
+        "zh-Hant": "看指南"
+      }
+    }
+  },
+  "ecosystem": {
+    "owners": [
+      "mcpplibs",
+      "mcpp-community",
+      "openxlings",
+      "d2learn",
+      "Sunrisepeak"
+    ],
+    "repos": [
+      "mcpp-community/mcpp",
+      "openxlings/xlings",
+      "mcpplibs/mcpp-index"
+    ]
   }
 }

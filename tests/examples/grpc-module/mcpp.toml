@@ -7,27 +7,30 @@
 # resolve from the published index, which is the point: this member proves the
 # descriptor works against the real dependency set.
 #
-# NO protoc output anywhere: gRPC's codegen needs host tools mcpp cannot hand a
-# consumer, so this exercises the module surface instead. grpc-m's own
-# examples/helloworld covers the generated-stub path end to end.
+# NO protoc output anywhere: this member exercises the MODULE surface. Codegen
+# is a separate member, tests/examples/grpc-codegen, which declares one
+# dependency and lets the grpc package hand it the whole toolchain.
+#
+# (This used to read "gRPC's codegen needs host tools mcpp cannot hand a
+# consumer". That stopped being true in mcpp 2026.8.6.2 — `reexport = true`
+# is exactly the mechanism for handing them over.)
 [package]
 name = "grpc-module-tests"
 version = "0.1.0"
 
-# linux + macOS only: the package has no windows xpm entry (its compat.openssl
+# unix only: the package has no windows xpm entry (its compat.openssl
 # dependency has none yet), so on windows this member carries no dependency at
 # all and the test compiles to a no-op main() — the same shape
 # tests/examples/openssl uses for the same underlying reason.
-[target.'cfg(linux)'.dependencies.grpc]
+#
+# One `cfg(unix)` rather than a linux block and an identical macos block: the
+# condition is a single fact ("gRPC resolves everywhere except windows"), so it
+# should be written once. mcpp evaluates `unix` as family == "unix"
+# (src/build/prepare.cppm, alongside any()/all()/not()).
+[target.'cfg(unix)'.dependencies.grpc]
 grpc = "1.83.0"
 
-[target.'cfg(linux)'.build]
-cxxflags = ["-DHAVE_GRPC=1"]
-
-[target.'cfg(macos)'.dependencies.grpc]
-grpc = "1.83.0"
-
-[target.'cfg(macos)'.build]
+[target.'cfg(unix)'.build]
 cxxflags = ["-DHAVE_GRPC=1"]
 
 [indices]

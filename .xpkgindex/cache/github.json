@@ -1,0 +1,1744 @@
+{
+  "entries": {
+    "https://api.github.com/repos/Aimol-l/Tensorvia-cpu": {
+      "at": 1786040367,
+      "body": {
+        "description": "多后端张量库Tensorvia的CPU 后端，移植到纯 C++23 模块化设计，使用mcpp构建。",
+        "homepage": "",
+        "language": "C++",
+        "license": "MIT",
+        "owner": "Aimol-l",
+        "owner_avatar": "https://avatars.githubusercontent.com/u/56304358?v=4",
+        "owner_url": "https://github.com/Aimol-l",
+        "slug": "Aimol-l/Tensorvia-cpu",
+        "stars": 3,
+        "topics": []
+      }
+    },
+    "https://api.github.com/repos/ArthurSonzogni/FTXUI": {
+      "at": 1786040374,
+      "body": {
+        "description": ":computer: C++ Functional Terminal User Interface. :heart:",
+        "homepage": "https://arthursonzogni.github.io/FTXUI/",
+        "language": "C++",
+        "license": "MIT",
+        "owner": "ArthurSonzogni",
+        "owner_avatar": "https://avatars.githubusercontent.com/u/4759106?v=4",
+        "owner_url": "https://github.com/ArthurSonzogni",
+        "slug": "ArthurSonzogni/FTXUI",
+        "stars": 10516,
+        "topics": [
+          "arthursonzogni",
+          "ascii",
+          "ascii-art",
+          "cpp",
+          "curse",
+          "simple",
+          "terminal",
+          "terminal-based",
+          "tui",
+          "ui",
+          "user-interface",
+          "xterm"
+        ]
+      }
+    },
+    "https://api.github.com/repos/CLIUtils/CLI11": {
+      "at": 1786040372,
+      "body": {
+        "description": "CLI11 is a command line parser for C++11 and beyond that provides a rich feature set with a simple and intuitive interface.",
+        "homepage": "https://cliutils.github.io/CLI11/",
+        "language": "C++",
+        "license": "NOASSERTION",
+        "owner": "CLIUtils",
+        "owner_avatar": "https://avatars.githubusercontent.com/u/26603456?v=4",
+        "owner_url": "https://github.com/CLIUtils",
+        "slug": "CLIUtils/CLI11",
+        "stars": 4402,
+        "topics": [
+          "cli",
+          "cli-parser",
+          "cpp11",
+          "no-dependencies"
+        ]
+      }
+    },
+    "https://api.github.com/repos/DaveGamble/cJSON": {
+      "at": 1786040371,
+      "body": {
+        "description": "Ultralightweight JSON parser in ANSI C",
+        "homepage": "",
+        "language": "C",
+        "license": "MIT",
+        "owner": "DaveGamble",
+        "owner_avatar": "https://avatars.githubusercontent.com/u/118247?v=4",
+        "owner_url": "https://github.com/DaveGamble",
+        "slug": "DaveGamble/cJSON",
+        "stars": 12903,
+        "topics": []
+      }
+    },
+    "https://api.github.com/repos/KhronosGroup/OpenGL-Registry": {
+      "at": 1786040377,
+      "body": {
+        "description": "OpenGL, OpenGL ES, and OpenGL ES-SC API and Extension Registry",
+        "homepage": "",
+        "language": "C",
+        "license": "",
+        "owner": "KhronosGroup",
+        "owner_avatar": "https://avatars.githubusercontent.com/u/1608701?v=4",
+        "owner_url": "https://github.com/KhronosGroup",
+        "slug": "KhronosGroup/OpenGL-Registry",
+        "stars": 850,
+        "topics": []
+      }
+    },
+    "https://api.github.com/repos/Mbed-TLS/mbedtls": {
+      "at": 1786040381,
+      "body": {
+        "description": "An open source, portable, easy to use, readable and flexible TLS library, and reference implementation of the PSA Cryptography API. Releases are on a varying cadence, typically around 3 - 6 months between releases.",
+        "homepage": "https://www.trustedfirmware.org/projects/mbed-tls/",
+        "language": "C",
+        "license": "NOASSERTION",
+        "owner": "Mbed-TLS",
+        "owner_avatar": "https://avatars.githubusercontent.com/u/97226525?v=4",
+        "owner_url": "https://github.com/Mbed-TLS",
+        "slug": "Mbed-TLS/mbedtls",
+        "stars": 6858,
+        "topics": [
+          "crypto",
+          "cryptography-library",
+          "psa",
+          "ssl",
+          "tls"
+        ]
+      }
+    },
+    "https://api.github.com/repos/NVIDIA/libglvnd": {
+      "at": 1786040376,
+      "body": {
+        "description": "The GL Vendor-Neutral Dispatch library",
+        "homepage": "",
+        "language": "C",
+        "license": "",
+        "owner": "NVIDIA",
+        "owner_avatar": "https://avatars.githubusercontent.com/u/1728152?v=4",
+        "owner_url": "https://github.com/NVIDIA",
+        "slug": "NVIDIA/libglvnd",
+        "stars": 538,
+        "topics": []
+      }
+    },
+    "https://api.github.com/repos/Neargye/magic_enum": {
+      "at": 1786040395,
+      "body": {
+        "description": "Static reflection for enums (to string, from string, iteration) for modern C++, work with any enum type without any macro or boilerplate code",
+        "homepage": "",
+        "language": "C++",
+        "license": "MIT",
+        "owner": "Neargye",
+        "owner_avatar": "https://avatars.githubusercontent.com/u/7997966?v=4",
+        "owner_url": "https://github.com/Neargye",
+        "slug": "Neargye/magic_enum",
+        "stars": 6161,
+        "topics": [
+          "c-plus-plus",
+          "c-plus-plus-17",
+          "cplusplus",
+          "cplusplus-17",
+          "cpp",
+          "cpp17",
+          "enum",
+          "enum-to-string",
+          "header-only",
+          "metaprogramming",
+          "no-dependencies",
+          "reflection",
+          "serialization",
+          "single-file",
+          "string-to-enum"
+        ]
+      }
+    },
+    "https://api.github.com/repos/OpenMathLib/OpenBLAS": {
+      "at": 1786040383,
+      "body": {
+        "description": "OpenBLAS is an optimized BLAS library based on GotoBLAS2 1.13 BSD version. ",
+        "homepage": "http://www.openblas.net",
+        "language": "C",
+        "license": "BSD-3-Clause",
+        "owner": "OpenMathLib",
+        "owner_avatar": "https://avatars.githubusercontent.com/u/9943298?v=4",
+        "owner_url": "https://github.com/OpenMathLib",
+        "slug": "OpenMathLib/OpenBLAS",
+        "stars": 7546,
+        "topics": [
+          "blas",
+          "lapack",
+          "lapacke"
+        ]
+      }
+    },
+    "https://api.github.com/repos/Sunrisepeak/opencv-m": {
+      "at": 1786040393,
+      "body": {
+        "description": "",
+        "homepage": "",
+        "language": "C",
+        "license": "Apache-2.0",
+        "owner": "Sunrisepeak",
+        "owner_avatar": "https://avatars.githubusercontent.com/u/38786181?v=4",
+        "owner_url": "https://github.com/Sunrisepeak",
+        "slug": "Sunrisepeak/opencv-m",
+        "stars": 1,
+        "topics": []
+      }
+    },
+    "https://api.github.com/repos/abseil/abseil-cpp": {
+      "at": 1786040369,
+      "body": {
+        "description": "Abseil Common Libraries (C++)",
+        "homepage": "https://abseil.io",
+        "language": "C++",
+        "license": "Apache-2.0",
+        "owner": "abseil",
+        "owner_avatar": "https://avatars.githubusercontent.com/u/26718316?v=4",
+        "owner_url": "https://github.com/abseil",
+        "slug": "abseil/abseil-cpp",
+        "stars": 18055,
+        "topics": []
+      }
+    },
+    "https://api.github.com/repos/boost-ext/ut": {
+      "at": 1786040367,
+      "body": {
+        "description": "C++20 μ(micro)/Unit Testing framework",
+        "homepage": "https://boost-ext.github.io/ut/",
+        "language": "C++",
+        "license": "BSL-1.0",
+        "owner": "boost-ext",
+        "owner_avatar": "https://avatars.githubusercontent.com/u/16814575?v=4",
+        "owner_url": "https://github.com/boost-ext",
+        "slug": "boost-ext/ut",
+        "stars": 1435,
+        "topics": [
+          "bdd",
+          "cpp20",
+          "tdd",
+          "testing"
+        ]
+      }
+    },
+    "https://api.github.com/repos/c-ares/c-ares": {
+      "at": 1786040370,
+      "body": {
+        "description": "A C library for asynchronous DNS requests",
+        "homepage": "https://c-ares.org/",
+        "language": "C",
+        "license": "MIT",
+        "owner": "c-ares",
+        "owner_avatar": "https://avatars.githubusercontent.com/u/16745161?v=4",
+        "owner_url": "https://github.com/c-ares",
+        "slug": "c-ares/c-ares",
+        "stars": 2175,
+        "topics": [
+          "async",
+          "c",
+          "dns",
+          "dns-queries",
+          "library",
+          "resolver"
+        ]
+      }
+    },
+    "https://api.github.com/repos/catchorg/Catch2": {
+      "at": 1786040371,
+      "body": {
+        "description": "A modern, C++-native, test framework for unit-tests, TDD and BDD - using C++14, C++17 and later (C++11 support is in v2.x branch, and C++03 on the Catch1.x branch)",
+        "homepage": "https://discord.gg/4CWS9zD",
+        "language": "C++",
+        "license": "BSL-1.0",
+        "owner": "catchorg",
+        "owner_avatar": "https://avatars.githubusercontent.com/u/33321405?v=4",
+        "owner_url": "https://github.com/catchorg",
+        "slug": "catchorg/Catch2",
+        "stars": 21419,
+        "topics": [
+          "bdd",
+          "cpp",
+          "cpp14",
+          "framework",
+          "no-dependencies",
+          "tdd",
+          "test-framework",
+          "testing"
+        ]
+      }
+    },
+    "https://api.github.com/repos/chriskohlhoff/asio": {
+      "at": 1786040368,
+      "body": {
+        "description": "Asio C++ Library",
+        "homepage": "http://think-async.com/Asio",
+        "language": "C++",
+        "license": "NOASSERTION",
+        "owner": "chriskohlhoff",
+        "owner_avatar": "https://avatars.githubusercontent.com/u/462538?v=4",
+        "owner_url": "https://github.com/chriskohlhoff",
+        "slug": "chriskohlhoff/asio",
+        "stars": 6153,
+        "topics": []
+      }
+    },
+    "https://api.github.com/repos/curl/curl": {
+      "at": 1786040373,
+      "body": {
+        "description": "A command line tool and library for transferring data with URL syntax, supporting DICT, FILE, FTP, FTPS, GOPHER, GOPHERS, HTTP, HTTPS, IMAP, IMAPS, LDAP, LDAPS, MQTT, MQTTS, POP3, POP3S, RTSP, SCP, SFTP, SMB, SMBS, SMTP, SMTPS, TELNET, TFTP, WS and WSS. libcurl offers a myriad of powerful features",
+        "homepage": "https://curl.se/",
+        "language": "C",
+        "license": "NOASSERTION",
+        "owner": "curl",
+        "owner_avatar": "https://avatars.githubusercontent.com/u/16928085?v=4",
+        "owner_url": "https://github.com/curl",
+        "slug": "curl/curl",
+        "stars": 42542,
+        "topics": [
+          "c",
+          "client",
+          "curl",
+          "ftp",
+          "gopher",
+          "hacktoberfest",
+          "http",
+          "https",
+          "imaps",
+          "ldap",
+          "libcurl",
+          "library",
+          "mqtt",
+          "pop3",
+          "scp",
+          "sftp",
+          "transfer-data",
+          "transferring-data",
+          "user-agent",
+          "websocket"
+        ]
+      }
+    },
+    "https://api.github.com/repos/facebook/zstd": {
+      "at": 1786040390,
+      "body": {
+        "description": "Zstandard - Fast real-time compression algorithm",
+        "homepage": "http://www.zstd.net",
+        "language": "C",
+        "license": "NOASSERTION",
+        "owner": "facebook",
+        "owner_avatar": "https://avatars.githubusercontent.com/u/69631?v=4",
+        "owner_url": "https://github.com/facebook",
+        "slug": "facebook/zstd",
+        "stars": 27523,
+        "topics": []
+      }
+    },
+    "https://api.github.com/repos/fmtlib/fmt": {
+      "at": 1786040391,
+      "body": {
+        "description": "A modern formatting library",
+        "homepage": "https://fmt.dev",
+        "language": "C++",
+        "license": "MIT",
+        "owner": "fmtlib",
+        "owner_avatar": "https://avatars.githubusercontent.com/u/7280830?v=4",
+        "owner_url": "https://github.com/fmtlib",
+        "slug": "fmtlib/fmt",
+        "stars": 23710,
+        "topics": [
+          "c-plus-plus",
+          "chrono",
+          "cpp",
+          "cross-platform",
+          "floating-point",
+          "formatting",
+          "multiplatform",
+          "output",
+          "performance",
+          "printf",
+          "ranges",
+          "unicode"
+        ]
+      }
+    },
+    "https://api.github.com/repos/gabime/spdlog": {
+      "at": 1786040386,
+      "body": {
+        "description": "Fast C++ logging library.",
+        "homepage": "",
+        "language": "C++",
+        "license": "NOASSERTION",
+        "owner": "gabime",
+        "owner_avatar": "https://avatars.githubusercontent.com/u/6052198?v=4",
+        "owner_url": "https://github.com/gabime",
+        "slug": "gabime/spdlog",
+        "stars": 29443,
+        "topics": [
+          "cpp",
+          "cpp11",
+          "header-only",
+          "logging",
+          "spdlog"
+        ]
+      }
+    },
+    "https://api.github.com/repos/glfw/glfw": {
+      "at": 1786040375,
+      "body": {
+        "description": "A multi-platform library for OpenGL, OpenGL ES, Vulkan, window and input",
+        "homepage": "https://www.glfw.org",
+        "language": "C",
+        "license": "Zlib",
+        "owner": "glfw",
+        "owner_avatar": "https://avatars.githubusercontent.com/u/3905364?v=4",
+        "owner_url": "https://github.com/glfw",
+        "slug": "glfw/glfw",
+        "stars": 15235,
+        "topics": [
+          "c",
+          "linux",
+          "macos",
+          "opengl",
+          "opengl-es",
+          "unix",
+          "vulkan",
+          "windows"
+        ]
+      }
+    },
+    "https://api.github.com/repos/godotengine/godot-cpp": {
+      "at": 1786040378,
+      "body": {
+        "description": "C++ bindings for the Godot script API",
+        "homepage": "https://docs.godotengine.org/en/latest/tutorials/scripting/cpp/",
+        "language": "C++",
+        "license": "MIT",
+        "owner": "godotengine",
+        "owner_avatar": "https://avatars.githubusercontent.com/u/6318500?v=4",
+        "owner_url": "https://github.com/godotengine",
+        "slug": "godotengine/godot-cpp",
+        "stars": 2628,
+        "topics": []
+      }
+    },
+    "https://api.github.com/repos/google/googletest": {
+      "at": 1786040379,
+      "body": {
+        "description": "GoogleTest - Google Testing and Mocking Framework",
+        "homepage": "https://google.github.io/googletest/",
+        "language": "C++",
+        "license": "BSD-3-Clause",
+        "owner": "google",
+        "owner_avatar": "https://avatars.githubusercontent.com/u/1342004?v=4",
+        "owner_url": "https://github.com/google",
+        "slug": "google/googletest",
+        "stars": 38905,
+        "topics": []
+      }
+    },
+    "https://api.github.com/repos/ibireme/yyjson": {
+      "at": 1786040388,
+      "body": {
+        "description": "The fastest JSON library in C",
+        "homepage": "https://ibireme.github.io/yyjson/doc/doxygen/html/",
+        "language": "C",
+        "license": "MIT",
+        "owner": "ibireme",
+        "owner_avatar": "https://avatars.githubusercontent.com/u/839283?v=4",
+        "owner_url": "https://github.com/ibireme",
+        "slug": "ibireme/yyjson",
+        "stars": 3829,
+        "topics": [
+          "ansi-c",
+          "c",
+          "c89",
+          "cross-platform",
+          "deserialization",
+          "json",
+          "json5",
+          "portable",
+          "serialization"
+        ]
+      }
+    },
+    "https://api.github.com/repos/libigl/libigl-glad": {
+      "at": 1786040375,
+      "body": {
+        "description": "",
+        "homepage": "",
+        "language": "C",
+        "license": "",
+        "owner": "libigl",
+        "owner_avatar": "https://avatars.githubusercontent.com/u/6785468?v=4",
+        "owner_url": "https://github.com/libigl",
+        "slug": "libigl/libigl-glad",
+        "stars": 0,
+        "topics": []
+      }
+    },
+    "https://api.github.com/repos/libsdl-org/SDL": {
+      "at": 1786040385,
+      "body": {
+        "description": "Simple DirectMedia Layer",
+        "homepage": "https://libsdl.org",
+        "language": "C",
+        "license": "Zlib",
+        "owner": "libsdl-org",
+        "owner_avatar": "https://avatars.githubusercontent.com/u/77683370?v=4",
+        "owner_url": "https://github.com/libsdl-org",
+        "slug": "libsdl-org/SDL",
+        "stars": 16285,
+        "topics": [
+          "sdl",
+          "sdl2",
+          "sdl3"
+        ]
+      }
+    },
+    "https://api.github.com/repos/lz4/lz4": {
+      "at": 1786040381,
+      "body": {
+        "description": "Extremely Fast Compression algorithm",
+        "homepage": "http://www.lz4.org",
+        "language": "C",
+        "license": "NOASSERTION",
+        "owner": "lz4",
+        "owner_avatar": "https://avatars.githubusercontent.com/u/11667224?v=4",
+        "owner_url": "https://github.com/lz4",
+        "slug": "lz4/lz4",
+        "stars": 11992,
+        "topics": [
+          "c",
+          "compression",
+          "lz4"
+        ]
+      }
+    },
+    "https://api.github.com/repos/machinezone/IXWebSocket": {
+      "at": 1786040387,
+      "body": {
+        "description": "websocket and http client and server library, with TLS support and very few dependencies",
+        "homepage": "",
+        "language": "C++",
+        "license": "BSD-3-Clause",
+        "owner": "machinezone",
+        "owner_avatar": "https://avatars.githubusercontent.com/u/6372053?v=4",
+        "owner_url": "https://github.com/machinezone",
+        "slug": "machinezone/IXWebSocket",
+        "stars": 783,
+        "topics": [
+          "cpp",
+          "http",
+          "http-server",
+          "websocket-client",
+          "websocket-server",
+          "websockets"
+        ]
+      }
+    },
+    "https://api.github.com/repos/madler/zlib": {
+      "at": 1786040389,
+      "body": {
+        "description": "A massively spiffy yet delicately unobtrusive compression library.",
+        "homepage": "http://zlib.net/",
+        "language": "C",
+        "license": "NOASSERTION",
+        "owner": "madler",
+        "owner_avatar": "https://avatars.githubusercontent.com/u/240717?v=4",
+        "owner_url": "https://github.com/madler",
+        "slug": "madler/zlib",
+        "stars": 7002,
+        "topics": []
+      }
+    },
+    "https://api.github.com/repos/marzer/tomlplusplus": {
+      "at": 1786040392,
+      "body": {
+        "description": "Header-only TOML config file parser and serializer for C++17.",
+        "homepage": "https://marzer.github.io/tomlplusplus/",
+        "language": "C++",
+        "license": "MIT",
+        "owner": "marzer",
+        "owner_avatar": "https://avatars.githubusercontent.com/u/3958019?v=4",
+        "owner_url": "https://github.com/marzer",
+        "slug": "marzer/tomlplusplus",
+        "stars": 2119,
+        "topics": [
+          "c-plus-plus-17",
+          "c-plus-plus-20",
+          "configuration-files",
+          "cplusplus-17",
+          "cplusplus-20",
+          "cpp",
+          "cpp17",
+          "cpp20",
+          "header-only",
+          "json",
+          "no-dependencies",
+          "parser",
+          "serializer",
+          "single-file",
+          "toml",
+          "toml-parser",
+          "toml-parsing",
+          "tomlplusplus",
+          "unicode",
+          "utf-8"
+        ]
+      }
+    },
+    "https://api.github.com/repos/mcpp-community/mcpp": {
+      "at": 1786040399,
+      "body": {
+        "description": "A modern C++ module-first build tool — written in pure C++23 modules, fully self-hosted / 一个 现代C++ 模块化构建工具 — 纯 C++23 模块编写(已实现自举) ",
+        "homepage": "",
+        "language": "C++",
+        "license": "Apache-2.0",
+        "owner": "mcpp-community",
+        "owner_avatar": "https://avatars.githubusercontent.com/u/247994312?v=4",
+        "owner_url": "https://github.com/mcpp-community",
+        "slug": "mcpp-community/mcpp",
+        "stars": 91,
+        "topics": [
+          "build-tool",
+          "cpp",
+          "cpp23",
+          "mcpp",
+          "toolchain"
+        ]
+      }
+    },
+    "https://api.github.com/repos/mcpp-community/mcpp/contributors?per_page=30": {
+      "at": 1786040400,
+      "body": [
+        {
+          "avatar": "https://avatars.githubusercontent.com/u/38786181?v=4",
+          "contributions": 434,
+          "login": "Sunrisepeak",
+          "url": "https://github.com/Sunrisepeak"
+        },
+        {
+          "avatar": "https://avatars.githubusercontent.com/u/248744407?v=4",
+          "contributions": 30,
+          "login": "speak-agent",
+          "url": "https://github.com/speak-agent"
+        },
+        {
+          "avatar": "https://avatars.githubusercontent.com/u/194236111?v=4",
+          "contributions": 4,
+          "login": "ZheFeng7110",
+          "url": "https://github.com/ZheFeng7110"
+        },
+        {
+          "avatar": "https://avatars.githubusercontent.com/u/96378453?v=4",
+          "contributions": 2,
+          "login": "wellwei",
+          "url": "https://github.com/wellwei"
+        },
+        {
+          "avatar": "https://avatars.githubusercontent.com/u/86313530?v=4",
+          "contributions": 1,
+          "login": "xv1rcn",
+          "url": "https://github.com/xv1rcn"
+        },
+        {
+          "avatar": "https://avatars.githubusercontent.com/u/67222274?v=4",
+          "contributions": 1,
+          "login": "HalfAnElephant",
+          "url": "https://github.com/HalfAnElephant"
+        },
+        {
+          "avatar": "https://avatars.githubusercontent.com/u/119092375?v=4",
+          "contributions": 1,
+          "login": "yizhinailong",
+          "url": "https://github.com/yizhinailong"
+        }
+      ]
+    },
+    "https://api.github.com/repos/mcpp-community/templates": {
+      "at": 1786040393,
+      "body": {
+        "description": "Minimal C++23 modular hello library — first package indexed in mcpp-index",
+        "homepage": "",
+        "language": "C++",
+        "license": "Apache-2.0",
+        "owner": "mcpp-community",
+        "owner_avatar": "https://avatars.githubusercontent.com/u/247994312?v=4",
+        "owner_url": "https://github.com/mcpp-community",
+        "slug": "mcpp-community/templates",
+        "stars": 0,
+        "topics": []
+      }
+    },
+    "https://api.github.com/repos/mcpplibs/ffmpeg-m": {
+      "at": 1786040390,
+      "body": {
+        "description": "",
+        "homepage": "",
+        "language": "C++",
+        "license": "MIT",
+        "owner": "mcpplibs",
+        "owner_avatar": "https://avatars.githubusercontent.com/u/247994090?v=4",
+        "owner_url": "https://github.com/mcpplibs",
+        "slug": "mcpplibs/ffmpeg-m",
+        "stars": 0,
+        "topics": []
+      }
+    },
+    "https://api.github.com/repos/mcpplibs/mcpp-index": {
+      "at": 1786040402,
+      "body": {
+        "description": "mcpp package index registry — modular C++23 packages for mcpp build tool",
+        "homepage": "https://mcpplibs.github.io/mcpp-index/",
+        "language": "Lua",
+        "license": "NOASSERTION",
+        "owner": "mcpplibs",
+        "owner_avatar": "https://avatars.githubusercontent.com/u/247994090?v=4",
+        "owner_url": "https://github.com/mcpplibs",
+        "slug": "mcpplibs/mcpp-index",
+        "stars": 3,
+        "topics": []
+      }
+    },
+    "https://api.github.com/repos/mcpplibs/mcpp-index/commits?per_page=100&page=1": {
+      "at": 1786040397,
+      "body": {
+        "Cloud_Yun|1770669041@qq.com": "yspbwx2010",
+        "FarnaHerry|108510510+FarnaHerry@users.noreply.github.com": "FarnaHerry",
+        "SPeak|speakshen@163.com": "Sunrisepeak",
+        "Yichen Pang|58691509+1115040131@users.noreply.github.com": "1115040131",
+        "Zhe Feng|zhefeng7110@outlook.com": "ZheFeng7110",
+        "sunrisepeak|speakshen@163.com": "Sunrisepeak",
+        "tz12323|2760686250@qq.com": "tz12323",
+        "wellwei|96378453+wellwei@users.noreply.github.com": "wellwei"
+      }
+    },
+    "https://api.github.com/repos/mcpplibs/mcpp-index/commits?per_page=100&page=2": {
+      "at": 1786040398,
+      "body": {
+        "SPeak|speakshen@163.com": "Sunrisepeak",
+        "sunrisepeak|speakshen@163.com": "Sunrisepeak",
+        "sunrisepeak|x.d2learn.org@gmail.com": "speak-agent",
+        "子菲鱼|56304358+Aimol-l@users.noreply.github.com": "Aimol-l"
+      }
+    },
+    "https://api.github.com/repos/mcpplibs/mcpp-index/commits?per_page=100&page=3": {
+      "at": 1786040399,
+      "body": {}
+    },
+    "https://api.github.com/repos/mcpplibs/mcpp-index/contributors?per_page=30": {
+      "at": 1786040403,
+      "body": [
+        {
+          "avatar": "https://avatars.githubusercontent.com/u/38786181?v=4",
+          "contributions": 144,
+          "login": "Sunrisepeak",
+          "url": "https://github.com/Sunrisepeak"
+        },
+        {
+          "avatar": "https://avatars.githubusercontent.com/u/108510510?v=4",
+          "contributions": 5,
+          "login": "FarnaHerry",
+          "url": "https://github.com/FarnaHerry"
+        },
+        {
+          "avatar": "https://avatars.githubusercontent.com/u/194236111?v=4",
+          "contributions": 5,
+          "login": "ZheFeng7110",
+          "url": "https://github.com/ZheFeng7110"
+        },
+        {
+          "avatar": "https://avatars.githubusercontent.com/u/96378453?v=4",
+          "contributions": 5,
+          "login": "wellwei",
+          "url": "https://github.com/wellwei"
+        },
+        {
+          "avatar": "https://avatars.githubusercontent.com/u/248744407?v=4",
+          "contributions": 3,
+          "login": "speak-agent",
+          "url": "https://github.com/speak-agent"
+        },
+        {
+          "avatar": "https://avatars.githubusercontent.com/u/58691509?v=4",
+          "contributions": 2,
+          "login": "1115040131",
+          "url": "https://github.com/1115040131"
+        },
+        {
+          "avatar": "https://avatars.githubusercontent.com/u/120697095?v=4",
+          "contributions": 1,
+          "login": "yspbwx2010",
+          "url": "https://github.com/yspbwx2010"
+        },
+        {
+          "avatar": "https://avatars.githubusercontent.com/u/190197873?v=4",
+          "contributions": 1,
+          "login": "tz12323",
+          "url": "https://github.com/tz12323"
+        },
+        {
+          "avatar": "https://avatars.githubusercontent.com/u/56304358?v=4",
+          "contributions": 1,
+          "login": "Aimol-l",
+          "url": "https://github.com/Aimol-l"
+        }
+      ]
+    },
+    "https://api.github.com/repos/mity/md4c": {
+      "at": 1786040382,
+      "body": {
+        "description": "C Markdown parser. Fast. SAX-like interface. Compliant to CommonMark specification.",
+        "homepage": "",
+        "language": "C",
+        "license": "MIT",
+        "owner": "mity",
+        "owner_avatar": "https://avatars.githubusercontent.com/u/873269?v=4",
+        "owner_url": "https://github.com/mity",
+        "slug": "mity/md4c",
+        "stars": 1413,
+        "topics": [
+          "c",
+          "commonmark",
+          "markdown",
+          "markdown-parser",
+          "mit-license",
+          "parser"
+        ]
+      }
+    },
+    "https://api.github.com/repos/nlohmann/json": {
+      "at": 1786040395,
+      "body": {
+        "description": "JSON for Modern C++",
+        "homepage": "https://json.nlohmann.me",
+        "language": "C++",
+        "license": "MIT",
+        "owner": "nlohmann",
+        "owner_avatar": "https://avatars.githubusercontent.com/u/159488?v=4",
+        "owner_url": "https://github.com/nlohmann",
+        "slug": "nlohmann/json",
+        "stars": 50309,
+        "topics": [
+          "bson",
+          "cbor",
+          "header-only",
+          "json",
+          "json-diff",
+          "json-merge-patch",
+          "json-parser",
+          "json-patch",
+          "json-pointer",
+          "json-serialization",
+          "messagepack",
+          "msgpack",
+          "rfc-6901",
+          "rfc-6902",
+          "rfc-7049",
+          "rfc-7159",
+          "rfc-8259",
+          "stl-containers",
+          "ubjson"
+        ]
+      }
+    },
+    "https://api.github.com/repos/ocornut/imgui": {
+      "at": 1786040379,
+      "body": {
+        "description": "Dear ImGui: Bloat-free Graphical User interface for C++ with minimal dependencies",
+        "homepage": "",
+        "language": "C++",
+        "license": "MIT",
+        "owner": "ocornut",
+        "owner_avatar": "https://avatars.githubusercontent.com/u/8225057?v=4",
+        "owner_url": "https://github.com/ocornut",
+        "slug": "ocornut/imgui",
+        "stars": 75531,
+        "topics": [
+          "api",
+          "cplusplus",
+          "framework",
+          "game-development",
+          "game-engine",
+          "gamedev",
+          "gui",
+          "imgui",
+          "immediate-gui",
+          "library",
+          "multi-platform",
+          "native",
+          "toolkit",
+          "tools",
+          "ui"
+        ]
+      }
+    },
+    "https://api.github.com/repos/openssl/openssl": {
+      "at": 1786040383,
+      "body": {
+        "description": "General purpose TLS and crypto library",
+        "homepage": "https://openssl-library.org/",
+        "language": "C",
+        "license": "Apache-2.0",
+        "owner": "openssl",
+        "owner_avatar": "https://avatars.githubusercontent.com/u/3279138?v=4",
+        "owner_url": "https://github.com/openssl",
+        "slug": "openssl/openssl",
+        "stars": 30568,
+        "topics": [
+          "cryptography",
+          "decryption",
+          "encryption",
+          "openssl",
+          "ssl",
+          "tls"
+        ]
+      }
+    },
+    "https://api.github.com/repos/openxlings/libxpkg": {
+      "at": 1786040394,
+      "body": {
+        "description": "xpkg 规范 的 C++23 标准库实现",
+        "homepage": "https://github.com/d2learn/xlings",
+        "language": "C++",
+        "license": "Apache-2.0",
+        "owner": "openxlings",
+        "owner_avatar": "https://avatars.githubusercontent.com/u/266796665?v=4",
+        "owner_url": "https://github.com/openxlings",
+        "slug": "openxlings/libxpkg",
+        "stars": 2,
+        "topics": []
+      }
+    },
+    "https://api.github.com/repos/openxlings/xlings": {
+      "at": 1786040401,
+      "body": {
+        "description": "Universal package infrastructure with OS-like SubOS isolation - Multi-version · Rootless · Decentralized Index · Agent-ready.",
+        "homepage": "https://openxlings.github.io",
+        "language": "C++",
+        "license": "Apache-2.0",
+        "owner": "openxlings",
+        "owner_avatar": "https://avatars.githubusercontent.com/u/266796665?v=4",
+        "owner_url": "https://github.com/openxlings",
+        "slug": "openxlings/xlings",
+        "stars": 599,
+        "topics": [
+          "ai",
+          "auto-configuration",
+          "auto-detect",
+          "d2x",
+          "demos",
+          "installer",
+          "llm-application",
+          "package-manager",
+          "project-management",
+          "tools",
+          "version-manager",
+          "xlings"
+        ]
+      }
+    },
+    "https://api.github.com/repos/openxlings/xlings/contributors?per_page=30": {
+      "at": 1786040402,
+      "body": [
+        {
+          "avatar": "https://avatars.githubusercontent.com/u/38786181?v=4",
+          "contributions": 619,
+          "login": "Sunrisepeak",
+          "url": "https://github.com/Sunrisepeak"
+        },
+        {
+          "avatar": "https://avatars.githubusercontent.com/u/248744407?v=4",
+          "contributions": 25,
+          "login": "speak-agent",
+          "url": "https://github.com/speak-agent"
+        },
+        {
+          "avatar": "https://avatars.githubusercontent.com/u/64307394?v=4",
+          "contributions": 6,
+          "login": "MoYingJi",
+          "url": "https://github.com/MoYingJi"
+        },
+        {
+          "avatar": "https://avatars.githubusercontent.com/in/1143301?v=4",
+          "contributions": 1,
+          "login": "Copilot",
+          "url": "https://github.com/apps/copilot-swe-agent"
+        },
+        {
+          "avatar": "https://avatars.githubusercontent.com/u/33739170?v=4",
+          "contributions": 1,
+          "login": "zzxzzk115",
+          "url": "https://github.com/zzxzzk115"
+        },
+        {
+          "avatar": "https://avatars.githubusercontent.com/u/194236111?v=4",
+          "contributions": 1,
+          "login": "ZheFeng7110",
+          "url": "https://github.com/ZheFeng7110"
+        }
+      ]
+    },
+    "https://api.github.com/repos/pnggroup/libpng": {
+      "at": 1786040380,
+      "body": {
+        "description": "LIBPNG: Portable Network Graphics support, official libpng repository",
+        "homepage": "http://libpng.sf.net",
+        "language": "C",
+        "license": "NOASSERTION",
+        "owner": "pnggroup",
+        "owner_avatar": "https://avatars.githubusercontent.com/u/48779779?v=4",
+        "owner_url": "https://github.com/pnggroup",
+        "slug": "pnggroup/libpng",
+        "stars": 1637,
+        "topics": []
+      }
+    },
+    "https://api.github.com/repos/protocolbuffers/protobuf": {
+      "at": 1786040384,
+      "body": {
+        "description": "Protocol Buffers - Google's data interchange format",
+        "homepage": "http://protobuf.dev",
+        "language": "C++",
+        "license": "NOASSERTION",
+        "owner": "protocolbuffers",
+        "owner_avatar": "https://avatars.githubusercontent.com/u/26310541?v=4",
+        "owner_url": "https://github.com/protocolbuffers",
+        "slug": "protocolbuffers/protobuf",
+        "stars": 71693,
+        "topics": [
+          "marshalling",
+          "protobuf",
+          "protobuf-runtime",
+          "protoc",
+          "protocol-buffers",
+          "protocol-compiler",
+          "rpc",
+          "serialization"
+        ]
+      }
+    },
+    "https://api.github.com/repos/sudoevolve/EUI-NEO": {
+      "at": 1786040373,
+      "body": {
+        "description": "EUI-NEO is a cross-platform, high-performance, low-overhead C++17 GPUI framework",
+        "homepage": "",
+        "language": "C",
+        "license": "Apache-2.0",
+        "owner": "sudoevolve",
+        "owner_avatar": "https://avatars.githubusercontent.com/u/147291183?v=4",
+        "owner_url": "https://github.com/sudoevolve",
+        "slug": "sudoevolve/EUI-NEO",
+        "stars": 1663,
+        "topics": []
+      }
+    },
+    "https://api.github.com/repos/tukaani-project/xz": {
+      "at": 1786040388,
+      "body": {
+        "description": "XZ Utils",
+        "homepage": "https://tukaani.org/xz/",
+        "language": "C",
+        "license": "NOASSERTION",
+        "owner": "tukaani-project",
+        "owner_avatar": "https://avatars.githubusercontent.com/u/116083088?v=4",
+        "owner_url": "https://github.com/tukaani-project",
+        "slug": "tukaani-project/xz",
+        "stars": 1629,
+        "topics": [
+          "c",
+          "cli",
+          "compression",
+          "library"
+        ]
+      }
+    },
+    "https://api.github.com/repos/zserge/tray": {
+      "at": 1786040386,
+      "body": {
+        "description": "Cross-platform, super tiny C99 implementation of a system tray icon with a popup menu.",
+        "homepage": "",
+        "language": "C",
+        "license": "MIT",
+        "owner": "zserge",
+        "owner_avatar": "https://avatars.githubusercontent.com/u/1911760?v=4",
+        "owner_url": "https://github.com/zserge",
+        "slug": "zserge/tray",
+        "stars": 576,
+        "topics": [
+          "appindicator",
+          "cross-platform",
+          "gtk",
+          "tray-icon",
+          "tray-menu"
+        ]
+      }
+    },
+    "https://raw.githubusercontent.com/Aimol-l/Tensorvia-cpu/v0.1.1/mcpp.toml": {
+      "at": 1786040356,
+      "body": {
+        "deps": [],
+        "description": "CPU backend of Tensorvia, ported to C++23 modules",
+        "language": "c++23",
+        "license": "MIT",
+        "modules": [
+          "tensorvia"
+        ],
+        "modules_path": "src/tensorvia.cppm",
+        "modules_source": "export",
+        "name": "tensorvia-cpu",
+        "namespace": "",
+        "platforms": [
+          "linux",
+          "macos",
+          "windows"
+        ],
+        "sources": [
+          "src/tensorvia.cppm"
+        ],
+        "targets": {
+          "tensorvia-cpu": {
+            "kind": "lib"
+          }
+        },
+        "version": "0.1.1"
+      }
+    },
+    "https://raw.githubusercontent.com/Aimol-l/Tensorvia-cpu/v0.1.1/src/tensorvia.cppm": {
+      "at": 1786040356,
+      "body": "tensorvia"
+    },
+    "https://raw.githubusercontent.com/Sunrisepeak/opencv-m/v0.0.10/mcpp.toml": {
+      "at": 1786040363,
+      "body": {
+        "deps": [
+          "compat"
+        ],
+        "description": "OpenCV 5.0.0 vendored + C++23 module layer — import opencv.cv; (API and habits unchanged, just no headers). Single repo: full source build carried by this manifest, frozen per-OS config snapshots in gen/, no compat.opencv dependency.",
+        "language": "",
+        "license": "MIT",
+        "modules": [
+          "opencv.cv"
+        ],
+        "modules_source": "description",
+        "name": "opencv",
+        "namespace": "",
+        "platforms": [],
+        "sources": [
+          "src/opencv.cppm",
+          "src/cv.cppm",
+          "src/core.cppm",
+          "src/imgproc.cppm",
+          "src/imgcodecs.cppm",
+          "src/videoio.cppm",
+          "src/highgui.cppm",
+          "src/flann.cppm",
+          "src/geometry.cppm"
+        ],
+        "targets": {
+          "opencv": {
+            "kind": "lib"
+          }
+        },
+        "version": "0.0.10"
+      }
+    },
+    "https://raw.githubusercontent.com/Sunrisepeak/opencv-m/v5.0.0/mcpp.toml": {
+      "at": 1786040366,
+      "body": {
+        "deps": [
+          "compat"
+        ],
+        "description": "OpenCV 5.0.0 vendored + C++23 module layer — import opencv.cv; (API and habits unchanged, just no headers). Single repo: full source build carried by this manifest, frozen per-OS config snapshots in gen/, no compat.opencv dependency.",
+        "language": "",
+        "license": "MIT",
+        "modules": [
+          "opencv.cv"
+        ],
+        "modules_source": "description",
+        "name": "opencv",
+        "namespace": "opencv",
+        "platforms": [],
+        "sources": [
+          "src/opencv.cppm",
+          "src/cv.cppm",
+          "src/core.cppm",
+          "src/imgproc.cppm",
+          "src/imgcodecs.cppm",
+          "src/videoio.cppm",
+          "src/highgui.cppm",
+          "src/flann.cppm",
+          "src/geometry.cppm"
+        ],
+        "targets": {
+          "opencv": {
+            "kind": "lib"
+          }
+        },
+        "version": "5.0.0"
+      }
+    },
+    "https://raw.githubusercontent.com/mcpp-community/templates/v0.0.1/mcpp.toml": {
+      "at": 1786040363,
+      "body": {
+        "deps": [],
+        "description": "Minimal C++23 modular hello library (mcpp port of mcpplibs/templates)",
+        "language": "",
+        "license": "Apache-2.0",
+        "modules": [
+          "mcpplibs.templates"
+        ],
+        "modules_path": "src/templates.cppm",
+        "modules_source": "export",
+        "name": "mcpplibs.templates",
+        "namespace": "",
+        "platforms": [],
+        "sources": [],
+        "targets": {
+          "templates": {
+            "kind": "lib"
+          }
+        },
+        "version": "0.0.1"
+      }
+    },
+    "https://raw.githubusercontent.com/mcpp-community/templates/v0.0.1/src/templates.cppm": {
+      "at": 1786040363,
+      "body": "mcpplibs.templates"
+    },
+    "https://raw.githubusercontent.com/mcpplibs/ffmpeg-m/v0.0.3/mcpp.toml": {
+      "at": 1786040360,
+      "body": {
+        "deps": [
+          "compat"
+        ],
+        "description": "FFmpeg C++ modules for mcpp (import ffmpeg.av;) on top of the compat.ffmpeg source build",
+        "language": "",
+        "license": "MIT",
+        "modules": [
+          "ffmpeg.av"
+        ],
+        "modules_source": "description",
+        "name": "ffmpeg",
+        "namespace": "",
+        "platforms": [
+          "linux",
+          "macos",
+          "windows"
+        ],
+        "sources": [
+          "src/**/*.cppm"
+        ],
+        "targets": {
+          "ffmpeg": {
+            "kind": "lib"
+          }
+        },
+        "version": "0.0.3"
+      }
+    },
+    "https://raw.githubusercontent.com/mcpplibs/ffmpeg-m/v8.1.2/mcpp.toml": {
+      "at": 1786040356,
+      "body": {
+        "deps": [
+          "compat"
+        ],
+        "description": "FFmpeg 8.1.2 C++ modules for mcpp (import ffmpeg.av;) on top of the compat.ffmpeg source build",
+        "language": "",
+        "license": "MIT",
+        "modules": [
+          "ffmpeg.av"
+        ],
+        "modules_source": "description",
+        "name": "ffmpeg",
+        "namespace": "ffmpeg",
+        "platforms": [
+          "linux",
+          "macos",
+          "windows"
+        ],
+        "sources": [
+          "src/**/*.cppm"
+        ],
+        "targets": {
+          "ffmpeg": {
+            "kind": "lib"
+          }
+        },
+        "version": "8.1.2"
+      }
+    },
+    "https://raw.githubusercontent.com/mcpplibs/godot-cpp-m/v10.0.0-rc1/mcpp.toml": {
+      "at": 1786040358,
+      "body": {
+        "deps": [
+          "compat"
+        ],
+        "description": "godot-cpp as a C++23 module (import godot_cpp;) on top of the compat.godot-cpp source build",
+        "language": "",
+        "license": "MIT",
+        "modules": [
+          "godot_cpp"
+        ],
+        "modules_source": "description",
+        "name": "godot-cpp-m",
+        "namespace": "",
+        "platforms": [
+          "linux",
+          "macos",
+          "windows"
+        ],
+        "sources": [
+          "src/**/*.cppm"
+        ],
+        "targets": {
+          "godot-cpp-m": {
+            "kind": "lib"
+          }
+        },
+        "version": "10.0.0-rc1"
+      }
+    },
+    "https://raw.githubusercontent.com/mcpplibs/grpc-m/v1.83.0-3/mcpp.toml": {
+      "at": 1786040358,
+      "body": {
+        "deps": [
+          "compat"
+        ],
+        "description": "gRPC 1.83.0 for mcpp — upstream C++ source vendored and built by this manifest, with abseil / protobuf / re2 / c-ares / OpenSSL taken from mcpp-index instead of re-vendored.",
+        "language": "c++23",
+        "license": "Apache-2.0",
+        "modules": [
+          "grpc"
+        ],
+        "modules_path": "src/grpc.cppm",
+        "modules_source": "export",
+        "name": "grpc",
+        "namespace": "",
+        "platforms": [
+          "linux",
+          "macos"
+        ],
+        "sources": [
+          "src/grpc.cppm",
+          "third_party/grpc-1.83.0/src/core/config/config_vars.cc",
+          "third_party/grpc-1.83.0/src/core/config/config_vars_non_generated.cc",
+          "third_party/grpc-1.83.0/src/core/config/load_config.cc",
+          "third_party/grpc-1.83.0/src/core/lib/event_engine/thread_local.cc",
+          "third_party/grpc-1.83.0/src/core/util/alloc.cc",
+          "third_party/grpc-1.83.0/src/core/util/crash.cc",
+          "third_party/grpc-1.83.0/src/core/util/examine_stack.cc",
+          "third_party/grpc-1.83.0/src/core/util/fork.cc",
+          "third_party/grpc-1.83.0/src/core/util/gpr_time.cc",
+          "third_party/grpc-1.83.0/src/core/util/host_port.cc",
+          "third_party/grpc-1.83.0/src/core/util/iphone/cpu.cc",
+          "third_party/grpc-1.83.0/src/core/util/linux/cpu.cc",
+          "third_party/grpc-1.83.0/src/core/util/linux/env.cc",
+          "third_party/grpc-1.83.0/src/core/util/log.cc",
+          "third_party/grpc-1.83.0/src/core/util/mpscq.cc",
+          "third_party/grpc-1.83.0/src/core/util/msys/tmpfile.cc",
+          "third_party/grpc-1.83.0/src/core/util/posix/cpu.cc",
+          "third_party/grpc-1.83.0/src/core/util/posix/env.cc",
+          "third_party/grpc-1.83.0/src/core/util/posix/stat.cc"
+        ],
+        "targets": {
+          "grpc": {
+            "kind": "lib"
+          }
+        },
+        "version": "1.83.0"
+      }
+    },
+    "https://raw.githubusercontent.com/mcpplibs/grpc-m/v1.83.0-3/plugin/mcpp.toml": {
+      "at": 1786040359,
+      "body": {
+        "deps": [
+          "compat"
+        ],
+        "description": "grpc_cpp_plugin — the gRPC C++ code generator, buildable as an mcpp host tool",
+        "language": "c++23",
+        "license": "Apache-2.0",
+        "modules": [],
+        "modules_source": "",
+        "name": "grpc-plugin",
+        "namespace": "",
+        "platforms": [
+          "linux",
+          "macos",
+          "windows"
+        ],
+        "sources": [
+          "src/compiler/cpp_generator.cc",
+          "src/compiler/proto_parser_helper.cc"
+        ],
+        "targets": {
+          "grpc_cpp_plugin": {
+            "kind": "bin"
+          }
+        },
+        "version": "1.83.0"
+      }
+    },
+    "https://raw.githubusercontent.com/mcpplibs/grpc-m/v1.83.0-3/plugin/src/grpc-plugin.cppm": {
+      "at": 1786040359,
+      "body": null
+    },
+    "https://raw.githubusercontent.com/mcpplibs/grpc-m/v1.83.0-3/plugin/src/grpc_cpp_plugin.cppm": {
+      "at": 1786040359,
+      "body": null
+    },
+    "https://raw.githubusercontent.com/mcpplibs/grpc-m/v1.83.0-3/rules/mcpp.toml": {
+      "at": 1786040360,
+      "body": {
+        "deps": [],
+        "description": "protoc + grpc_cpp_plugin codegen as an importable mcpp build rule",
+        "language": "c++23",
+        "license": "Apache-2.0",
+        "modules": [
+          "grpcgen"
+        ],
+        "modules_path": "src/grpcgen.cppm",
+        "modules_source": "export",
+        "name": "grpcgen",
+        "namespace": "",
+        "platforms": [
+          "linux",
+          "macos",
+          "windows"
+        ],
+        "sources": [],
+        "targets": {
+          "grpcgen": {
+            "kind": "lib"
+          }
+        },
+        "version": "1.83.0"
+      }
+    },
+    "https://raw.githubusercontent.com/mcpplibs/grpc-m/v1.83.0-3/rules/src/grpcgen.cppm": {
+      "at": 1786040360,
+      "body": "grpcgen"
+    },
+    "https://raw.githubusercontent.com/mcpplibs/grpc-m/v1.83.0-3/src/grpc.cppm": {
+      "at": 1786040358,
+      "body": "grpc"
+    },
+    "https://raw.githubusercontent.com/mcpplibs/imgui-m/0.0.6/mcpp.toml": {
+      "at": 1786040361,
+      "body": {
+        "deps": [
+          "compat"
+        ],
+        "description": "Dear ImGui core and GLFW/OpenGL3 backend modules for mcpp",
+        "language": "",
+        "license": "MIT",
+        "modules": [
+          "imgui.core"
+        ],
+        "modules_path": "src/core.cppm",
+        "modules_source": "export",
+        "name": "imgui",
+        "namespace": "",
+        "platforms": [],
+        "sources": [
+          "src/core.cppm",
+          "src/core.cppm",
+          "src/app.cppm",
+          "src/backends/backend.cppm",
+          "src/backends/platform_glfw.cppm",
+          "src/backends/renderer_opengl3.cppm",
+          "src/backends/glfw_opengl3.cppm",
+          "src/backends/headless.cppm",
+          "src/backends/glfw_impl.cpp",
+          "src/backends/opengl3_impl.cpp"
+        ],
+        "targets": {
+          "imgui": {
+            "kind": "lib"
+          }
+        },
+        "version": "0.0.6"
+      }
+    },
+    "https://raw.githubusercontent.com/mcpplibs/imgui-m/0.0.6/src/core.cppm": {
+      "at": 1786040361,
+      "body": "imgui.core"
+    },
+    "https://raw.githubusercontent.com/mcpplibs/imgui-m/1.92.8/mcpp.toml": {
+      "at": 1786040365,
+      "body": {
+        "deps": [
+          "compat"
+        ],
+        "description": "Dear ImGui 1.92.8 core and GLFW/OpenGL3 backend modules for mcpp",
+        "language": "",
+        "license": "MIT",
+        "modules": [
+          "imgui.core"
+        ],
+        "modules_path": "src/core.cppm",
+        "modules_source": "export",
+        "name": "imgui",
+        "namespace": "ocornut",
+        "platforms": [],
+        "sources": [
+          "src/core.cppm",
+          "src/core.cppm",
+          "src/backends/backend.cppm",
+          "src/backends/platform_glfw.cppm",
+          "src/backends/renderer_opengl3.cppm",
+          "src/backends/glfw_opengl3.cppm",
+          "src/backends/headless.cppm",
+          "src/backends/glfw_impl.cpp",
+          "src/backends/opengl3_impl.cpp"
+        ],
+        "targets": {
+          "imgui": {
+            "kind": "lib"
+          }
+        },
+        "version": "1.92.8"
+      }
+    },
+    "https://raw.githubusercontent.com/mcpplibs/imgui-m/1.92.8/src/core.cppm": {
+      "at": 1786040365,
+      "body": "imgui.core"
+    },
+    "https://raw.githubusercontent.com/mcpplibs/llama.cpp-m/b10069/mcpp.toml": {
+      "at": 1786040357,
+      "body": {
+        "deps": [],
+        "description": "C++23 module package for llama.cpp b10069",
+        "language": "c++23",
+        "license": "MIT",
+        "modules": [
+          "llamacpp"
+        ],
+        "modules_path": "src/llamacpp.cppm",
+        "modules_source": "export",
+        "name": "llamacpp",
+        "namespace": "ggml-org",
+        "platforms": [],
+        "sources": [
+          "third_party/llama.cpp/ggml/src/ggml.c",
+          "generated/ggml_cpp.cpp",
+          "third_party/llama.cpp/ggml/src/ggml-alloc.c",
+          "third_party/llama.cpp/ggml/src/ggml-backend.cpp",
+          "third_party/llama.cpp/ggml/src/ggml-backend-meta.cpp",
+          "third_party/llama.cpp/ggml/src/ggml-opt.cpp",
+          "third_party/llama.cpp/ggml/src/ggml-threading.cpp",
+          "third_party/llama.cpp/ggml/src/ggml-quants.c",
+          "third_party/llama.cpp/ggml/src/gguf.cpp",
+          "third_party/llama.cpp/ggml/src/ggml-backend-dl.cpp",
+          "third_party/llama.cpp/ggml/src/ggml-backend-reg.cpp",
+          "third_party/llama.cpp/ggml/src/ggml-cpu/ggml-cpu.c",
+          "generated/ggml-cpu_cpp.cpp",
+          "third_party/llama.cpp/ggml/src/ggml-cpu/binary-ops.cpp",
+          "third_party/llama.cpp/ggml/src/ggml-cpu/hbm.cpp",
+          "third_party/llama.cpp/ggml/src/ggml-cpu/ops.cpp",
+          "third_party/llama.cpp/ggml/src/ggml-cpu/quants.c",
+          "third_party/llama.cpp/ggml/src/ggml-cpu/repack.cpp",
+          "third_party/llama.cpp/ggml/src/ggml-cpu/traits.cpp",
+          "third_party/llama.cpp/ggml/src/ggml-cpu/unary-ops.cpp"
+        ],
+        "targets": {
+          "llama": {
+            "kind": "lib"
+          }
+        },
+        "version": "b10069"
+      }
+    },
+    "https://raw.githubusercontent.com/mcpplibs/llama.cpp-m/b10069/src/llama.cppm": {
+      "at": 1786040357,
+      "body": null
+    },
+    "https://raw.githubusercontent.com/mcpplibs/llama.cpp-m/b10069/src/llamacpp.cppm": {
+      "at": 1786040357,
+      "body": "llamacpp"
+    },
+    "https://raw.githubusercontent.com/mcpplibs/llama.cpp-m/v0.1.0/mcpp.toml": {
+      "at": 1786040361,
+      "body": {
+        "deps": [],
+        "description": "C++23 module package for llama.cpp b10069",
+        "language": "c++23",
+        "license": "MIT",
+        "modules": [
+          "llamacpp"
+        ],
+        "modules_path": "src/llamacpp.cppm",
+        "modules_source": "export",
+        "name": "llamacpp",
+        "namespace": "",
+        "platforms": [],
+        "sources": [
+          "third_party/llama.cpp/ggml/src/ggml.c",
+          "generated/ggml_cpp.cpp",
+          "third_party/llama.cpp/ggml/src/ggml-alloc.c",
+          "third_party/llama.cpp/ggml/src/ggml-backend.cpp",
+          "third_party/llama.cpp/ggml/src/ggml-backend-meta.cpp",
+          "third_party/llama.cpp/ggml/src/ggml-opt.cpp",
+          "third_party/llama.cpp/ggml/src/ggml-threading.cpp",
+          "third_party/llama.cpp/ggml/src/ggml-quants.c",
+          "third_party/llama.cpp/ggml/src/gguf.cpp",
+          "third_party/llama.cpp/ggml/src/ggml-backend-dl.cpp",
+          "third_party/llama.cpp/ggml/src/ggml-backend-reg.cpp",
+          "third_party/llama.cpp/ggml/src/ggml-cpu/ggml-cpu.c",
+          "generated/ggml-cpu_cpp.cpp",
+          "third_party/llama.cpp/ggml/src/ggml-cpu/binary-ops.cpp",
+          "third_party/llama.cpp/ggml/src/ggml-cpu/hbm.cpp",
+          "third_party/llama.cpp/ggml/src/ggml-cpu/ops.cpp",
+          "third_party/llama.cpp/ggml/src/ggml-cpu/quants.c",
+          "third_party/llama.cpp/ggml/src/ggml-cpu/repack.cpp",
+          "third_party/llama.cpp/ggml/src/ggml-cpu/traits.cpp",
+          "third_party/llama.cpp/ggml/src/ggml-cpu/unary-ops.cpp"
+        ],
+        "targets": {
+          "llama": {
+            "kind": "lib"
+          }
+        },
+        "version": "0.1.0"
+      }
+    },
+    "https://raw.githubusercontent.com/mcpplibs/llama.cpp-m/v0.1.0/src/llama.cppm": {
+      "at": 1786040362,
+      "body": null
+    },
+    "https://raw.githubusercontent.com/mcpplibs/llama.cpp-m/v0.1.0/src/llamacpp.cppm": {
+      "at": 1786040362,
+      "body": "llamacpp"
+    },
+    "https://raw.githubusercontent.com/mcpplibs/llmapi/0.2.8/mcpp.toml": {
+      "at": 1786040362,
+      "body": {
+        "deps": [
+          "mcpplibs"
+        ],
+        "description": "Modern C++ LLM API client with openai-compatible support",
+        "language": "",
+        "license": "Apache-2.0",
+        "modules": [
+          "mcpplibs.llmapi"
+        ],
+        "modules_path": "src/llmapi.cppm",
+        "modules_source": "export",
+        "name": "llmapi",
+        "namespace": "mcpplibs",
+        "platforms": [],
+        "sources": [],
+        "targets": {
+          "llmapi": {
+            "kind": "lib"
+          }
+        },
+        "version": "0.2.8"
+      }
+    },
+    "https://raw.githubusercontent.com/mcpplibs/llmapi/0.2.8/src/llmapi.cppm": {
+      "at": 1786040363,
+      "body": "mcpplibs.llmapi"
+    },
+    "https://raw.githubusercontent.com/mcpplibs/lua/0.0.3/mcpp.toml": {
+      "at": 1786040359,
+      "body": {
+        "deps": [
+          "lua"
+        ],
+        "description": "C++23 module wrapping the Lua 5.4 C API — `import mcpplibs.capi.lua;`",
+        "language": "",
+        "license": "Apache-2.0",
+        "modules": [
+          "mcpplibs.capi.lua"
+        ],
+        "modules_source": "description",
+        "name": "mcpplibs.capi.lua",
+        "namespace": "",
+        "platforms": [],
+        "sources": [
+          "src/capi/lua.cppm"
+        ],
+        "targets": {
+          "capi-lua": {
+            "kind": "lib"
+          },
+          "mcpplibs.capi.lua": {
+            "kind": "lib"
+          }
+        },
+        "version": "0.0.3"
+      }
+    },
+    "https://raw.githubusercontent.com/mcpplibs/tinyhttps/0.2.9/mcpp.toml": {
+      "at": 1786040364,
+      "body": {
+        "deps": [
+          "compat"
+        ],
+        "description": "Minimal C++23 HTTP/HTTPS client with SSE streaming support",
+        "language": "",
+        "license": "Apache-2.0",
+        "modules": [
+          "mcpplibs.tinyhttps"
+        ],
+        "modules_path": "src/tinyhttps.cppm",
+        "modules_source": "export",
+        "name": "tinyhttps",
+        "namespace": "mcpplibs",
+        "platforms": [],
+        "sources": [],
+        "targets": {
+          "tinyhttps": {
+            "kind": "lib"
+          }
+        },
+        "version": "0.2.9"
+      }
+    },
+    "https://raw.githubusercontent.com/mcpplibs/tinyhttps/0.2.9/src/tinyhttps.cppm": {
+      "at": 1786040364,
+      "body": "mcpplibs.tinyhttps"
+    },
+    "https://raw.githubusercontent.com/openxlings/libxpkg/0.0.53/mcpp.toml": {
+      "at": 1786040364,
+      "body": {
+        "deps": [
+          "mcpplibs.capi.lua"
+        ],
+        "description": "C++23 reference implementation of the xpkg V2 spec (multi-arch)",
+        "language": "",
+        "license": "Apache-2.0",
+        "modules": [
+          "mcpplibs.xpkg"
+        ],
+        "modules_path": "src/xpkg.cppm",
+        "modules_source": "export",
+        "name": "xpkg",
+        "namespace": "mcpplibs",
+        "platforms": [],
+        "sources": [],
+        "targets": {
+          "xpkg": {
+            "kind": "lib"
+          }
+        },
+        "version": "0.0.53"
+      }
+    },
+    "https://raw.githubusercontent.com/openxlings/libxpkg/0.0.53/src/xpkg.cppm": {
+      "at": 1786040365,
+      "body": "mcpplibs.xpkg"
+    }
+  },
+  "fetched_at": 1786040403,
+  "schema": 1
+}

@@ -1,0 +1,27 @@
+{
+  "_note": [
+    "Hand-curated consumption lines for packages where no rule can reach the",
+    "answer: the header name simply is not derivable from the package name",
+    "(abseil -> absl/…, bzip2 -> bzlib.h, xz -> lzma.h), and the test project",
+    "that uses them covers several packages at once so the file cannot be",
+    "attributed automatically either.",
+    "",
+    "Every line below was taken from this repository's own tests/examples,",
+    "i.e. from code CI compiles — not written from memory. Keys are package",
+    "ids; a value may be one line or a list of lines. Curated entries win over",
+    "every derivation, so keep them correct.",
+    "",
+    "Packages deliberately absent: the X11/XCB/Vulkan/GLX protocol and runtime",
+    "packages are transitive dependencies that no example includes directly,",
+    "so they show no consumption line rather than an invented one."
+  ],
+
+  "interfaces": {
+    "compat.abseil":   "#include \"absl/strings/str_cat.h\"",
+    "compat.bzip2":    "#include <bzlib.h>",
+    "compat.xz":       "#include <lzma.h>",
+    "compat.ffmpeg":   "#include <libavformat/avformat.h>",
+    "compat.freetype": "#include <ft2build.h>",
+    "compat.openblas": "#include <cblas.h>"
+  }
+}

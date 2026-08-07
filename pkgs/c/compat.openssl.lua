@@ -59,11 +59,22 @@ package = {
 
     xpm = {
         linux = {
+            -- glibc + linux-headers are here for the same reason make and perl
+            -- are: this package builds through its own Makefile with a bare
+            -- `cc`, so every tool it uses has to be something this descriptor
+            -- resolved, not something it hopes to find. See cc_override().
+            --
+            -- The specs are xim:gcc's own, character for character, and NOT
+            -- `@latest`. openssl's objects are linked into projects built by
+            -- that gcc, so the C library it compiles against has to be the one
+            -- the toolchain uses; `@latest` would be free to resolve a NEWER
+            -- glibc than the toolchain's and introduce symbols the final link
+            -- cannot satisfy. Matching the ranges means both resolve the same
+            -- node -- already on disk wherever gcc is, so this costs a
+            -- resolution rather than a download.
             deps = {
-                "xim:make@latest",
-                "xim:perl@latest",
-                "xim:glibc@2.39",
-                "xim:linux-headers@5.11.1",
+                "xim:make@latest", "xim:perl@latest",
+                "xim:glibc@>=2.39", "xim:linux-headers@5.11.1",
             },
             ["3.5.1"] = {
                 url = {
@@ -166,40 +177,80 @@ end
 -- inherit the resolved toolchain's sysroot flags — it just runs `cc`. On macOS
 -- the toolchain in PATH is xim's llvm, which has no macOS SDK wired up, so
 -- every compile would fail on <stdio.h>. Pin Apple's own driver, which finds
--- the SDK by itself. On Linux, use the same payload-first header order as
--- mcpp's GCC link model instead of relying on the active subos sysroot.
+-- the SDK by itself.
+--
+-- On linux the compiler used to be left to PATH, on the strength of "the xim
+-- gcc carries its own payload and is the right compiler to use". The binary is
+-- right; the assumption that it is SELF-SUFFICIENT is not. PATH reaches it
+-- through its xvm shim, and the shim injects `--sysroot=<subos>` resolved
+-- against **the subos the calling process resolved to** (xim-pkgindex
+-- pkgs/g/gcc.lua) -- whose own comment states the other half of the contract:
+--
+--     Consumers that bypass the shim supply their own header flags.
+--
+-- OpenSSL's Makefile is exactly such a consumer: it calls a bare `cc`. So the
+-- flags are this hook's business, the same way `make` and `perl` already are.
+--
+-- Leaving it ambient breaks whenever the resolved subos is not the one holding
+-- the toolchain. This hook runs with its cwd inside the CONSUMING PROJECT's
+-- xlings home (<proj>/.mcpp/.xlings/data/runtimedir/openssl-<v>), so the subos
+-- resolves to the PROJECT one, which holds only what that project installed --
+-- no usr/include, usually no usr/ at all. A `--sysroot` at an empty tree does
+-- not fall back to the default search, it SUPPRESSES it, and every compile
+-- dies a long way from the cause:
+--
+--     include/internal/common.h:14:11: fatal error: stdlib.h: No such file
+--     .../xim-x-gcc/16.1.0/lib/gcc/.../limits.h:210:15: fatal error: limits.h
+--
+-- (the second is gcc's own `#include_next`, which reads like a broken compiler
+-- and is not).
+--
+-- So resolve the C library the way make and perl are resolved -- from declared
+-- build deps -- and hand openssl the three things the payload gcc needs:
+-- headers (-isystem), crt objects (-B) and -lc (-L). `--sysroot` is re-pointed
+-- at the glibc payload root, which is NOT FHS-shaped and therefore contributes
+-- no search path of its own: it neutralises whatever the shim injected without
+-- opening a door to the host's /usr/include. A later --sysroot wins, so this
+-- needs no cooperation from the shim.
+--
+-- This is a local restatement of what mcpp's own link model does
+-- (src/build/flags.cppm, "payload-first, --sysroot fallback"). Duplicating a
+-- decision is a real cost; the alternative is worse, because openssl builds
+-- outside mcpp's compile rules by construction and has no other way to be told.
+-- If xim ever hands install() hooks a ready CC/CFLAGS, this should become that.
+local function libc_payloads()
+    local glibc = pkginfo.build_dep("xim:glibc") or pkginfo.build_dep("glibc")
+    local kern  = pkginfo.build_dep("xim:linux-headers")
+                  or pkginfo.build_dep("linux-headers")
+    local groot = glibc and glibc.path
+    local kroot = kern and kern.path
+    if not (groot and os.isfile(path.join(groot, "include", "stdlib.h"))) then
+        return nil
+    end
+    return groot, kroot
+end
+
 local function cc_override()
     if os.host() == "macosx" and os.isfile("/usr/bin/cc") then
         return "CC=/usr/bin/cc "
     end
-    if os.host() == "linux" then
-        local glibc_dir = pkginfo.dep_install_dir("glibc")
-        local linux_headers_dir = pkginfo.dep_install_dir("linux-headers")
-        local glibc_include = glibc_dir and path.join(glibc_dir, "include")
-        local linux_include = linux_headers_dir
-            and path.join(linux_headers_dir, "include")
+    if os.host() ~= "linux" then return "" end
 
-        -- install() 不继承 mcpp 的工具链参数，必须把两个 payload 的系统头
-        -- 文件目录显式传给 OpenSSL 的 Configure/Make。GCC 使用 -idirafter，
-        -- 以保留其 include_next 对内置包装头的语义。
-        if not glibc_include or not os.isdir(glibc_include) then
-            log.error("compat.openssl: glibc headers are unavailable at %s",
-                tostring(glibc_include))
-            return nil
-        end
-        if not linux_include or not os.isdir(linux_include) then
-            log.error("compat.openssl: Linux headers are unavailable at %s",
-                tostring(linux_include))
-            return nil
-        end
-
-        local header_flags = "-idirafter " .. sh_quote(glibc_include)
-            .. " -idirafter " .. sh_quote(linux_include)
-        return "CC=" .. sh_quote("gcc")
-            .. " CPPFLAGS=" .. sh_quote(header_flags)
-            .. " CFLAGS=" .. sh_quote(header_flags) .. " "
+    local groot, kroot = libc_payloads()
+    if not groot then
+        log.warn("openssl: no xim:glibc payload resolved; leaving CC to PATH"
+            .. " (fails if the active subos carries no libc headers)")
+        return ""
     end
-    return ""
+    local libdir = os.isdir(path.join(groot, "lib64"))
+                   and path.join(groot, "lib64") or path.join(groot, "lib")
+    local cc = "gcc --sysroot=" .. groot
+        .. " -isystem " .. path.join(groot, "include")
+    if kroot and os.isdir(path.join(kroot, "include")) then
+        cc = cc .. " -isystem " .. path.join(kroot, "include")
+    end
+    cc = cc .. " -B " .. libdir .. " -L " .. libdir
+    return "CC=" .. sh_quote(cc) .. " "
 end
 
 -- Does this perl actually RUN, with the core modules Configure opens with?

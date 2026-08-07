@@ -11,3 +11,6 @@ tests/examples/*/imgui.ini
 
 # 本地 git worktree(逐包验证时开的),不属于索引内容
 .worktrees/
+
+# plugin bytecode
+.xpkgindex/plugins/__pycache__/

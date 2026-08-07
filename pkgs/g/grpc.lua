@@ -6,9 +6,10 @@
 -- 索引(#151),满打满算一天,唯一的消费者是本仓的 tests/examples/grpc-module。
 -- 为一天的历史留一份永久重复条目不划算。
 --
--- 归档换成 v1.83.0-2:`src/` / `include/` / `third_party/` 与 v1.83.0 逐字节相同,
--- 多出的只有 plugin/(grpc_cpp_plugin)与 rules/(grpcgen)。v1.83.0 的 sha256 已
--- 经发布过,移动 tag 会让它校验失败(mcpp#349:发布数据不得让程序失效),故另起。
+-- 归档现为 v1.83.0-4。历次重打包中 `src/` / `include/` / `third_party/` 与
+-- v1.83.0 逐字节相同,变的只有 plugin/(grpc_cpp_plugin)、rules/(grpcgen)
+-- 与本包 manifest 的 codegen feature。已发布过的 sha256 不能靠移动 tag 复用
+-- (mcpp#349:发布数据不得让程序失效),所以每次重打包都另起一个 tag。
 -- Form A descriptor: the public gRPC package ships its own mcpp.toml, so this
 -- file carries metadata and a download address and nothing else. mcpp's default
 -- lookup finds <verdir>/*/mcpp.toml inside the GitHub source tarball wrap.
@@ -58,19 +59,19 @@ package = {
         linux = {
             ["1.83.0"] = {
                 url = {
-                    GLOBAL = "https://github.com/mcpplibs/grpc-m/archive/refs/tags/v1.83.0-3.tar.gz",
-                    CN     = "https://gitcode.com/mcpp-res/grpc/releases/download/1.83.0/grpc-m-1.83.0-3.tar.gz",
+                    GLOBAL = "https://github.com/mcpplibs/grpc-m/archive/refs/tags/v1.83.0-4.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/grpc/releases/download/1.83.0/grpc-m-1.83.0-4.tar.gz",
                 },
-                sha256 = "9a0514a325e348fb013a89bb7b1acb9b41f42d5e9f3c92cee8be788e1e48d74f",
+                sha256 = "991e9928e0fde0bd9a9fdc80229d976438f03d953b6679a6a71edab258c54baa",
             },
         },
         macosx = {
             ["1.83.0"] = {
                 url = {
-                    GLOBAL = "https://github.com/mcpplibs/grpc-m/archive/refs/tags/v1.83.0-3.tar.gz",
-                    CN     = "https://gitcode.com/mcpp-res/grpc/releases/download/1.83.0/grpc-m-1.83.0-3.tar.gz",
+                    GLOBAL = "https://github.com/mcpplibs/grpc-m/archive/refs/tags/v1.83.0-4.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/grpc/releases/download/1.83.0/grpc-m-1.83.0-4.tar.gz",
                 },
-                sha256 = "9a0514a325e348fb013a89bb7b1acb9b41f42d5e9f3c92cee8be788e1e48d74f",
+                sha256 = "991e9928e0fde0bd9a9fdc80229d976438f03d953b6679a6a71edab258c54baa",
             },
         },
         -- No windows block, and the reason is a DEPENDENCY rather than gRPC:

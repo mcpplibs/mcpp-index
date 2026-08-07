@@ -28,6 +28,7 @@ linux	godot-cpp	573
 linux	godot-cpp-module	549
 linux	godot-cpp-module-v10	392
 linux	godot-cpp-v10	504
+linux	grpc-codegen	3563
 linux	grpc-module	1701
 linux	gui-stack	81
 linux	imgui	6
@@ -89,6 +90,7 @@ macos	godot-cpp	333
 macos	godot-cpp-module	256
 macos	godot-cpp-module-v10	215
 macos	godot-cpp-v10	230
+macos	grpc-codegen	1715
 macos	grpc-module	880
 macos	gui-stack	1
 macos	imgui	4
@@ -152,6 +154,7 @@ windows	godot-cpp	742
 windows	godot-cpp-module	636
 windows	godot-cpp-module-v10	684
 windows	godot-cpp-v10	566
+windows	grpc-codegen	31
 windows	grpc-module	1
 windows	gui-stack	1
 windows	imgui	6

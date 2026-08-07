@@ -1,0 +1,23 @@
+// One line, and it finds every .proto under proto/ by itself.
+//
+// The rule comes from the `grpcgen` package, which this project does NOT
+// declare on linux/macOS: `grpc = { features = ["codegen"] }` re-exports it,
+// along with protoc and grpc_cpp_plugin. Which tools gRPC codegen needs is the
+// gRPC package's knowledge.
+import std;
+import mcpp;
+import grpcgen;
+
+int main() {
+    // No gRPC on windows — compat.openssl has no windows xpm entry, so the
+    // grpc package is linux/macOS only and there is nothing to generate. The
+    // guard is on the CALL, not the import: `import grpcgen;` is a
+    // compile-time dependency and cannot be conditional (docs/01 §4.2 forbids
+    // #if-guarded imports), so the module is declared on windows too — it is a
+    // pure C++23 rule package with no platform-limited dependencies of its own.
+    //
+    // Same shape as tests/examples/protobuf-protoc: return 0 so the member
+    // still builds, and let the test compile to a visible skip.
+    if (std::string_view(mcpp::target_os()) == "windows") return 0;
+    return grpcgen::generate_all() ? 0 : 1;
+}

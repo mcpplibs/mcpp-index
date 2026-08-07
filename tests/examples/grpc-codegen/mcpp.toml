@@ -1,0 +1,46 @@
+# grpc-codegen test project: the ONE-DEPENDENCY form of gRPC codegen.
+#
+# Its sibling tests/examples/grpc-module covers the module surface with no
+# codegen at all. This member covers what that one's header says is impossible:
+#
+#   "NO protoc output anywhere: gRPC's codegen needs host tools mcpp cannot
+#    hand a consumer"
+#
+# That stopped being true in mcpp 2026.8.6.2. `features = ["codegen"]` makes
+# the grpc package re-export protoc, grpc_cpp_plugin and the grpcgen rule to
+# whoever depends on it, so this manifest names ONE package and build.mcpp is
+# one line — and the .proto below is compiled from a stub that did not exist
+# when the build started.
+#
+# What this member protects, and what no other member can:
+#   * `reexport = true` really reaches a consumer through the published index
+#     (every other test of it is a path dependency in mcpp's own e2e);
+#   * `rerun_if_changed_glob` really drives `generate_all()` — the file list is
+#     never written down anywhere;
+#   * the host tools are built for the BUILD machine and produce stubs that
+#     link against the runtime this project links, which is the property the
+#     whole design exists to make inexpressible-to-get-wrong.
+#
+# linux + macOS only, for the same reason grpc-module is: compat.openssl has no
+# windows xpm entry, so on windows this member carries no dependency and the
+# test compiles to a no-op main().
+[package]
+name    = "grpc-codegen-tests"
+version = "0.1.0"
+
+# `cfg(unix)`, not one block per OS: the condition is "everywhere gRPC
+# resolves", and what excludes windows is compat.openssl having no xpm entry
+# there — a single fact, so a single predicate. mcpp evaluates `unix` as
+# family == "unix" (src/build/prepare.cppm, alongside any()/all()/not()).
+[target.'cfg(unix)'.dependencies.grpc]
+grpc = { version = "1.83.0", features = ["codegen"] }
+
+[target.'cfg(unix)'.build]
+cxxflags = ["-DHAVE_GRPC=1"]
+
+# windows carries the RULE but not gRPC itself, so build.mcpp compiles (its
+# `import grpcgen;` cannot be conditional) and then returns early. grpcgen is a
+# pure C++23 rule package — no openssl, no platform-limited dependency — which
+# is why it is available here while grpc is not.
+[target.'cfg(windows)'.dependencies.mcpplibs]
+grpcgen = { version = "1.83.0", host-module = true }

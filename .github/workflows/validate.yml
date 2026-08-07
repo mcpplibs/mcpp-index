@@ -404,7 +404,65 @@ jobs:
                      "$1" "$2" "$3" "$4" "$5" "$6" "$i" "$7"
             done
           }
-          if [ "$full" = 1 ]; then ln=3; mn=1; wn=2; else ln=1; mn=1; wn=1; fi
+          # Shard count follows the WORK, per platform, measured.
+          #
+          # It used to be binary — full run: linux 3 / macos 1 / windows 2,
+          # anything else: 1 each — which asserts two things that are not
+          # true. "A partial run is small": touching a widely consumed
+          # descriptor selects every member that consumes it, and this PR's
+          # `pkgs/c/compat.openssl.lua` selected four; one linux shard took
+          # grpc-codegen (3563s) and grpc-module (1701s) back to back and was
+          # cancelled at exactly 1h30m, the job cap. "A full macOS run fits in
+          # one shard": at 6922s measured it does not — it fit only while the
+          # total sat just under the cap, and the run that added grpc-codegen
+          # (1715s on macOS) pushed it to 1h30m20s.
+          #
+          # Sharding is not only a wall-clock lever. Each shard is its own job
+          # with its own `timeout-minutes`, so it is also how the work is made
+          # to FIT. That is the half the "macOS concurrency is 1, so extra
+          # shards run back to back" note above left out: back to back is fine
+          # when the alternative is not finishing.
+          #
+          # tests/member-timings.tsv already holds every member's measured
+          # cost and plan_shards.lua already packs by it (LPT), so the fan-out
+          # comes from the same table: sum this run's members for that
+          # platform and take one shard per ~70 minutes, which leaves ~20
+          # minutes of headroom under the 90-minute cap for a cold cache.
+          #
+          # The caps are where runner concurrency comes back in: linux 3 (the
+          # measured concurrency — a 4th shard would queue), macOS 2, windows
+          # 2. Past those, more shards buy fit that is already there and pay
+          # another checkout + mcpp download + cache restore.
+          #
+          # Full run, from the table: linux 13570s over 3 -> ~75min/shard
+          # (observed slowest 77), macOS 6922s over 2 -> ~57, windows 8043s
+          # over 2 -> ~67. linux is the tight one — its cap binds before the
+          # ~70-minute target does, so it is the first place to look if a
+          # cold full run starts brushing 90 again. The levers, in order:
+          # raise the linux cap to 4 (costs a queued runner), then the job
+          # timeout.
+          shards_for() {   # platform cap -> shard count
+            local secs
+            secs=$(XPLAT="$1" lua5.4 -e '
+              local plat = os.getenv("XPLAT")
+              local sel, all = {}, (os.getenv("MEMBERS") == "__ALL__")
+              if not all then
+                for m in (os.getenv("MEMBERS") or ""):gmatch("%S+") do sel[m] = true end
+              end
+              local total = 0
+              for line in io.lines("tests/member-timings.tsv") do
+                local p, m, s = line:match("^(%S+)\t(%S+)\t(%d+)$")
+                if p == plat and m and (all or sel[m]) then total = total + tonumber(s) end
+              end
+              print(total)')
+            local n=$(( secs / 4200 + 1 ))
+            [ "$n" -gt "$2" ] && n="$2"
+            echo "$1 work: ${secs}s (measured) -> $n shard(s)" >&2
+            echo "$n"
+          }
+          ln=$(shards_for linux 3)
+          mn=$(shards_for macos 2)
+          wn=$(shards_for windows 2)
           {
             printf '{"include":['
             emit linux   ubuntu-latest  linux-x86_64   tar.gz bin/mcpp     registry/bin/xlings     "$ln"

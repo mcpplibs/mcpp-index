@@ -1,0 +1,56 @@
+name: refresh-site-cache
+
+# Manual refresh of the data the site cannot read from `pkgs/` alone:
+# upstream repo metadata (stars, avatars, contributor logins) and, for Form A
+# packages, the upstream `mcpp.toml` that actually holds their build
+# information.
+#
+# Deliberately manual. The normal `deploy-site` build reads the committed
+# cache and touches no network, so a rendered page never depends on GitHub
+# being reachable at deploy time; this job is how new data gets in.
+#
+# Run it after adding a package or bumping one to a new upstream tag — the
+# cache is keyed by URL and a manifest URL contains the release tag, so a
+# bumped package fetches fresh while everything else is reused.
+
+on:
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: "Why (shows up in the commit message)"
+        required: false
+        default: "manual refresh"
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0          # same reason as deploy-site: history replay
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install xpkgindex
+        run: pip install git+https://github.com/openxlings/xpkgindex.git
+
+      - name: Refresh cache
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: xpkgindex generate . --output /tmp/site --refresh
+
+      - name: Commit if anything changed
+        run: |
+          if git diff --quiet -- .xpkgindex/cache; then
+            echo "cache unchanged"
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .xpkgindex/cache
+          git commit -m "chore(site): refresh upstream cache (${{ inputs.reason }})"
+          git push
