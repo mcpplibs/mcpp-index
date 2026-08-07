@@ -9,9 +9,9 @@
 -- so there resolve_make() falls back to PATH.
 --
 -- Because that build runs OUTSIDE mcpp's compile rules, it inherits none of
--- the resolved toolchain's flags — it just calls `cc`. Anything the host
--- toolchain needs spelled out (macOS SDK, ranlib) has to be handed to it
--- explicitly; see cc_override() and the install_sw step.
+-- the resolved toolchain's flags — it just calls `cc`. Anything the toolchain
+-- needs spelled out (Linux payload headers, macOS SDK, ranlib) has to be
+-- handed to it explicitly; see cc_override() and the install_sw step.
 --
 -- PERL. `./config` execs `Configure`, which is `#!/usr/bin/env perl` and opens
 -- with `use Config; use FindBin;`. So what this build needs is not "a perl
@@ -59,7 +59,12 @@ package = {
 
     xpm = {
         linux = {
-            deps = { "xim:make@latest", "xim:perl@latest" },
+            deps = {
+                "xim:make@latest",
+                "xim:perl@latest",
+                "xim:glibc@2.39",
+                "xim:linux-headers@5.11.1",
+            },
             ["3.5.1"] = {
                 url = {
                     GLOBAL = "https://github.com/openssl/openssl/releases/download/openssl-3.5.1/openssl-3.5.1.tar.gz",
@@ -161,11 +166,38 @@ end
 -- inherit the resolved toolchain's sysroot flags — it just runs `cc`. On macOS
 -- the toolchain in PATH is xim's llvm, which has no macOS SDK wired up, so
 -- every compile would fail on <stdio.h>. Pin Apple's own driver, which finds
--- the SDK by itself. Left alone elsewhere: on linux the xim gcc carries its
--- own payload and is the right compiler to use.
+-- the SDK by itself. On Linux, use the same payload-first header order as
+-- mcpp's GCC link model instead of relying on the active subos sysroot.
 local function cc_override()
     if os.host() == "macosx" and os.isfile("/usr/bin/cc") then
         return "CC=/usr/bin/cc "
+    end
+    if os.host() == "linux" then
+        local glibc_dir = pkginfo.dep_install_dir("glibc")
+        local linux_headers_dir = pkginfo.dep_install_dir("linux-headers")
+        local glibc_include = glibc_dir and path.join(glibc_dir, "include")
+        local linux_include = linux_headers_dir
+            and path.join(linux_headers_dir, "include")
+
+        -- install() 不继承 mcpp 的工具链参数，必须把两个 payload 的系统头
+        -- 文件目录显式传给 OpenSSL 的 Configure/Make。GCC 使用 -idirafter，
+        -- 以保留其 include_next 对内置包装头的语义。
+        if not glibc_include or not os.isdir(glibc_include) then
+            log.error("compat.openssl: glibc headers are unavailable at %s",
+                tostring(glibc_include))
+            return nil
+        end
+        if not linux_include or not os.isdir(linux_include) then
+            log.error("compat.openssl: Linux headers are unavailable at %s",
+                tostring(linux_include))
+            return nil
+        end
+
+        local header_flags = "-idirafter " .. sh_quote(glibc_include)
+            .. " -idirafter " .. sh_quote(linux_include)
+        return "CC=" .. sh_quote("gcc")
+            .. " CPPFLAGS=" .. sh_quote(header_flags)
+            .. " CFLAGS=" .. sh_quote(header_flags) .. " "
     end
     return ""
 end
@@ -312,6 +344,7 @@ local function _install_impl()
         perl_path, make, sh_quote(logf)))
 
     local cc = cc_override()
+    if not cc then return false end
     if not run("./config", logf, string.format(
         "%scd %s && %s./config --prefix=%s --libdir=lib %s >> %s 2>&1",
         perl_path, sh_quote(srcroot), cc, sh_quote(prefix), flags,
