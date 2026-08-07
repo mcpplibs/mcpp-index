@@ -9,9 +9,9 @@
 -- so there resolve_make() falls back to PATH.
 --
 -- Because that build runs OUTSIDE mcpp's compile rules, it inherits none of
--- the resolved toolchain's flags — it just calls `cc`. Anything the toolchain
--- needs spelled out (Linux payload headers, macOS SDK, ranlib) has to be
--- handed to it explicitly; see cc_override() and the install_sw step.
+-- the resolved toolchain's flags — it just calls `cc`. Anything the host
+-- toolchain needs spelled out (macOS SDK, ranlib) has to be handed to it
+-- explicitly; see cc_override() and the install_sw step.
 --
 -- PERL. `./config` execs `Configure`, which is `#!/usr/bin/env perl` and opens
 -- with `use Config; use FindBin;`. So what this build needs is not "a perl
@@ -395,7 +395,6 @@ local function _install_impl()
         perl_path, make, sh_quote(logf)))
 
     local cc = cc_override()
-    if not cc then return false end
     if not run("./config", logf, string.format(
         "%scd %s && %s./config --prefix=%s --libdir=lib %s >> %s 2>&1",
         perl_path, sh_quote(srcroot), cc, sh_quote(prefix), flags,
