@@ -4,7 +4,7 @@
 **本仓**: `mcpplibs/mcpp-index`
 **目标**:
 1. 收录 [`sewenew/redis-plus-plus`](https://github.com/sewenew/redis-plus-plus) **1.3.13** —— C++ Redis 客户端(同步 API),
-   文件 `pkgs/r/compat.redis-plus-plus.lua`。
+   文件 `pkgs/c/compat.redis-plus-plus.lua`。
 2. 收录其依赖 [`redis/hiredis`](https://github.com/redis/hiredis) **1.2.0** —— C 客户端,文件 `pkgs/c/compat.hiredis.lua`。
 3. 形态:两者均为 **Form A 源码 compat**;redis-plus-plus 额外带一个 Shape-E 特征
    (`hiredis_features.h` 用 `generated_files` 快照)。

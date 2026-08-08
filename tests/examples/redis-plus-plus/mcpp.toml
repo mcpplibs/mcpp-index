@@ -2,7 +2,7 @@
 # compat.hiredis) and asserts behavior under `mcpp test`. Part of the
 # mcpp-index self-referential workspace — the workspace-root `[indices]`
 # redirect points at this repo, so the dependency resolves to the checked-in
-# recipe (pkgs/r/compat.redis-plus-plus.lua).
+# recipe (pkgs/c/compat.redis-plus-plus.lua).
 #
 # The test is entirely OFFLINE and self-contained: it runs a minimal RESP
 # PING/SET server inside the test process (raw loopback sockets, same pattern
