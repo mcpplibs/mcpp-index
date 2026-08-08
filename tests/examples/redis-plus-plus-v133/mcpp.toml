@@ -1,0 +1,15 @@
+# redis-plus-plus v1.3.3 test project — the PRE-watershed structure: 15 sync
+# TUs (no redis_uri.cpp / patterns/redlock.cpp, no hiredis_features.h, flat
+# no_tls/tls.h). This is the member that proves the single-package union holds:
+# at 1.3.3 exactly two source globs match nothing (a warning, not an error) and
+# the build must still link and pass the same offline RESP assertions as the
+# 1.3.13 member (tests/examples/redis-plus-plus).
+#
+# The `compat` index redirect is inherited from the workspace root.
+# Part of the mcpp-index self-referential workspace.
+[package]
+name = "redis-plus-plus-v133-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+redis-plus-plus = "1.3.3"

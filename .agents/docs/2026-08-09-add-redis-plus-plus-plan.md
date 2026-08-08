@@ -44,12 +44,16 @@ include 布局(镜像上游 target_include_directories):
 - hiredis:`{ "*", "mcpp_generated/include" }`
 - redis-plus-plus:`{ "*/src", "*/src/sw/redis++/cxx17", "*/src/sw/redis++/no_tls", "mcpp_generated" }`
 
-## 3. 多版本友好性
+## 3. 多版本友好性(已跨分水岭落地)
 
 - hiredis 全部 1.x(1.2.0/1.3.0/1.4.1 已核实)源列表与布局一致 → 加版本 = xpm 加一行,`mcpp` 块不动。
 - redis-plus-plus **1.3.6+** 源列表与结构一致(1.3.13 vs 1.3.15 diff 为空)→ 加 1.3.14/1.3.15 = xpm 加一行。
-  **1.3.6 之前是分水岭**(1.3.3 缺 `redis_uri.cpp`/`shards.cpp`/`patterns/redlock.cpp`,且无
-  `hiredis_features.h`)→ 需要独立源列表,暂不支持。
+- **1.3.6 之前是分水岭,现已用「并集源列表」支持**:1.3.3 的同步核心是 15 个 TU(有 `shards.cpp`,缺
+  `redis_uri.cpp` 与 `patterns/redlock.cpp`),且无 `hiredis_features.h`(生成的快照头只是不被包含)、
+  `no_tls/tls.h` 是平铺的(`#include "tls.h"`,经 `*/src/sw/redis++/no_tls` include dir 命中)。因为 1.3.3 的
+  TU 是 1.3.13 17-TU 列表的**严格子集**,同一份 `sources` 对两个版本都成立:1.3.3 上恰好两个 glob 零命中
+  (警告而非错误)—— 与 compat.catch2 的「不相交并集」同款前提,这里更简单。复核新版本时须重查该子集关系
+  (长期解:per-version build blocks,mcpp-community/mcpp#290)。
 
 ## 4. feature 评估
 
@@ -66,8 +70,10 @@ include 布局(镜像上游 target_include_directories):
 
 ## 6. 验证结论(已实测)
 
-- 本地 `mcpp test -p redis-plus-plus`(2026.8.8.4 与 CI 钉版 2026.8.8.2 各跑一遍,后者冷沙箱):
-  `test result ok. 1 passed; 0 failed`,测试输出 `OK: PING -> PONG, SET -> OK`。
+- 本地 `mcpp test -p redis-plus-plus`(1.3.13)与 `mcpp test -p redis-plus-plus-v133`(1.3.3)
+  (2026.8.8.4 与 CI 钉版 2026.8.8.2 各跑一遍,后者冷沙箱):
+  均为 `test result ok. 1 passed; 0 failed`,测试输出 `OK: PING -> PONG, SET -> OK` —— 同一描述符、同一测试,
+  两个分水岭两侧的版本都构建、链接、运行通过。
 - 独立 clang++ 冒烟(-std=c++17 与 c++23):17/17 TU 编译通过;静态链接 hiredis 后,
   离线 ping 连接被拒场景抛 `sw::redis::IoError`(完整覆盖 URI 解析 → hiredis 连接 → 错误映射)。
 - lint 全绿:`mcpp xpkg parse`(本地与钉版)、`check_mirror_urls.lua`、`check_package_name.lua`、
@@ -81,4 +87,5 @@ include 布局(镜像上游 target_include_directories):
 - 测试自建迷你 RESP server(PING→+PONG、SET→+OK),无需 redis-server 进程、无网络依赖;
   带 5s 接收超时防 CI 挂起。
 - 纯字符串 url 的 GLOBAL 拉取在 CI 冷缓存下需要 GitHub 可达(与 spdlog 等成员相同条件)。
-- 后续加多版本时,只动 xpm 与消费者 member pin,`mcpp` 块与测试断言保持不变(1.3.6+ 线)。
+- 加 1.3.3 后,消费者侧有两个成员:`redis-plus-plus`(钉 1.3.13)与 `redis-plus-plus-v133`(钉 1.3.3),
+  各自覆盖分水岭一侧;1.3.3 构建会产生两个零命中 glob 警告(预期,catch2 v2 同款)。

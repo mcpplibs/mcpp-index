@@ -22,12 +22,23 @@
 -- configure_file(hiredis_features.h.in). hiredis 1.2.0 HAS
 -- redisEnableKeepAliveWithInterval, so the define is on.
 --
--- VERSION. 1.3.13 is the classic stable release (2024-10), the long-standing
--- vcpkg/conan default before the 2025 releases. 1.3.6+ share this exact source
--- list and structure (diffed against 1.3.15: identical .cpp set), so adding
--- 1.3.14/1.3.15 later is just one more xpm row. Versions before 1.3.6 differ
--- (no redis_uri.cpp / shards.cpp / redlock.cpp, no hiredis_features.h) and
--- would need their own source list.
+-- VERSION / MULTI-VERSION UNION. Two versions today, one on each side of the
+-- source-structure watershed:
+--   * 1.3.13 (2024-10) — the classic stable release, long-standing vcpkg/conan
+--     default before the 2025 releases; 1.3.6+ all share this exact source list
+--     (diffed against 1.3.15: identical .cpp set), so 1.3.14/1.3.15 later are
+--     just new xpm rows.
+--   * 1.3.3 (2021-12) — the pre-watershed structure: 15 sync TUs (it lacks
+--     redis_uri.cpp and patterns/redlock.cpp, both added in 1.3.6+), no
+--     hiredis_features.h (connection.h never includes it, so the generated
+--     header is simply unused), and its no_tls stub is FLAT (no_tls/tls.h,
+--     included as "tls.h") instead of namespaced.
+-- One mcpp block serves both because the two layouts are a SUBSET/SUPERSET
+-- pair (same trick as compat.catch2's disjoint union, but simpler): the source
+-- list below is 1.3.13's 17 TUs, and for 1.3.3 exactly two globs match nothing
+-- (redis_uri.cpp, patterns/redlock.cpp) — a zero-hit glob is a warning, not an
+-- error. Re-check the table when adding a version (mcpp-community/mcpp#290 is
+-- the long-term per-version build blocks that removes this assumption).
 --
 -- No CN mirror yet: plain-string upstream URL (see compat.hiredis).
 package = {
@@ -41,18 +52,30 @@ package = {
 
     xpm = {
         linux = {
+            ["1.3.3"] = {
+                url    = "https://github.com/sewenew/redis-plus-plus/archive/refs/tags/1.3.3.tar.gz",
+                sha256 = "23689059b7ba50fcd8fa673c5dbb7bdb010b896b14abad5aa80a5ec48eb64f26",
+            },
             ["1.3.13"] = {
                 url    = "https://github.com/sewenew/redis-plus-plus/archive/refs/tags/1.3.13.tar.gz",
                 sha256 = "678a61898ed72f0c692102c7ce103a1bcae1e6ff85a4ad03e6002c1ba8fe1e08",
             },
         },
         macosx = {
+            ["1.3.3"] = {
+                url    = "https://github.com/sewenew/redis-plus-plus/archive/refs/tags/1.3.3.tar.gz",
+                sha256 = "23689059b7ba50fcd8fa673c5dbb7bdb010b896b14abad5aa80a5ec48eb64f26",
+            },
             ["1.3.13"] = {
                 url    = "https://github.com/sewenew/redis-plus-plus/archive/refs/tags/1.3.13.tar.gz",
                 sha256 = "678a61898ed72f0c692102c7ce103a1bcae1e6ff85a4ad03e6002c1ba8fe1e08",
             },
         },
         windows = {
+            ["1.3.3"] = {
+                url    = "https://github.com/sewenew/redis-plus-plus/archive/refs/tags/1.3.3.tar.gz",
+                sha256 = "23689059b7ba50fcd8fa673c5dbb7bdb010b896b14abad5aa80a5ec48eb64f26",
+            },
             ["1.3.13"] = {
                 url    = "https://github.com/sewenew/redis-plus-plus/archive/refs/tags/1.3.13.tar.gz",
                 sha256 = "678a61898ed72f0c692102c7ce103a1bcae1e6ff85a4ad03e6002c1ba8fe1e08",
