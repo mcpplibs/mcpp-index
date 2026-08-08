@@ -1,0 +1,9 @@
+# SQLite test project: depends on compat.sqlite3 (built from source via this
+# repo's own index) and asserts behavior under `mcpp test`. Part of the
+# mcpp-index self-referential workspace.
+[package]
+name = "sqlite3-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+sqlite3 = "3.45.3"
