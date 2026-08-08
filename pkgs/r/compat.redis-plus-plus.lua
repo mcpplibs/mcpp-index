@@ -125,6 +125,15 @@ package = {
             ["mcpp_generated/sw/redis++/hiredis_features.h"] = "#define REDIS_PLUS_PLUS_HAS_redisEnableKeepAliveWithInterval\n",
         },
 
+        -- 1.3.3's utils.h declares `uint16_t crc16(...)` WITHOUT including
+        -- <cstdint> (upstream added the include in 1.3.6+). clang's libc++
+        -- pulls it in transitively, but the vendored gcc/libstdc++ sysroot
+        -- does not, so the 1.3.3 build fails with "'uint16_t' does not name a
+        -- type" on the linux-default (gcc) CI leg. -include cstdint forces the
+        -- header into every C++ TU; harmless for 1.3.13 (which includes it
+        -- itself). Recipe repair with CI regression evidence (PR #188).
+        cxxflags = { "-include", "cstdint" },
+
         windows = {
             -- Upstream CMake adds NOMINMAX to its static-lib target on WIN32;
             -- ws2_32 arrives through compat.hiredis' propagated ldflags.

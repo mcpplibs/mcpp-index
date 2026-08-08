@@ -13,3 +13,9 @@ version = "0.1.0"
 
 [dependencies.compat]
 redis-plus-plus = "1.3.3"
+
+# 1.3.3's utils.h uses uint16_t without including <cstdint> (fixed upstream in
+# 1.3.6+); under the vendored gcc/libstdc++ sysroot the test TU (which includes
+# <sw/redis++/redis++.h> first) needs the same force-include the package uses.
+[build]
+cxxflags = ["-include", "cstdint"]

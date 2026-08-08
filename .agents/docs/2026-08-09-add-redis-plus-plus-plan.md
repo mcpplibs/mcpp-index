@@ -89,3 +89,7 @@ include 布局(镜像上游 target_include_directories):
 - 纯字符串 url 的 GLOBAL 拉取在 CI 冷缓存下需要 GitHub 可达(与 spdlog 等成员相同条件)。
 - 加 1.3.3 后,消费者侧有两个成员:`redis-plus-plus`(钉 1.3.13)与 `redis-plus-plus-v133`(钉 1.3.3),
   各自覆盖分水岭一侧;1.3.3 构建会产生两个零命中 glob 警告(预期,catch2 v2 同款)。
+- **CI 修复(PR #188 实测)**:linux-default(gcc/vendored libstdc++)腿报
+  `'uint16_t' does not name a type` —— 1.3.3 的 `utils.h` 用 `uint16_t` 却未包含 `<cstdint>`
+  (1.3.6+ 才补)。包级 `cxxflags = { "-include", "cstdint" }` 修复包自身,v133 成员
+  `[build] cxxflags` 修复测试 TU(先包含 redis++.h);对 1.3.13 无害。
