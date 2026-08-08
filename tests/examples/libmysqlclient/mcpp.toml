@@ -1,0 +1,16 @@
+[package]
+name = "libmysqlclient-tests"
+version = "0.1.0"
+
+# libmysqlclient 的 mcpp 源码构建目前只验证 Linux/macOS。
+[target.'cfg(linux)'.dependencies.compat]
+libmysqlclient = "8.4.6"
+
+[target.'cfg(linux)'.build]
+cxxflags = ["-DHAVE_LIBMYSQLCLIENT=1"]
+
+[target.'cfg(macos)'.dependencies.compat]
+libmysqlclient = "8.4.6"
+
+[target.'cfg(macos)'.build]
+cxxflags = ["-DHAVE_LIBMYSQLCLIENT=1"]

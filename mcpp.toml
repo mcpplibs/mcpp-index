@@ -44,6 +44,8 @@ members = [
     "tests/examples/imgui-module",
     "tests/examples/imgui-window",
     "tests/examples/marzer.tomlplusplus",
+    "tests/examples/libmysqlclient",
+    "tests/examples/mysql-connector-cpp",
     "tests/examples/nlohmann.json",
     "tests/examples/openblas",
     "tests/examples/openssl",

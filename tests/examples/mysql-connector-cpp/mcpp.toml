@@ -1,0 +1,17 @@
+[package]
+name = "mysql-connector-cpp-tests"
+version = "0.1.0"
+
+# Connector/C++ 同时构建 X DevAPI 和 JDBC，并依赖源码构建的
+# compat.libmysqlclient/compat.openssl，因此目前只覆盖 Linux/macOS。
+[target.'cfg(linux)'.dependencies.compat]
+mysql-connector-cpp = "26.7.0"
+
+[target.'cfg(linux)'.build]
+cxxflags = ["-DHAVE_MYSQL_CONNECTOR_CPP=1"]
+
+[target.'cfg(macos)'.dependencies.compat]
+mysql-connector-cpp = "26.7.0"
+
+[target.'cfg(macos)'.build]
+cxxflags = ["-DHAVE_MYSQL_CONNECTOR_CPP=1"]

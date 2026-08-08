@@ -1,0 +1,239 @@
+-- compat.mysql-connector-cpp -- MySQL Connector/C++ X DevAPI and JDBC.
+package = {
+    spec        = "1",
+    namespace   = "compat",
+    name        = "mysql-connector-cpp",
+    description = "MySQL Connector/C++ X DevAPI and JDBC (static, source-built)",
+    licenses    = {"GPL-2.0-only", "Universal-FOSS-exception-1.0"},
+    repo        = "https://github.com/mysql/mysql-connector-cpp",
+    type        = "package",
+
+    xpm = {
+        linux = {
+            deps = { "xim:cmake@latest", "xim:make@latest" },
+            ["26.7.0"] = {
+                url = "https://github.com/mysql/mysql-connector-cpp/archive/refs/tags/26.7.0.tar.gz",
+                sha256 = "b2299862eefc33fd71c0aac68328305671805fc955e6bd2578ef205c10f98550",
+            },
+        },
+        macosx = {
+            deps = { "xim:cmake@latest" },
+            ["26.7.0"] = {
+                url = "https://github.com/mysql/mysql-connector-cpp/archive/refs/tags/26.7.0.tar.gz",
+                sha256 = "b2299862eefc33fd71c0aac68328305671805fc955e6bd2578ef205c10f98550",
+            },
+        },
+    },
+
+    mcpp = {
+        language     = "c++23",
+        import_std   = false,
+        sources      = { "mcpp_mysql_connector_cpp_anchor.c" },
+        include_dirs = { "include" },
+        targets      = { ["mysql_connector_cpp"] = { kind = "lib" } },
+        deps = {
+            ["compat.libmysqlclient"] = "8.4.6",
+            ["compat.openssl"]        = "3.5.1",
+        },
+
+        linux = {
+            ldflags = {
+                "-Llib", "-l:libmysqlcppconnx-static.a",
+                "-l:libmysqlcppconn-static.a", "-lresolv",
+            },
+        },
+        macosx = {
+            ldflags = {
+                "-Llib", "-lmysqlcppconnx-static",
+                "-lmysqlcppconn-static", "-lresolv",
+            },
+        },
+    },
+}
+
+import("xim.libxpkg.pkginfo")
+import("xim.libxpkg.log")
+
+local function sh_quote(value)
+    return "'" .. tostring(value):gsub("'", "'\\''") .. "'"
+end
+
+local function resolve_tool(dep, name, fallback)
+    local pkg = pkginfo.build_dep(dep)
+    if pkg and pkg.bin then
+        local candidate = path.join(pkg.bin, name)
+        if os.isfile(candidate) then return candidate end
+    end
+    return fallback
+end
+
+local function tail_lines(file, count)
+    local ok, content = pcall(io.readfile, file)
+    if not ok or not content then return "<log unavailable>" end
+    local lines = {}
+    for line in (tostring(content) .. "\n"):gmatch("(.-)\n") do
+        lines[#lines + 1] = line
+    end
+    return table.concat(lines, "\n", math.max(1, #lines - count + 1), #lines)
+end
+
+local function run(step, logf, command)
+    -- xlings 的 os.exec 通过返回值报告非零退出；pcall 只负责捕获 Lua 错误。
+    local invoked, result, reason, code =
+        pcall(os.exec, string.format("bash -c %s", sh_quote(command)))
+    if invoked and result then return true end
+    local err = invoked and (tostring(reason) .. " " .. tostring(code))
+                        or tostring(result)
+    log.error("%s", "compat.mysql-connector-cpp: " .. step .. " failed ("
+             .. tostring(err) .. ")\n--- last 40 lines of " .. logf .. " ---\n"
+             .. tail_lines(logf, 40))
+    return false
+end
+
+local function find_source_root()
+    local ifile = pkginfo.install_file()
+    local roots = {}
+    if ifile then roots[#roots + 1] = tostring(ifile):replace(".tar.gz", "") end
+    roots[#roots + 1] = "mysql-connector-cpp-" .. pkginfo.version()
+    for _, root in ipairs(roots) do
+        if os.isfile(path.join(root, "CMakeLists.txt")) then return root end
+    end
+end
+
+local function find_mysql_source_root(prefix)
+    local direct = path.join(prefix, "libmysqlclient-8.4.6")
+    if os.isfile(path.join(direct, "mcpp.toml")) then return direct end
+    for _, manifest in ipairs(os.files(path.join(prefix, "**", "mcpp.toml")) or {}) do
+        local root = path.directory(manifest)
+        if os.isfile(path.join(root, "include", "mysql.h")) then return root end
+    end
+end
+
+local function patch_internal_compression_helper(srcroot)
+    local source = path.join(srcroot, "common", "session.cc")
+    local content = io.readfile(source)
+    local replacement =
+        "\nstatic TCPIP_options::compression_algorithm_t get_compression_algorithm(std::string alg)"
+    if content:find(replacement, 1, true) then return true end
+
+    local signature =
+        "\nTCPIP_options::compression_algorithm_t get_compression_algorithm%(std::string alg%)"
+    local patched, count = content:gsub(signature, replacement)
+    if count ~= 1 then
+        log.error("compat.mysql-connector-cpp: expected one compression helper, found "
+                  .. tostring(count))
+        return false
+    end
+    io.writefile(source, patched)
+    return true
+end
+
+function install()
+    local srcroot = find_source_root()
+    local mysql = pkginfo.install_dir("compat:libmysqlclient", "8.4.6")
+    local openssl = pkginfo.install_dir("compat:openssl", "3.5.1")
+    if not srcroot or not mysql or not openssl then
+        log.error("compat.mysql-connector-cpp: source/dependency prefix not found")
+        return false
+    end
+
+    local mysql_src = find_mysql_source_root(mysql)
+    if not mysql_src then
+        log.error("compat.mysql-connector-cpp: libmysqlclient Form A source root not found")
+        return false
+    end
+
+    local prefix = pkginfo.install_dir()
+    local builddir = path.join(srcroot, "mcpp-build")
+    local logf = path.join(prefix, "mcpp_mysql_connector_cpp_build.log")
+    os.tryrm(prefix)
+    os.mkdir(prefix)
+    os.tryrm(builddir)
+
+    -- 此 helper 只在 session.cc 内使用；内部链接避免与 MySQL 8.4
+    -- libmysqlclient 中同签名的实现发生静态链接符号冲突。
+    if not patch_internal_compression_helper(srcroot) then return false end
+
+    -- Connector/C++ 的配置阶段只要求能找到一个 mysqlclient archive；真正的
+    -- libmysqlclient.a 会在最终消费时由 mcpp 的依赖图链接。这里的探测库不安装。
+    local mysql_probe = path.join(builddir, "mysqlclient-probe")
+    os.mkdir(path.join(mysql_probe, "lib"))
+    os.mkdir(path.join(mysql_probe, "include"))
+    local probe_src = path.join(mysql_probe, "probe.c")
+    local probe_obj = path.join(mysql_probe, "probe.o")
+    local probe_lib = path.join(mysql_probe, "lib", "libmysqlclient.a")
+    io.writefile(probe_src, "int mcpp_mysqlclient_probe(void) { return 0; }\n")
+    local probe_command = string.format(
+        "cp -R %s/. %s/ && cp %s/*.h %s/ && "
+        .. "cc -c %s -o %s && ar rcs %s %s",
+        sh_quote(path.join(mysql_src, "include")),
+        sh_quote(path.join(mysql_probe, "include")),
+        sh_quote(path.join(mysql_src, "generated")),
+        sh_quote(path.join(mysql_probe, "include")),
+        sh_quote(probe_src), sh_quote(probe_obj), sh_quote(probe_lib), sh_quote(probe_obj))
+    if not run("mysqlclient probe archive", logf,
+               probe_command .. " >" .. sh_quote(logf) .. " 2>&1") then
+        return false
+    end
+
+    local cmake = resolve_tool("xim:cmake", "cmake", "cmake")
+    local make = resolve_tool("xim:make", "make", "make")
+    local jobs = (os.default_njob and os.default_njob()) or 4
+    local clean_env = "env -u CPPFLAGS -u CFLAGS -u CXXFLAGS -u LDFLAGS "
+    local compiler = ""
+    if os.host() == "macosx" then
+        -- Connector 在 project() 前启动 bootstrap CMake；必须通过环境变量
+        -- 将最低系统版本同步给 bootstrap 及其后续的内置依赖构建。
+        clean_env = clean_env .. "MACOSX_DEPLOYMENT_TARGET=14.0 "
+        compiler = "-DCMAKE_C_COMPILER=/usr/bin/cc -DCMAKE_CXX_COMPILER=/usr/bin/c++ "
+                .. "-DCMAKE_OSX_DEPLOYMENT_TARGET=14.0 "
+    end
+
+    local configure = string.format(
+        "%s%s -S %s -B %s -G \"Unix Makefiles\" "
+        .. "-DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=%s "
+        .. "-DCMAKE_INSTALL_LIBDIR=lib -DCMAKE_MAKE_PROGRAM=%s "
+        .. "-DBUILD_STATIC=ON -DWITH_JDBC=ON -DWITH_TESTS=OFF "
+        .. "-DWITH_DOC=OFF -DWITH_HEADER_CHECKS=OFF "
+        .. "-DOPENSSL_USE_STATIC_LIBS=TRUE -DWITH_SSL=%s "
+        .. "-DMYSQL_INCLUDE_DIR=%s/include -DMYSQL_LIB_DIR=%s/lib "
+        .. "-DMYSQLCLIENT_STATIC_LINKING=ON -DMYSQLCLIENT_STATIC_BINDING=ON %s",
+        clean_env, sh_quote(cmake), sh_quote(srcroot), sh_quote(builddir),
+        sh_quote(prefix), sh_quote(make), sh_quote(openssl),
+        sh_quote(mysql_probe), sh_quote(mysql_probe), compiler)
+    if not run("CMake configure", logf, configure .. " >" .. sh_quote(logf) .. " 2>&1") then
+        return false
+    end
+
+    local build = string.format(
+        "%s%s --build %s --target connector -- -j%d >>%s 2>&1",
+        clean_env, sh_quote(cmake), sh_quote(builddir), jobs, sh_quote(logf))
+    if not run("X DevAPI build", logf, build) then return false end
+
+    local jdbc_build = string.format(
+        "%s%s --build %s --target connector-jdbc -- -j%d >>%s 2>&1",
+        clean_env, sh_quote(cmake), sh_quote(builddir), jobs, sh_quote(logf))
+    if not run("JDBC build", logf, jdbc_build) then return false end
+
+    local install_cmd = string.format(
+        "%s%s --install %s --component XDevAPIDev >>%s 2>&1",
+        clean_env, sh_quote(cmake), sh_quote(builddir), sh_quote(logf))
+    if not run("X DevAPI install", logf, install_cmd) then return false end
+
+    local jdbc_install = string.format(
+        "%s%s --install %s --component JDBCDev >>%s 2>&1",
+        clean_env, sh_quote(cmake), sh_quote(builddir), sh_quote(logf))
+    if not run("JDBC install", logf, jdbc_install) then return false end
+
+    if not os.isfile(path.join(prefix, "include", "mysqlx", "xdevapi.h"))
+       or not os.isfile(path.join(prefix, "include", "mysql", "jdbc.h"))
+       or not os.isfile(path.join(prefix, "lib", "libmysqlcppconnx-static.a"))
+       or not os.isfile(path.join(prefix, "lib", "libmysqlcppconn-static.a")) then
+        log.error("compat.mysql-connector-cpp: incomplete X DevAPI/JDBC install")
+        return false
+    end
+
+    io.writefile(path.join(prefix, "mcpp_mysql_connector_cpp_anchor.c"),
+                 "int mcpp_compat_mysql_connector_cpp_anchor(void) { return 0; }\n")
+    return true
+end
