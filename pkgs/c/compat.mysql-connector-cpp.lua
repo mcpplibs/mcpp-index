@@ -266,8 +266,8 @@ function install()
         -- libtool, and a GNU libtool earlier on PATH (conda/homebrew) breaks
         -- the archive merge. cmake/make come from xim by absolute path and
         -- cc/c++ are pinned below, so system-only PATH is safe here.
-        clean_env = clean_env .. "PATH=/usr/bin:/bin:/usr/sbin:/sbin:"
-                                .. (os.getenv("PATH") or "") .. " "
+        local system_path = "/usr/bin:/bin:/usr/sbin:/sbin:" .. (os.getenv("PATH") or "")
+        clean_env = clean_env .. "PATH=" .. sh_quote(system_path) .. " "
         compiler = "-DCMAKE_C_COMPILER=/usr/bin/cc -DCMAKE_CXX_COMPILER=/usr/bin/c++ "
                 .. "-DCMAKE_OSX_DEPLOYMENT_TARGET=14.0 "
     end
