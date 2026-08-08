@@ -84,9 +84,11 @@ local function run(step, logf, command)
     if invoked and result then return true end
     local err = invoked and (tostring(reason) .. " " .. tostring(code))
                         or tostring(result)
-    log.error("%s", "compat.mysql-connector-cpp: " .. step .. " failed ("
+    local msg = "compat.mysql-connector-cpp: " .. step .. " failed ("
              .. tostring(err) .. ")\n--- last 40 lines of " .. logf .. " ---\n"
-             .. tail_lines(logf, 40))
+             .. tail_lines(logf, 40)
+    log.error("%s", msg)
+    print(msg)  -- [diag] surface to Actions stdout
     return false
 end
 
@@ -129,15 +131,25 @@ local function patch_internal_compression_helper(srcroot)
 end
 
 function install()
+    -- [diag] diagnostics to stdout; strip before finalizing
+    print("compat.mysql-connector-cpp: install() start pkg_name=" .. tostring(pkginfo.name())
+          .. " version=" .. tostring(pkginfo.version())
+          .. " install_file=" .. tostring(pkginfo.install_file())
+          .. " install_dir=" .. tostring(pkginfo.install_dir())
+          .. " deps=" .. tostring(pkginfo.deps_list()))
+    local ok, result = pcall(function()
     local srcroot = find_source_root()
     local mysql = pkginfo.install_dir("compat:libmysqlclient", "8.4.6")
     local openssl = pkginfo.install_dir("compat:openssl", "3.5.1")
+    print("compat.mysql-connector-cpp: [diag] srcroot=" .. tostring(srcroot)
+          .. " mysql=" .. tostring(mysql) .. " openssl=" .. tostring(openssl))
     if not srcroot or not mysql or not openssl then
         log.error("compat.mysql-connector-cpp: source/dependency prefix not found")
         return false
     end
 
     local mysql_src = find_mysql_source_root(mysql)
+    print("compat.mysql-connector-cpp: [diag] mysql_src=" .. tostring(mysql_src))
     if not mysql_src then
         log.error("compat.mysql-connector-cpp: libmysqlclient Form A source root not found")
         return false
@@ -146,6 +158,8 @@ function install()
     local prefix = pkginfo.install_dir()
     local builddir = path.join(srcroot, "mcpp-build")
     local logf = path.join(prefix, "mcpp_mysql_connector_cpp_build.log")
+    print("compat.mysql-connector-cpp: [diag] prefix=" .. tostring(prefix)
+          .. " builddir=" .. tostring(builddir) .. " logf=" .. tostring(logf))
     os.tryrm(prefix)
     os.mkdir(prefix)
     os.tryrm(builddir)
@@ -235,5 +249,11 @@ function install()
 
     io.writefile(path.join(prefix, "mcpp_mysql_connector_cpp_anchor.c"),
                  "int mcpp_compat_mysql_connector_cpp_anchor(void) { return 0; }\n")
-    return true
+        end)
+    if not ok then
+        print("compat.mysql-connector-cpp: UNCAUGHT Lua error: " .. tostring(result))
+        return false
+    end
+    print("compat.mysql-connector-cpp: install() result=" .. tostring(result))
+    return result
 end
