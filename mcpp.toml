@@ -57,6 +57,7 @@ members = [
     "tests/examples/opencv-module-dnn",
     "tests/examples/opencv-module-unifont",
     "tests/examples/re2",
+    "tests/examples/redis-plus-plus",
     "tests/examples/sdl2",
     "tests/examples/spdlog",
     "tests/examples/freetype",

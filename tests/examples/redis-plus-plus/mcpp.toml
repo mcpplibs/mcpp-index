@@ -1,0 +1,17 @@
+# redis-plus-plus test project: consumes compat.redis-plus-plus (and through it
+# compat.hiredis) and asserts behavior under `mcpp test`. Part of the
+# mcpp-index self-referential workspace — the workspace-root `[indices]`
+# redirect points at this repo, so the dependency resolves to the checked-in
+# recipe (pkgs/r/compat.redis-plus-plus.lua).
+#
+# The test is entirely OFFLINE and self-contained: it runs a minimal RESP
+# PING/SET server inside the test process (raw loopback sockets, same pattern
+# as the websocket member) and drives the sw::redis::Redis sync client against
+# it — a full protocol round trip with no redis-server binary and no network
+# access.
+[package]
+name = "redis-plus-plus-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+redis-plus-plus = "1.3.13"
