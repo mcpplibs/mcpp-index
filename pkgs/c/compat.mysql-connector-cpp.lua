@@ -10,14 +10,23 @@ package = {
 
     xpm = {
         linux = {
-            deps = { "xim:cmake@latest", "xim:make@latest" },
+            deps = {
+                "compat:libmysqlclient@8.4.6",
+                "compat:openssl@3.5.1",
+                "xim:cmake@latest",
+                "xim:make@latest",
+            },
             ["26.7.0"] = {
                 url = "https://github.com/mysql/mysql-connector-cpp/archive/refs/tags/26.7.0.tar.gz",
                 sha256 = "b2299862eefc33fd71c0aac68328305671805fc955e6bd2578ef205c10f98550",
             },
         },
         macosx = {
-            deps = { "xim:cmake@latest" },
+            deps = {
+                "compat:libmysqlclient@8.4.6",
+                "compat:openssl@3.5.1",
+                "xim:cmake@latest",
+            },
             ["26.7.0"] = {
                 url = "https://github.com/mysql/mysql-connector-cpp/archive/refs/tags/26.7.0.tar.gz",
                 sha256 = "b2299862eefc33fd71c0aac68328305671805fc955e6bd2578ef205c10f98550",
@@ -53,26 +62,27 @@ package = {
 
 import("xim.libxpkg.pkginfo")
 import("xim.libxpkg.log")
--- [diag] file-based diagnostics: written under $HOME/.mcpp/registry so the
--- validate.yml `find ... -name 'mcpp_*_build.log'` dump surfaces it even when
--- the hook's stdout/stderr are swallowed by xlings. No-op outside the xlings
--- runtime (plain `path` global missing), so descriptor-executing lint helpers
--- stay green. Strip before finalizing.
-local diagf
-local function diag(msg)
+-- Hook diagnostics: xlings swallows install-hook stdout and log.error, so a
+-- failure used to surface only as an empty E_INTERNAL with no build log. This
+-- hook writes a step trace + the failing reason to
+-- $HOME/.mcpp/registry/data/mcpp_mysql_connector_cpp_build.log, which
+-- validate.yml's `find ... -name 'mcpp_*_build.log'` dump tail-prints. It is a
+-- no-op outside the xlings runtime (the `path` global is absent there), so the
+-- descriptor-executing lint helpers stay green.
+local hook_logf
+local function hook_log(msg)
     if type(path) ~= "table" then return end
-    if not diagf then
+    if not hook_logf then
         local home = os.getenv and os.getenv("HOME") or "/tmp"
-        diagf = home .. "/.mcpp/registry/data/mcpp_mysql_connector_cpp_build.log"
+        hook_logf = home .. "/.mcpp/registry/data/mcpp_mysql_connector_cpp_build.log"
     end
-    local f = io.open(diagf, "a")
+    local f = io.open(hook_logf, "a")
     if f then
         f:write(os.date("%H:%M:%S") .. " " .. tostring(msg) .. "\n")
         f:close()
     end
 end
-diag("descriptor loaded; cwd=" .. tostring(os.getcwd and os.getcwd()))
-
+hook_log("descriptor loaded")
 
 local function sh_quote(value)
     return "'" .. tostring(value):gsub("'", "'\\''") .. "'"
@@ -108,6 +118,7 @@ local function run(step, logf, command)
              .. tostring(err) .. ")\n--- last 40 lines of " .. logf .. " ---\n"
              .. tail_lines(logf, 40)
     log.error("%s", msg)
+    hook_log(msg)
     return false
 end
 
@@ -130,6 +141,30 @@ local function find_mysql_source_root(prefix)
     end
 end
 
+-- `pkginfo.install_dir` scans only the member-local xpkgs roots; a dependency
+-- that was installed into the shared registry cache (e.g. compat.openssl built
+-- by the sibling libmysqlclient member and reused here without a member-local
+-- copy) is invisible to it and comes back nil. Fall back to the known xpkgs
+-- roots before giving up.
+local function find_dep_install_dir(dep_name, dep_version)
+    local dir = pkginfo.install_dir(dep_name, dep_version)
+    if dir then return dir end
+    local ns, bare = dep_name:match("^([^:]+):(.+)$")
+    if not ns then return nil end
+    local store = ns .. "-x-" .. bare
+    local pfx = pkginfo.install_dir()
+    local roots = {}
+    if pfx then roots[#roots + 1] = path.directory(path.directory(pfx)) end
+    local home = os.getenv and os.getenv("MCPP_HOME") or ""
+    if home == "" then home = ((os.getenv and os.getenv("HOME")) or "") .. "/.mcpp" end
+    roots[#roots + 1] = path.join(home, "registry/data/xpkgs")
+    for _, root in ipairs(roots) do
+        local cand = path.join(root, store, dep_version)
+        if os.isdir(cand) then return cand end
+    end
+    return nil
+end
+
 local function patch_internal_compression_helper(srcroot)
     local source = path.join(srcroot, "common", "session.cc")
     local content = io.readfile(source)
@@ -150,22 +185,26 @@ local function patch_internal_compression_helper(srcroot)
 end
 
 function install()
-    diag("install() called; install_file=" .. tostring(pkginfo.install_file())
+    hook_log("install() called; install_file=" .. tostring(pkginfo.install_file())
          .. " install_dir=" .. tostring(pkginfo.install_dir())
          .. " deps=" .. tostring(pkginfo.deps_list()))
     local ok, result = pcall(function()
     local srcroot = find_source_root()
-    local mysql = pkginfo.install_dir("compat:libmysqlclient", "8.4.6")
-    local openssl = pkginfo.install_dir("compat:openssl", "3.5.1")
-    diag("step1 srcroot=" .. tostring(srcroot) .. " mysql=" .. tostring(mysql)
-         .. " openssl=" .. tostring(openssl))
+    local mysql = find_dep_install_dir("compat:libmysqlclient", "8.4.6")
+    local openssl = find_dep_install_dir("compat:openssl", "3.5.1")
+    hook_log("srcroot=" .. tostring(srcroot) .. " mysql=" .. tostring(mysql)
+             .. " openssl=" .. tostring(openssl))
     if not srcroot or not mysql or not openssl then
-        log.error("compat.mysql-connector-cpp: source/dependency prefix not found")
+        local why = "source/dependency prefix not found (srcroot="
+                    .. tostring(srcroot) .. " mysql=" .. tostring(mysql)
+                    .. " openssl=" .. tostring(openssl) .. ")"
+        log.error("compat.mysql-connector-cpp: %s", why)
+        hook_log(why)
         return false
     end
 
     local mysql_src = find_mysql_source_root(mysql)
-    diag("step2 mysql_src=" .. tostring(mysql_src))
+    hook_log("mysql_src=" .. tostring(mysql_src))
     if not mysql_src then
         log.error("compat.mysql-connector-cpp: libmysqlclient Form A source root not found")
         return false
@@ -174,8 +213,8 @@ function install()
     local prefix = pkginfo.install_dir()
     local builddir = path.join(srcroot, "mcpp-build")
     local logf = path.join(prefix, "mcpp_mysql_connector_cpp_build.log")
-    diag("step3 prefix=" .. tostring(prefix) .. " builddir=" .. tostring(builddir)
-         .. " logf=" .. tostring(logf))
+    hook_log("prefix=" .. tostring(prefix) .. " builddir=" .. tostring(builddir)
+             .. " logf=" .. tostring(logf))
     os.tryrm(prefix)
     os.mkdir(prefix)
     os.tryrm(builddir)
@@ -215,6 +254,11 @@ function install()
         -- Connector 在 project() 前启动 bootstrap CMake；必须通过环境变量
         -- 将最低系统版本同步给 bootstrap 及其后续的内置依赖构建。
         clean_env = clean_env .. "MACOSX_DEPLOYMENT_TARGET=14.0 "
+        -- Sanitize PATH: the connector's CMake merge step invokes Apple's
+        -- libtool, and a GNU libtool earlier on PATH (conda/homebrew) breaks
+        -- the archive merge. cmake/make come from xim by absolute path and
+        -- cc/c++ are pinned below, so system-only PATH is safe here.
+        clean_env = clean_env .. "PATH=/usr/bin:/bin:/usr/sbin:/sbin "
         compiler = "-DCMAKE_C_COMPILER=/usr/bin/cc -DCMAKE_CXX_COMPILER=/usr/bin/c++ "
                 .. "-DCMAKE_OSX_DEPLOYMENT_TARGET=14.0 "
     end
@@ -267,9 +311,9 @@ function install()
                  "int mcpp_compat_mysql_connector_cpp_anchor(void) { return 0; }\n")
         end)
     if not ok then
-        diag("UNCAUGHT Lua error: " .. tostring(result))
+        hook_log("UNCAUGHT Lua error: " .. tostring(result))
         return false
     end
-    diag("install() result=" .. tostring(result))
+    hook_log("install() result=" .. tostring(result))
     return result
 end
