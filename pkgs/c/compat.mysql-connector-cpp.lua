@@ -90,9 +90,17 @@ end
 
 local function resolve_tool(dep, name, fallback)
     local pkg = pkginfo.build_dep(dep)
-    if pkg and pkg.bin then
-        local candidate = path.join(pkg.bin, name)
-        if os.isfile(candidate) then return candidate end
+    if pkg then
+        local candidates = {}
+        if pkg.bin then candidates[#candidates + 1] = path.join(pkg.bin, name) end
+        if pkg.path then
+            -- macOS .app bundles (xim cmake ships CMake.app/Contents/bin).
+            candidates[#candidates + 1] =
+                path.join(pkg.path, name .. ".app", "Contents", "bin", name)
+        end
+        for _, cand in ipairs(candidates) do
+            if os.isfile(cand) then return cand end
+        end
     end
     return fallback
 end
@@ -258,7 +266,8 @@ function install()
         -- libtool, and a GNU libtool earlier on PATH (conda/homebrew) breaks
         -- the archive merge. cmake/make come from xim by absolute path and
         -- cc/c++ are pinned below, so system-only PATH is safe here.
-        clean_env = clean_env .. "PATH=/usr/bin:/bin:/usr/sbin:/sbin "
+        clean_env = clean_env .. "PATH=/usr/bin:/bin:/usr/sbin:/sbin:"
+                                .. (os.getenv("PATH") or "") .. " "
         compiler = "-DCMAKE_C_COMPILER=/usr/bin/cc -DCMAKE_CXX_COMPILER=/usr/bin/c++ "
                 .. "-DCMAKE_OSX_DEPLOYMENT_TARGET=14.0 "
     end
