@@ -53,6 +53,19 @@ package = {
 
 import("xim.libxpkg.pkginfo")
 import("xim.libxpkg.log")
+-- [diag] file-based diagnostics: written under $HOME/.mcpp/registry so the
+-- validate.yml `find ... -name 'mcpp_*_build.log'` dump surfaces it even when
+-- the hook's stdout/stderr are swallowed by xlings. Strip before finalizing.
+local diagf = path.join(os.getenv("HOME") or "/tmp", ".mcpp/registry/data/mcpp_mysql_connector_cpp_build.log")
+local function diag(msg)
+    local f = io.open(diagf, "a")
+    if f then
+        f:write(os.date("%H:%M:%S") .. " " .. tostring(msg) .. "\n")
+        f:close()
+    end
+end
+diag("descriptor loaded; cwd=" .. tostring(os.getcwd and os.getcwd()))
+
 
 local function sh_quote(value)
     return "'" .. tostring(value):gsub("'", "'\\''") .. "'"
@@ -88,7 +101,6 @@ local function run(step, logf, command)
              .. tostring(err) .. ")\n--- last 40 lines of " .. logf .. " ---\n"
              .. tail_lines(logf, 40)
     log.error("%s", msg)
-    print(msg)  -- [diag] surface to Actions stdout
     return false
 end
 
@@ -131,25 +143,22 @@ local function patch_internal_compression_helper(srcroot)
 end
 
 function install()
-    -- [diag] diagnostics to stdout; strip before finalizing
-    print("compat.mysql-connector-cpp: install() start pkg_name=" .. tostring(pkginfo.name())
-          .. " version=" .. tostring(pkginfo.version())
-          .. " install_file=" .. tostring(pkginfo.install_file())
-          .. " install_dir=" .. tostring(pkginfo.install_dir())
-          .. " deps=" .. tostring(pkginfo.deps_list()))
+    diag("install() called; install_file=" .. tostring(pkginfo.install_file())
+         .. " install_dir=" .. tostring(pkginfo.install_dir())
+         .. " deps=" .. tostring(pkginfo.deps_list()))
     local ok, result = pcall(function()
     local srcroot = find_source_root()
     local mysql = pkginfo.install_dir("compat:libmysqlclient", "8.4.6")
     local openssl = pkginfo.install_dir("compat:openssl", "3.5.1")
-    print("compat.mysql-connector-cpp: [diag] srcroot=" .. tostring(srcroot)
-          .. " mysql=" .. tostring(mysql) .. " openssl=" .. tostring(openssl))
+    diag("step1 srcroot=" .. tostring(srcroot) .. " mysql=" .. tostring(mysql)
+         .. " openssl=" .. tostring(openssl))
     if not srcroot or not mysql or not openssl then
         log.error("compat.mysql-connector-cpp: source/dependency prefix not found")
         return false
     end
 
     local mysql_src = find_mysql_source_root(mysql)
-    print("compat.mysql-connector-cpp: [diag] mysql_src=" .. tostring(mysql_src))
+    diag("step2 mysql_src=" .. tostring(mysql_src))
     if not mysql_src then
         log.error("compat.mysql-connector-cpp: libmysqlclient Form A source root not found")
         return false
@@ -158,8 +167,8 @@ function install()
     local prefix = pkginfo.install_dir()
     local builddir = path.join(srcroot, "mcpp-build")
     local logf = path.join(prefix, "mcpp_mysql_connector_cpp_build.log")
-    print("compat.mysql-connector-cpp: [diag] prefix=" .. tostring(prefix)
-          .. " builddir=" .. tostring(builddir) .. " logf=" .. tostring(logf))
+    diag("step3 prefix=" .. tostring(prefix) .. " builddir=" .. tostring(builddir)
+         .. " logf=" .. tostring(logf))
     os.tryrm(prefix)
     os.mkdir(prefix)
     os.tryrm(builddir)
@@ -251,9 +260,9 @@ function install()
                  "int mcpp_compat_mysql_connector_cpp_anchor(void) { return 0; }\n")
         end)
     if not ok then
-        print("compat.mysql-connector-cpp: UNCAUGHT Lua error: " .. tostring(result))
+        diag("UNCAUGHT Lua error: " .. tostring(result))
         return false
     end
-    print("compat.mysql-connector-cpp: install() result=" .. tostring(result))
+    diag("install() result=" .. tostring(result))
     return result
 end
