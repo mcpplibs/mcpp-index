@@ -55,9 +55,16 @@ import("xim.libxpkg.pkginfo")
 import("xim.libxpkg.log")
 -- [diag] file-based diagnostics: written under $HOME/.mcpp/registry so the
 -- validate.yml `find ... -name 'mcpp_*_build.log'` dump surfaces it even when
--- the hook's stdout/stderr are swallowed by xlings. Strip before finalizing.
-local diagf = path.join(os.getenv("HOME") or "/tmp", ".mcpp/registry/data/mcpp_mysql_connector_cpp_build.log")
+-- the hook's stdout/stderr are swallowed by xlings. No-op outside the xlings
+-- runtime (plain `path` global missing), so descriptor-executing lint helpers
+-- stay green. Strip before finalizing.
+local diagf
 local function diag(msg)
+    if type(path) ~= "table" then return end
+    if not diagf then
+        local home = os.getenv and os.getenv("HOME") or "/tmp"
+        diagf = home .. "/.mcpp/registry/data/mcpp_mysql_connector_cpp_build.log"
+    end
     local f = io.open(diagf, "a")
     if f then
         f:write(os.date("%H:%M:%S") .. " " .. tostring(msg) .. "\n")
