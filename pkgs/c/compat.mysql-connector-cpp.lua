@@ -11,7 +11,7 @@ package = {
     xpm = {
         linux = {
             deps = {
-                "compat:libmysqlclient@8.4.6",
+                "compat:libmysqlclient@8.4.6.1",
                 "compat:openssl@3.5.1",
                 "xim:cmake@latest",
                 "xim:make@latest",
@@ -23,7 +23,7 @@ package = {
         },
         macosx = {
             deps = {
-                "compat:libmysqlclient@8.4.6",
+                "compat:libmysqlclient@8.4.6.1",
                 "compat:openssl@3.5.1",
                 "xim:cmake@latest",
             },
@@ -41,7 +41,7 @@ package = {
         include_dirs = { "include" },
         targets      = { ["mysql_connector_cpp"] = { kind = "lib" } },
         deps = {
-            ["compat.libmysqlclient"] = "8.4.6",
+            ["compat.libmysqlclient"] = "8.4.6.1",
             ["compat.openssl"]        = "3.5.1",
         },
 
@@ -141,7 +141,7 @@ local function find_source_root()
 end
 
 local function find_mysql_source_root(prefix)
-    local direct = path.join(prefix, "libmysqlclient-8.4.6")
+    local direct = path.join(prefix, "libmysqlclient-8.4.6.1")
     if os.isfile(path.join(direct, "mcpp.toml")) then return direct end
     for _, manifest in ipairs(os.files(path.join(prefix, "**", "mcpp.toml")) or {}) do
         local root = path.directory(manifest)
@@ -198,7 +198,7 @@ function install()
          .. " deps=" .. tostring(pkginfo.deps_list()))
     local ok, result = pcall(function()
     local srcroot = find_source_root()
-    local mysql = find_dep_install_dir("compat:libmysqlclient", "8.4.6")
+    local mysql = find_dep_install_dir("compat:libmysqlclient", "8.4.6.1")
     local openssl = find_dep_install_dir("compat:openssl", "3.5.1")
     hook_log("srcroot=" .. tostring(srcroot) .. " mysql=" .. tostring(mysql)
              .. " openssl=" .. tostring(openssl))
