@@ -20,16 +20,4 @@ package = {
         ['0.2.1'] = { url = "https://github.com/Aimol-l/Tensorvia-cpu/releases/download/v0.2.1/tensorvia-cpu-0.2.1.tar.gz", sha256 = "cdca93b2dbdcb46e163e787e3da735427d0cf4f3e8f9a4551bd1f50237389420" },
         },
     },
-
-    mcpp = {
-        schema = "0.1",
-        language = "c++23",
-        import_std = true,
-        modules = {
-            "tensorvia",
-        },
-        deps = {
-        },
-        manifest = "mcpp.toml",
-    },
 }
