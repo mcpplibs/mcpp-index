@@ -253,3 +253,28 @@ tests and Linux/macOS descriptor checks cannot prove the Windows ABI.
 Document the exact commands, client version, observed assertions, and Windows
 CI job URL in the task handoff. State explicitly that Connector/C++ Windows
 hook design and gRPC remain deferred.
+
+### Local Wine evidence (2026-08-17)
+
+- The authoritative mcpp release was queried from `xlings-res/mcpp` with
+  `gh api repos/xlings-res/mcpp/releases/tags/2026.8.17.1`: tag
+  `2026.8.17.1`, published `2026-08-16T22:02:47Z`. The downloaded Windows
+  asset `mcpp-2026.8.17.1-windows-x86_64.zip` matched both the GitHub asset
+  digest and its `.sha256` file:
+  `35520f09b4c87d855711e172390ea0ecd0a7fd58c739e9a17d329d0fb6335c08`.
+- Under Wine `11.14`, the Windows binary reported `mcpp 2026.8.17.1` and,
+  with an isolated `MCPP_HOME` plus the simulated VS/SDK paths, resolved
+  `llvm@20.1.7` as `x86_64-pc-windows-msvc`. The initial unisolated run
+  correctly exposed the MinGW fallback separately: GNU ld cannot consume the
+  MSVC-style `-llibssl/-llibcrypto` names.
+- A cold `asio-ssl` project reached the Windows `compat.openssl` install hook,
+  but Wine's MSVC wrapper stalled OpenSSL `Configure` while probing
+  `cl -dM -E -x c /dev/null`; no `libssl.lib` or `libcrypto.lib` was produced.
+  Strawberry Perl `5.40.4.1` was independently verified under Wine with
+  `Locale::Maketext::Simple` and the required core modules, so Perl discovery
+  was not the remaining blocker.
+- A cold `libmysqlclient` project reached the same OpenSSL hook and stopped at
+  the same Wine compiler-probe boundary, before the Form A client archive
+  could compile or link. Therefore both local Windows results are **blocked**,
+  not passes or package regressions; native Windows CI is still required for
+  final ABI and runtime evidence.
