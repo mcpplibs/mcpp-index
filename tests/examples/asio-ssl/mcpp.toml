@@ -21,9 +21,8 @@
 # is configured for ITS namespace, so an unmerged compat descriptor can be
 # exercised through a published consumer that activates it.
 #
-# linux + macOS only: compat.openssl has no windows xpm entry (prebuilt MSVC
-# archives not yet published), so on windows the member carries no dependency
-# and tests/ssl.cpp compiles to a no-op main().
+# Linux, macOS, and Windows all resolve compat.openssl and execute the real
+# TLS handshake below. A selected member must always execute the real test.
 [package]
 name    = "asio-ssl-tests"
 version = "0.1.0"
@@ -38,4 +37,11 @@ cxxflags = ["-DHAVE_ASIO_SSL=1"]
 asio = { version = "1.38.1", features = ["ssl"] }
 
 [target.'cfg(macos)'.build]
+cxxflags = ["-DHAVE_ASIO_SSL=1"]
+
+# Windows 也必须执行真实 TLS 测试；OpenSSL 的 Windows 构建由包描述负责。
+[target.'cfg(windows)'.dependencies.chriskohlhoff]
+asio = { version = "1.38.1", features = ["ssl"] }
+
+[target.'cfg(windows)'.build]
 cxxflags = ["-DHAVE_ASIO_SSL=1"]
