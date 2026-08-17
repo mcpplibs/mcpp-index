@@ -82,6 +82,7 @@ members = [
     "tests/examples/vulkan",
     "tests/examples/websocket",
     "tests/examples/uwebsockets",
+    "tests/examples/wil",
     "tests/examples/websocket-features",
     "tests/examples/tray",
     "tests/examples/xxhash",
