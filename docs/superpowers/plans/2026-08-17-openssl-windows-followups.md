@@ -133,7 +133,7 @@ Add the repaired archive to the Windows block in
         windows = {
             ["8.4.6"] = {
                 url = "https://github.com/wellwei/libmysqlclient/archive/refs/tags/8.4.6.tar.gz",
-                sha256 = "c9b9fb9b926d38bf011812782eabaaa94a675901039dc1c77ede9f3cd4afbda0",
+                sha256 = "8ef7f8a63d21e38b06bfbdb9bd3c4660cc063b535c3f13cdd9451295b0ba9c15",
             },
         },
 ```
