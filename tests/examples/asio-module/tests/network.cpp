@@ -1,5 +1,6 @@
-// TCP (acceptor/socket, async_read/async_write) and UDP (datagram send/receive)
-// over the imported module surface.
+// TCP (acceptor/socket, async_read/async_write), the free asio::async_connect
+// over a sequence of candidate endpoints, and UDP (datagram send/receive) over
+// the imported module surface.
 import std;
 import asio;
 
@@ -98,5 +99,44 @@ int main() {
         });
 
     udp_io.run();
-    return !udp_failure && receive_done && send_done ? 0 : 8;
+    if (udp_failure || !receive_done || !send_done) return 8;
+
+    // --- free asio::async_connect over a candidate sequence ---
+    //
+    // The member socket.async_connect above takes ONE endpoint; the free
+    // function takes a range and tries each in turn, which is what a consumer
+    // hands a resolver's results_type to. Assert that semantics directly:
+    // an unreachable candidate first, the live acceptor second. Kept hermetic
+    // (no DNS) so it cannot fail for reasons that have nothing to do with the
+    // module surface.
+    asio::io_context connect_io;
+    asio::ip::tcp::acceptor live(connect_io, {asio::ip::address_v4::loopback(), 0});
+    asio::ip::tcp::socket accepted_side(connect_io);
+    asio::ip::tcp::socket connecting(connect_io);
+    live.async_accept(accepted_side, [](const std::error_code&) {});
+
+    const std::vector<asio::ip::tcp::endpoint> candidates{
+        // Port 1 on loopback: nothing listens there, so this candidate is
+        // refused and async_connect must move on rather than give up.
+        {asio::ip::address_v4::loopback(), 1},
+        live.local_endpoint(),
+    };
+
+    std::error_code connect_ec{std::make_error_code(std::errc::not_supported)};
+    asio::ip::tcp::endpoint chosen;
+    bool connect_done = false;
+
+    asio::async_connect(connecting, candidates,
+        [&](const std::error_code& ec, const asio::ip::tcp::endpoint& ep) {
+            connect_ec = ec;
+            chosen = ep;
+            connect_done = true;
+        });
+
+    connect_io.run();
+    if (!connect_done || connect_ec) return 9;
+    if (chosen != live.local_endpoint()) return 10;   // it must have skipped port 1
+    if (!connecting.is_open()) return 11;
+
+    return 0;
 }
