@@ -1,0 +1,14 @@
+# uSockets test project. compat.libuv arrives transitively as the event loop.
+[package]
+name = "usockets-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+usockets = "0.8.8"
+
+[build]
+# libusockets.h changes the layout of us_loop_t under LIBUS_USE_LIBUV and gates
+# its SSL declarations on LIBUS_NO_SSL, so a consumer must be compiled with the
+# SAME pair the library was — an index descriptor's cflags reach only the
+# package's own TUs. Getting this wrong does not fail to build; it corrupts.
+defines = ["LIBUS_USE_LIBUV", "LIBUS_NO_SSL"]

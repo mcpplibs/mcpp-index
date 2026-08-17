@@ -1,0 +1,14 @@
+# uWebSockets test project. compat.usockets and compat.libuv arrive transitively.
+[package]
+name = "uwebsockets-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+uwebsockets = "20.79.0"
+
+[build]
+# uWS is header-only: the consumer's TU is where it is actually compiled, so the
+# consumer is where these have to be declared. LIBUS_* must match how uSockets
+# was built (us_loop_t layout, SSL declarations); UWS_NO_ZLIB matches the
+# package's zlib-free build.
+defines = ["LIBUS_USE_LIBUV", "LIBUS_NO_SSL", "UWS_NO_ZLIB"]

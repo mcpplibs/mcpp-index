@@ -1,0 +1,9 @@
+# SQLiteCpp test project: consumes compat.sqlitecpp from this repo's own index.
+# compat.sqlite3 arrives transitively — the wrapper depends on it because
+# upstream's own build gets SQLite from a git submodule the tarball omits.
+[package]
+name = "sqlitecpp-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+sqlitecpp = "3.3.3"
