@@ -29,6 +29,16 @@ package = {
                 sha256 = "e50e5da37baa26fff56952d85bd8e33b577be7a534e67df0b8e10a5cc8507af8",
             },
         },
+        windows = {
+            ["8.4.6"] = {
+                url = "https://github.com/wellwei/libmysqlclient/archive/refs/tags/8.4.6.tar.gz",
+                sha256 = "27decd6716591d84a6f765a3d63fcd24031373841c684369445b83a840b38bea",
+            },
+            ["8.4.6.1"] = {
+                url = "https://github.com/wellwei/libmysqlclient/archive/refs/tags/8.4.6.1.tar.gz",
+                sha256 = "e50e5da37baa26fff56952d85bd8e33b577be7a534e67df0b8e10a5cc8507af8",
+            },
+        },
     },
 
     -- 无 `mcpp` 字段：默认查找会命中归档根目录的 mcpp.toml。
