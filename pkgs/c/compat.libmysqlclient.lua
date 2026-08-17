@@ -12,19 +12,19 @@ package = {
         linux = {
             ["8.4.6"] = {
                 url = "https://github.com/wellwei/libmysqlclient/archive/refs/tags/8.4.6.tar.gz",
-                sha256 = "d7c60f6a296a262793ed8517bbfd0b1a32a9456eb1eff6aeb8751c8ae67fe8ba",
+                sha256 = "0c2d4b1b25d828bc40f760c50f7d49a3b6377073ac352ed5a52c2de45c7a2cad",
             },
         },
         macosx = {
             ["8.4.6"] = {
                 url = "https://github.com/wellwei/libmysqlclient/archive/refs/tags/8.4.6.tar.gz",
-                sha256 = "d7c60f6a296a262793ed8517bbfd0b1a32a9456eb1eff6aeb8751c8ae67fe8ba",
+                sha256 = "0c2d4b1b25d828bc40f760c50f7d49a3b6377073ac352ed5a52c2de45c7a2cad",
             },
         },
         windows = {
             ["8.4.6"] = {
                 url = "https://github.com/wellwei/libmysqlclient/archive/refs/tags/8.4.6.tar.gz",
-                sha256 = "d7c60f6a296a262793ed8517bbfd0b1a32a9456eb1eff6aeb8751c8ae67fe8ba",
+                sha256 = "0c2d4b1b25d828bc40f760c50f7d49a3b6377073ac352ed5a52c2de45c7a2cad",
             },
         },
     },

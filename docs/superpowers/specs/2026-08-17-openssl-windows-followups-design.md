@@ -53,8 +53,8 @@ Selecting a member while compiling a no-op test is not support evidence.
   OpenSSL 3.5.1 `ms/applink.c` implementation at `include/openssl/applink.c`,
   because the static OpenSSL package does not install that source file.
 - The repaired `8.4.6` archive has SHA-256
-  `d7c60f6a296a262793ed8517bbfd0b1a32a9456eb1eff6aeb8751c8ae67fe8ba` and
-  resolves to source commit `616b7ba67a9f5a0393cc015923fba68ab50f7b3e`.
+  `0c2d4b1b25d828bc40f760c50f7d49a3b6377073ac352ed5a52c2de45c7a2cad` and
+  resolves to source commit `52a26090e360817850dd41e88056c98599fda6b7`.
 
 ## 4. Design
 
