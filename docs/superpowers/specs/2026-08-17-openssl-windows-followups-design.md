@@ -48,11 +48,13 @@ Selecting a member while compiling a no-op test is not support evidence.
 - The Asio descriptor already has a Windows archive and an `ssl` feature whose
   dependency is `compat.openssl`; only the test member is Unix-gated.
 - The libmysqlclient Form A archive contains Windows source, flags,
-  system-library, and OpenSSL dependency data. Its Windows configuration had
-  incorrectly enabled `HAVE_OPENSSL_APPLINK_C` even though the static OpenSSL
-  package does not install `openssl/applink.c`.
+  system-library, and OpenSSL dependency data. Its Windows configuration
+  enables `HAVE_OPENSSL_APPLINK_C`; the repaired source archive now carries the
+  OpenSSL 3.5.1 `ms/applink.c` implementation at `include/openssl/applink.c`,
+  because the static OpenSSL package does not install that source file.
 - The repaired `8.4.6` archive has SHA-256
-  `cb54e74d20d6cc11d936c8ed2f361a510ddbe3efb827bb53e07eceb2f4933a73`.
+  `e776339ef97dff0f5a502e3af6144ea67e536c5bd8cbe0659d4af86fcfbc18b4` and
+  resolves to source commit `4d201b6723795282cffb6e1db41aa6df94e938b8`.
 
 ## 4. Design
 
@@ -79,6 +81,8 @@ Change `pkgs/c/compat.libmysqlclient.lua` and
 - Add the repaired `8.4.6` source archive to `xpm.windows`.
 - Use the reissued tag URL and its verified SHA-256. The old `8.4.6.1` tag and
   index entry are intentionally retired by explicit maintainer direction.
+- Keep the vendored `include/openssl/applink.c` byte-identical to OpenSSL
+  3.5.1 `ms/applink.c`; `tools/check-layout.sh` guards this required layout.
 - Add the `8.4.6` dependency and `HAVE_LIBMYSQLCLIENT=1` flag under
   `cfg(windows)`.
 - Update the test comment so it describes all three declared platforms.

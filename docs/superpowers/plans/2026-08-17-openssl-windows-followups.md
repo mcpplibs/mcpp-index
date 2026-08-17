@@ -4,7 +4,7 @@
 
 **Goal:** Make the existing Asio SSL and libmysqlclient consumer tests execute on Windows with real OpenSSL-backed builds, using the repaired `libmysqlclient@8.4.6` source tag and preserving Unix behavior.
 
-**Architecture:** The Asio descriptor already has a Windows archive and an `ssl` feature that depends on `compat.openssl`; only its consumer member is incorrectly Unix-gated. The repaired libmysqlclient `8.4.6` Form A archive contains the Windows build recipe and omits the invalid OpenSSL applink requirement. The index publishes that single effective version under `xpm.windows` and enables the current behavior test. Connector/C++ and gRPC remain outside this plan.
+**Architecture:** The Asio descriptor already has a Windows archive and an `ssl` feature that depends on `compat.openssl`; only its consumer member is incorrectly Unix-gated. The repaired libmysqlclient `8.4.6` Form A archive contains the Windows build recipe and vendors OpenSSL 3.5.1's `ms/applink.c` at the include path expected by its Windows configuration. The index publishes that single effective version under `xpm.windows` and enables the current behavior test. Connector/C++ and gRPC remain outside this plan.
 
 **Tech Stack:** Lua xpkg descriptors, mcpp workspace manifests, C++23 consumer tests, Lua repository lints, mcpp `2026.8.10.3`, GitHub Actions Windows x64 with MSVC ABI and LLVM consumer toolchain.
 
@@ -133,7 +133,7 @@ Add the repaired archive to the Windows block in
         windows = {
             ["8.4.6"] = {
                 url = "https://github.com/wellwei/libmysqlclient/archive/refs/tags/8.4.6.tar.gz",
-                sha256 = "cb54e74d20d6cc11d936c8ed2f361a510ddbe3efb827bb53e07eceb2f4933a73",
+                sha256 = "e776339ef97dff0f5a502e3af6144ea67e536c5bd8cbe0659d4af86fcfbc18b4",
             },
         },
 ```
