@@ -48,7 +48,7 @@ dependency and explain in Chinese that the macro is owned by this consumer:
 Run the focused source check:
 
 ```bash
-rg -n "no-op|no openssl dep|HAVE_ASIO_SSL must|HAVE_ASIO_SSL" tests/examples/asio-ssl/tests/ssl.cpp
+rg -n "no-op|no openssl dep|HAVE_ASIO_SSL must|HAVE_ASIO_SSL" tests/examples/asio-ssl/tests/ssl.cpp tests/examples/asio-ssl/mcpp.toml
 ```
 
 Expected: the stale Windows/no-op wording is absent, the consumer-owned macro
@@ -76,14 +76,14 @@ continue inheriting the root `compat` path while resolving Asio remotely.
 Run the exact checks that can be proved on the current host:
 
 ```bash
-lua5.4 -e "assert(loadfile('tests/examples/asio-ssl/mcpp.toml', 't'))"
 git diff --check
 MCPP_HOME="$(mktemp -d)" MCPP_BUILD_CACHE=local MCPP_INDEX_MIRROR=GLOBAL mcpp test -p asio-ssl
 ```
 
-Expected: the manifest parses, the diff is clean, and the macOS/Linux-host
-test executes the existing TLS handshake and exits successfully. Record that
-this does not prove Windows ABI behavior.
+`mcpp test` is the parser for the TOML manifest; do not pass the TOML file to
+Lua's `loadfile`. Expected: the manifest parses, the diff is clean, and the
+macOS/Linux-host test executes the existing TLS handshake and exits
+successfully. Record that this does not prove Windows ABI behavior.
 
 - [ ] **Step 4: Commit the Asio change independently.**
 
@@ -166,10 +166,11 @@ source of the Windows compile and link recipe.
 - [ ] **Step 4: Run descriptor and parity checks before building.**
 
 ```bash
-lua5.4 -e "assert(loadfile('pkgs/c/compat.libmysqlclient.lua', 't'))"
-lua5.4 tests/check_mirror_urls.lua pkgs/c/compat.libmysqlclient.lua
-lua5.4 tests/check_package_name.lua pkgs/c/compat.libmysqlclient.lua
-lua5.4 tests/check_platform_version_parity.lua pkgs/c/compat.libmysqlclient.lua
+LUA_BIN="$(command -v lua5.4 || command -v lua5.5 || command -v lua)"
+"$LUA_BIN" -e "assert(loadfile('pkgs/c/compat.libmysqlclient.lua', 't'))"
+"$LUA_BIN" tests/check_mirror_urls.lua pkgs/c/compat.libmysqlclient.lua
+"$LUA_BIN" tests/check_package_name.lua pkgs/c/compat.libmysqlclient.lua
+"$LUA_BIN" tests/check_platform_version_parity.lua pkgs/c/compat.libmysqlclient.lua
 git diff --check
 ```
 
@@ -182,8 +183,11 @@ Use the same release pin as `.github/workflows/validate.yml`:
 
 ```bash
 MCPP_VERSION=2026.8.10.3
-MCPP_ARCHIVE="mcpp-${MCPP_VERSION}-linux-x86_64.tar.gz"
-MCPP_ROOT="mcpp-${MCPP_VERSION}-linux-x86_64"
+case "$(uname -s)" in
+  Darwin) MCPP_ARCHIVE="mcpp-${MCPP_VERSION}-macosx-arm64.tar.gz"; MCPP_ROOT="mcpp-${MCPP_VERSION}-macosx-arm64" ;;
+  Linux) MCPP_ARCHIVE="mcpp-${MCPP_VERSION}-linux-x86_64.tar.gz"; MCPP_ROOT="mcpp-${MCPP_VERSION}-linux-x86_64" ;;
+  *) echo "Use the matching workflow asset for this host before running xpkg parse" >&2; exit 2 ;;
+esac
 curl -L -fsS -o "$MCPP_ARCHIVE" "https://github.com/mcpp-community/mcpp/releases/download/v${MCPP_VERSION}/${MCPP_ARCHIVE}"
 tar -xzf "$MCPP_ARCHIVE"
 "$PWD/$MCPP_ROOT/bin/mcpp" xpkg parse pkgs/c/compat.libmysqlclient.lua
@@ -214,8 +218,9 @@ git commit -m "feat(libmysqlclient): publish Windows package entries"
 - [ ] **Step 1: Run the repository-wide cheap checks.**
 
 ```bash
-lua5.4 tests/check_cross_package_refs.lua pkgs/*/*.lua
-lua5.4 tests/check_platform_version_parity.lua pkgs/*/*.lua
+LUA_BIN="$(command -v lua5.4 || command -v lua5.5 || command -v lua)"
+"$LUA_BIN" tests/check_cross_package_refs.lua pkgs/*/*.lua
+"$LUA_BIN" tests/check_platform_version_parity.lua pkgs/*/*.lua
 git diff --check
 git status --short --branch
 ```
