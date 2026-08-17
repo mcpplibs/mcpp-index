@@ -27,7 +27,7 @@
 - Modify: `tests/examples/asio-ssl/mcpp.toml`
 - Modify: `tests/examples/asio-ssl/tests/ssl.cpp`
 
-- [ ] **Step 1: Make the test fail loudly when the feature is not wired.**
+- [x] **Step 1: Make the test fail loudly when the feature is not wired.**
 
 Keep the existing `#ifdef HAVE_ASIO_SSL` body and replace the no-op fallback at
 the end of `tests/examples/asio-ssl/tests/ssl.cpp` with a compile-time failure:
@@ -54,7 +54,7 @@ rg -n "no-op|no openssl dep|HAVE_ASIO_SSL must|HAVE_ASIO_SSL" tests/examples/asi
 Expected: the stale Windows/no-op wording is absent, the consumer-owned macro
 comment is present, and the `#error` fallback is present.
 
-- [ ] **Step 2: Add the Windows dependency and consumer flag.**
+- [x] **Step 2: Add the Windows dependency and consumer flag.**
 
 Append the Windows sections to `tests/examples/asio-ssl/mcpp.toml`, matching the
 Linux and macOS dependency and build flag exactly:
@@ -71,7 +71,7 @@ Update the preceding platform comment so it says Linux, macOS, and Windows all
 run the real TLS test. Do not add a second `[indices]` table: this member must
 continue inheriting the root `compat` path while resolving Asio remotely.
 
-- [ ] **Step 3: Run the Asio static and Unix regression checks.**
+- [x] **Step 3: Run the Asio static and Unix regression checks.**
 
 Run the exact checks that can be proved on the current host:
 
@@ -85,7 +85,7 @@ Lua's `loadfile`. Expected: the manifest parses, the diff is clean, and the
 macOS/Linux-host test executes the existing TLS handshake and exits
 successfully. Record that this does not prove Windows ABI behavior.
 
-- [ ] **Step 4: Commit the Asio change independently.**
+- [x] **Step 4: Commit the Asio change independently.**
 
 ```bash
 git add tests/examples/asio-ssl/mcpp.toml tests/examples/asio-ssl/tests/ssl.cpp
@@ -99,7 +99,7 @@ git commit -m "test(asio-ssl): exercise Windows TLS support"
 - Modify: `tests/examples/libmysqlclient/mcpp.toml`
 - Modify: `tests/examples/libmysqlclient/tests/client.cpp`
 
-- [ ] **Step 1: Make the consumer test fail loudly when its dependency gate is absent.**
+- [x] **Step 1: Make the consumer test fail loudly when its dependency gate is absent.**
 
 Replace the no-op fallback in `tests/examples/libmysqlclient/tests/client.cpp`
 with:
@@ -124,7 +124,7 @@ rg -n "no-op|HAVE_LIBMYSQLCLIENT must|MYSQL_VERSION_ID|mysql_init" tests/example
 Expected: no no-op fallback remains and all three runtime assertions are still
 present.
 
-- [ ] **Step 2: Add both immutable versions to `xpm.windows`.**
+- [x] **Step 2: Add both immutable versions to `xpm.windows`.**
 
 Add a Windows block to `pkgs/c/compat.libmysqlclient.lua` with the exact bytes
 already published for Linux and macOS:
@@ -146,7 +146,7 @@ The final `8.4.6.1` SHA must be copied from the existing descriptor rather than
 retyped from memory; if the checked-in value differs, reuse the checked-in
 value and stop for review instead of changing source identity.
 
-- [ ] **Step 3: Enable the Windows consumer dependency.**
+- [x] **Step 3: Enable the Windows consumer dependency.**
 
 Append to `tests/examples/libmysqlclient/mcpp.toml`:
 
@@ -163,7 +163,7 @@ Update the platform comment from Linux/macOS-only to Linux/macOS/Windows.
 Do not modify the archive's embedded Form A manifest in this task; it is the
 source of the Windows compile and link recipe.
 
-- [ ] **Step 4: Run descriptor and parity checks before building.**
+- [x] **Step 4: Run descriptor and parity checks before building.**
 
 ```bash
 LUA_BIN="$(command -v lua5.4 || command -v lua5.5 || command -v lua)"
@@ -177,7 +177,7 @@ git diff --check
 Expected: all commands exit 0. The parity check must see `8.4.6` and `8.4.6.1`
 in Linux, macOS, and Windows.
 
-- [ ] **Step 5: Parse the changed descriptor with the workflow-pinned client.**
+- [x] **Step 5: Parse the changed descriptor with the workflow-pinned client.**
 
 Use the same release pin as `.github/workflows/validate.yml`:
 
@@ -196,7 +196,7 @@ tar -xzf "$MCPP_ARCHIVE"
 Expected: `xpkg parse` exits 0 using `2026.8.10.3`, independent of the newer
 developer-installed mcpp on the host.
 
-- [ ] **Step 6: Run the libmysqlclient Unix regression test from a cold cache.**
+- [x] **Step 6: Run the libmysqlclient Unix regression test from a cold cache.**
 
 ```bash
 MCPP_HOME="$(mktemp -d)" MCPP_BUILD_CACHE=local MCPP_INDEX_MIRROR=GLOBAL mcpp test -p libmysqlclient
@@ -206,7 +206,7 @@ Expected: the test compiles against `mysql.h`, observes client version `80406`,
 obtains a non-null `MYSQL*`, calls `mysql_close`, and exits 0. Record any
 OpenSSL/system-library failure separately from an index resolution failure.
 
-- [ ] **Step 7: Commit the libmysqlclient change independently.**
+- [x] **Step 7: Commit the libmysqlclient change independently.**
 
 ```bash
 git add pkgs/c/compat.libmysqlclient.lua tests/examples/libmysqlclient/mcpp.toml tests/examples/libmysqlclient/tests/client.cpp
@@ -215,7 +215,7 @@ git commit -m "feat(libmysqlclient): publish Windows package entries"
 
 ## Task 3: Cross-platform validation and handoff
 
-- [ ] **Step 1: Run the repository-wide cheap checks.**
+- [x] **Step 1: Run the repository-wide cheap checks.**
 
 ```bash
 LUA_BIN="$(command -v lua5.4 || command -v lua5.5 || command -v lua)"
@@ -229,7 +229,7 @@ Expected: cross-package references and platform parity exit 0; the working tree
 contains only the two feature commits (or later verification-only artifacts
 that are ignored by Git).
 
-- [ ] **Step 2: Verify the affected members are registered.**
+- [x] **Step 2: Verify the affected members are registered.**
 
 ```bash
 rg -n 'tests/examples/(asio-ssl|libmysqlclient)' mcpp.toml
@@ -245,7 +245,10 @@ that returns success. A green selector or a member that only compiles the new
 `#error`-guarded fallback is insufficient. Do not edit `tests/member-timings.tsv`
 unless the workflow's measured artifact proves a material ranking change.
 
-- [ ] **Step 4: Record the final boundary.**
+Current status: pending an authorized push or pull request run. Local macOS
+tests and Linux/macOS descriptor checks cannot prove the Windows ABI.
+
+- [x] **Step 4: Record the final boundary.**
 
 Document the exact commands, client version, observed assertions, and Windows
 CI job URL in the task handoff. State explicitly that Connector/C++ Windows
