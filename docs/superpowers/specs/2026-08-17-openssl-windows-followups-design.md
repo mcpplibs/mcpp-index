@@ -52,7 +52,7 @@ Selecting a member while compiling a no-op test is not support evidence.
   incorrectly enabled `HAVE_OPENSSL_APPLINK_C` even though the static OpenSSL
   package does not install `openssl/applink.c`.
 - The repaired `8.4.6` archive has SHA-256
-  `8ef7f8a63d21e38b06bfbdb9bd3c4660cc063b535c3f13cdd9451295b0ba9c15`.
+  `cb54e74d20d6cc11d936c8ed2f361a510ddbe3efb827bb53e07eceb2f4933a73`.
 
 ## 4. Design
 
