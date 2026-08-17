@@ -1,0 +1,8 @@
+# reflect-cpp test project: consumes compat.reflectcpp from this repo's own index
+# and asserts struct <-> JSON round trips through the bundled yyjson.
+[package]
+name = "reflectcpp-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+reflectcpp = "0.25.0"
