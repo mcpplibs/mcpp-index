@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Make the existing Asio SSL and libmysqlclient consumer tests execute on Windows with real OpenSSL-backed builds, while preserving all existing package identities and Unix behavior.
+**Goal:** Make the existing Asio SSL and libmysqlclient consumer tests execute on Windows with real OpenSSL-backed builds, using the repaired `libmysqlclient@8.4.6` source tag and preserving Unix behavior.
 
-**Architecture:** The Asio descriptor already has a Windows archive and an `ssl` feature that depends on `compat.openssl`; only its consumer member is incorrectly Unix-gated. The libmysqlclient release archives already contain their Form A Windows build recipe, so the index change publishes both existing versions under `xpm.windows` and enables the current behavior test. Each package is implemented and committed independently; Connector/C++ and gRPC remain outside this plan.
+**Architecture:** The Asio descriptor already has a Windows archive and an `ssl` feature that depends on `compat.openssl`; only its consumer member is incorrectly Unix-gated. The repaired libmysqlclient `8.4.6` Form A archive contains the Windows build recipe and omits the invalid OpenSSL applink requirement. The index publishes that single effective version under `xpm.windows` and enables the current behavior test. Connector/C++ and gRPC remain outside this plan.
 
 **Tech Stack:** Lua xpkg descriptors, mcpp workspace manifests, C++23 consumer tests, Lua repository lints, mcpp `2026.8.10.3`, GitHub Actions Windows x64 with MSVC ABI and LLVM consumer toolchain.
 
@@ -16,8 +16,8 @@
 | --- | --- |
 | `tests/examples/asio-ssl/mcpp.toml` | Resolve the Asio `ssl` feature and set the consumer assertion flag on all declared platforms. |
 | `tests/examples/asio-ssl/tests/ssl.cpp` | Run the TLS loopback handshake; fail compilation if the feature gate is accidentally absent instead of compiling a no-op. |
-| `pkgs/c/compat.libmysqlclient.lua` | Publish the existing `8.4.6` and `8.4.6.1` Form A archives for Windows without changing their source identity. |
-| `tests/examples/libmysqlclient/mcpp.toml` | Resolve `libmysqlclient@8.4.6.1` and set the consumer assertion flag on Windows. |
+| `pkgs/c/compat.libmysqlclient.lua` | Publish the repaired `8.4.6` Form A archive for Windows. |
+| `tests/examples/libmysqlclient/mcpp.toml` | Resolve `libmysqlclient@8.4.6` and set the consumer assertion flag on Windows. |
 | `tests/examples/libmysqlclient/tests/client.cpp` | Assert the client ABI and usable `mysql_init` handle; fail compilation if the dependency gate is absent. |
 | `tests/member-timings.tsv` | Do not edit before measured Windows CI output exists; update only if the live timing workflow produces a materially different ranking. |
 
@@ -124,27 +124,23 @@ rg -n "no-op|HAVE_LIBMYSQLCLIENT must|MYSQL_VERSION_ID|mysql_init" tests/example
 Expected: no no-op fallback remains and all three runtime assertions are still
 present.
 
-- [x] **Step 2: Add both immutable versions to `xpm.windows`.**
+- [x] **Step 2: Publish the repaired `8.4.6` source in `xpm.windows`.**
 
-Add a Windows block to `pkgs/c/compat.libmysqlclient.lua` with the exact bytes
-already published for Linux and macOS:
+Add the repaired archive to the Windows block in
+`pkgs/c/compat.libmysqlclient.lua`:
 
 ```lua
         windows = {
             ["8.4.6"] = {
                 url = "https://github.com/wellwei/libmysqlclient/archive/refs/tags/8.4.6.tar.gz",
-                sha256 = "27decd6716591d84a6f765a3d63fcd24031373841c684369445b83a840b38bea",
-            },
-            ["8.4.6.1"] = {
-                url = "https://github.com/wellwei/libmysqlclient/archive/refs/tags/8.4.6.1.tar.gz",
-                sha256 = "e50e5da37baa26fff56952d85bd8e33b577be7a534e67df0b8e10a5cc8507af8",
+                sha256 = "c9b9fb9b926d38bf011812782eabaaa94a675901039dc1c77ede9f3cd4afbda0",
             },
         },
 ```
 
-The final `8.4.6.1` SHA must be copied from the existing descriptor rather than
-retyped from memory; if the checked-in value differs, reuse the checked-in
-value and stop for review instead of changing source identity.
+The SHA is taken from a fresh download of the explicitly reissued `8.4.6`
+tag. The superseded `8.4.6.1` tag is retired rather than retained as a second
+package revision.
 
 - [x] **Step 3: Enable the Windows consumer dependency.**
 
@@ -153,7 +149,7 @@ Append to `tests/examples/libmysqlclient/mcpp.toml`:
 ```toml
 # Windows 也必须执行真实客户端 ABI 和运行时句柄断言。
 [target.'cfg(windows)'.dependencies.compat]
-libmysqlclient = "8.4.6.1"
+libmysqlclient = "8.4.6"
 
 [target.'cfg(windows)'.build]
 cxxflags = ["-DHAVE_LIBMYSQLCLIENT=1"]
@@ -174,8 +170,8 @@ LUA_BIN="$(command -v lua5.4 || command -v lua5.5 || command -v lua)"
 git diff --check
 ```
 
-Expected: all commands exit 0. The parity check must see `8.4.6` and `8.4.6.1`
-in Linux, macOS, and Windows.
+Expected: all commands exit 0. The parity check must see the repaired `8.4.6`
+entry in Linux, macOS, and Windows.
 
 - [x] **Step 5: Parse the changed descriptor with the workflow-pinned client.**
 

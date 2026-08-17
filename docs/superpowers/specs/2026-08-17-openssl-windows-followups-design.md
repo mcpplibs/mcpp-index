@@ -11,7 +11,8 @@ Extend the Windows support that landed for `compat.openssl@3.5.1` to the two
 downstream packages that can be completed within `mcpp-index` in this round:
 
 1. `chriskohlhoff.asio@1.38.1` with its opt-in `ssl` feature.
-2. `compat.libmysqlclient@8.4.6.1`, while preserving the older `8.4.6` entry.
+2. `compat.libmysqlclient@8.4.6`, using the repaired source tag as the sole
+   effective package revision.
 
 The result is complete only when Windows resolves the package, builds the
 consumer, links the expected static libraries, and runs a non-trivial test.
@@ -22,10 +23,11 @@ Selecting a member while compiling a no-op test is not support evidence.
 ### In scope
 
 - Enable the existing Asio SSL consumer test on `cfg(windows)`.
-- Add Windows xpm entries for both published libmysqlclient versions.
+- Publish the repaired `libmysqlclient@8.4.6` archive on Windows.
 - Enable the existing libmysqlclient consumer test on `cfg(windows)`.
-- Keep the existing package identities, source URLs, SHA-256 values, and Unix
-  build behavior unchanged.
+- Keep the client ABI and Unix build behavior unchanged. The source tag was
+  explicitly reissued after the Windows configuration repair; the superseded
+  `8.4.6.1` tag is no longer valid.
 - Validate descriptor grammar, platform-version parity, cold resolution, and
   real consumer behavior with the workflow-pinned mcpp client.
 
@@ -45,12 +47,12 @@ Selecting a member while compiling a no-op test is not support evidence.
   built by `VC-WIN64A` plus `cl`/`nmake`, consumed by the Windows LLVM toolchain.
 - The Asio descriptor already has a Windows archive and an `ssl` feature whose
   dependency is `compat.openssl`; only the test member is Unix-gated.
-- The libmysqlclient Form A archives already contain Windows source, flags,
-  system-library, and OpenSSL dependency data. The index descriptor currently
-  declares only Linux and macOS.
-- The current platform parity check requires Windows to expose the complete
-  version set unless an explicitly justified divergence is declared. Both
-  libmysqlclient versions will therefore be added to Windows.
+- The libmysqlclient Form A archive contains Windows source, flags,
+  system-library, and OpenSSL dependency data. Its Windows configuration had
+  incorrectly enabled `HAVE_OPENSSL_APPLINK_C` even though the static OpenSSL
+  package does not install `openssl/applink.c`.
+- The repaired `8.4.6` archive has SHA-256
+  `c9b9fb9b926d38bf011812782eabaaa94a675901039dc1c77ede9f3cd4afbda0`.
 
 ## 4. Design
 
@@ -74,10 +76,10 @@ No change is needed to the Asio descriptor or its `ssl` feature.
 Change `pkgs/c/compat.libmysqlclient.lua` and
 `tests/examples/libmysqlclient/mcpp.toml`:
 
-- Add the existing `8.4.6` and `8.4.6.1` source archives to `xpm.windows`.
-- Use the exact existing URLs and SHA-256 values; do not rewrite historical
-  source identity or remove either version.
-- Add the `8.4.6.1` dependency and `HAVE_LIBMYSQLCLIENT=1` flag under
+- Add the repaired `8.4.6` source archive to `xpm.windows`.
+- Use the reissued tag URL and its verified SHA-256. The old `8.4.6.1` tag and
+  index entry are intentionally retired by explicit maintainer direction.
+- Add the `8.4.6` dependency and `HAVE_LIBMYSQLCLIENT=1` flag under
   `cfg(windows)`.
 - Update the test comment so it describes all three declared platforms.
 - Keep the behavior assertion in `tests/client.cpp`: the client version must
