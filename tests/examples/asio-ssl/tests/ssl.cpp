@@ -10,9 +10,7 @@
 // cxxflags, not by the package's feature. A feature's `defines` apply to the
 // package's own translation units; a consumer that keys its source off one has
 // to declare it itself (same shape as the openblas member's HAVE_OPENBLAS).
-// Getting that backwards is how the previous version of this file passed while
-// compiling to nothing. Windows has no openssl dep yet, so there the whole
-// body drops out and main() is a no-op.
+// HAVE_ASIO_SSL 由本测试成员自己的构建配置定义；所有已声明平台都必须运行真实 TLS 测试。
 #ifdef HAVE_ASIO_SSL
 import std;
 import asio;
@@ -153,5 +151,5 @@ int main() {
     return failure ? failure : (client_done ? 0 : 8);
 }
 #else
-int main() { return 0; }  // ssl feature inactive (windows); no-op
+#error "HAVE_ASIO_SSL must be enabled for every declared asio-ssl test platform"
 #endif

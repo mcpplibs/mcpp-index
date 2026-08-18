@@ -2,15 +2,22 @@
 name = "libmysqlclient-tests"
 version = "0.1.0"
 
-# libmysqlclient 的 mcpp 源码构建目前只验证 Linux/macOS。
+# libmysqlclient 的源码构建在 Linux、macOS 和 Windows 上都执行真实断言。
 [target.'cfg(linux)'.dependencies.compat]
-libmysqlclient = "8.4.6.1"
+libmysqlclient = "8.4.6"
 
 [target.'cfg(linux)'.build]
 cxxflags = ["-DHAVE_LIBMYSQLCLIENT=1"]
 
 [target.'cfg(macos)'.dependencies.compat]
-libmysqlclient = "8.4.6.1"
+libmysqlclient = "8.4.6"
 
 [target.'cfg(macos)'.build]
+cxxflags = ["-DHAVE_LIBMYSQLCLIENT=1"]
+
+# Windows 也必须执行真实客户端 ABI 和运行时句柄断言。
+[target.'cfg(windows)'.dependencies.compat]
+libmysqlclient = "8.4.6"
+
+[target.'cfg(windows)'.build]
 cxxflags = ["-DHAVE_LIBMYSQLCLIENT=1"]

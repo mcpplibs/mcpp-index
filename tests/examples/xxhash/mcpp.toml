@@ -1,0 +1,8 @@
+# xxHash test project: consumes compat.xxhash from this repo's own index and
+# asserts the hash values themselves, not just that the symbols link.
+[package]
+name = "xxhash-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+xxhash = "0.8.3"

@@ -1,0 +1,8 @@
+# libwebp test project: consumes compat.libwebp from this repo's own index and
+# asserts a real encode -> decode round trip, not just that the symbols link.
+[package]
+name = "libwebp-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+libwebp = "1.5.0"

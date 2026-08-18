@@ -22,13 +22,23 @@
 --   * 依赖未导出 ASIO_HAS_* 宏、平台专用头文件或 Boost 扩展的代码，需要
 --     改用标准/操作系统能力检测或另行扩展模块 wrapper。
 --
+-- 平台条件导出：文件 I/O
+--   * `asio::stream_file` / `asio::random_access_file` / `asio::file_base`
+--     （及其 basic_ 模板）在 `ASIO_HAS_FILE` 成立时导出。这是 Asio 自己的
+--     能力宏：Windows 下由 IOCP 提供，Linux 下需要 io_uring，macOS 下无后端
+--     （见 `asio/detail/config.hpp` 的 "// Files." 一节）。用 Asio 的宏而不是
+--     在描述符里维护一张平台清单，是为了让它随上游一起演进。
+--   * 消费端**不能**用 `#if defined(ASIO_HAS_FILE)` 判断：宏不跨模块边界，
+--     而模块消费者不 include Asio 头文件，那个宏在它的 TU 里永远为假。
+--     就本包的配置而言判据是确定的 —— 未开启 io_uring，所以
+--     `ASIO_HAS_FILE` ⇔ Windows。跨平台消费者按 `_WIN32` 分支即可
+--     (tests/examples/asio-module/tests/file.cpp 就是这么写的)。
+--
 -- 未导出的组件
 --   * SSL/TLS (`asio/ssl/*.hpp`)：需要 OpenSSL/wolfSSL 等外部依赖。
 --   * Unix 域套接字、POSIX 描述符和 Windows 句柄：
 --     `asio/local/*.hpp`、`asio/posix/*.hpp`、`asio/windows/*.hpp`。
---   * 串口、pipe 和文件 I/O：`asio/serial_port.hpp`、
---     `asio/*able_pipe.hpp`、`asio/stream_file.hpp`、
---     `asio/random_access_file.hpp`。
+--   * 串口和 pipe：`asio/serial_port.hpp`、`asio/*able_pipe.hpp`。
 --   * spawn()/yield_context 有栈协程：需要 Boost.Context；本包禁用其自动
 --     检测，应改用 co_spawn + awaitable + use_awaitable。
 --   * deadline_timer、generic protocol、execution、traits、遗留宏式协程和
@@ -146,6 +156,16 @@ module;
 #include <asio/ip/udp.hpp>
 #include <asio/ip/address.hpp>
 #include <asio/ip/address_v6.hpp>
+#include <asio/error.hpp>
+// File I/O exists only where Asio has a backend for it: IOCP on Windows, or
+// io_uring on Linux (asio/detail/config.hpp, "// Files."). ASIO_HAS_FILE is
+// Asio's own answer to that question, so the guard here is the library's, not
+// a platform list this descriptor would have to keep in sync.
+#if defined(ASIO_HAS_FILE)
+#include <asio/file_base.hpp>
+#include <asio/stream_file.hpp>
+#include <asio/random_access_file.hpp>
+#endif
 #include <asio/experimental/promise.hpp>
 #include <asio/experimental/channel_error.hpp>
 #include <asio/experimental/channel.hpp>
@@ -173,7 +193,19 @@ using ::std::coroutine_traits;
 
 export namespace asio::error {
 using ::asio::error::make_error_code;
-using ::asio::error::operation_aborted;
+// The four error enums and their enumerators. Exporting `operation_aborted`
+// alone made every OTHER condition unreachable through the module — a consumer
+// that wants to tell a connection refusal from a DNS failure had no name to
+// compare against. `using enum` keeps that from becoming a hand-maintained
+// list of ~40 enumerators that drifts on the next Asio release.
+using ::asio::error::basic_errors;
+using ::asio::error::netdb_errors;
+using ::asio::error::addrinfo_errors;
+using ::asio::error::misc_errors;
+using enum ::asio::error::basic_errors;
+using enum ::asio::error::netdb_errors;
+using enum ::asio::error::addrinfo_errors;
+using enum ::asio::error::misc_errors;
 }
 
 export namespace asio {
@@ -218,12 +250,24 @@ using ::asio::consign;
 using ::asio::as_tuple;
 using ::asio::socket_base;
 using ::asio::connect;
+using ::asio::async_connect;
 using ::asio::async_read;
 using ::asio::async_write;
 using ::asio::read;
 using ::asio::write;
 using ::asio::read_until;
 }
+
+#if defined(ASIO_HAS_FILE)
+export namespace asio {
+using ::asio::file_base;
+using ::asio::basic_file;
+using ::asio::basic_stream_file;
+using ::asio::basic_random_access_file;
+using ::asio::stream_file;
+using ::asio::random_access_file;
+}
+#endif
 
 export namespace asio::experimental {
 using ::asio::experimental::channel;
@@ -241,6 +285,9 @@ using ::asio::ip::udp;
 using ::asio::ip::address;
 using ::asio::ip::address_v4;
 using ::asio::ip::address_v6;
+using ::asio::ip::make_address;
+using ::asio::ip::make_address_v4;
+using ::asio::ip::make_address_v6;
 }
 
 export namespace asio::this_coro {

@@ -1,0 +1,13 @@
+# WIL test project. The library is Windows-only — not a portable library with a
+# Windows backend, but a library ABOUT Win32 — so the dependency is gated and
+# the test compiles to a no-op main() elsewhere, the same shape gui-stack uses
+# in the other direction.
+[package]
+name = "wil-tests"
+version = "0.1.0"
+
+[target.'cfg(windows)'.dependencies.compat]
+wil = "1.0.260126.7"
+
+[target.'cfg(windows)'.build]
+ldflags = ["-lole32", "-loleaut32"]
