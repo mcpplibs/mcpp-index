@@ -1,18 +1,17 @@
 -- std-freestanding — the freestanding subset of the C++ standard library.
 --
--- Form A, and `deps` at the xpm PLATFORM level, for the same two reasons as
--- riscv-virt-rt: the package ships a `build.mcpp` (which mcpp looks for at the
--- package ROOT, so Form B would leave it one level down inside the tarball's
--- wrap directory and unfound), and mcpp materializes `[xlings] deps` for the
--- ROOT project only, so a consumer would otherwise get the package with
--- neither the target C library nor the toolchain whose payload carries
--- libc++'s headers.
+-- Form A because the package ships a `build.mcpp`, which mcpp looks for at the
+-- package ROOT: Form B would leave it one level down inside the tarball's wrap
+-- directory, unfound, and the package would resolve and compile and then link
+-- against nothing.
 --
--- ⚠️ `xim:llvm` is a dependency because that is where libc++'s HEADERS live.
--- The package does not link anything from it — it privately includes the
--- headers and exports a module — but without the payload there is nothing to
--- include, and the failure would arrive as "file not found" deep inside a
--- module compile rather than as a missing dependency.
+-- ⚠️ NO `deps`, and that is the design. This package needs libc++'s headers
+-- and the target's C headers, and it gets both by ASKING mcpp
+-- (`mcpp::toolchain_dir()`, and the target's libc which mcpp already puts on
+-- the compile line) rather than by declaring who provides them. Declaring
+-- pinned it to one standard-library implementation, one C library, one
+-- architecture and one version of each — none of which it has any business
+-- knowing about.
 package = {
     spec        = "1",
     namespace   = "mcpplibs",
@@ -24,33 +23,30 @@ package = {
 
     xpm = {
         linux = {
-            deps = { "xim:picolibc-riscv@1.8.12", "xim:llvm" },
-            ["0.1.0"] = {
+            ["0.2.0"] = {
                 url    = {
-                    GLOBAL = "https://github.com/mcpplibs/std-freestanding/archive/refs/tags/0.1.0.tar.gz",
-                    CN     = "https://gitcode.com/mcpp-res/std-freestanding/releases/download/0.1.0/std-freestanding-0.1.0.tar.gz",
+                    GLOBAL = "https://github.com/mcpplibs/std-freestanding/archive/refs/tags/0.2.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/std-freestanding/releases/download/0.2.0/std-freestanding-0.2.0.tar.gz",
                 },
-                sha256 = "b93b46d9267004eb409aa55fa8042173f93e71c68604969d54c1930baaf65abe",
+                sha256 = "c0026e6aa85d207b3dd00c3f2fe2674174c2e25d86a162f64fe70742420efb00",
             },
         },
         macosx = {
-            deps = { "xim:picolibc-riscv@1.8.12", "xim:llvm" },
-            ["0.1.0"] = {
+            ["0.2.0"] = {
                 url    = {
-                    GLOBAL = "https://github.com/mcpplibs/std-freestanding/archive/refs/tags/0.1.0.tar.gz",
-                    CN     = "https://gitcode.com/mcpp-res/std-freestanding/releases/download/0.1.0/std-freestanding-0.1.0.tar.gz",
+                    GLOBAL = "https://github.com/mcpplibs/std-freestanding/archive/refs/tags/0.2.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/std-freestanding/releases/download/0.2.0/std-freestanding-0.2.0.tar.gz",
                 },
-                sha256 = "b93b46d9267004eb409aa55fa8042173f93e71c68604969d54c1930baaf65abe",
+                sha256 = "c0026e6aa85d207b3dd00c3f2fe2674174c2e25d86a162f64fe70742420efb00",
             },
         },
         windows = {
-            deps = { "xim:picolibc-riscv@1.8.12", "xim:llvm" },
-            ["0.1.0"] = {
+            ["0.2.0"] = {
                 url    = {
-                    GLOBAL = "https://github.com/mcpplibs/std-freestanding/archive/refs/tags/0.1.0.tar.gz",
-                    CN     = "https://gitcode.com/mcpp-res/std-freestanding/releases/download/0.1.0/std-freestanding-0.1.0.tar.gz",
+                    GLOBAL = "https://github.com/mcpplibs/std-freestanding/archive/refs/tags/0.2.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/std-freestanding/releases/download/0.2.0/std-freestanding-0.2.0.tar.gz",
                 },
-                sha256 = "b93b46d9267004eb409aa55fa8042173f93e71c68604969d54c1930baaf65abe",
+                sha256 = "c0026e6aa85d207b3dd00c3f2fe2674174c2e25d86a162f64fe70742420efb00",
             },
         },
     },

@@ -9,13 +9,13 @@
 -- link against nothing. Pointing at the manifest moves the root inside the
 -- wrap layer, where both the manifest and the program live.
 --
--- ⚠️ `deps` is at the xpm PLATFORM level, not in the mcpp segment. The two
--- entries are xim packages (an emulator and a target sysroot), not mcpp
--- packages, so they travel on xim's install-time dependency edge. This matters
--- more than it looks: mcpp materializes `[xlings] deps` for the ROOT project
--- only, so a consumer that just runs `mcpp add riscv-virt-rt` would otherwise
--- get the board package with neither a libc nor an emulator, and find out at
--- build.mcpp time.
+-- ⚠️ `deps` names the EMULATOR and nothing else. The target's C library is not
+-- here because it is not this package's: mcpp resolves it from the target's
+-- own row, the way it resolves the compiler. What is left is the one xim
+-- package that really is a board fact — how to run an image — and it is at the
+-- xpm PLATFORM level because mcpp materializes `[xlings] deps` for the ROOT
+-- project only, so a consumer running `mcpp add riscv-virt-rt` would otherwise
+-- get a board package with no way to start it.
 package = {
     spec        = "1",
     namespace   = "mcpplibs",
@@ -30,7 +30,7 @@ package = {
     -- published is a version someone may have pinned.
     xpm = {
         linux = {
-            deps = { "xim:picolibc-riscv@1.8.12", "xim:qemu-riscv@9.2.4-1" },
+            deps = { "xim:qemu-riscv@9.2.4-1" },
             ["0.1.0"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/riscv-virt-rt/archive/refs/tags/0.1.0.tar.gz",
@@ -44,10 +44,17 @@ package = {
                     CN     = "https://gitcode.com/mcpp-res/riscv-virt-rt/releases/download/0.2.0/riscv-virt-rt-0.2.0.tar.gz",
                 },
                 sha256 = "79f1dc4415a59ba828048eb8706322957723f8a6fd84bde3faba6a377e48242b",
+            },
+            ["0.3.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/riscv-virt-rt/archive/refs/tags/0.3.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/riscv-virt-rt/releases/download/0.3.0/riscv-virt-rt-0.3.0.tar.gz",
+                },
+                sha256 = "71fc43daa4903d4f3037c204bd2b3be9aea56371b123a4529cc8c0c8c9b7f525",
             },
         },
         macosx = {
-            deps = { "xim:picolibc-riscv@1.8.12", "xim:qemu-riscv@9.2.4-1" },
+            deps = { "xim:qemu-riscv@9.2.4-1" },
             ["0.1.0"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/riscv-virt-rt/archive/refs/tags/0.1.0.tar.gz",
@@ -61,10 +68,17 @@ package = {
                     CN     = "https://gitcode.com/mcpp-res/riscv-virt-rt/releases/download/0.2.0/riscv-virt-rt-0.2.0.tar.gz",
                 },
                 sha256 = "79f1dc4415a59ba828048eb8706322957723f8a6fd84bde3faba6a377e48242b",
+            },
+            ["0.3.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/riscv-virt-rt/archive/refs/tags/0.3.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/riscv-virt-rt/releases/download/0.3.0/riscv-virt-rt-0.3.0.tar.gz",
+                },
+                sha256 = "71fc43daa4903d4f3037c204bd2b3be9aea56371b123a4529cc8c0c8c9b7f525",
             },
         },
         windows = {
-            deps = { "xim:picolibc-riscv@1.8.12", "xim:qemu-riscv@9.2.4-1" },
+            deps = { "xim:qemu-riscv@9.2.4-1" },
             ["0.1.0"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/riscv-virt-rt/archive/refs/tags/0.1.0.tar.gz",
@@ -78,6 +92,13 @@ package = {
                     CN     = "https://gitcode.com/mcpp-res/riscv-virt-rt/releases/download/0.2.0/riscv-virt-rt-0.2.0.tar.gz",
                 },
                 sha256 = "79f1dc4415a59ba828048eb8706322957723f8a6fd84bde3faba6a377e48242b",
+            },
+            ["0.3.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/riscv-virt-rt/archive/refs/tags/0.3.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/riscv-virt-rt/releases/download/0.3.0/riscv-virt-rt-0.3.0.tar.gz",
+                },
+                sha256 = "71fc43daa4903d4f3037c204bd2b3be9aea56371b123a4529cc8c0c8c9b7f525",
             },
         },
     },
