@@ -22,30 +22,30 @@ package = {
 
     xpm = {
         linux = {
-            ["0.2.0"] = {
+            ["0.3.0"] = {
                 url    = {
-                    GLOBAL = "https://github.com/mcpplibs/openkal/archive/refs/tags/0.2.0.tar.gz",
-                    CN     = "https://gitcode.com/mcpp-res/openkal/releases/download/0.2.0/openkal-0.2.0.tar.gz",
+                    GLOBAL = "https://github.com/mcpplibs/openkal/archive/refs/tags/0.3.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal/releases/download/0.3.0/openkal-0.3.0.tar.gz",
                 },
-                sha256 = "461865b784dbb2eb70f757e11889428e1551e297878877c424d429ff3a55281b",
+                sha256 = "919a13bb2a012f268c09591586e0c622f7ccab51bfa46cd36206576851d8945f",
             },
         },
         macosx = {
-            ["0.2.0"] = {
+            ["0.3.0"] = {
                 url    = {
-                    GLOBAL = "https://github.com/mcpplibs/openkal/archive/refs/tags/0.2.0.tar.gz",
-                    CN     = "https://gitcode.com/mcpp-res/openkal/releases/download/0.2.0/openkal-0.2.0.tar.gz",
+                    GLOBAL = "https://github.com/mcpplibs/openkal/archive/refs/tags/0.3.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal/releases/download/0.3.0/openkal-0.3.0.tar.gz",
                 },
-                sha256 = "461865b784dbb2eb70f757e11889428e1551e297878877c424d429ff3a55281b",
+                sha256 = "919a13bb2a012f268c09591586e0c622f7ccab51bfa46cd36206576851d8945f",
             },
         },
         windows = {
-            ["0.2.0"] = {
+            ["0.3.0"] = {
                 url    = {
-                    GLOBAL = "https://github.com/mcpplibs/openkal/archive/refs/tags/0.2.0.tar.gz",
-                    CN     = "https://gitcode.com/mcpp-res/openkal/releases/download/0.2.0/openkal-0.2.0.tar.gz",
+                    GLOBAL = "https://github.com/mcpplibs/openkal/archive/refs/tags/0.3.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal/releases/download/0.3.0/openkal-0.3.0.tar.gz",
                 },
-                sha256 = "461865b784dbb2eb70f757e11889428e1551e297878877c424d429ff3a55281b",
+                sha256 = "919a13bb2a012f268c09591586e0c622f7ccab51bfa46cd36206576851d8945f",
             },
         },
     },
