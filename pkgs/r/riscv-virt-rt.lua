@@ -25,6 +25,9 @@ package = {
     repo        = "https://github.com/mcpplibs/riscv-virt-rt",
     type        = "package",
 
+    -- 0.2.0 adds the project template (`mcpp new <name> --template
+    -- riscv-virt-rt`); 0.1.0 stays listed because a version that has been
+    -- published is a version someone may have pinned.
     xpm = {
         linux = {
             deps = { "xim:picolibc-riscv@1.8.12", "xim:qemu-riscv@9.2.4-1" },
@@ -34,6 +37,13 @@ package = {
                     CN     = "https://gitcode.com/mcpp-res/riscv-virt-rt/releases/download/0.1.0/riscv-virt-rt-0.1.0.tar.gz",
                 },
                 sha256 = "8afb5ff2e9593b59f1f90029f57d577df454c78cdeff80760894c72aac7e5168",
+            },
+            ["0.2.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/riscv-virt-rt/archive/refs/tags/0.2.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/riscv-virt-rt/releases/download/0.2.0/riscv-virt-rt-0.2.0.tar.gz",
+                },
+                sha256 = "79f1dc4415a59ba828048eb8706322957723f8a6fd84bde3faba6a377e48242b",
             },
         },
         macosx = {
@@ -45,6 +55,13 @@ package = {
                 },
                 sha256 = "8afb5ff2e9593b59f1f90029f57d577df454c78cdeff80760894c72aac7e5168",
             },
+            ["0.2.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/riscv-virt-rt/archive/refs/tags/0.2.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/riscv-virt-rt/releases/download/0.2.0/riscv-virt-rt-0.2.0.tar.gz",
+                },
+                sha256 = "79f1dc4415a59ba828048eb8706322957723f8a6fd84bde3faba6a377e48242b",
+            },
         },
         windows = {
             deps = { "xim:picolibc-riscv@1.8.12", "xim:qemu-riscv@9.2.4-1" },
@@ -54,6 +71,13 @@ package = {
                     CN     = "https://gitcode.com/mcpp-res/riscv-virt-rt/releases/download/0.1.0/riscv-virt-rt-0.1.0.tar.gz",
                 },
                 sha256 = "8afb5ff2e9593b59f1f90029f57d577df454c78cdeff80760894c72aac7e5168",
+            },
+            ["0.2.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/riscv-virt-rt/archive/refs/tags/0.2.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/riscv-virt-rt/releases/download/0.2.0/riscv-virt-rt-0.2.0.tar.gz",
+                },
+                sha256 = "79f1dc4415a59ba828048eb8706322957723f8a6fd84bde3faba6a377e48242b",
             },
         },
     },
