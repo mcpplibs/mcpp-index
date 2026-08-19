@@ -19,30 +19,30 @@ package = {
 
     xpm = {
         linux = {
-            ["0.1.0"] = {
+            ["0.2.0"] = {
                 url    = {
-                    GLOBAL = "https://github.com/mcpplibs/openkal-linux/archive/refs/tags/0.1.0.tar.gz",
-                    CN     = "https://gitcode.com/mcpp-res/openkal-linux/releases/download/0.1.0/openkal-linux-0.1.0.tar.gz",
+                    GLOBAL = "https://github.com/mcpplibs/openkal-linux/archive/refs/tags/0.2.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-linux/releases/download/0.2.0/openkal-linux-0.2.0.tar.gz",
                 },
-                sha256 = "ea00efa54c5bb3f62b29a9cfd5c8f8f3f32d8ddc6a1da75477893e2c7aca7223",
+                sha256 = "0007231fa59852f13ac3a0048033c9efbe6772c39545bbfb36f230c6ffd8a654",
             },
         },
         macosx = {
-            ["0.1.0"] = {
+            ["0.2.0"] = {
                 url    = {
-                    GLOBAL = "https://github.com/mcpplibs/openkal-linux/archive/refs/tags/0.1.0.tar.gz",
-                    CN     = "https://gitcode.com/mcpp-res/openkal-linux/releases/download/0.1.0/openkal-linux-0.1.0.tar.gz",
+                    GLOBAL = "https://github.com/mcpplibs/openkal-linux/archive/refs/tags/0.2.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-linux/releases/download/0.2.0/openkal-linux-0.2.0.tar.gz",
                 },
-                sha256 = "ea00efa54c5bb3f62b29a9cfd5c8f8f3f32d8ddc6a1da75477893e2c7aca7223",
+                sha256 = "0007231fa59852f13ac3a0048033c9efbe6772c39545bbfb36f230c6ffd8a654",
             },
         },
         windows = {
-            ["0.1.0"] = {
+            ["0.2.0"] = {
                 url    = {
-                    GLOBAL = "https://github.com/mcpplibs/openkal-linux/archive/refs/tags/0.1.0.tar.gz",
-                    CN     = "https://gitcode.com/mcpp-res/openkal-linux/releases/download/0.1.0/openkal-linux-0.1.0.tar.gz",
+                    GLOBAL = "https://github.com/mcpplibs/openkal-linux/archive/refs/tags/0.2.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-linux/releases/download/0.2.0/openkal-linux-0.2.0.tar.gz",
                 },
-                sha256 = "ea00efa54c5bb3f62b29a9cfd5c8f8f3f32d8ddc6a1da75477893e2c7aca7223",
+                sha256 = "0007231fa59852f13ac3a0048033c9efbe6772c39545bbfb36f230c6ffd8a654",
             },
         },
     },
