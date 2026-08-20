@@ -7,11 +7,23 @@
 -- per-architecture assembly, and which assembly is compiled follows the
 -- resolved target through the manifest's own `cfg(arch = ...)` sections.
 --
--- ⚠️ 0.1.0 IS A PROBE, NOT A LAYER. One architecture and one of the two
--- primitives that decide whether the layer can exist. The gate — that a single
--- interface survives a second, genuinely different machine — has not been
--- passed and cannot be passed by one architecture. Listed so that the probe can
--- be consumed and reproduced, not because the layer is ready to be built upon.
+-- ⭐ 0.4.0 PASSES THE GATE ON THREE MACHINES, WHICH IS WHAT MAKES IT AN
+-- ABSTRACTION RATHER THAN A FIT.
+--
+-- riscv64 and aarch64 are both weakly-ordered, fixed-width RISC machines: an
+-- interface that suits both may suit them because it is right or because they
+-- are alike, and no amount of testing on those two tells the cases apart.
+-- x86_64 is neither — variable-length instructions, total store order under
+-- which three of the four barriers need no instruction at all, and an interrupt
+-- mechanism that is a table of 256 gates. One probe source runs on all three
+-- and prints byte-identical output.
+--
+-- ⚠️ THE TARBALL CARRIES FOUR PACKAGES AND A CONSUMER NAMES ONE. Since 0.4.0
+-- the repository root is BOTH the interface package and a workspace; the ABI
+-- contract and the three backends are members reached by `path` from inside the
+-- same archive. `openarch = "0.4.0"` is the whole of a consumer's manifest, and
+-- the backend for its target arrives through the default `backend-auto`
+-- feature.
 package = {
     spec        = "1",
     namespace   = "mcpplibs",
@@ -23,6 +35,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.4.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openarch/archive/refs/tags/0.4.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openarch/releases/download/0.4.0/openarch-0.4.0.tar.gz",
+                },
+                sha256 = "deda18140965c7ebee9f49c90b9545aec38d564fc413daa3a075a02725020106",
+            },
             ["0.2.0"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openarch/archive/refs/tags/0.2.0.tar.gz",
@@ -39,6 +58,13 @@ package = {
             },
         },
         macosx = {
+            ["0.4.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openarch/archive/refs/tags/0.4.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openarch/releases/download/0.4.0/openarch-0.4.0.tar.gz",
+                },
+                sha256 = "deda18140965c7ebee9f49c90b9545aec38d564fc413daa3a075a02725020106",
+            },
             ["0.2.0"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openarch/archive/refs/tags/0.2.0.tar.gz",
@@ -55,6 +81,13 @@ package = {
             },
         },
         windows = {
+            ["0.4.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openarch/archive/refs/tags/0.4.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openarch/releases/download/0.4.0/openarch-0.4.0.tar.gz",
+                },
+                sha256 = "deda18140965c7ebee9f49c90b9545aec38d564fc413daa3a075a02725020106",
+            },
             ["0.2.0"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openarch/archive/refs/tags/0.2.0.tar.gz",
