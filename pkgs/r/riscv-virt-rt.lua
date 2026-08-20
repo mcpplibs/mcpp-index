@@ -52,6 +52,13 @@ package = {
                 },
                 sha256 = "71fc43daa4903d4f3037c204bd2b3be9aea56371b123a4529cc8c0c8c9b7f525",
             },
+            ["0.4.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/riscv-virt-rt/archive/refs/tags/0.4.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/riscv-virt-rt/releases/download/0.4.0/riscv-virt-rt-0.4.0.tar.gz",
+                },
+                sha256 = "2eef43aefb00905236a72d49924129c379e9d085fafdc4dd5c868e8a52b0414e",
+            },
         },
         macosx = {
             deps = { "xim:qemu-riscv@9.2.4-1" },
@@ -76,6 +83,13 @@ package = {
                 },
                 sha256 = "71fc43daa4903d4f3037c204bd2b3be9aea56371b123a4529cc8c0c8c9b7f525",
             },
+            ["0.4.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/riscv-virt-rt/archive/refs/tags/0.4.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/riscv-virt-rt/releases/download/0.4.0/riscv-virt-rt-0.4.0.tar.gz",
+                },
+                sha256 = "2eef43aefb00905236a72d49924129c379e9d085fafdc4dd5c868e8a52b0414e",
+            },
         },
         windows = {
             deps = { "xim:qemu-riscv@9.2.4-1" },
@@ -99,6 +113,13 @@ package = {
                     CN     = "https://gitcode.com/mcpp-res/riscv-virt-rt/releases/download/0.3.0/riscv-virt-rt-0.3.0.tar.gz",
                 },
                 sha256 = "71fc43daa4903d4f3037c204bd2b3be9aea56371b123a4529cc8c0c8c9b7f525",
+            },
+            ["0.4.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/riscv-virt-rt/archive/refs/tags/0.4.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/riscv-virt-rt/releases/download/0.4.0/riscv-virt-rt-0.4.0.tar.gz",
+                },
+                sha256 = "2eef43aefb00905236a72d49924129c379e9d085fafdc4dd5c868e8a52b0414e",
             },
         },
     },

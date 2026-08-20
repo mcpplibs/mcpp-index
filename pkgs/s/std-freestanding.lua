@@ -30,6 +30,13 @@ package = {
                 },
                 sha256 = "c0026e6aa85d207b3dd00c3f2fe2674174c2e25d86a162f64fe70742420efb00",
             },
+            ["0.3.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/std-freestanding/archive/refs/tags/0.3.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/std-freestanding/releases/download/0.3.0/std-freestanding-0.3.0.tar.gz",
+                },
+                sha256 = "04c02fc42d1fb608a831ff6a1c780a4c12901d8d1d680bd602cb4ff439eedf9a",
+            },
         },
         macosx = {
             ["0.2.0"] = {
@@ -39,6 +46,13 @@ package = {
                 },
                 sha256 = "c0026e6aa85d207b3dd00c3f2fe2674174c2e25d86a162f64fe70742420efb00",
             },
+            ["0.3.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/std-freestanding/archive/refs/tags/0.3.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/std-freestanding/releases/download/0.3.0/std-freestanding-0.3.0.tar.gz",
+                },
+                sha256 = "04c02fc42d1fb608a831ff6a1c780a4c12901d8d1d680bd602cb4ff439eedf9a",
+            },
         },
         windows = {
             ["0.2.0"] = {
@@ -47,6 +61,13 @@ package = {
                     CN     = "https://gitcode.com/mcpp-res/std-freestanding/releases/download/0.2.0/std-freestanding-0.2.0.tar.gz",
                 },
                 sha256 = "c0026e6aa85d207b3dd00c3f2fe2674174c2e25d86a162f64fe70742420efb00",
+            },
+            ["0.3.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/std-freestanding/archive/refs/tags/0.3.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/std-freestanding/releases/download/0.3.0/std-freestanding-0.3.0.tar.gz",
+                },
+                sha256 = "04c02fc42d1fb608a831ff6a1c780a4c12901d8d1d680bd602cb4ff439eedf9a",
             },
         },
     },
