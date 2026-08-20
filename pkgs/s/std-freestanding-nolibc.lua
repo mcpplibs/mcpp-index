@@ -44,6 +44,13 @@ package = {
                 },
                 sha256 = "8999ec9db31699569e14a9c5f0fa24f4736961b1d8aec143c4d0cc7e5a978ec0",
             },
+            ["0.2.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/std-freestanding-nolibc/archive/refs/tags/0.2.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/std-freestanding-nolibc/releases/download/0.2.0/std-freestanding-nolibc-0.2.0.tar.gz",
+                },
+                sha256 = "8e3509752d0a13411b5eabf64c3b9420cf904bbc7bba9e1ab0bd8f16b69e7afd",
+            },
         },
         macosx = {
             ["0.1.0"] = {
@@ -60,6 +67,13 @@ package = {
                 },
                 sha256 = "8999ec9db31699569e14a9c5f0fa24f4736961b1d8aec143c4d0cc7e5a978ec0",
             },
+            ["0.2.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/std-freestanding-nolibc/archive/refs/tags/0.2.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/std-freestanding-nolibc/releases/download/0.2.0/std-freestanding-nolibc-0.2.0.tar.gz",
+                },
+                sha256 = "8e3509752d0a13411b5eabf64c3b9420cf904bbc7bba9e1ab0bd8f16b69e7afd",
+            },
         },
         windows = {
             ["0.1.0"] = {
@@ -75,6 +89,13 @@ package = {
                     CN     = "https://gitcode.com/mcpp-res/std-freestanding-nolibc/releases/download/0.1.1/std-freestanding-nolibc-0.1.1.tar.gz",
                 },
                 sha256 = "8999ec9db31699569e14a9c5f0fa24f4736961b1d8aec143c4d0cc7e5a978ec0",
+            },
+            ["0.2.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/std-freestanding-nolibc/archive/refs/tags/0.2.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/std-freestanding-nolibc/releases/download/0.2.0/std-freestanding-nolibc-0.2.0.tar.gz",
+                },
+                sha256 = "8e3509752d0a13411b5eabf64c3b9420cf904bbc7bba9e1ab0bd8f16b69e7afd",
             },
         },
     },
