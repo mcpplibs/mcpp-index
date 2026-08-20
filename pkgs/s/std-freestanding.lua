@@ -12,6 +12,13 @@
 -- pinned it to one standard-library implementation, one C library, one
 -- architecture and one version of each — none of which it has any business
 -- knowing about.
+-- ⚠️ 0.3.0 AND 0.3.1's `alloc-kal` / `alloc-libc` features DO NOT WORK; 0.3.2
+-- is the first that does. 0.3.0 named `0.1.x`, which the installer reports as a
+-- missing package; 0.3.1 named `0.1`, which resolves and then fails with
+-- `install path missing after fetch`. 0.3.2 names `^0.1.0`, measured to fetch.
+-- The lesson recorded in the package: "no E_NOT_FOUND" is not "installs", and
+-- "installs" is not "builds".
+--
 -- ⚠️ 0.3.0's `alloc-kal` / `alloc-libc` features DO NOT WORK. Their
 -- `[feature-deps]` entries name `0.1.x`, a selector the installer does not
 -- have, so the implementation cannot be fetched and the feature is inert.
@@ -50,6 +57,13 @@ package = {
                 },
                 sha256 = "7e9433c037d05940a6680f0a82ea979345535f902d5ee6a4c7b4b352319527e5",
             },
+            ["0.3.2"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/std-freestanding/archive/refs/tags/0.3.2.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/std-freestanding/releases/download/0.3.2/std-freestanding-0.3.2.tar.gz",
+                },
+                sha256 = "8cd1687b2a02a53729fe8d97319b862f92a9c00ae2fb51985332fdbe0c1332c2",
+            },
         },
         macosx = {
             ["0.2.0"] = {
@@ -73,6 +87,13 @@ package = {
                 },
                 sha256 = "7e9433c037d05940a6680f0a82ea979345535f902d5ee6a4c7b4b352319527e5",
             },
+            ["0.3.2"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/std-freestanding/archive/refs/tags/0.3.2.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/std-freestanding/releases/download/0.3.2/std-freestanding-0.3.2.tar.gz",
+                },
+                sha256 = "8cd1687b2a02a53729fe8d97319b862f92a9c00ae2fb51985332fdbe0c1332c2",
+            },
         },
         windows = {
             ["0.2.0"] = {
@@ -95,6 +116,13 @@ package = {
                     CN     = "https://gitcode.com/mcpp-res/std-freestanding/releases/download/0.3.1/std-freestanding-0.3.1.tar.gz",
                 },
                 sha256 = "7e9433c037d05940a6680f0a82ea979345535f902d5ee6a4c7b4b352319527e5",
+            },
+            ["0.3.2"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/std-freestanding/archive/refs/tags/0.3.2.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/std-freestanding/releases/download/0.3.2/std-freestanding-0.3.2.tar.gz",
+                },
+                sha256 = "8cd1687b2a02a53729fe8d97319b862f92a9c00ae2fb51985332fdbe0c1332c2",
             },
         },
     },
