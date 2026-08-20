@@ -16,6 +16,14 @@
 -- xpm PLATFORM level because mcpp materializes `[xlings] deps` for the ROOT
 -- project only, so a consumer running `mcpp add riscv-virt-rt` would otherwise
 -- get a board package with no way to start it.
+-- ⚠️ 0.4.0's `nolibc` template generates a project that does not run. The
+-- scaffolder injects the template's own package as a dependency, and this
+-- package's module includes <stdio.h> — so on a target with no C library the
+-- injected dependency fails to compile before the generated project is
+-- reached. 0.4.1 declines the injection (`[template.inject] self = false`,
+-- mcpp 2026.8.20.2+) and stops treating an absent C library as an error, while
+-- still supplying the emulator. 0.4.0 stays listed; its default template is
+-- unaffected.
 package = {
     spec        = "1",
     namespace   = "mcpplibs",
@@ -59,6 +67,13 @@ package = {
                 },
                 sha256 = "2eef43aefb00905236a72d49924129c379e9d085fafdc4dd5c868e8a52b0414e",
             },
+            ["0.4.1"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/riscv-virt-rt/archive/refs/tags/0.4.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/riscv-virt-rt/releases/download/0.4.1/riscv-virt-rt-0.4.1.tar.gz",
+                },
+                sha256 = "ec8c09c1954b3e6552f5378bd14c34d7fe63ed23efc1fed4454801a4d6e71b46",
+            },
         },
         macosx = {
             deps = { "xim:qemu-riscv@9.2.4-1" },
@@ -90,6 +105,13 @@ package = {
                 },
                 sha256 = "2eef43aefb00905236a72d49924129c379e9d085fafdc4dd5c868e8a52b0414e",
             },
+            ["0.4.1"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/riscv-virt-rt/archive/refs/tags/0.4.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/riscv-virt-rt/releases/download/0.4.1/riscv-virt-rt-0.4.1.tar.gz",
+                },
+                sha256 = "ec8c09c1954b3e6552f5378bd14c34d7fe63ed23efc1fed4454801a4d6e71b46",
+            },
         },
         windows = {
             deps = { "xim:qemu-riscv@9.2.4-1" },
@@ -120,6 +142,13 @@ package = {
                     CN     = "https://gitcode.com/mcpp-res/riscv-virt-rt/releases/download/0.4.0/riscv-virt-rt-0.4.0.tar.gz",
                 },
                 sha256 = "2eef43aefb00905236a72d49924129c379e9d085fafdc4dd5c868e8a52b0414e",
+            },
+            ["0.4.1"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/riscv-virt-rt/archive/refs/tags/0.4.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/riscv-virt-rt/releases/download/0.4.1/riscv-virt-rt-0.4.1.tar.gz",
+                },
+                sha256 = "ec8c09c1954b3e6552f5378bd14c34d7fe63ed23efc1fed4454801a4d6e71b46",
             },
         },
     },
