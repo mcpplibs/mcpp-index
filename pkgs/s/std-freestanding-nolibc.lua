@@ -9,6 +9,16 @@
 -- Four of the five are an obligation rather than a convenience: a freestanding
 -- implementation provides memcpy, memmove, memset and memcmp because the
 -- compiler lowers structure assignment and array initialisation onto them.
+--
+-- ⚠️ 0.1.1 corrects a claim, not code. 0.1.0 predicted that using this package
+-- alongside a C library would fail with a duplicate definition. Measured: it
+-- does not. A C library is an ARCHIVE, and an archive member is pulled only
+-- while the symbol is still undefined, so this package's object files define
+-- `memcpy` first and the C library's member is never pulled. The build
+-- succeeds, silently substituting byte-at-a-time implementations for the C
+-- library's optimised ones — which is worse than the error that was predicted.
+-- 0.1.0 stays listed because a published version is one somebody may have
+-- pinned.
 package = {
     spec        = "1",
     namespace   = "mcpplibs",
@@ -27,6 +37,13 @@ package = {
                 },
                 sha256 = "280ffe0180e0bd19ef94d4655c564507c4799e5c72ac7624d58722cb8aac363a",
             },
+            ["0.1.1"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/std-freestanding-nolibc/archive/refs/tags/0.1.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/std-freestanding-nolibc/releases/download/0.1.1/std-freestanding-nolibc-0.1.1.tar.gz",
+                },
+                sha256 = "8999ec9db31699569e14a9c5f0fa24f4736961b1d8aec143c4d0cc7e5a978ec0",
+            },
         },
         macosx = {
             ["0.1.0"] = {
@@ -36,6 +53,13 @@ package = {
                 },
                 sha256 = "280ffe0180e0bd19ef94d4655c564507c4799e5c72ac7624d58722cb8aac363a",
             },
+            ["0.1.1"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/std-freestanding-nolibc/archive/refs/tags/0.1.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/std-freestanding-nolibc/releases/download/0.1.1/std-freestanding-nolibc-0.1.1.tar.gz",
+                },
+                sha256 = "8999ec9db31699569e14a9c5f0fa24f4736961b1d8aec143c4d0cc7e5a978ec0",
+            },
         },
         windows = {
             ["0.1.0"] = {
@@ -44,6 +68,13 @@ package = {
                     CN     = "https://gitcode.com/mcpp-res/std-freestanding-nolibc/releases/download/0.1.0/std-freestanding-nolibc-0.1.0.tar.gz",
                 },
                 sha256 = "280ffe0180e0bd19ef94d4655c564507c4799e5c72ac7624d58722cb8aac363a",
+            },
+            ["0.1.1"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/std-freestanding-nolibc/archive/refs/tags/0.1.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/std-freestanding-nolibc/releases/download/0.1.1/std-freestanding-nolibc-0.1.1.tar.gz",
+                },
+                sha256 = "8999ec9db31699569e14a9c5f0fa24f4736961b1d8aec143c4d0cc7e5a978ec0",
             },
         },
     },
