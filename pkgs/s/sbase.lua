@@ -21,6 +21,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.1.1"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/sbase/archive/refs/tags/0.1.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/sbase/releases/download/0.1.1/sbase-0.1.1.tar.gz",
+                },
+                sha256 = "d770d9273130aceeb7bd117644aed584969521fd10456fe375d52621958f4ff9",
+            },
             ["0.1.0"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/sbase/archive/refs/tags/0.1.0.tar.gz",
@@ -30,6 +37,13 @@ package = {
             },
         },
         macosx = {
+            ["0.1.1"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/sbase/archive/refs/tags/0.1.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/sbase/releases/download/0.1.1/sbase-0.1.1.tar.gz",
+                },
+                sha256 = "d770d9273130aceeb7bd117644aed584969521fd10456fe375d52621958f4ff9",
+            },
             ["0.1.0"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/sbase/archive/refs/tags/0.1.0.tar.gz",
@@ -39,6 +53,13 @@ package = {
             },
         },
         windows = {
+            ["0.1.1"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/sbase/archive/refs/tags/0.1.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/sbase/releases/download/0.1.1/sbase-0.1.1.tar.gz",
+                },
+                sha256 = "d770d9273130aceeb7bd117644aed584969521fd10456fe375d52621958f4ff9",
+            },
             ["0.1.0"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/sbase/archive/refs/tags/0.1.0.tar.gz",
