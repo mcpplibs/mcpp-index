@@ -12,6 +12,12 @@
 -- pinned it to one standard-library implementation, one C library, one
 -- architecture and one version of each — none of which it has any business
 -- knowing about.
+-- ⚠️ 0.3.0's `alloc-kal` / `alloc-libc` features DO NOT WORK. Their
+-- `[feature-deps]` entries name `0.1.x`, a selector the installer does not
+-- have, so the implementation cannot be fetched and the feature is inert.
+-- 0.3.1 uses a two-segment prefix instead. 0.3.0 stays listed because a
+-- published version is one somebody may have pinned, and its non-allocating
+-- half is unaffected.
 package = {
     spec        = "1",
     namespace   = "mcpplibs",
@@ -37,6 +43,13 @@ package = {
                 },
                 sha256 = "04c02fc42d1fb608a831ff6a1c780a4c12901d8d1d680bd602cb4ff439eedf9a",
             },
+            ["0.3.1"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/std-freestanding/archive/refs/tags/0.3.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/std-freestanding/releases/download/0.3.1/std-freestanding-0.3.1.tar.gz",
+                },
+                sha256 = "7e9433c037d05940a6680f0a82ea979345535f902d5ee6a4c7b4b352319527e5",
+            },
         },
         macosx = {
             ["0.2.0"] = {
@@ -53,6 +66,13 @@ package = {
                 },
                 sha256 = "04c02fc42d1fb608a831ff6a1c780a4c12901d8d1d680bd602cb4ff439eedf9a",
             },
+            ["0.3.1"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/std-freestanding/archive/refs/tags/0.3.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/std-freestanding/releases/download/0.3.1/std-freestanding-0.3.1.tar.gz",
+                },
+                sha256 = "7e9433c037d05940a6680f0a82ea979345535f902d5ee6a4c7b4b352319527e5",
+            },
         },
         windows = {
             ["0.2.0"] = {
@@ -68,6 +88,13 @@ package = {
                     CN     = "https://gitcode.com/mcpp-res/std-freestanding/releases/download/0.3.0/std-freestanding-0.3.0.tar.gz",
                 },
                 sha256 = "04c02fc42d1fb608a831ff6a1c780a4c12901d8d1d680bd602cb4ff439eedf9a",
+            },
+            ["0.3.1"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/std-freestanding/archive/refs/tags/0.3.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/std-freestanding/releases/download/0.3.1/std-freestanding-0.3.1.tar.gz",
+                },
+                sha256 = "7e9433c037d05940a6680f0a82ea979345535f902d5ee6a4c7b4b352319527e5",
             },
         },
     },
