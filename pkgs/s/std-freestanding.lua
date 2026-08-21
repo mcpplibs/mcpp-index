@@ -5,13 +5,21 @@
 -- directory, unfound, and the package would resolve and compile and then link
 -- against nothing.
 --
--- ⚠️ NO `deps`, and that is the design. This package needs libc++'s headers
--- and the target's C headers, and it gets both by ASKING mcpp
--- (`mcpp::toolchain_dir()`, and the target's libc which mcpp already puts on
--- the compile line) rather than by declaring who provides them. Declaring
--- pinned it to one standard-library implementation, one C library, one
--- architecture and one version of each — none of which it has any business
--- knowing about.
+-- ⚠️ `deps` IS EMPTY ON TWO PLATFORMS OF THREE, AND THE EXCEPTION IS INSTRUCTIVE.
+--
+-- The package needs libc++'s headers and the target's C headers, and it gets
+-- both by ASKING mcpp (`mcpp::toolchain_dir()`, and the target's libc which
+-- mcpp already puts on the compile line) rather than by declaring who provides
+-- them. Declaring pinned it to one standard-library implementation, one C
+-- library, one architecture and one version of each — none of which it has any
+-- business knowing about.
+--
+-- ⚠️ That holds as long as the toolchain payload CARRIES the headers, and the
+-- Windows payload does not. From 0.5.0 the package looks in a second place —
+-- an installed `xim:libcxx-headers` — and the windows block below declares it.
+-- The rule survives: the package still does not name a C library or an
+-- architecture. It names one missing artifact on the one platform that is
+-- missing it.
 -- ⚠️ 0.3.0 AND 0.3.1's `alloc-kal` / `alloc-libc` features DO NOT WORK; 0.3.2
 -- is the first that does. 0.3.0 named `0.1.x`, which the installer reports as a
 -- missing package; 0.3.1 named `0.1`, which resolves and then fails with
@@ -71,6 +79,13 @@ package = {
                 },
                 sha256 = "a0306d470f524f7ac32fca2ab46a46435a66dc0eb9b4960ada013a905f66b9a6",
             },
+            ["0.5.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/std-freestanding/archive/refs/tags/0.5.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/std-freestanding/releases/download/0.5.0/std-freestanding-0.5.0.tar.gz",
+                },
+                sha256 = "cb7c7fe4f2f6dd60784951262875d317e8a107642af01bad6ea4b3a106fc43f2",
+            },
         },
         macosx = {
             ["0.2.0"] = {
@@ -108,8 +123,36 @@ package = {
                 },
                 sha256 = "a0306d470f524f7ac32fca2ab46a46435a66dc0eb9b4960ada013a905f66b9a6",
             },
+            ["0.5.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/std-freestanding/archive/refs/tags/0.5.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/std-freestanding/releases/download/0.5.0/std-freestanding-0.5.0.tar.gz",
+                },
+                sha256 = "cb7c7fe4f2f6dd60784951262875d317e8a107642af01bad6ea4b3a106fc43f2",
+            },
         },
         windows = {
+            -- ⚠️ THE ONLY PLATFORM WITH A `deps`, AND IT IS A PROPERTY OF THE
+            -- TOOLCHAIN PAYLOAD RATHER THAN OF WINDOWS.
+            --
+            -- This package needs libc++'s headers. On linux and macosx the
+            -- llvm payload ships them and `build.mcpp` finds them under
+            -- `mcpp::toolchain_dir()`; the Windows payload builds clang
+            -- against the MSVC standard library and ships no libc++ at all,
+            -- so there the headers have to come from somewhere. They come
+            -- from here.
+            --
+            -- ⚠️ `deps` IS PER-PLATFORM, NOT PER-VERSION, so this also applies
+            -- to 0.2.0 through 0.4.0 -- which do not look for the package and
+            -- could not build on Windows at all. The cost is one small
+            -- download on a configuration that never worked; the alternative
+            -- is no mechanism for 0.5.0, which does.
+            --
+            -- The version is pinned rather than `@latest` for the reason
+            -- compat.openssl pins glibc: these headers are read by the SAME
+            -- clang the payload ships, and a newer libc++ is free to require
+            -- a newer compiler than the one that will read it.
+            deps = { "xim:libcxx-headers@22.1.8" },
             ["0.2.0"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/std-freestanding/archive/refs/tags/0.2.0.tar.gz",
@@ -144,6 +187,13 @@ package = {
                     CN     = "https://gitcode.com/mcpp-res/std-freestanding/releases/download/0.4.0/std-freestanding-0.4.0.tar.gz",
                 },
                 sha256 = "a0306d470f524f7ac32fca2ab46a46435a66dc0eb9b4960ada013a905f66b9a6",
+            },
+            ["0.5.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/std-freestanding/archive/refs/tags/0.5.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/std-freestanding/releases/download/0.5.0/std-freestanding-0.5.0.tar.gz",
+                },
+                sha256 = "cb7c7fe4f2f6dd60784951262875d317e8a107642af01bad6ea4b3a106fc43f2",
             },
         },
     },
