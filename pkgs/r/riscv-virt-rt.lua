@@ -91,6 +91,13 @@ package = {
                 },
                 sha256 = "2eef43aefb00905236a72d49924129c379e9d085fafdc4dd5c868e8a52b0414e",
             },
+            ["0.5.2"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/riscv-virt-rt/archive/refs/tags/0.5.2.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/riscv-virt-rt/releases/download/0.5.2/riscv-virt-rt-0.5.2.tar.gz",
+                },
+                sha256 = "09491adb7e0b6d5b3f67168a2450caa763292c6eed25019685cd9106d2eaa5df",
+            },
             ["0.5.1"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/riscv-virt-rt/archive/refs/tags/0.5.1.tar.gz",
@@ -136,6 +143,13 @@ package = {
                 },
                 sha256 = "2eef43aefb00905236a72d49924129c379e9d085fafdc4dd5c868e8a52b0414e",
             },
+            ["0.5.2"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/riscv-virt-rt/archive/refs/tags/0.5.2.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/riscv-virt-rt/releases/download/0.5.2/riscv-virt-rt-0.5.2.tar.gz",
+                },
+                sha256 = "09491adb7e0b6d5b3f67168a2450caa763292c6eed25019685cd9106d2eaa5df",
+            },
             ["0.5.1"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/riscv-virt-rt/archive/refs/tags/0.5.1.tar.gz",
@@ -180,6 +194,13 @@ package = {
                     CN     = "https://gitcode.com/mcpp-res/riscv-virt-rt/releases/download/0.4.0/riscv-virt-rt-0.4.0.tar.gz",
                 },
                 sha256 = "2eef43aefb00905236a72d49924129c379e9d085fafdc4dd5c868e8a52b0414e",
+            },
+            ["0.5.2"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/riscv-virt-rt/archive/refs/tags/0.5.2.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/riscv-virt-rt/releases/download/0.5.2/riscv-virt-rt-0.5.2.tar.gz",
+                },
+                sha256 = "09491adb7e0b6d5b3f67168a2450caa763292c6eed25019685cd9106d2eaa5df",
             },
             ["0.5.1"] = {
                 url    = {
