@@ -1,0 +1,9 @@
+# compat.jwt-cpp test project: real HMAC signing + verification through the
+# package's compat.openssl dependency — the positive path must verify, and a
+# wrong key must be rejected.
+[package]
+name = "jwt-cpp-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+jwt-cpp = "0.7.2"

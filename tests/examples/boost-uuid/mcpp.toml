@@ -1,0 +1,9 @@
+# compat.boost-uuid test project: RFC 4122 shape, string round-trip,
+# deterministic name generation and std::hash. Pulls the whole modular-boost
+# header family transitively through the descriptor's own deps.
+[package]
+name = "boost-uuid-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+boost-uuid = "1.92.0"

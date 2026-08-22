@@ -1,0 +1,8 @@
+# compat.boost-throw-exception test project: BOOST_THROW_EXCEPTION raises a
+# std::exception-derived error carrying the original message.
+[package]
+name = "boost-throw-exception-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+boost-throw-exception = "1.92.0"

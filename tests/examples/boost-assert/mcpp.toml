@@ -1,0 +1,8 @@
+# compat.boost-assert test project: asserts the assert/current_function/
+# source_location surface compiles and behaves at runtime.
+[package]
+name = "boost-assert-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+boost-assert = "1.92.0"

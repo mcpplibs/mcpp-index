@@ -1,0 +1,10 @@
+# compat.boost-config test project: the root of the modular-boost header
+# family this index carries. Asserts the pinned 1.92.0 train and positive
+# platform detection under `mcpp test`. Resolves via the inherited
+# workspace-root `[indices]` compat redirect.
+[package]
+name = "boost-config-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+boost-config = "1.92.0"

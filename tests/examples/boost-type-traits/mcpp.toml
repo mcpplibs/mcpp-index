@@ -1,0 +1,8 @@
+# compat.boost-type-traits test project: the trait answers are asserted both
+# statically (compile fails on wrong answers) and through a runtime value.
+[package]
+name = "boost-type-traits-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+boost-type-traits = "1.92.0"
