@@ -17,6 +17,7 @@ members = [
     "tests/examples/boost-throw-exception",
     "tests/examples/boost-type-traits",
     "tests/examples/boost-uuid",
+    "tests/examples/brotli",
     "tests/examples/build-mcpp",
     "tests/examples/c-ares",
     "tests/examples/catch2",

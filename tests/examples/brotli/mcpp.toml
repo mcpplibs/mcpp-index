@@ -1,0 +1,8 @@
+# Brotli test project: consumes compat.brotli through the workspace-root
+# `compat` index redirect and exercises encoder, decoder, and common code.
+[package]
+name = "brotli-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+brotli = "1.2.0"
