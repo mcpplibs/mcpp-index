@@ -1,0 +1,6 @@
+[package]
+name = "httplib-brotli-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+httplib = { version = "0.53.1", features = ["brotli"] }

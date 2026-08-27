@@ -1,0 +1,6 @@
+[package]
+name = "httplib-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+httplib = "0.53.1"
