@@ -1,0 +1,28 @@
+# compat.eui-neo's system tray, over the public `core::platform` surface.
+#
+# The other six eui-neo members cover the headless surface, the two entry-point
+# shapes, and the SDL2 / Vulkan / markdown legs. None of them touches the tray,
+# and none of them CAN detect it: tray_bridge.c's `#else` arm defines all six
+# tray symbols and returns 0 from each, so a descriptor that lost its backend
+# define keeps every existing member green while the tray quietly stops
+# existing. This member exists to make that difference observable.
+#
+# ALL THREE PLATFORMS, deliberately not cfg-gated. The descriptor gives windows
+# EUI_TRAY_WINAPI and macOS EUI_TRAY_APPKIT unconditionally, and linux
+# EUI_TRAY_SNI since 0.5.7; `core/platform/platform.h` is platform-clean, so the
+# consumer code below is identical everywhere. Only the ASSERTION is
+# linux-specific, for the reason given in tests/tray.cpp.
+#
+# compat.eui-neo is the only declared dependency. On linux the tray pulls glib
+# through the package's own staged copy and its `runtime` deps, all of which
+# mcpp propagates to the consumer -- the same convention as eui-neo-sdl2 and
+# eui-neo-vulkan, which include <SDL.h> / <vulkan/vulkan.h> without re-declaring
+# either.
+#
+# The `compat` index redirect is inherited from the workspace root.
+[package]
+name = "eui-neo-tray-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+eui-neo = "0.5.7"

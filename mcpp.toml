@@ -35,6 +35,7 @@ members = [
     "tests/examples/eui-neo-app-main",
     "tests/examples/eui-neo-markdown",
     "tests/examples/eui-neo-sdl2",
+    "tests/examples/eui-neo-tray",
     "tests/examples/eui-neo-vulkan",
     "tests/examples/eui-neo-window",
     "tests/examples/ffmpeg",

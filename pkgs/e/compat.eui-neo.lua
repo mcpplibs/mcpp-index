@@ -606,17 +606,18 @@ end
 -- work by an accident of the archive's shape rather than by anything this
 -- descriptor controls. Adding a hook means owning that.
 --
--- ⚠️ DONE IN THE SHELL, and not for brevity: this xim's Lua sandbox has
--- neither `os.files` nor `path.basename`, and both absences surface as
--- `attempt to call a nil value` AFTER the entire dependency set has
--- downloaded. `os.exec` / `os.isfile` / `os.isdir` / `os.mkdir` are what the
--- rest of this index uses, so they are what this uses.
+-- ⚠️ WHAT THIS RUNTIME ACTUALLY OFFERS, measured here rather than read out of
+-- xmake's sources -- descriptors run on libxpkg, which is a different and much
+-- narrower environment. Three things a first draft assumed, and none hold:
+-- `os.files` and `path.basename` are absent, and `os.cp` takes a LITERAL path,
+-- so a glob argument copies nothing without raising. Every one of those
+-- surfaces only AFTER the whole dependency set has downloaded, which is why
+-- the assertions further down are worth their lines.
 local function normalise_layout(layer)
-    -- ⚠️ NO SHELL. `sh -c` does not exist on a Windows runner, and this hook
-    -- runs on every platform -- the flag that says otherwise is further down,
-    -- and it only guards the glib staging. Listing a directory is also out
-    -- (`os.files` is not in this sandbox), so the archive's shape is ASKED
-    -- ABOUT by name rather than discovered.
+    -- ⚠️ NO SHELL HERE. `sh -c` does not exist on a Windows runner and this
+    -- hook runs on every platform; the host guard is further down and it only
+    -- covers the glib staging. With no directory listing available, the
+    -- archive's shape is ASKED ABOUT by name rather than discovered.
     local v = pkginfo.version()
     for _, name in ipairs({ "EUI-NEO-" .. v, "eui-neo-" .. v,
                             "EUI-NEO-v" .. v, "eui-neo-v" .. v }) do
@@ -625,21 +626,17 @@ local function normalise_layout(layer)
             return os.isfile(path.join(layer, "CMakeLists.txt"))
         end
     end
-    -- A mirror that flattened its tarball: everything at this level IS the
-    -- tree, so give it the one layer the globs expect.
+    -- ⚠️ NO FALLBACK FOR A FLATTENED ARCHIVE, and that is a measured decision
+    -- rather than an omission. A draft of this file carried one built on
+    -- `os.cp("*", layer)`; libxpkg's `os.cp` copies a LITERAL path and silently
+    -- copies nothing when handed a glob, so the branch could only ever have
+    -- returned false one line later -- a fallback in shape only. Reaching the
+    -- error below is strictly more honest than appearing to recover.
     --
-    -- ⚠️ DEFENSIVE, NOT OBSERVED. An earlier draft of this change said the CN
-    -- mirror does not preserve the wrap layer. Checked rather than repeated:
-    -- `eui-neo-0.5.6.tar.gz` from gitcode unpacks to `EUI-NEO-0.5.6/`, byte
-    -- for byte the same archive as GitHub's (same sha256, which is what one
-    -- `sha256` field for two URLs already required). Every mirrored version
-    -- was re-downloaded and checked the same way. This branch exists so the
-    -- globs cannot depend on that continuing to hold.
-    if os.isfile("CMakeLists.txt") then
-        os.mkdir(layer)
-        os.cp("*", layer)
-        return os.isfile(path.join(layer, "CMakeLists.txt"))
-    end
+    -- Nothing published needs it either: `eui-neo-0.5.6.tar.gz` from gitcode
+    -- unpacks to `EUI-NEO-0.5.6/`, byte for byte the same archive as GitHub's
+    -- (one `sha256` field for two URLs already required that), and every
+    -- mirrored version was re-downloaded and checked the same way.
     return false
 end
 
@@ -674,6 +671,20 @@ local function stage_glib(outdir)
     -- host guard in install()), and preserving the SYMLINKS matters. glib ships
     -- `libgio-2.0.so -> .so.0 -> .so.0.8000.0`; dereferencing them would stage
     -- three full copies of each library and lose the name the linker resolves.
+    -- ⚠️ THE SHELL IS DOING TWO THINGS `os.cp` CANNOT, both measured against
+    -- this runtime rather than assumed:
+    --
+    --   * GLOBBING. libxpkg's `os.cp` copies a literal path; handed
+    --     `libgio-2.0.so*` it silently copies NOTHING, and the assertion below
+    --     is what catches it. The versioned real file (`libgio-2.0.so.0.8000.0`)
+    --     cannot be named literally without discovering it, and this sandbox
+    --     has no directory listing (`os.files` is absent).
+    --   * SYMLINKS. glib ships `libgio-2.0.so -> .so.0 -> .so.0.8000.0`;
+    --     dereferencing that chain would stage three full copies of each
+    --     library and lose the name `-lgio-2.0` actually resolves to.
+    --
+    -- Safe despite running inside a hook that fires on every platform, because
+    -- install() returns before this on any non-Linux host.
     for _, pattern in ipairs(glib_libs) do
         os.exec("for lib in " .. sh_quote(path.join(glib.path, "lib")) .. "/" .. pattern ..
                 "; do [ -e \"$lib\" ] || continue; " ..
