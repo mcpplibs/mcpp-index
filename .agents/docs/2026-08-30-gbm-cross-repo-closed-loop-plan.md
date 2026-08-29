@@ -867,3 +867,64 @@ host 依赖。一个源码构建的 `compat.libdrm` 能把那条 host 边关掉,
 
 **结论**:不复制 mesa;把「可分离」这条判据用在真正可分离的东西上,而 libdrm 是最该先做的
 那个。`compat.libgbm` 保持 §3/§10.1 论证过的薄绑定形态。
+
+---
+
+## 15. xlings 版本 pin:**不下调,现状已经是对的**
+
+任务里有一条「顺带 pin 一下内部依赖的 xlings 版本到 `2026.8.27.4`,到时候应该就发布了」。
+查完之后这条建立在一个反过来的前提上,所以**没有执行**,理由如下。
+
+### 15.1 事实
+
+```
+gh release list --repo openxlings/xlings
+2026.8.27.5   Latest   v2026.8.27.5   2026-08-27T13:29:41Z      ← 已发布,8 个 asset
+2026.8.27.4            v2026.8.27.4   2026-08-27T10:18:31Z      ← 更旧
+```
+
+`.4` **不是待发布的新版,是已经发布的旧版**;`.5` 才是 Latest,而且三仓的 pin 已经都在 `.5`:
+
+| 仓 | pin | 状态 |
+|---|---|---|
+| mcpp | `src/xlings/xlings.cppm` `kXlingsVersion = "2026.8.27.5"` | `.github/tools/check_version_pins.sh` → `OK: xlings pins all at 2026.8.27.5` |
+| xim-pkgindex | `pkgs/x/xlings.lua` `latest = 2026.8.27.5` | 一致 |
+| mcpp-index | 只 pin mcpp(`MCPP_VERSION`),不 pin xlings | 无关 |
+
+所以「pin 到已发布的 xlings」这个**意图本身已经满足**,而且是被更好地满足了。
+
+### 15.2 下调会丢掉一个有记录的性质
+
+`src/xlings/xlings.cppm` 的注释写明了为什么是 `.5` 而不是 `.4`:
+
+> 2026.8.27.4 和 .5 都改成读索引,因此保持一致。**`.5` 还让声明在解析时压过索引,
+> 所以即使 `latest` 不是表里最高的那条,它也成立。**
+
+`.5` 之下(≤ `.4`)那条「声明压过索引」的行为没有。同一段注释还记录了 `.5` 作为
+**下限**要挡住的故障:低于 `2026.8.27.2` 的 xlings 从编译进去的常量取 runtime binding,
+于是一个 home 可以声明一个 glibc、装另一个,而报错的是 mcpp:
+
+```
+error: selected RuntimeBinding glibc@2.44 requires payload
+       '<store>/xim-x-glibc/2.44', but it is not installed
+```
+
+`kXlingsVersion` 是**全仓每一处 xlings pin 的唯一真源**,`check_version_pins.sh` 会强制
+`.github/` 下所有地方与它一致 —— 下调会同时改动 release/CI/bootstrap 的十几处。
+
+### 15.3 那条 warning 的正确解法不是下调
+
+本地看到的
+
+```
+Note vendored xlings 2026.8.27.4 is older than the pinned 2026.8.27.5,
+but no newer source is available (keeping it; run `xlings self update`)
+```
+
+说的是**随 mcpp 发行版打包进去的那份 vendored 副本**是 `.4`,不是说 `.5` 拿不到 ——
+`.5` 有 8 个 release asset,可下载。这条消息自己给了解法:`xlings self update`。
+把 pin 降到 `.4` 只会让「pin 与 vendored 一致」,代价是整个生态退回到没有
+「声明压过索引」的那个版本。
+
+**结论**:保持 `2026.8.27.5`。若确实要下调,那是一次独立的、影响 release/CI/bootstrap
+的变更,应当单独评估,不该搭在本方案里顺带做。
