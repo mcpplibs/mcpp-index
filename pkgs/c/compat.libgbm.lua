@@ -156,12 +156,26 @@
 -- same variable, same "don't override an explicit value" rule, scoped to
 -- processes that actually link libgbm.
 --
--- WHERE THIS REALLY BELONGS. Long term the distro answer is the right one and
--- it is one layer down: `xim:mesa` either building with `-Dgbm-backends-path=`
--- pointing into the subos view, or declaring `lib/gbm/` into it the way it
--- already declares `lib` and `include`. Then this package would carry no
--- constructor at all. Worth filing; until then the wiring lives here, where it
--- can at least be tested.
+-- WHERE THIS REALLY BELONGS, AND WHEN THIS CODE GOES AWAY. The distro answer is
+-- the right one and it is one layer down. That is now DONE rather than
+-- proposed: openxlings/xim-pkgindex#713 adds `GBM_BACKENDS_PATH` to the
+-- graphics discovery table, so `xim:mesa` declares it into the subos and every
+-- consumer inherits it — measured in a fresh subos, `4 env var(s) from 1
+-- package(s)` where it used to be 3, and a real `gbm_bo_create` on card0.
+--
+-- THE REMOVAL CONDITION IS MECHANICAL, not a judgement call:
+-- `tests/stock_usage.cpp` includes stock `<gbm.h>` and nothing else and
+-- asserts the variable is already set. Delete this TU, the `lib/gbm/` farm and
+-- `mcpp_gbm.h`, and re-run it. If it stays green, the ecosystem is supplying
+-- the value and none of this is needed any more.
+--
+-- As of 2026-08-30 it is NOT yet green without the constructor: the value
+-- arrives only in a home whose installed `xim:mesa` was configured by an index
+-- carrying #713, which means after that PR merges and the artifact is
+-- republished. Until then this is the only thing that makes
+-- `gbm_create_device()` work for an mcpp consumer, and it is deliberately the
+-- narrowest possible mechanism — one constructor, one variable, no override of
+-- an explicit value.
 --
 -- WHY THE FARM CARRIES THE UNVERSIONED `libgbm.so`, when compat.vulkan-runtime
 -- is emphatic that its farm must hold versioned sonames only. That rule exists
