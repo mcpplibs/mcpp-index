@@ -993,3 +993,65 @@ constructor 这一步是空转。
 
 `tests/stock_usage.cpp` **原样保留** —— 删掉 constructor 之后,它断言的就从
 「本包的 constructor 生效了」变成「**整条生态闭环生效了**」,是这个包最有价值的一条回归。
+
+---
+
+## 17. §14.2 的更正,以及真正该做的下一步
+
+§14.2 把 `compat.libdrm` 列为「最该先做的那个」,理由是它能关掉
+`compat.vulkan-runtime` 从宿主 harvest `libdrm*.so.*` 那条边。**这个理由是错的**,
+而查错的过程指向了一个更好的下一步。
+
+### 17.1 为什么那个理由不成立
+
+`compat.vulkan-runtime` 的农场存在的原因是:被 `dlopen` 的 **ICD 本身来自宿主**,
+而它有自己的 `DT_NEEDED`(libdrm、LLVM、xcb…),这些必须在同一个目录里解析得到。
+所以那里需要的是**宿主兼容的共享库**。
+
+一个索引内源码构建的 `compat.libdrm` 是**静态**包(索引里的 `compat.*` 都是),
+**满足不了一个 `.so` 的 `DT_NEEDED`**。所以它根本替代不了那条边 —— 我把「有个包叫
+libdrm」和「农场里那条 `libdrm*.so.*` 需求」当成同一件事了,它们不是。
+
+`compat.libdrm` 仍然可能有价值(给**构建期**消费者,例如将来若真要源码建 GBM 前端),
+但**不是**因为它能关掉 vulkan-runtime 的 host 边。
+
+### 17.2 真正该做的下一步:vulkan-runtime 走 glx-runtime 走过的那条路
+
+实测 `xim:mesa` 的 payload:
+
+```
+share/vulkan/icd.d/radeon_icd.x86_64.json
+lib/libvulkan_radeon.so
+```
+
+而 `mesa.lua` 的 `config()` 里已经有:
+
+```lua
+graphics.declare_vulkan_icd(dir, "share/vulkan/icd.d", tag)
+```
+
+配合 DISCOVERY 的 `XDG_DATA_DIRS`(Vulkan loader 搜 `$XDG_DATA_DIRS/vulkan/icd.d`),
+**生态已经能 hermetic 地提供 RADV 这一条 ICD**。
+
+而 `compat.vulkan-runtime` 至今 `deps = {}`,并且照旧从
+`/usr/lib/x86_64-linux-gnu` 一把抓 `libvulkan_*.so` / `libdrm*.so.*` / `libLLVM*.so.*` …
+—— **这正是 2026.08.08 之前 `compat.glx-runtime` 的处境**:生态自己有了,包却还在够宿主。
+
+`glx-runtime` 当时的修法就是答案:声明 `deps = { runtime = { "xim:graphics" } }`,
+从生态栈取,宿主那扇门只留给生态覆盖不到的厂商(它保留 `MCPP_HOST_GL_LIBRARY_PATH`
+并在注释里写明代价)。
+
+**但要诚实的一点**:生态的 Vulkan 覆盖目前**只有 AMD**(RADV)。`mesa.lua` 自己写着
+「anv(Intel Vulkan)与 NVK 仍然不在这里」。所以 vulkan-runtime **不能**像本方案对
+`compat.libgbm` 那样做到「零 host」,它应当变成 glx-runtime 那个形态:
+**生态优先 + 宿主兜底**,而不是现在的**只有宿主**。
+
+### 17.3 收益与排序
+
+| 候选 | 关掉的 host 边 | 依据 |
+|---|---|---|
+| **vulkan-runtime 接 `xim:mesa`** | AMD 机器上的 ICD + 其整条传递闭包(libdrm/LLVM/xcb…) | 生态已有 RADV,机制已有 `declare_vulkan_icd` |
+| `compat.libdrm` | **无**(见 17.1) | 仅构建期价值 |
+
+所以下一步是 **vulkan-runtime**,不是 libdrm。这与本方案的主线是同一条:
+**先问「生态是不是已经拥有它」,再决定是 vendor、绑定、还是够宿主。**
