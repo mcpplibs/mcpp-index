@@ -805,3 +805,49 @@ version `GLIBC_2.43' not found (required by …/libgallium-25.0.7.so)
 装对 scope 之后,sysroot 天然看得见,不需要叠加层。
 
 一句话:**mcpp#352 修好了「怎么注入」;T1 补上「注入什么」;T3 补上「从哪读得到」。**
+
+---
+
+## 14. 要不要把 mesa(或它内部可分离的库)做成 mcpp-index 包?
+
+mcpp **确实**支持共享库包 —— `docs/package-types.md` 的形态 F(「共享库 compat:必须是
+唯一的那个 `.so`」),`compat.x11` 家族与 linux 上的 `compat.vulkan` 就是。所以这不是
+「能不能」的问题,是「该不该」。
+
+### 14.1 mesa 本体:不建议
+
+三条,前两条已实测:
+
+1. **一个进程里会出现两个 `libgbm.so.1`。** `xim:mesa` 已经提供一个,索引再建一个,
+   谁被加载取决于搜索顺序。`compat.vulkan-runtime` 的注释对同一件事的结论是
+   「宿主自己的 `libvulkan.so*` **刻意不** harvest……一个进程一个 loader 才是重点」。
+
+2. **混合链接形态 = 静默符号劫持。** 索引里的 `compat.*` 全是**静态**包,而 mesa 的
+   payload 是 shared 闭包。实测(glib/zlib,见 [[mcpp-prebuilt-package-route]]):exe 的
+   `.dynsym` 导出 86 个 zlib 符号,`LD_DEBUG=bindings` 显示 libgio 的 12 次 zlib 调用
+   **全部绑到 exe**,捆进去的 `libz.so.1` 被完全遮蔽成死重 —— **跑得通、无告警**。
+   vcpkg 用 triplet、Conan 用 `shared` option 沿图传播来禁止「一次链接里混形态」,
+   mcpp/xlings 缺的正是这个全图开关。
+
+3. **成本。** mesa 要 meson + LLVM + ~30 个依赖;而 `xlings-res/mesa` 已经把这件事做完了。
+
+### 14.2 内部「可分离的库」:`compat.libdrm` 值得做
+
+用户的直觉在这里是对的 —— **有些确实是独立项目**,判据仍是 §3 那条(上游是否作为
+可独立分发的单元发布):
+
+| 候选 | 是独立项目吗 | Conan 有没有 | 建议 |
+|---|---|---|---|
+| **libdrm** | ✔ 独立发布 | ✔ 真配方(源码构建) | **值得加**,见下 |
+| expat | ✔ 独立发布 | ✔ | 可加,按需 |
+| libglvnd | ✔ 独立发布 | ✔ | 索引已有 `compat.glx-headers`(只取头) |
+| **libgbm / libEGL / libGL** | ✗ 是 mesa 内部 target | ✗ **Conan 根本没有** | 保持绑定形态 |
+
+**`compat.libdrm` 有一条现成的理由**:`compat.vulkan-runtime` 今天从**宿主**
+`/usr/lib/x86_64-linux-gnu` harvest `libdrm*.so.*` —— 这正是本方案第 2 节反复要消除的
+host 依赖。一个源码构建的 `compat.libdrm` 能把那条 host 边关掉,而且它**不触发 14.1 的
+任何一条**:libdrm 是独立项目、索引里没有第二份、可以静态构建从而与其余 `compat.*`
+形态一致。
+
+**结论**:不复制 mesa;把「可分离」这条判据用在真正可分离的东西上,而 libdrm 是最该先做的
+那个。`compat.libgbm` 保持 §3/§10.1 论证过的薄绑定形态。
