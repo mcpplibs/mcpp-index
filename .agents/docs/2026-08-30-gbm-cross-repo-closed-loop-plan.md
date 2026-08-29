@@ -18,6 +18,13 @@ R2 **不是 gbm 专属的**:同一条线上 `LIBGL_DRIVERS_PATH` 和 `__EGL_VEND
 R1 + R2 落地后,`compat.libgbm` 里的 constructor 与后端 farm **全部删除**,退化成一个
 只有「头 + `-lgbm`」的薄壳。
 
+> **第二轮 review 修正(§8)**:R2 应拆成 R2a/R2b/R2c 三条,且 mcpp 侧正确形态是
+> **分层继承(B3)** —— 工具链 subos 作基座、项目 subos 作叠加层 —— 而不是原文建议的
+> B1(只合 env)或 B2(整体切换)。实测:项目 subos **缺 `libgcc_s` / `libstdc++`**,
+> 不是工具链 subos 的超集,所以 B2 会回退;而 B1 只修运行期、不修构建期。
+> 另外实测确认:今天**唯一**能把 xim 层引进 mcpp 工程的东西就是 compat 包的
+> `xpm.deps.runtime`(`[xlings] deps` 只物化不供给、`[xlings] subos` 不能自举)。
+
 ---
 
 ## 1. 实测证据(全部可复现)
@@ -146,7 +153,10 @@ end
 
 ### C2 — mcpp:让默认选择也能读到项目 subos 的声明
 
-两个方案,**建议 B1**。
+> **⚠ 本节已被第 8 节「深度自我 review」推翻。** 下面的 B1/B2 是一个假二分,正确的形态是
+> **分层继承**(B3)。保留原文是为了记录被否掉的推理,新方案见 §8。
+
+两个方案,~~建议 B1~~。
 
 #### B1(小,建议):只合并 env,不动其他
 
@@ -319,3 +329,98 @@ version `GLIBC_2.43' not found (required by …/libgallium-25.0.7.so)
 
 这也是为什么全套测试断言的是「后端**存在于**将被搜索的路径上」而不是「后端能加载」——
 后者在这台机器上永远红,且红的原因不在本方案范围内。
+
+---
+
+## 8. 深度自我 review(2026-08-30 第二轮)
+
+第一轮方案有四处实质错误。逐条记录,因为其中三条是「没做实验就下结论」。
+
+### 8.1 B1/B2 是假二分,正确形态是**分层继承**(B3)
+
+**实测**:项目 subos `_` 里有什么:
+
+| | |
+|---|---|
+| `libc.so.6` / `crt1.o` / `libm.so.6` / `ld-linux-x86-64.so.2` | ✔ |
+| **`libgcc_s.so.1` / `libstdc++.so.6`** | **✗ 没有**(工具链 subos 里有) |
+| `libgbm.so{,.1}` / `libEGL.so.1` / `libGL.so.1` / `usr/include/gbm.h` | ✔ |
+
+所以**项目 subos 不是工具链 subos 的超集**。由此:
+
+- **B2(切换)会回退**:sysroot 换过去就丢了 gcc runtime。我当时反对 B2 的理由是「爆炸半径大 /
+  会 full rebuild」—— 那是**弱理由**(fingerprint 变化本就由 `contractHash` 正确处理,一次性重建
+  不是正确性问题)。真正的反对理由是**它会丢东西**,而我没测出来。
+- **B1(只合 env)不够**:它修好 `GBM_BACKENDS_PATH`,但 `gbm.h` 与 `-lgbm` 仍然只能靠 compat 包
+  自己声明。也就是说 B1 把「运行期」修好了,「构建期」原样留着。
+
+**B3 = 默认用 mcpp 的工具链 subos 作**基座**,项目 subos 作**叠加层**:**
+
+```
+sysroot   : --sysroot=<toolchain subos>            ← 不变,保住 gcc runtime
+叠加      : -isystem <proj subos>/usr/include
+            -L       <proj subos>/lib
+            -Wl,-rpath,<proj subos>/lib
+env       : 项目 subos 的 envs 按 prepend 合并(项目在前)
+```
+
+一个编译器只吃一个 `--sysroot`,所以「继承」在实现上必然是「基座 sysroot + 叠加 `-isystem`/`-L`」,
+而不是换 sysroot。这既拿到了 B2 想要的东西(头和库直接可见),又不承担 B2 的回退风险,
+比 B1 多修一个构建期。
+
+### 8.2 我从没验证过「不要 compat 包」这条路走不走得通
+
+第一轮直接断言「薄壳仍然要保留」,没有证伪替代方案。补测之后:
+
+| 尝试 | 结果 |
+|---|---|
+| `[xlings] deps = ["mesa"]`(无 compat 依赖) | `.mcpp/.xlings.json` 里确实写进了 `"deps": ["mesa"]`,但**没有安装、没有建 subos**,`fatal error: gbm.h: No such file or directory` |
+| `[xlings] subos = "_"`(subos 不存在时) | **报错**:`selected SubOS '_' does not exist … create/bootstrap that environment instead of falling back`,mcpp 不会自举 |
+| 包声明 `xpm.deps.runtime = { "xim:mesa" }` | ✔ 项目 subos 被建出来,mesa 进去 |
+
+**⇒ 今天唯一能把 xim 层引进一个 mcpp 工程的东西,就是 compat 包的 `xpm.deps.runtime`。**
+
+结论没变(薄壳要保留),但**理由变了**,而且这个理由本身是第三个洞:
+
+- **R2a**:`[xlings] subos` 只能**选择**已存在的 subos,不能创建。
+- **R2b**:`[xlings] deps` 只被**物化**进 `.mcpp/.xlings.json`,没有被**供给**(install/expose)。
+
+R2a + R2b 不修,B3 从 manifest 侧就是不可达的 —— 用户写 `[xlings]` 也拿不到东西,
+只能绕道「随便依赖一个声明了 `xim:mesa` 的 compat 包」。这恰好就是 `compat.libgbm` 现在的处境:
+**它事实上在扮演「xim 层的入口」,而这不该是一个库包的职责。**
+
+### 8.3 V 矩阵把两种 C2 混在一起了
+
+原矩阵的 V3/V5 默认「C2 之后头和库也就有了」。只有 B3 成立;B1 之下 V5 永远不可能绿,
+因为删掉 constructor 只影响 env,而 `include_dirs`/`ldflags` 本来就来自包本身。
+
+修正:V5 的准入条件应写成「**C2 采用 B3** 且 V3 绿」。若最终只做 B1,则
+`compat.libgbm` 的薄壳形态是**长期**的,不是过渡的 —— 这对 §3「是否独立成包」的结论没有影响
+(仍然该独立、该薄),但对「多久之后能删 constructor」的预期影响很大。
+
+### 8.4 R2 应拆成三条
+
+原文一条 R2 说不清。正确的分解:
+
+| | 缺陷 | 影响 |
+|---|---|---|
+| **R2a** | `[xlings] subos` 不能自举 | manifest 侧无法建立项目 subos |
+| **R2b** | `[xlings] deps` 只物化不供给 | 声明了也拿不到东西 |
+| **R2c** | 默认选择只读工具链 subos,无分层 | 项目 subos 的 env / 头 / 库全部不可见 |
+
+`mcpp#352` 修的是「怎么注入 env」,R2c 是「从哪读」,R2a/R2b 是「谁来建」。三者独立。
+
+### 8.5 修正后的建议
+
+- **C2 采用 B3(分层继承)**,不是 B1。理由见 8.1:B1 只修一半,B2 会丢 gcc runtime。
+- **C2 的前置**是 R2a/R2b,否则 B3 只能被包触发,manifest 侧仍然不可用。
+- **C3 的准入条件**改为「B3 落地 + V3 绿 + V5 绿」。
+- §3 的结论(`compat.libgbm` 应独立且薄)**不变**,但要补一句:它今天还额外承担了
+  「xim 层入口」这个不属于它的职责,R2a/R2b 修好之后这份职责才真正卸掉。
+
+### 8.6 仍然成立的部分
+
+- §1 的全部实测证据(两个 `.xlings.json`、`subos = "_"` 的前后对比)。
+- **R1 与 C1 完全不受影响** —— 它在另一个仓,独立可合,且单独就能修好 xlings 侧消费者。
+- §3 的行业论证(按接口拆包;Conan 无 gbm recipe、`<name>/system` 形态)。
+- §7 的 glibc 错位,与本方案正交。
