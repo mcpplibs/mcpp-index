@@ -75,6 +75,13 @@ package = {
                 },
                 sha256 = "b17e0b15d2c205a2918708bcd3ac992384f1a38d03232c28f17190a1db081e54",
             },
+            ["0.2.10"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/tinyhttps/archive/refs/tags/0.2.10.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/tinyhttps/releases/download/0.2.10/tinyhttps-0.2.10.tar.gz",
+                },
+                sha256 = "7ab1555ff465ae179579cc2d9328db11c847770f9a22148d563cd041dd8e4481",
+            },
         },
         macosx = {
             ["0.2.1"] = {
@@ -140,6 +147,13 @@ package = {
                 },
                 sha256 = "b17e0b15d2c205a2918708bcd3ac992384f1a38d03232c28f17190a1db081e54",
             },
+            ["0.2.10"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/tinyhttps/archive/refs/tags/0.2.10.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/tinyhttps/releases/download/0.2.10/tinyhttps-0.2.10.tar.gz",
+                },
+                sha256 = "7ab1555ff465ae179579cc2d9328db11c847770f9a22148d563cd041dd8e4481",
+            },
         },
         windows = {
             ["0.2.1"] = {
@@ -204,6 +218,13 @@ package = {
                     CN     = "https://gitcode.com/mcpp-res/tinyhttps/releases/download/0.2.9/tinyhttps-0.2.9.tar.gz",
                 },
                 sha256 = "b17e0b15d2c205a2918708bcd3ac992384f1a38d03232c28f17190a1db081e54",
+            },
+            ["0.2.10"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/tinyhttps/archive/refs/tags/0.2.10.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/tinyhttps/releases/download/0.2.10/tinyhttps-0.2.10.tar.gz",
+                },
+                sha256 = "7ab1555ff465ae179579cc2d9328db11c847770f9a22148d563cd041dd8e4481",
             },
         },
     },
