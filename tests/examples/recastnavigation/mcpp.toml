@@ -1,0 +1,24 @@
+# recastnavigation 测试工程：用 Recast 烘一张导航网格，用 Detour 在上面
+# 走路，并对路径做断言。mcpp-index 自引用 workspace 的一员——workspace 根
+# 的 [indices] 重定向指向本仓库，所以 compat.recastnavigation 解析到签入的
+# 描述符（pkgs/c/compat.recastnavigation.lua）。
+#
+# 地面是 20x20、中间挖穿一个 4x4 洞的正方形，因此从 (2,2) 到 (18,18) 的
+# 路线不可能是一条直线段。「包坏了但测试依然绿」的情况有三种，这里逐项
+# 防住：
+#
+#   * 栅格化出空网格       -> 对 nverts/npolys 做断言
+#   * 网格是一整块大四方形 -> 直线路径必须拐弯，洞若被构建器悄悄填平，
+#     就在这里失败
+#   * Detour 没被真正链接  -> findPath / findStraightPath 都被调用，
+#     缺库在链接期就失败，根本到不了这里
+#
+# 本成员只测核心构建（Recast + Detour）；`crowd`、`tilecache`、
+# `debug-utils` 三个 feature 由 tests/examples/recastnavigation-features
+# 覆盖。
+[package]
+name = "recastnavigation-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+recastnavigation = "1.6.0"

@@ -1,0 +1,24 @@
+# recastnavigation-features 测试工程：以三个可选 feature 全开的方式消费
+# compat.recastnavigation——`crowd`、`tilecache`、`debug-utils`——并逐个断言
+# 它们干了真实的活。mcpp-index 自引用 workspace 的一员；workspace 根的
+# [indices] 重定向让依赖解析到签入的描述符
+# （pkgs/c/compat.recastnavigation.lua）。
+#
+# 兄弟成员 tests/examples/recastnavigation 覆盖无 feature 的核心构建
+# （Recast + Detour）；本成员证明三个被门控的组件——每个都只在被点名时
+# 才编进库里：
+#
+#   crowd        -> 一个 agent 被引导着穿过网格，而且必须真的挪了地方
+#   tilecache    -> 构建高度场层、压缩、缓存，再物化回一块导航网格 tile
+#   debug-utils  -> 用一个 duDebugDraw 实现驱动导航网格绘制，并给收到的
+#                   图元计数
+#
+# `debug-utils` 会传递拉入 `tilecache`（上游的 DebugUtils 无条件链接
+# DetourTileCache），所以只点调试绘制的消费者依然能拿到可链接的库——
+# 这条 implication 也是本成员要守住的东西之一。
+[package]
+name = "recastnavigation-features-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+recastnavigation = { version = "1.6.0", features = ["crowd", "debug-utils"] }

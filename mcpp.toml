@@ -62,6 +62,8 @@ members = [
     "tests/examples/nlohmann.json",
     "tests/examples/openblas",
     "tests/examples/openssl",
+    "tests/examples/recastnavigation",
+    "tests/examples/recastnavigation-features",
     "tests/examples/protobuf",
     "tests/examples/protobuf-upb",
     "tests/examples/protobuf-gzip",

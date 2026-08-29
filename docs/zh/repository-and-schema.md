@@ -217,3 +217,4 @@ bash tests/run_members.sh --all --cache local               # 绕过包构建缓
 | header-only(纯头) | `pkgs/c/compat.opengl.lua`、`compat.khrplatform.lua` | — | `.agents/docs/2026-06-03-gl-runtime-packages-plan.md` |
 | 外部构建系统(`install()` 驱动) | `pkgs/c/compat.openblas.lua`(Make)、`compat.openssl.lua`(Perl Configure + Make) | `tests/examples/openblas/`、`openssl/` | `docs/superpowers/specs/2026-07-26-openssl-asio-tls-design.md` / #124 |
 | feature 拉起依赖(跨包) | `pkgs/c/chriskohlhoff.asio.lua` 的 `ssl` feature → `compat.openssl` | `tests/examples/asio-ssl/` | 同上 |
+| 多组件上游拍平进单个库 | `pkgs/c/compat.recastnavigation.lua`(上游五个 CMake target → 核心构建 + `crowd`/`tilecache`/`debug-utils`;`debug-utils` `implies` `tilecache`) | `tests/examples/recastnavigation/`、`recastnavigation-features/` | `.agents/docs/2026-08-29-add-recastnavigation-plan.md` |

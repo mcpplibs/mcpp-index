@@ -40,6 +40,7 @@ mcpp self config --mirror CN   # 切换至国内镜像,默认使用 GLOBAL 上�
 | C 源码 compat | [`compat.cjson`](pkgs/c/compat.cjson.lua) | 单个 `.c` 编成库;可选扩展由 `features` 门控 |
 | header-only | [`compat.gtl`](pkgs/c/compat.gtl.lua) | 没有可编译内容 —— `include_dirs` 加一个 anchor TU |
 | 全源码直编 + 生成 config | [`compat.c-ares`](pkgs/c/compat.c-ares.lua) | 把 configure 本该生成的 config 头快照进 `generated_files` |
+| 多组件上游拍平进单个库 | [`compat.recastnavigation`](pkgs/c/compat.recastnavigation.lua) | Recast Navigation 1.6.0 —— 上游是五个互相依赖的 CMake target;这里把「人人都要用」的两个作为核心,其余三个做 `features`,全部编进同一个 lib。依赖边必须手工重建,这正是 `debug-utils` 带 `implies = { "tilecache" }` 的原因:上游无条件链接 DetourTileCache,没有这条 implication,只开调试绘制的消费者会在**链接期**撞上缺失的 `dtTileCache*` 符号。上游安装把头文件拍平进 `include/recastnavigation/`,同时把该目录**及其父目录**都放进 interface include path,于是对着真实安装 `#include <Recast.h>` 与 `#include <recastnavigation/Recast.h>` 都合法 —— 26 个生成的转发头把第二种拼写还给源码树构建。`RECASTNAVIGATION_DT_POLYREF64` 与 `RECASTNAVIGATION_DT_VIRTUAL_QUERYFILTER` 刻意**不**做成 feature:它们改变跨库边界类型的 ABI,而 feature 的 `defines` 只作用于本包自己的 TU |
 | C++23 module wrapper | [`nlohmann.json`](pkgs/n/nlohmann.json.lua) | 一份生成的 `.cppm` 把 header-only 库变成 `import` 即用 |
 | 外部构建系统 | [`compat.openssl`](pkgs/c/compat.openssl.lua) | `install()` 钩子驱动上游自己的 Perl Configure + Make |
 
