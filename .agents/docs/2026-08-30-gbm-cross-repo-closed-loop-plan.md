@@ -970,7 +970,7 @@ constructor 这一步是空转。
 对比同一个包在**未打补丁**的索引下(本文档 §12.4 之前的所有测量),同一条路径给出的是
 包内 farm 的值 —— 差别只有一个变量:索引里有没有那一行 DISCOVERY。
 
-### 16.3 为什么现在还不能删
+### 16.3 为什么现在还不能删 —— ⚠ 已过时,#713 已合并,constructor 已删除(见 §18)
 
 `#713` 尚未合并,artifact 也没重新发布。删了之后:
 
@@ -1055,3 +1055,61 @@ graphics.declare_vulkan_icd(dir, "share/vulkan/icd.d", tag)
 
 所以下一步是 **vulkan-runtime**,不是 libdrm。这与本方案的主线是同一条:
 **先问「生态是不是已经拥有它」,再决定是 vendor、绑定、还是够宿主。**
+
+
+---
+
+## 18. 最终状态(2026-08-30,#713 合并之后)
+
+§16.4 列的那一步已经做完了。
+
+### 18.1 包最终长什么样
+
+| | 行数 |
+|---|---|
+| 带 constructor 的形态 | 598 |
+| **最终** | **303** |
+
+删掉的:`gbm_backends.c`(constructor + 两个 helper)、`lib/gbm/` 后端 farm、
+`mesa_libdir()`、`mcpp_gbm.h`,以及为它们辩护的那段注释。
+
+剩下的就是一个绑定:`deps = { runtime = { "xim:mesa" } }`、一个把
+`gbm.h` 与 `libgbm.so*` 从 subos view 软链出来的 `install()`,加上
+`include_dirs` / `ldflags` / `runtime.{library_dirs,link_library_dirs}`。
+**它不编译任何上游源码、不带自己的头文件、不设任何环境变量。**
+
+设 `GBM_BACKENDS_PATH` 从来就是 Mesa 自己的机制、而且是**环境**的职责;
+包去做那件事的那个版本是权宜之计,不是设计。
+
+### 18.2 验证(对着**已发布**的 artifact,不是本地打补丁的副本)
+
+`xlings update` 从发布的 artifact 同步索引 → 重装 `xim:mesa` → `config()` 重跑:
+
+```
+mesa vars: ['LIBGL_DRIVERS_PATH', '__EGL_VENDOR_LIBRARY_DIRS', 'XDG_DATA_DIRS', 'GBM_BACKENDS_PATH']
+<registry>/subos/default/usr/lib/gbm/dri_gbm.so
+```
+
+`mcpp test -p libgbm`(CN 镜像,冷跑):**2 passed**,且
+
+```
+backends dir: <registry>/subos/default/usr/lib/gbm      ← subos 给的,不是包给的
+```
+
+### 18.3 测试现在守的是什么
+
+两个二进制断言的对象**移到了本仓之外**,这是刻意的:
+
+| 断言 | 一旦谁坏了会红 |
+|---|---|
+| `GBM_BACKENDS_PATH` 已设置 | xim-pkgindex 的 DISCOVERY 行被删 / mcpp 停止注入 subos env |
+| 它指向的目录里有 `*_gbm.so` | `xim:mesa` 不再把后端放进 subos |
+| `GBM_BO_FORMAT_XRGB8888`(值 0)→ `"XR24"` | 头与库来自不同 Mesa |
+
+所以这个 member 现在是**整条生态链的绊线**,而不只是这个包的自测。
+
+### 18.4 顺带修掉的一个更大的问题
+
+`index.toml` 的 `min_mcpp = 2026.8.3.3` 是**假的**,而且是本包证明的 —— 详见提交
+`feat(libgbm): the package sheds its workaround; index floor corrected`。
+已上调到 `2026.8.27.2`,同时把「floor 与 CI pin 一起动」这条早已漂移的不变量恢复了。
