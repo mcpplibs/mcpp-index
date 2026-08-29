@@ -104,6 +104,51 @@ MESA-LOADER: failed to open dri: /usr/lib/gbm/dri_gbm.so: cannot open shared obj
 Closing that is this package's real content, and it is why the shape is not a copy of
 `compat.glx-runtime`.
 
+### The repair has to be invisible
+
+The first version of this package exposed a header, `mcpp_gbm.h`, and asked the consumer to call
+`mcpp_gbm_use_sibling_backends()` before creating a device. That was wrong, and not merely
+stylistically: **libgbm is mostly called from inside other libraries.** SDL2's KMSDRM backend,
+wlroots and ffmpeg's VAAPI hwcontext all call `gbm_create_device()` out of their own sources, and
+none of them will ever call a helper of ours. A design that only works for callers who have read
+this descriptor leaves the important consumers exactly as broken as they were.
+
+So the package exposes stock `gbm.h`, and the path is wired from a **constructor** in the
+package's own TU. Nothing has to be included, called, or known about.
+
+What makes that reliable is a property of mcpp that is usually a nuisance: a dependency's objects
+enter the consumer's link *eagerly*, rather than being lazily selected the way an archive member
+would be. Confirmed in the emitted `build.ninja`, which names the object on the link line:
+
+```
+build bin/gbm : cxx_link obj/gbm.o obj/compat_libgbm/mcpp_generated/gbm_backends.o
+```
+
+so the constructor cannot be dropped. Priority 101 — the first value not reserved for the
+implementation — puts it ahead of default-priority constructors in case a consumer creates a
+device from one. An already-set `GBM_BACKENDS_PATH` is left alone: this is a default, not an
+override.
+
+### This is what every other ecosystem does, and none of them use an API
+
+| ecosystem | how the backend path is made right |
+|---|---|
+| Debian (`libgbm1`/`libgbm-dev`), Fedora (`mesa-libgbm`) | libgbm is a **binary package split out of the mesa source package**; one system-wide prefix makes Mesa's compiled-in `$libdir/gbm` correct by construction. Nothing to set. |
+| Valve pressure-vessel (Steam Runtime) | Hit exactly this bug when Mesa 24.3 split the backends out — [steam-runtime#797](https://github.com/ValveSoftware/steam-runtime/issues/797) — and answers with `GBM_BACKENDS_PATH=/run/host/usr/lib64/gbm` **in the container environment**. |
+| NixOS / Conda / AppImage | Same variable, set at environment-activation / wrapper level. |
+| Anyone controlling the build | Mesa's own [`-Dgbm-backends-path=`](https://cgit.freedesktop.org/mesa/mesa/commit/?id=7f615c66fbdd0a7aa7a513d011956dcc6c0ac2e6) meson option, added for precisely this. |
+
+Every one of them is *environment* or *build-time*. None is "call our function". This package is
+in the sandboxed case and cannot set a container-wide environment, so the constructor is the
+in-process equivalent: same variable, same don't-override rule, scoped to processes that actually
+link libgbm.
+
+**Where this really belongs.** The distro answer is the right one and it is one layer down:
+`xim:mesa` either building with `-Dgbm-backends-path=` pointing into the subos view, or declaring
+`lib/gbm/` into it the way it already declares `lib` and `include`. Then this package would carry
+no constructor at all. Worth filing against `xim:mesa`; until then the wiring lives here, where it
+is at least tested.
+
 ### How the path is found, without pinning anything
 
 The farm is laid out so the backend directory is the sibling of the libgbm that actually loaded:
@@ -167,7 +212,21 @@ would come down to search order.
 ## Test member
 
 `tests/examples/libgbm`, linux-gated, no-op `main()` elsewhere (the `compat.libaio` /
-`compat.wil` pattern). Nineteen checks, all runnable with no GPU:
+`compat.wil` pattern). **Two binaries**, and the split is the point:
+
+- `tests/stock_usage.cpp` includes **stock `<gbm.h>` and nothing else** — no `mcpp_gbm.h`, no
+  helper declaration, no knowledge that this package exists. It is what a ported consumer looks
+  like, and what a third-party library looks like from the inside. If the backend path ever
+  regresses to something the application must opt into, this file fails while `gbm.cpp` could
+  still pass. That asymmetry is why it exists.
+- `tests/gbm.cpp` covers the rest, including the optional introspection header.
+
+`gbm.cpp`'s first assertion reads `GBM_BACKENDS_PATH` **before the program has called anything**,
+which is the direct check that the constructor did its job. Its last one re-execs the binary with
+the variable already set and asserts the child still sees the inherited value — the only way to
+observe the don't-override rule, since by the time `main` runs the constructor is finished.
+
+All checks run with no GPU:
 
 - `gbm_format_get_name` over four fourccs — `XRGB8888`→`XR24`, `ARGB8888`→`AR24`, `NV12`→`NV12`,
   `ABGR2101010`→`AB30`.
@@ -179,7 +238,8 @@ would come down to search order.
 - `gbm_create_device(-1) == nullptr`.
 - **Backend reachability**: the derived directory exists and holds at least one `*_gbm.so`. This is
   the assertion the package exists for and it needs no `/dev/dri`.
-- `GBM_BACKENDS_PATH` is set from the derived path, and an explicitly set one is left alone.
+- `GBM_BACKENDS_PATH` is already set on entry to `main`, and an inherited one survives (checked in
+  a re-exec'd child).
 
 Real device creation is opt-in behind `MCPP_RUN_GBM_DEVICE=1` plus a working `/dev/dri`, following
 `tests/examples/imgui-window`'s `MCPP_RUN_WINDOW=1`.
@@ -193,16 +253,26 @@ package's build-cache entry:
    Compiling compat.libgbm v2026.08.29
    Compiling gbm (test)
      Running bin/gbm
-… 19 checks …
+GBM_BACKENDS_PATH is set on entry to main (nothing called) ok
+…
+an inherited GBM_BACKENDS_PATH survives the constructor    ok
 0 check(s) failed
- test result ok. 1 passed; 0 failed; finished in 23.61s
+stock_usage ... ok
+a <gbm.h>-only consumer inherits GBM_BACKENDS_PATH         ok
+  ... and it is a directory                                ok
+  ... holding a backend libgbm can actually dlopen         ok
+0 check(s) failed
+ test result ok. 2 passed; 0 failed; finished in 45.69s
 ```
+
+Also verified outside mcpp, as an independent check of the mechanism: a consumer compiled against
+stock `gbm.h` and linked with no knowledge of the package prints the wired path before `main`.
 
 - `mcpp xpkg parse pkgs/c/compat.libgbm.lua` → `parse OK` (no unknown mcpp-segment keys).
 - All eight lint gates reproduced locally (syntax, required fields, no leading `v`, mirror urls,
   package name, cross-package refs, platform parity, duplicate versions) → clean.
 - **Assertions confirmed failable**: moving `dri_gbm.so` out of the farm turns the reachability
-  check to `FAILED` and the binary exits 1.
+  check to `FAILED` and both binaries exit 1.
 - The linked binary is honest: `NEEDED libgbm.so.1` with the farm on `RPATH` and **no host path
   anywhere** on it.
 - CN mirror published at `gitcode.com/mcpp-res/libgbm@2026.08.29`, fetched back and confirmed

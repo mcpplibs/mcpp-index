@@ -16,10 +16,14 @@
 //          MESA-LOADER: failed to open dri: /usr/lib/gbm/dri_gbm.so: cannot
 //          open shared object file (search paths /usr/lib/gbm, suffix _gbm)
 //
-//      A link check cannot see this, and neither can any assertion that needs
-//      a GPU. The backend-reachability check below is the one that can: it
-//      asserts the directory libgbm will actually search exists and holds a
-//      backend, which is checkable on a CI runner with no /dev/dri.
+//   3. **The repair could require the consumer to opt in** — which would make
+//      it useless. This is what section 0 below exists to prevent, and it is
+//      the assertion most worth having: libgbm is mostly called from INSIDE
+//      other libraries (SDL2's KMSDRM backend, wlroots, ffmpeg's VAAPI
+//      hwcontext), and none of them will ever call a helper of ours. So the
+//      package must work for a consumer that writes `#include <gbm.h>` and
+//      nothing else. Section 0 asserts precisely that, by reading the
+//      environment before this program has called anything at all.
 //
 // WHY THE LEGACY ENUM IS ASSERTED. gbm_format_get_name(GBM_FORMAT_XRGB8888) is
 // a weak test on its own — the answer is four bytes of the fourcc and a
@@ -35,12 +39,17 @@
 
 #ifdef __linux__
 
+// Stock libgbm. This include alone is the supported way to use the package.
+#include <gbm.h>
+
+// Optional; only for the introspection the reachability assertions need.
 #include <mcpp_gbm.h>
 
 #include <dirent.h>
 #include <dlfcn.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 #include <cstdint>
@@ -95,10 +104,38 @@ bool dir_has_backend(const char *dir)
     return found;
 }
 
+const char *const kSentinel = "/mcpp/sentinel/gbm";
+const char *const kChildMarker = "MCPP_GBM_SELFTEST_CHILD";
+
 } // namespace
 
-int main()
+int main(int, char **argv)
 {
+    // Re-executed by section 4 with GBM_BACKENDS_PATH already set. All this
+    // child does is report whether the constructor left that value alone.
+    if (std::getenv(kChildMarker) != nullptr) {
+        const char *v = std::getenv("GBM_BACKENDS_PATH");
+        return (v != nullptr && std::strcmp(v, kSentinel) == 0) ? 0 : 1;
+    }
+
+    // ── 0. The package works without being asked to ──────────────────────
+    // Read FIRST, before this program has called anything. If this passes,
+    // a consumer that only ever writes `#include <gbm.h>` — including a
+    // third-party library doing so inside its own code — gets a working
+    // gbm_create_device(). If it fails, the package is only usable by callers
+    // who know its private helper, which is to say not usable at all.
+    const char *env_at_entry = std::getenv("GBM_BACKENDS_PATH");
+    check(env_at_entry != nullptr,
+          "GBM_BACKENDS_PATH is set on entry to main (nothing called)");
+    if (env_at_entry != nullptr) {
+        std::printf("   backends dir: %s\n", env_at_entry);
+        struct ::stat st {};
+        check(::stat(env_at_entry, &st) == 0 && S_ISDIR(st.st_mode),
+              "it names a directory that exists");
+        check(dir_has_backend(env_at_entry),
+              "it contains at least one *_gbm.so backend");
+    }
+
     // ── 1. The calls reach Mesa's libgbm ─────────────────────────────────
     // Pure functions: no device, no GPU, no DRM node.
     check(format_name(GBM_FORMAT_XRGB8888) == "XR24",
@@ -133,40 +170,32 @@ int main()
     check(gbm_create_device(-1) == nullptr,
           "gbm_create_device(-1) == nullptr");
 
-    // ── 4. The backend is REACHABLE ──────────────────────────────────────
-    // The assertion this package exists for, and it needs no GPU.
+    // The introspection helper agrees with what the constructor published.
     const char *dir = mcpp_gbm_backends_dir();
-    check(dir != nullptr, "mcpp_gbm_backends_dir() resolves libgbm's location");
+    check(dir != nullptr && env_at_entry != nullptr &&
+              std::strcmp(dir, env_at_entry) == 0,
+          "mcpp_gbm_backends_dir() agrees with the wired value");
 
-    if (dir != nullptr) {
-        std::printf("   backends dir: %s\n", dir);
-
-        struct ::stat st {};
-        check(::stat(dir, &st) == 0 && S_ISDIR(st.st_mode),
-              "the derived backend directory exists");
-        check(dir_has_backend(dir),
-              "it contains at least one *_gbm.so backend");
+    // ── 4. An explicit setting outranks us ───────────────────────────────
+    // The constructor is a DEFAULT, not an override, so a value inherited from
+    // the environment has to survive it. That can only be observed from a
+    // fresh process, because by the time main runs the constructor is done.
+    {
+        const pid_t pid = ::fork();
+        if (pid == 0) {
+            ::setenv(kChildMarker, "1", 1);
+            ::setenv("GBM_BACKENDS_PATH", kSentinel, 1);
+            ::execv("/proc/self/exe", argv);
+            ::_exit(127);
+        }
+        int status = 0;
+        check(pid > 0 && ::waitpid(pid, &status, 0) == pid &&
+                  WIFEXITED(status) && WEXITSTATUS(status) == 0,
+              "an inherited GBM_BACKENDS_PATH survives the constructor");
     }
-
-    check(mcpp_gbm_use_sibling_backends() != 0,
-          "mcpp_gbm_use_sibling_backends() succeeds");
-
-    const char *env = std::getenv("GBM_BACKENDS_PATH");
-    check(env != nullptr && dir != nullptr && std::strcmp(env, dir) == 0,
-          "GBM_BACKENDS_PATH now names that directory");
-
-    // An already-set value is the caller's decision and must be left alone.
-    ::setenv("GBM_BACKENDS_PATH", "/nonexistent/chosen/by/caller", 1);
-    mcpp_gbm_use_sibling_backends();
-    const char *kept = std::getenv("GBM_BACKENDS_PATH");
-    check(kept != nullptr && std::strcmp(kept, "/nonexistent/chosen/by/caller") == 0,
-          "an explicit GBM_BACKENDS_PATH is not overwritten");
-    ::unsetenv("GBM_BACKENDS_PATH");
 
     // ── 5. A real device, opt-in ─────────────────────────────────────────
     if (std::getenv("MCPP_RUN_GBM_DEVICE") != nullptr) {
-        mcpp_gbm_use_sibling_backends();
-
         const int fd = ::open("/dev/dri/renderD128", O_RDWR);
         if (fd < 0) {
             std::printf("   MCPP_RUN_GBM_DEVICE set but /dev/dri/renderD128 "

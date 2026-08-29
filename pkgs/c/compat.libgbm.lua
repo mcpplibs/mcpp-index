@@ -89,17 +89,46 @@
 -- `lib/gbm/` is a SUBDIRECTORY and does not. Closing that is this package's
 -- real content, and it is why the shape is not a copy of compat.glx-runtime.
 --
+-- THE FIX MUST BE INVISIBLE. This is the constraint that decides the design,
+-- and getting it wrong produces a package that passes its own tests and fails
+-- its real consumers.
+--
+-- A libgbm consumer writes `#include <gbm.h>` and calls `gbm_create_device()`.
+-- That is the whole API, and it has to keep working unchanged — because the
+-- consumers that matter most are not the ones reading this file. SDL2's
+-- KMSDRM backend, wlroots and ffmpeg's VAAPI hwcontext all call
+-- gbm_create_device() from INSIDE a third-party library. Any scheme that
+-- requires the application to call a helper first is unreachable for exactly
+-- those callers, and would leave them as broken as they were.
+--
+-- So the package exposes stock `gbm.h` and wires the backend path from a
+-- CONSTRUCTOR in its own TU (mcpp_generated/gbm_backends.c). By the time any
+-- code runs, GBM_BACKENDS_PATH is already set; nothing has to be included,
+-- called or known about. Verified with a consumer compiled against gbm.h alone
+-- and linked with no knowledge of this package.
+--
+-- What makes that reliable is a property of mcpp that is usually a nuisance: a
+-- dependency's objects enter the consumer's link EAGERLY, all of them, rather
+-- than being lazily selected the way an archive member would be. Confirmed in
+-- the emitted build.ninja, which names our object on the link line directly:
+--
+--     build bin/gbm : cxx_link obj/gbm.o obj/compat_libgbm/…/gbm_backends.o
+--
+-- so the constructor cannot be dropped. Priority 101 (the first value not
+-- reserved for the implementation) puts it ahead of default-priority
+-- constructors, in case a consumer creates a device from one.
+--
 -- HOW THE PATH IS FOUND, WITHOUT PINNING ANYTHING. The farm is laid out so the
 -- backend directory is the SIBLING of the libgbm that actually got loaded:
 --
 --     mcpp_generated/libgbm/lib/libgbm.so{,.1,.1.0.0}   -> <subos>/lib/*
 --     mcpp_generated/libgbm/lib/gbm/dri_gbm.so          -> mesa payload
 --
--- so `mcpp_gbm_use_sibling_backends()` below resolves it at RUNTIME:
--- dlsym(RTLD_DEFAULT) a gbm symbol, dladdr it, take the directory, append
--- "/gbm". Verified that dladdr reports the FARM path rather than the realpath
--- — a library loaded through a symlink on the RUNPATH reports the name the
--- loader used — so the sibling lands inside this package's own payload.
+-- and the constructor resolves it at RUNTIME: dlsym(RTLD_DEFAULT) a gbm
+-- symbol, dladdr it, take the directory, append "/gbm". Verified that dladdr
+-- reports the FARM path rather than the realpath — a library loaded through a
+-- symlink on the RUNPATH reports the name the loader used — so the sibling
+-- lands inside this package's own payload.
 --
 -- The alternative was to bake an absolute path into a generated header at
 -- install time. That works and it pins the package to whichever mesa payload
@@ -107,6 +136,32 @@
 -- compat.glx-runtime's header comment warns about ("a payload path pins a
 -- version … and stops resolving the day it is upgraded"). Runtime derivation
 -- has no such cost and no absolute path anywhere in the descriptor.
+--
+-- An already-set GBM_BACKENDS_PATH is left alone: this is a default, not an
+-- override, and a user who has pointed it somewhere deliberately outranks us.
+--
+-- THIS IS WHAT EVERY OTHER ECOSYSTEM DOES, and none of them do it with an API.
+-- Distributions (Debian's libgbm1/libgbm-dev, Fedora's mesa-libgbm) split
+-- libgbm out of the mesa SOURCE package and never touch the path, because one
+-- system-wide prefix makes Mesa's compiled-in `$libdir/gbm` correct by
+-- construction. Relocated and sandboxed stacks cannot rely on that and set the
+-- environment variable instead — Valve's pressure-vessel hit precisely this
+-- bug when Mesa 24.3 split the backends out (steam-runtime#797) and answers
+-- with GBM_BACKENDS_PATH=/run/host/usr/lib64/gbm; Nix, Conda and AppImage do
+-- the same at environment-activation time. Mesa itself offers the third route,
+-- `-Dgbm-backends-path=`, for packagers who control the build.
+--
+-- This package is in the sandboxed case and cannot set a container-wide
+-- environment, so the constructor is the in-process equivalent: same effect,
+-- same variable, same "don't override an explicit value" rule, scoped to
+-- processes that actually link libgbm.
+--
+-- WHERE THIS REALLY BELONGS. Long term the distro answer is the right one and
+-- it is one layer down: `xim:mesa` either building with `-Dgbm-backends-path=`
+-- pointing into the subos view, or declaring `lib/gbm/` into it the way it
+-- already declares `lib` and `include`. Then this package would carry no
+-- constructor at all. Worth filing; until then the wiring lives here, where it
+-- can at least be tested.
 --
 -- WHY THE FARM CARRIES THE UNVERSIONED `libgbm.so`, when compat.vulkan-runtime
 -- is emphatic that its farm must hold versioned sonames only. That rule exists
@@ -235,80 +290,10 @@ package = {
             -- ignored would document a guarantee this package cannot make.
         },
 
-        generated_files = {
-            -- Resolves GBM_BACKENDS_PATH from whichever libgbm is actually
-            -- loaded. See the header comment for why this is derived at
-            -- runtime instead of baked in at install time.
-            --
-            -- Declared here AND written by install(); install() does not wipe
-            -- the payload, so the two never race — this entry is what
-            -- guarantees the TU exists whatever order the two run in.
-            ["mcpp_generated/gbm_backends.c"] =
-[[
-/* compat.libgbm — locate the GBM backend directory without pinning a path.
- *
- * Mesa compiles `/usr/lib/gbm` in as its default backend search path, which
- * does not exist inside an mcpp sandbox. This package's farm instead places
- * the backends in `gbm/` NEXT TO the libgbm it ships, so the directory can be
- * derived from the loaded library itself and no absolute path is ever stored.
- */
-#define _GNU_SOURCE
-#include <dlfcn.h>
-#include <stdlib.h>
-#include <string.h>
-
-static char mcpp_gbm_dir_buf[4096];
-
-const char *mcpp_gbm_backends_dir(void)
-{
-    Dl_info info;
-    const char *slash;
-    void *sym;
-    size_t n;
-
-    if (mcpp_gbm_dir_buf[0] != '\0')
-        return mcpp_gbm_dir_buf;
-
-    /* RTLD_DEFAULT rather than &gbm_format_get_name: the address of an
-       imported function is this object's own PLT stub, and dladdr would
-       report the CONSUMER instead of libgbm. */
-    sym = dlsym(RTLD_DEFAULT, "gbm_format_get_name");
-    if (sym == NULL)
-        return NULL;
-
-    if (dladdr(sym, &info) == 0 || info.dli_fname == NULL)
-        return NULL;
-
-    slash = strrchr(info.dli_fname, '/');
-    if (slash == NULL)
-        return NULL;
-
-    n = (size_t)(slash - info.dli_fname);
-    if (n + sizeof("/gbm") > sizeof(mcpp_gbm_dir_buf))
-        return NULL;
-
-    memcpy(mcpp_gbm_dir_buf, info.dli_fname, n);
-    memcpy(mcpp_gbm_dir_buf + n, "/gbm", sizeof("/gbm"));
-    return mcpp_gbm_dir_buf;
-}
-
-int mcpp_gbm_use_sibling_backends(void)
-{
-    const char *dir;
-
-    /* An explicit GBM_BACKENDS_PATH is the caller's decision and is left
-       alone -- this is a default, not an override. */
-    if (getenv("GBM_BACKENDS_PATH") != NULL)
-        return 1;
-
-    dir = mcpp_gbm_backends_dir();
-    if (dir == NULL)
-        return 0;
-
-    return setenv("GBM_BACKENDS_PATH", dir, 1) == 0;
-}
-]],
-        },
+        -- No `generated_files`. The one TU and the two headers are written by
+        -- install() below, which is the only writer — a `generated_files` copy
+        -- of the same C source would be a second copy to keep in sync, and the
+        -- parser takes only literals so it could not share one.
     },
 }
 
@@ -379,13 +364,23 @@ local consumer_header = [[
 #ifndef MCPP_COMPAT_LIBGBM_H
 #define MCPP_COMPAT_LIBGBM_H
 
-/* compat.libgbm — Mesa's gbm.h plus the two helpers this package adds.
+/* compat.libgbm -- OPTIONAL. You do not need this header.
+ *
+ * The way to use this package is the way you would use libgbm anywhere else:
+ *
+ *     #include <gbm.h>
+ *     struct gbm_device *dev = gbm_create_device(fd);
  *
  * Mesa's compiled-in backend search path (/usr/lib/gbm) does not exist inside
- * an mcpp sandbox, so gbm_create_device() would find no backend. Call
- * mcpp_gbm_use_sibling_backends() once before creating a device; it points
- * GBM_BACKENDS_PATH at the backends shipped beside this package's libgbm, and
- * leaves an explicitly set GBM_BACKENDS_PATH alone.
+ * an mcpp sandbox, but the package repairs that from a constructor in its own
+ * translation unit, before any of your code runs. Nothing has to be called and
+ * nothing has to be included -- which is the point: libgbm is mostly called
+ * from INSIDE other libraries (SDL2's KMSDRM backend, wlroots, ffmpeg's VAAPI
+ * hwcontext), and those will never call a helper of ours.
+ *
+ * What is below is introspection for diagnostics and for this package's own
+ * tests. Reach for it when you want to report which backend directory was
+ * chosen, or to override the choice explicitly.
  */
 
 #include <gbm.h>
@@ -398,8 +393,9 @@ extern "C" {
    in this process. Does not test whether the directory exists. */
 const char *mcpp_gbm_backends_dir(void);
 
-/* Set GBM_BACKENDS_PATH to that directory unless it is already set.
-   Returns non-zero on success. */
+/* Point GBM_BACKENDS_PATH at that directory unless it is already set. The
+   constructor has already done this; calling it again is harmless. Returns
+   non-zero on success. */
 int mcpp_gbm_use_sibling_backends(void);
 
 #ifdef __cplusplus
@@ -412,12 +408,24 @@ int mcpp_gbm_use_sibling_backends(void);
 -- Kept identical to the generated_files entry above; install() does not wipe
 -- the payload, so whichever of the two lands second writes the same bytes.
 local backends_tu = [[
-/* compat.libgbm — locate the GBM backend directory without pinning a path.
+/* compat.libgbm -- point GBM_BACKENDS_PATH at the backends shipped beside this
+ * package's libgbm, automatically and before anything else runs.
  *
- * Mesa compiles `/usr/lib/gbm` in as its default backend search path, which
- * does not exist inside an mcpp sandbox. This package's farm instead places
- * the backends in `gbm/` NEXT TO the libgbm it ships, so the directory can be
- * derived from the loaded library itself and no absolute path is ever stored.
+ * WHY A CONSTRUCTOR. Mesa compiles `/usr/lib/gbm` in as its backend search
+ * path and that directory does not exist inside an mcpp sandbox, so
+ * gbm_create_device() finds nothing. Repairing it through a function the
+ * application must call would not work: libgbm is mostly called from inside
+ * OTHER libraries -- SDL2's KMSDRM backend, wlroots, ffmpeg's VAAPI hwcontext
+ * -- and none of them will ever call ours. A constructor reaches all of them,
+ * and keeps `#include <gbm.h>` the whole of the API.
+ *
+ * Priority 101 is the first value not reserved for the implementation, so this
+ * runs ahead of default-priority constructors in case one creates a device.
+ *
+ * The path is derived, never stored: dlsym the loaded libgbm, dladdr it, and
+ * take the sibling `gbm/` directory. dladdr reports the path the loader used
+ * -- this package's farm -- rather than the realpath, so the answer stays
+ * correct without pinning a mesa version.
  */
 #define _GNU_SOURCE
 #include <dlfcn.h>
@@ -464,7 +472,8 @@ int mcpp_gbm_use_sibling_backends(void)
     const char *dir;
 
     /* An explicit GBM_BACKENDS_PATH is the caller's decision and is left
-       alone -- this is a default, not an override. */
+       alone -- this is a default, not an override. Same rule the sandboxed
+       stacks that set this variable follow (pressure-vessel, Nix, Conda). */
     if (getenv("GBM_BACKENDS_PATH") != NULL)
         return 1;
 
@@ -473,6 +482,12 @@ int mcpp_gbm_use_sibling_backends(void)
         return 0;
 
     return setenv("GBM_BACKENDS_PATH", dir, 1) == 0;
+}
+
+__attribute__((constructor(101)))
+static void mcpp_gbm_wire_backends(void)
+{
+    mcpp_gbm_use_sibling_backends();
 }
 ]]
 
