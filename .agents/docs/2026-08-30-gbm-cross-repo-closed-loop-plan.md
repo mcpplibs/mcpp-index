@@ -10,7 +10,7 @@ Date: 2026-08-30 · 起因:`compat.libgbm`(mcpp-index PR #281)· 状态:待 revi
 | # | 缺什么 | 在哪个仓 | 规模 |
 |---|---|---|---|
 | **R1** | `GBM_BACKENDS_PATH` 不在 graphics 的 `DISCOVERY` 表里 | xim-pkgindex | 一个常量 + 一行表项 + 一个照抄 `declare_dri` 的函数 |
-| **R2** | 默认 runtime selection 读的是**工具链 subos**,而项目的 `xim:` 依赖声明在**项目 subos** | mcpp | 一处选择/合并逻辑 |
+| **R2** | 默认 runtime selection 读的是**工具链 subos**,而项目的 `xim:` 依赖声明在**项目 subos** | mcpp | 见 §8/§9:拆成 R2a/R2b/R2c,形态是**分层继承 + 首次构建自动供给** |
 
 R2 **不是 gbm 专属的**:同一条线上 `LIBGL_DRIVERS_PATH` 和 `__EGL_VENDOR_LIBRARY_DIRS`
 也没到进程,也就是说**任何 mcpp 构建的 GL 程序都找不到 DRI 驱动**。gbm 只是让它显形。
@@ -24,6 +24,11 @@ R1 + R2 落地后,`compat.libgbm` 里的 constructor 与后端 farm **全部删�
 > 不是工具链 subos 的超集,所以 B2 会回退;而 B1 只修运行期、不修构建期。
 > 另外实测确认:今天**唯一**能把 xim 层引进 mcpp 工程的东西就是 compat 包的
 > `xpm.deps.runtime`(`[xlings] deps` 只物化不供给、`[xlings] subos` 不能自举)。
+>
+> **第三轮(§9/§10)**:R2b 的修法是**首次构建自动供给**,复用工具链首次运行同款流程;
+> R2a 降级为「供给先于选择」的顺序约束。并且修正了一处预期 —— 即便三条全修完,
+> `compat.libgbm` **也不会消失**,因为库→库的**传递依赖**只能靠包来表达,
+> 不能靠消费者的 `[xlings] deps`。
 
 ---
 
@@ -424,3 +429,154 @@ R2a + R2b 不修,B3 从 manifest 侧就是不可达的 —— 用户写 `[xlings
 - **R1 与 C1 完全不受影响** —— 它在另一个仓,独立可合,且单独就能修好 xlings 侧消费者。
 - §3 的行业论证(按接口拆包;Conan 无 gbm recipe、`<name>/system` 形态)。
 - §7 的 glibc 错位,与本方案正交。
+
+---
+
+## 9. R2b 的修法:首次构建自动供给 `[xlings] deps`
+
+### 9.1 现状
+
+`[xlings]` 段被 1:1 物化成 `ProjectEnv`(`src/platform/xlings/xlings.cppm:307`):
+
+```cpp
+struct ProjectEnv {
+    std::vector<std::string>  deps;       // → .xlings.json "deps"
+    ... workspace / subos / envs
+};
+```
+
+`seed_xlings_json(env, repos, mirror, penv)` 把它写进 `<proj>/.mcpp/.xlings.json`。
+**写完就结束了 —— 没有任何一处去装它。** 实测:`deps = ["mesa"]` 写进了文件,
+`gbm.h` 依然 not found,项目 subos 根本没被创建。
+
+### 9.2 mcpp 里已经有两条现成的「声明 → 自动安装」路径
+
+**(a) 工具链首次运行**(`src/build/prepare.cppm` ~1690):
+
+```cpp
+mcpp::ui::info("First run",
+    std::format("no toolchain configured — installing {} ({}) as default", …));
+
+mcpp::fetcher::Fetcher fetcher(**cfg);
+mcpp::fetcher::InstallProgressHandler progress;
+for (auto dep : {"xim:glibc", "xim:linux-headers"})
+    (void)fetcher.resolve_xpkg_path(dep, /*autoInstall=*/true, &progress);
+auto payload = fetcher.resolve_xpkg_path(defaultPkg.target(), /*autoInstall=*/true, &progress);
+```
+
+**(b) 项目作用域安装**(`src/build/prepare.cppm` ~2936),已经带实时进度 UI:
+
+```cpp
+auto projEnv = mcpp::config::make_project_xlings_env(**cfg, *root);
+auto argsJson = std::format(R"({{"targets":["{}"],"yes":true}})", target);
+mcpp::fetcher::InstallProgressHandler progress;
+auto r = mcpp::xlings::call(projEnv, "install_packages", argsJson, &progress);
+```
+
+注释里写得很清楚:安装目的地由**包的 scope(project vs global)**决定,不由 transport 决定 ——
+也就是说 (b) 装出来的东西正好落在**项目**作用域,而项目 subos 正是这样被建出来的。
+
+### 9.3 提案
+
+在 `seed_xlings_json` 物化 `ProjectEnv` 之后、runtime selection 之前,
+若 `penv.deps` 非空且尚未满足,走 **(b)** 的同一条路把它们装上:
+
+```cpp
+if (!penv.deps.empty() && !already_provisioned(penv.deps)) {
+    mcpp::ui::info("First run",
+        std::format("provisioning [xlings] deps — installing {}", join(penv.deps)));
+    auto projEnv = mcpp::config::make_project_xlings_env(cfg, root);
+    auto argsJson = to_targets_json(penv.deps);          // {"targets":[…],"yes":true}
+    mcpp::fetcher::InstallProgressHandler progress;
+    auto r = mcpp::xlings::call(projEnv, "install_packages", argsJson, &progress);
+    if (!r) return std::unexpected(/* 与工具链同款:给出手工命令 */);
+}
+```
+
+要点:
+
+- **复用 (b) 而不是新写一条**,因为 scope 语义、进度 UI、错误捕获(`captured_error()`)
+  都已经是对的;
+- 失败信息照抄工具链那条的形状:说明失败了、并给出**手工可执行的等价命令**;
+- 幂等:已装则跳过 —— 与工具链首次运行一样只在缺失时触发;
+- **供给必须发生在 runtime selection 之前**,否则 §8.2 那条
+  `selected SubOS '_' does not exist` 会先一步报错。这条顺序约束就是 **R2a 的实质**:
+  R2a 与其说是「subos 要能自举」,不如说是「**供给先于选择**」。修好顺序,
+  R2a 作为独立缺陷基本消失,`[xlings] subos` 可以继续保持「只选择、不创建」的严格语义。
+
+### 9.4 R2b 修好之后,直接消费这条路就通了
+
+预期(修完应当能实测通过,即新增回归):
+
+```toml
+[xlings]
+deps = ["mesa"]
+
+[build]
+ldflags = ["-lgbm"]
+```
+
+配合 B3 分层,`#include <gbm.h>` / `-lgbm` / `GBM_BACKENDS_PATH` 全部可用,
+**不需要任何 mcpp-index 包**。
+
+---
+
+## 10. 综合 review(第三轮):这套方案自洽吗?
+
+### 10.1 R2b + B3 之后,`compat.libgbm` 还需要存在吗?
+
+**需要,而且理由比前两轮更硬 —— 是「传递依赖」。**
+
+§9.4 那条路只对**应用自己的 manifest** 成立。而 GBM 的真实消费者多数是**库**:
+`compat.sdl2` 的 KMSDRM 后端、wlroots、ffmpeg 的 VAAPI hwcontext。
+一个库包**无法往消费者的 `mcpp.toml` 里注入 `[xlings] deps`** —— 它只能声明一条依赖边。
+
+所以两条路各有各的用途,不重复:
+
+| 场景 | 用什么 |
+|---|---|
+| 应用自己要用 gbm | `[xlings] deps = ["mesa"]`(R2b 之后) |
+| **库**要用 gbm,并让它随依赖图传播 | **`compat.libgbm`** |
+
+Conan 也正是这么并存的:`opengl/system` 是一个**包**而不是「让用户自己写
+system_requirements」,因为 `sdl`、`glfw` 这些库需要 `requires` 一个东西。
+`compat.libgbm` 在 mcpp 里承担同一角色。
+
+`ldflags = ["-lgbm"]` 也一样:让每个消费者手写是错的,那属于包的 `package_info()`。
+
+### 10.2 三轮下来,哪些结论真正稳定
+
+| 结论 | 第1轮 | 第2轮 | 第3轮 |
+|---|---|---|---|
+| R1 / C1(GBM 进 DISCOVERY) | ✔ | ✔ | ✔ **从未动摇,且独立可合** |
+| 按接口拆包、包要薄 | ✔ | ✔ | ✔ |
+| `compat.libgbm` 应独立存在 | ✔(理由弱) | ✔(理由:唯一入口) | ✔ **(理由:传递依赖)** |
+| constructor 不属于包的职责 | ✔ | ✔ | ✔ |
+| mcpp 侧该怎么修 | B1 | **B3** | B3 + R2b(供给) |
+| R2 的分解 | 一条 | 三条 | 三条,且 **R2a 降级为顺序约束** |
+
+理由被换掉三次而结论不变的那几条,才是真的稳。**唯一反复改的是 mcpp 侧的形态** ——
+因为那是我唯一没有一开始就去读源码/做实验的部分。
+
+### 10.3 还没验证、需要在实现时确认的假设
+
+诚实列出,不假装已闭环:
+
+1. **B3 的叠加是否会与包自己的 `include_dirs` 撞车。** 项目 subos 的 `usr/include` 会带进
+   `EGL/`、`GL/`、`KHR/`(mesa + libglvnd),而 `compat.opengl` / `compat.glx-headers`
+   也提供 `GL/` —— `compat.glx-headers` 的注释已经记过这个重叠是真实踩坑。
+   **叠加顺序必须让包的 `include_dirs` 优先于 subos 叠加层**,否则等于给所有消费者
+   换了一套 GL 头。这是 B3 最需要测的一点。
+2. **`install_packages` 对「已装」是否幂等**,以及在离线/无网时的行为。
+3. **`${subosdir}` 的展开源**:必须是声明所在的那个 subos,不是 `binding.subosDir`(§2 B1 已记)。
+4. **workspace 成员**:`select_runtime` 用的是 `workspaceManifest` 的 `[xlings]`
+   (`owner = workspaceManifest ? … : projectManifest`),所以 mcpp-index 这种虚拟 workspace
+   里,`[xlings]` 该写在根还是成员,需要确认;写错会静默不生效。
+
+### 10.4 对 PR #281 的最终判断
+
+不变:**以现状合并是安全的**,它自包含、CI 全绿、对消费者透明(`#include <gbm.h>` 即可),
+唯一代价是一份带删除条件的临时 constructor + 后端 farm。
+
+但 §10.1 修正了一处预期:即便 R1 + R2b + B3 全部落地,**这个包也不会消失**,
+只会瘦下来 —— 它作为「库→库」传递依赖的载体是长期的。
