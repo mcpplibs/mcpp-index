@@ -767,3 +767,41 @@ version `GLIBC_2.43' not found (required by …/libgallium-25.0.7.so)
 2. **mcpp 有自己的一份索引副本**(`<MCPP_HOME>/registry/data/xim-pkgindex`),
    与 `~/.xlings/data/xim-pkgindex` 是两份。改了后者,mcpp 侧不会看到,
    要等合并 + artifact 重新发布(本地验证时手工同步了两份)。
+
+---
+
+## 13. 交付状态(每仓一个 PR)
+
+| ID | 仓 | 状态 | 落在哪 |
+|---|---|---|---|
+| **T1** | xim-pkgindex | ✅ 完成 | [#713](https://github.com/openxlings/xim-pkgindex/pull/713) |
+| **T2** | xim-pkgindex | ✅ 完成 | 同上(`test_graphics_gbm_discovery.py` 5 例 + Lua harness) |
+| **T3** | mcpp | ✅ 完成 | [#531](https://github.com/mcpp-community/mcpp/pull/531) |
+| **T4** | mcpp | ⛔ **不需要**,已退休 | 见 §12.1 |
+| **T5** | mcpp | ✅ 完成 | `mcpp test` 96 passed;SubOS-env 轴由既有 `tests/e2e/200_subos_env_reaches_program.sh` 覆盖 |
+| **T6** | mcpp-index | ✅ 完成 | [#281](https://github.com/mcpplibs/mcpp-index/pull/281) |
+| **T7** | mcpp-index | ✅ 完成 | 同上(`stock_usage.cpp`) |
+| **T8** | 三仓 | ✅ 完成 | 各自 PR 内(mcpp-index 含 zh) |
+| **T9** | — | ✅ 完成 | `gitcode.com/mcpp-res/libgbm@2026.08.29`,与 GLOBAL 逐字节一致 |
+| **T10** | — | ✅ 完成 | §12.3 / §12.4 |
+
+**每个仓恰好一个 PR。**
+
+### 13.1 「SubOS 环境那半哪去了?」
+
+这是 review 时最该问的问题,答案是:**它一直都在 mcpp 里,不需要新写**。
+
+| 环节 | 在哪 | 状态 |
+|---|---|---|
+| 解析 `.xlings.json` 的 `envs` | `subos_info.cppm` → `EnvDecl{var,op,value}` | 早已有 |
+| 收进 binding | `runtime_binding.cppm` → `binding.environment` | 早已有 |
+| 展开 `${subosdir}` / 应用 `prepend` / 注入子进程 | `execute.cppm::compute_subos_env()`(mcpp#352) | 早已有 |
+| **回归测试** | `tests/e2e/200_subos_env_reaches_program.sh` | 早已有 |
+| **声明里有 GBM 这一项** | `libs/graphics.lua` 的 DISCOVERY | ← **T1,这次补的** |
+| **SubOS 里有东西可读** | `[xlings] deps` 自动供给 | ← **T3,这次补的** |
+
+所以 #531 只包含供给逻辑是**正确的**:环境注入不缺,缺的是「声明里没有 GBM」和
+「mcpp 读的那个 SubOS 里没有 mesa」。§12.1 的三次实测把 T4 也一并否掉了 ——
+装对 scope 之后,sysroot 天然看得见,不需要叠加层。
+
+一句话:**mcpp#352 修好了「怎么注入」;T1 补上「注入什么」;T3 补上「从哪读得到」。**
