@@ -934,3 +934,62 @@ but no newer source is available (keeping it; run `xlings self update`)
 
 **结论**:保持 `2026.8.27.5`。若确实要下调,那是一次独立的、影响 release/CI/bootstrap
 的变更,应当单独评估,不该搭在本方案里顺带做。
+
+---
+
+## 16. V5 已验证:合并 #713 之后 constructor 可以删
+
+§4 把「删 constructor」定义成一个**机械准入条件**而不是判断题。现在它通过了。
+
+### 16.1 做法
+
+把合并后的状态在本地模拟出来:`libs/graphics.lua` + `pkgs/m/mesa.lua` 的 #713 版本
+复制进 `~/.mcpp/registry/data/xim-pkgindex`,再 `xlings install xim:mesa@25.0.7.2`
+让 `config()` 重跑:
+
+```
+mesa vars: ['LIBGL_DRIVERS_PATH', '__EGL_VENDOR_LIBRARY_DIRS', 'XDG_DATA_DIRS', 'GBM_BACKENDS_PATH']
+<registry>/subos/default/usr/lib/gbm/dri_gbm.so
+```
+
+然后走**真实依赖路径**(`[dependencies.compat] libgbm`,无 `[xlings]`、无 `ldflags`,
+`#include <gbm.h>`),经 CN 镜像冷跑:
+
+```
+XRGB8888 -> XR24
+GBM_BACKENDS_PATH = /home/speak/.mcpp/registry/subos/default/usr/lib/gbm
+```
+
+### 16.2 为什么这一行就是证明
+
+值是 **subos 路径**,不是包自己的 farm(`…/compat-x-libgbm/…/mcpp_generated/libgbm/lib/gbm`)。
+constructor 的实现是 **`if (getenv("GBM_BACKENDS_PATH")) return;`** —— 只在未设置时才写。
+既然进程里读到的是 subos 的值,说明**在 constructor 运行之前它已经被生态设好了**,
+constructor 这一步是空转。
+
+对比同一个包在**未打补丁**的索引下(本文档 §12.4 之前的所有测量),同一条路径给出的是
+包内 farm 的值 —— 差别只有一个变量:索引里有没有那一行 DISCOVERY。
+
+### 16.3 为什么现在还不能删
+
+`#713` 尚未合并,artifact 也没重新发布。删了之后:
+
+* 用**已发布索引**的消费者拿不到 `GBM_BACKENDS_PATH`,`gbm_create_device()` 回到返回 NULL;
+* mcpp-index CI 会红 —— `tests/stock_usage.cpp` 断言的正是「只 include `<gbm.h>` 的消费者
+  能拿到这个变量」,而 CI 用的是已发布的 xim 索引。
+
+**这正是我们想要的顺序保证**:准入条件由 CI 机械把关,而不是靠人记得。
+
+### 16.4 合并之后的收尾(一步)
+
+`#713` 合并 + artifact 重新发布后,在 `pkgs/c/compat.libgbm.lua` 删掉:
+
+* `generated_files`/`install()` 里写的 `mcpp_generated/gbm_backends.c` 整个 TU
+  (constructor + `mcpp_gbm_backends_dir` + `mcpp_gbm_use_sibling_backends`);
+* `install()` 里的后端 farm(`lib/gbm/` 那段与 `mesa_libdir()` 辅助函数);
+* `mcpp_gbm.h`,以及 `include_dirs` 中对它的依赖(`gbm.h` 仍从 subos view 取);
+* `tests/gbm.cpp` 里与 constructor 相关的断言(§0 的「入口即已设置」改为断言来源是 subos;
+  re-exec 那条随 constructor 一起删)。
+
+`tests/stock_usage.cpp` **原样保留** —— 删掉 constructor 之后,它断言的就从
+「本包的 constructor 生效了」变成「**整条生态闭环生效了**」,是这个包最有价值的一条回归。
