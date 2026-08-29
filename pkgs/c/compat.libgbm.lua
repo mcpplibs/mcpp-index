@@ -219,20 +219,33 @@ package = {
             -- the GL dispatch and X11 halves of the twenty-two-package stack.
             deps = { runtime = { "xim:mesa" } },
             ["2026.08.29"] = {
-                -- Nothing downloaded is used. The payload is what install()
-                -- builds out of the subos view, so this is only a stable,
-                -- well-formed anchor for the xpm entry — the trick
-                -- compat.glx-runtime plays with an OpenGL-Registry README.
+                -- NOTHING DOWNLOADED HERE IS EVER READ, and the file is chosen
+                -- so that cannot be misread.
                 --
-                -- Mesa's own gbm.h at the tag the ecosystem's mesa ships, so
-                -- the anchor at least records which header this package was
-                -- written against. A raw file at a tag is byte-stable, unlike
-                -- a GitLab-generated archive; sha256 confirmed twice.
+                -- Both halves of this package's payload come from the SUBOS:
+                -- install() symlinks `gbm.h` out of `<subos>/usr/include` and
+                -- `libgbm.so*` out of `<subos>/lib`. The xpm schema still wants
+                -- a url + sha256 per version, so this is a stable, inert
+                -- anchor and nothing more — exactly what compat.glx-runtime
+                -- does with an OpenGL-Registry README and compat.vulkan-runtime
+                -- with a Vulkan-Loader README.
+                --
+                -- It used to be Mesa's own `src/gbm/main/gbm.h`, on the theory
+                -- that the anchor may as well record which header the package
+                -- was written against. That was a mistake: an anchor NAMED
+                -- like the header this package installs reads as though the
+                -- download is the shipped header, which is the one thing it is
+                -- not — and the first reader to see it asked exactly that. A
+                -- README cannot be mistaken for a payload.
+                --
+                -- A raw file at a tag is byte-stable, unlike a GitLab-generated
+                -- archive; sha256 confirmed twice, and the CN asset re-fetched
+                -- and compared byte-for-byte against GLOBAL.
                 url = {
-                    GLOBAL = "https://gitlab.freedesktop.org/mesa/mesa/-/raw/mesa-25.0.7/src/gbm/main/gbm.h",
-                    CN     = "https://gitcode.com/mcpp-res/libgbm/releases/download/2026.08.29/libgbm-2026.08.29.h",
+                    GLOBAL = "https://gitlab.freedesktop.org/mesa/mesa/-/raw/mesa-25.0.7/README.rst",
+                    CN     = "https://gitcode.com/mcpp-res/libgbm/releases/download/2026.08.29/libgbm-2026.08.29.rst",
                 },
-                sha256 = "95f3b4a6ee5175c7cc5d47368d4efb100063fe49e5a6f5b19030ac2ceed73b81",
+                sha256 = "03f0fd62094179bb70fb885042baa4254d392f5f7bb64e4d8856bec8a5ff8386",
             },
         },
     },
