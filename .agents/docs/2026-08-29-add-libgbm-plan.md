@@ -1,5 +1,27 @@
 # Adding `compat.libgbm` — GBM bound to the ecosystem's Mesa
 
+> ## ⚠ SUPERSEDED IN PART — read this first
+>
+> This is the FIRST-ROUND design record, and its central mechanism no longer
+> exists. It describes a constructor in a generated TU that set
+> `GBM_BACKENDS_PATH`, a `lib/gbm/` backend farm, and an `mcpp_gbm.h`. **All
+> three are gone.**
+>
+> Setting that variable was always Mesa's own mechanism and the ENVIRONMENT's
+> job. `xim:mesa` now declares it through the graphics discovery layer
+> (openxlings/xim-pkgindex#713), so the package sets nothing, generates no TU
+> and ships no header of its own — 598 lines down to 303. What this document
+> calls "the part that is actual work" turned out to be a workaround for a
+> missing declaration one layer down.
+>
+> What still holds: the shape decision (a binding, not a source build) and the
+> evidence behind it; the zero-host rule; the two-directory-key finding; and
+> the test design. For the current state and the three rounds of correction
+> that produced it, see
+> [2026-08-30-gbm-cross-repo-closed-loop-plan.md](2026-08-30-gbm-cross-repo-closed-loop-plan.md)
+> — especially §12.1, §16 and §17.
+
+
 Date: 2026-08-29 · Package: `compat.libgbm@2026.08.29` · Member: `tests/examples/libgbm`
 
 ## What GBM is, and what had to be decided
