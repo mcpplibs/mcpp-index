@@ -17,6 +17,7 @@ A–D 是四种**基础**形态,先按它们判定;E–G 是在基础形态之�
 | **F. 共享库 compat** | 必须是**唯一**的那个 `.so`(会被第三方 `dlopen`) | `pkgs/c/compat.x11.lua` 等 X11 家族、`compat.vulkan.lua`(linux) | `targets = { kind = "shared", soname = … }` |
 | **G. 宿主运行时适配** | 驱动之类无法 vendor 的东西,只做符号链接农场 + 元数据 | `pkgs/c/compat.glx-runtime.lua`、`compat.vulkan-runtime.lua` | `runtime.library_dirs` / `capabilities` |
 | **H. 宿主工具提供方** | 上游 tarball 里除了库,还带着消费者在构建期要跑的**代码生成器** | `pkgs/c/compat.protobuf.lua`(`protoc`) | `targets` 里一条 `kind = "bin"` + `main`,配 `required_features` |
+| **I. 生态栈绑定** | 这个库是某个**生态已经拥有**的项目的内部 build target,vendor 它就等于 fork 那个项目 | `pkgs/c/compat.libgbm.lua`(Mesa 的 GBM,经 `xim:mesa`) | `xpm.<plat>.deps.runtime = { "xim:<pkg>" }` + 从 `system.subos_sysrootdir()` 建农场,`runtime.library_dirs` **和** `link_library_dirs` 都要 |
 
 完整的样例索引见[描述符示例总览(按形态)](descriptor-examples.md)。
 
@@ -179,9 +180,22 @@ runtime = {
 
 两个反复踩到的细节:
 
-- **农场里只放带版本号的 soname**(`lib*.so.*`)。`runtime.library_dirs` 同时进**链接行**,一个裸 `libxcb.so`
-  会遮蔽本仓自己的 `compat.xcb`,链接报 `undefined reference to XauDisposeAuth`(mcpp#304)。带版本号的名字对
-  链接器不可见,而恰好是 `dlopen` 要的。
+- **农场里只放带版本号的 soname**(`lib*.so.*`)。曾经一个裸 `libxcb.so` 遮蔽了本仓自己的 `compat.xcb`,
+  链接报 `undefined reference to XauDisposeAuth`(mcpp#304)。带版本号的名字对链接器不可见,而恰好是
+  `dlopen` 要的,所以这条规矩继续保留。
+- **要分清哪个目录键出哪个 flag** —— 三者不可互换,而正是这个拆分让上一条变得与版本有关。
+  在 mcpp 2026.8.27.2 上从生成的 `build.ninja` 读出来:
+
+  | 键 | 渲染成 |
+  |---|---|
+  | `runtime.library_dirs` | `-Wl,-rpath` |
+  | `runtime.link_library_dirs` | `-L` |
+  | `runtime.transitive_needed_dirs` | `-Wl,-rpath-link` |
+
+  也就是说在这个 pin 上,只写 `library_dirs` **不会**把农场放进链接行(单独的 `-L` 键是 2026.8.10.3 才有的,
+  mcpp#304 早于它)。形态 G 的包要的正是这个效果 —— 没人链接它们的农场,它们存在的意义是让裸 soname 的
+  `dlopen` 在**运行期**解析得到。而一个**会被链接**的包还需要 `link_library_dirs`,否则农场完全正确、
+  构建却死在 `ld: cannot find -l<name>`;见形态 I。
 - **闭包必须完整**。农场里有 `libxcb.so.1` 却没有它依赖的 `libXau.so.6`,会遮蔽掉本来能解析的宿主副本,可执行
   文件直接起不来。
 

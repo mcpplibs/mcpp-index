@@ -1,0 +1,238 @@
+# Adding `compat.libgbm` — GBM bound to the ecosystem's Mesa
+
+Date: 2026-08-29 · Package: `compat.libgbm@2026.08.29` · Member: `tests/examples/libgbm`
+
+## What GBM is, and what had to be decided
+
+GBM (Generic Buffer Management) is the API a program uses to get scanout-capable buffers out of a
+DRM device — `gbm_device`, `gbm_bo`, `gbm_surface`. It sits under EGL on a KMS console, under a
+Wayland compositor's back end, and under headless GPU rendering with no X server.
+
+The only real decision was the shape, and the first answer was wrong. The criterion that settled it
+is not "which is less work" but **how much dependency surface the ecosystem takes on, and how much
+of it touches the host**.
+
+## Shape: why this is a binding, not a source build
+
+### 1. Upstream does not ship libgbm as a separable unit
+
+Measured against Mesa 26.2.1. `src/gbm/meson.build`:
+
+```meson
+libgbm = shared_library(libgbm_name, files_gbm,
+  link_with    : [libloader],
+  dependencies : [dep_libdrm, idep_xmlconfig], …)
+```
+
+and `src/loader/meson.build` in turn:
+
+```meson
+libloader = static_library('loader', ['loader_dri_helper.c', 'loader.c', sha1_h],
+  c_args       : ['-DUSE_DRICONF'],
+  dependencies : [idep_mesautil, dep_libdrm, dep_thread, dep_xcb, dep_xcb_xrandr], …)
+```
+
+`idep_mesautil` is the whole of Mesa's internal util library — ~120 TUs plus Python-generated
+tables — and libgbm reaches it for exactly **one** function, `loader_open_driver_lib`. `loader.c`
+itself pulls `GL/gl.h`, `mesa_interface.h`, `util/xmlconfig.h` (expat), `drm-uapi/nouveau_drm.h`,
+`pci_id_driver_map.h` and a generated `git_sha1.h`.
+
+This is not a recent refactor to route around: `main/backend.c` has included `loader.h` since at
+least Mesa 23.3.6 (checked 23.3.6, 25.0.7, 26.2.1).
+
+GBM's frontend/backend `dlopen` split exists so **vendors can ship backends** — NVIDIA contributed
+it in 2021 — not as an invitation to rebuild the frontend. Vendoring it means forking Mesa's
+internals.
+
+The contrast with `compat.vulkan` is the point, and it is not a double standard: Khronos releases
+the Vulkan-Loader as a **standalone project** whose entire purpose is to ship separately from any
+driver. Mesa releases no such thing for GBM.
+
+### 2. In this ecosystem, Mesa already has an owner
+
+`xim:mesa` is a package, and `xim-x-mesa/25.0.7.2` already carries `lib/libgbm.so{,.1,.1.0.0}`,
+`include/gbm.h` and `lib/gbm/dri_gbm.so`. Its `config()` declares `lib` into `<subos>/lib` and
+`include` into `<subos>/usr/include`.
+
+So a source build would make mcpp-index re-import **libdrm + expat + xcb + a Mesa-util carve-out**
+— four or more new packages — to duplicate a dependency graph the ecosystem has already resolved
+hermetically. That grows the dependency surface in order to shrink nothing.
+
+### Measured surface of the chosen shape
+
+| surface | count | note |
+|---|---|---|
+| host | **0** | no `/usr/lib*` path, no `MCPP_HOST_*` override — see below |
+| ecosystem | **1** | `xim:mesa`, not `xim:graphics`'s twenty-two |
+| index | **0** | `deps = {}`; `gbm.h` includes only `<stddef.h>`/`<stdint.h>` |
+| transitive | **0** | `libgbm.so.1`'s RUNPATH resolves entirely inside `xim-x-{mesa,libdrm,expat,libllvm,glibc,…}` |
+
+## Zero host — not "host, converged"
+
+This package reads `system.subos_sysrootdir()` and nothing else. That is stricter than either
+neighbour: `compat.glx-runtime` keeps `MCPP_HOST_GL_LIBRARY_PATH` as "the ONLY door back to the
+host", and `compat.vulkan-runtime` harvests `/usr/lib/x86_64-linux-gnu` outright.
+
+Those two have a reason this one does not: a **proprietary vendor driver** can only come from the
+host. GBM has no such case — `xim:mesa` covers every host shape the graphics stack covers
+(llvmpipe, radeonsi, iris, nouveau, zink, d3d12, RADV).
+
+And host libgbm specifically is a leak the ecosystem has already closed. From
+`xim:nvidia-gl-host-link`:
+
+> The table was a list of what someone thought of, and it was missing libm, libdrm, **libgbm**,
+> libgcc_s and libwayland-* — all of which were therefore coming from the HOST, silently, which is
+> the leak this package exists to close (R7).
+
+Reopening it here would undo that. If a machine ever needs NVIDIA's own GBM backend, that belongs
+in `xim:nvidia-gl-host-link` — the ecosystem's host-link layer, which owns host contact — and not
+in this descriptor.
+
+## The part that is actual work: backend reachability
+
+Harvesting `libgbm.so` and `gbm.h` is the easy half and produces a package you can link and cannot
+use. libgbm is a **loader**: every `gbm_create_device()` dlopens `<path>/<driver>_gbm.so`, and the
+path Mesa compiles in is `/usr/lib/gbm` (its `gbm.pc` says `gbmbackendspath=/usr/lib/gbm`), which
+does not exist inside the sandbox. Measured before this package existed:
+
+```
+MESA-LOADER: failed to open dri: /usr/lib/gbm/dri_gbm.so: cannot open shared object file
+(search paths /usr/lib/gbm, suffix _gbm)
+```
+
+`xim:mesa` declares `lib` into the view, but `lib/gbm/` is a **subdirectory** and does not follow.
+Closing that is this package's real content, and it is why the shape is not a copy of
+`compat.glx-runtime`.
+
+### How the path is found, without pinning anything
+
+The farm is laid out so the backend directory is the sibling of the libgbm that actually loaded:
+
+```
+mcpp_generated/libgbm/lib/libgbm.so{,.1,.1.0.0}   -> <subos>/lib/*
+mcpp_generated/libgbm/lib/gbm/dri_gbm.so          -> mesa payload lib/gbm/
+mcpp_generated/libgbm/include/{gbm.h,mcpp_gbm.h}
+```
+
+and `mcpp_gbm_use_sibling_backends()` resolves it at runtime: `dlsym(RTLD_DEFAULT)` a gbm symbol,
+`dladdr` it, take the directory, append `/gbm`.
+
+Verified experimentally that `dladdr` reports the **farm** path and not the realpath — a library
+loaded through a symlink on the RUNPATH reports the name the loader used — so the sibling lands
+inside this package's own payload:
+
+```
+dli_fname            = …/farmtest/lib/libgbm.so.1
+derived backends dir = …/farmtest/lib/gbm
+```
+
+and with `GBM_BACKENDS_PATH` set from it, the loader's own diagnostic confirms it searches there:
+`(search paths …/farmtest/lib/gbm, suffix _gbm)`.
+
+The alternative — baking an absolute path into a generated header at install time — works and pins
+the package to whichever mesa payload existed on install day, which is exactly what
+`compat.glx-runtime`'s header comment warns about ("a payload path pins a version … and stops
+resolving the day it is upgraded"). Runtime derivation has no such cost and puts no absolute path
+in the descriptor at all.
+
+`RTLD_DEFAULT` rather than `&gbm_format_get_name`: the address of an imported function is the
+consumer's own PLT stub, and `dladdr` would report the consumer.
+
+## Two mechanism findings worth keeping
+
+**`runtime.library_dirs` does not put `-L` on the link line.** The index README and the descriptor
+catalog both said it did. Reading the emitted `build.ninja` on mcpp 2026.8.27.2:
+
+| key | renders as |
+|---|---|
+| `runtime.library_dirs` | `-Wl,-rpath` |
+| `runtime.link_library_dirs` | `-L` |
+| `runtime.transitive_needed_dirs` | `-Wl,-rpath-link` |
+
+`compat.glx-runtime` and `compat.vulkan-runtime` are unaffected — nothing links against their
+farms, they exist so a bare-soname `dlopen` resolves at run time. This package does link against
+its farm, and with `library_dirs` alone the farm is complete, the rpath correct, and the build dies
+at `ld: cannot find -lgbm`. Both catalog rows have been corrected in this change.
+
+**`c_standard = "gnu11"` is still silently ignored** (mcpp 2026.8.27.2 emits `-std=c11` anyway), so
+`dladdr`/`RTLD_DEFAULT` are reached with `cflags = { "-D_GNU_SOURCE" }`, exactly as `compat.libaio`
+found for `syscall()`/`sigset_t`.
+
+## Target naming
+
+The lib target is `gbm_binding`, not `gbm`. A target called `gbm` would put a `libgbm.a` on the
+link line beside the real `libgbm.so` the package exists to deliver, and which one `-lgbm` picked
+would come down to search order.
+
+## Test member
+
+`tests/examples/libgbm`, linux-gated, no-op `main()` elsewhere (the `compat.libaio` /
+`compat.wil` pattern). Nineteen checks, all runnable with no GPU:
+
+- `gbm_format_get_name` over four fourccs — `XRGB8888`→`XR24`, `ARGB8888`→`AR24`, `NV12`→`NV12`,
+  `ABGR2101010`→`AB30`.
+- The two **legacy enumerators**, which are the assertions that matter: `GBM_BO_FORMAT_XRGB8888`
+  is the value `0`, and only the library's own `format_canonicalize()` turns it into `"XR24"`. A
+  header-only reimplementation would pass the fourcc cases and fail these.
+- Six `dlsym(RTLD_DEFAULT, …)` checks, so a header from a different Mesa than the library surfaces
+  here rather than as a link error.
+- `gbm_create_device(-1) == nullptr`.
+- **Backend reachability**: the derived directory exists and holds at least one `*_gbm.so`. This is
+  the assertion the package exists for and it needs no `/dev/dri`.
+- `GBM_BACKENDS_PATH` is set from the derived path, and an explicitly set one is left alone.
+
+Real device creation is opt-in behind `MCPP_RUN_GBM_DEVICE=1` plus a working `/dev/dri`, following
+`tests/examples/imgui-window`'s `MCPP_RUN_WINDOW=1`.
+
+## Verification
+
+With the CI-pinned mcpp (2026.8.27.2), after `rm -rf` of the member's `target/`, `.mcpp/` and the
+package's build-cache entry:
+
+```
+   Compiling compat.libgbm v2026.08.29
+   Compiling gbm (test)
+     Running bin/gbm
+… 19 checks …
+0 check(s) failed
+ test result ok. 1 passed; 0 failed; finished in 23.61s
+```
+
+- `mcpp xpkg parse pkgs/c/compat.libgbm.lua` → `parse OK` (no unknown mcpp-segment keys).
+- All eight lint gates reproduced locally (syntax, required fields, no leading `v`, mirror urls,
+  package name, cross-package refs, platform parity, duplicate versions) → clean.
+- **Assertions confirmed failable**: moving `dri_gbm.so` out of the farm turns the reachability
+  check to `FAILED` and the binary exits 1.
+- The linked binary is honest: `NEEDED libgbm.so.1` with the farm on `RPATH` and **no host path
+  anywhere** on it.
+- CN mirror published at `gitcode.com/mcpp-res/libgbm@2026.08.29`, fetched back and confirmed
+  byte-identical to GLOBAL (`95f3b4a6…`, 19165 bytes). GLOBAL sha computed twice before use.
+
+## Known, and not this package's defect
+
+On a host whose `xim-x-mesa` is 25.0.7.2 against `xim-x-glibc` 2.39, the backend is found and then
+fails to load:
+
+```
+MESA-LOADER: failed to open dri: …/xim-x-glibc/2.39/lib64/libm.so.6: version `GLIBC_2.43' not
+found (required by …/libgallium-25.0.7.so) (search paths …/lib/gbm, suffix _gbm)
+```
+
+Note the search path: the reachability gap **is** closed, and what remains is a glibc skew inside
+the ecosystem's own Mesa build — the shape of mcpp#352, upstream of this package. It is why the
+test asserts the backend is *present* at the derived path rather than that it *loads*: that
+assertion is meaningful on a GPU-less runner and does not go green by accident when the stack is
+broken. Worth reporting against `xim:mesa` separately.
+
+## What was deliberately left out
+
+- **No `capabilities` entry.** `compat.glx-runtime` declares `"x11.display"` because it needs the
+  sandbox to expose a socket it does not own. There is no verified DRM counterpart in the engine's
+  vocabulary, and coining one that may be silently ignored would document a guarantee this package
+  cannot make.
+- **No `libraries` block.** Only `ldflags`. A name containing a dot in `libraries` is treated as a
+  package-relative path; the neutral block is only needed by `cl.exe` consumers.
+- **No features.** There are no optional compilable components — the package has exactly one TU of
+  its own.
+- **No non-linux `xpm` section.** GBM is the DRM buffer API; there is no port to declare, so
+  consumers gate it with `[target.'cfg(linux)'.dependencies]`.

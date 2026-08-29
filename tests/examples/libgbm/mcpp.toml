@@ -1,0 +1,25 @@
+# libgbm test project.
+#
+# GBM is the DRM buffer-management API, so like tests/examples/libaio the
+# descriptor has a `linux` section and nothing else, the dependency is gated,
+# and the test compiles to a no-op main() elsewhere.
+#
+# What this member has to prove is not "does -lgbm resolve". compat.libgbm is a
+# BINDING onto the ecosystem's Mesa, and it can be wrong in a way that still
+# links:
+#
+#   * the header could come from a different Mesa than the library;
+#   * the backend directory could be unreachable, which is the state every
+#     mcpp sandbox is in by default (Mesa compiles in /usr/lib/gbm, which does
+#     not exist there) and which no link check would notice.
+#
+# So the assertions cover the pure-function half of the API, which needs no GPU
+# and no device, and then check that the directory libgbm will actually search
+# exists and holds a backend. That second one is the interesting assertion:
+# it is meaningful on a CI runner with no /dev/dri at all.
+[package]
+name = "libgbm-tests"
+version = "0.1.0"
+
+[target.'cfg(linux)'.dependencies.compat]
+libgbm = "2026.08.29"

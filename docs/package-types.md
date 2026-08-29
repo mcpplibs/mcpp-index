@@ -19,6 +19,7 @@ combined as needed.
 | **F. Shared-library compat** | has to be the **only** copy of that `.so` in the process (third parties `dlopen` it) | the X11 family such as `pkgs/c/compat.x11.lua`, and `compat.vulkan.lua` (linux) | `targets = { kind = "shared", soname = … }` |
 | **G. Host runtime adaptation** | things that cannot be vendored, such as drivers — only a symlink farm plus metadata | `pkgs/c/compat.glx-runtime.lua`, `compat.vulkan-runtime.lua` | `runtime.library_dirs` / `capabilities` |
 | **H. Host tool provider** | the upstream tarball also holds a **code generator** consumers run at build time | `pkgs/c/compat.protobuf.lua` (`protoc`) | a `targets` entry with `kind = "bin"` + `main`, plus `required_features` |
+| **I. Ecosystem-stack binding** | the library is an internal build target of a project the **ecosystem already owns**, so vendoring it would fork that project | `pkgs/c/compat.libgbm.lua` (Mesa's GBM, via `xim:mesa`) | `xpm.<plat>.deps.runtime = { "xim:<pkg>" }` + a farm from `system.subos_sysrootdir()`, with `runtime.library_dirs` **and** `link_library_dirs` |
 
 For the complete sample index, see [Descriptor examples by shape](descriptor-examples.md).
 
@@ -193,10 +194,23 @@ every ICD manifest and yet cannot open a single driver.
 
 Two details that keep biting:
 
-- **Put only versioned sonames in the farm** (`lib*.so.*`). `runtime.library_dirs` also joins the **link line**, so a
-  bare `libxcb.so` shadows this repository's own `compat.xcb` and the link fails with
-  `undefined reference to XauDisposeAuth` (mcpp#304). Versioned names are invisible to the linker and are exactly what
-  `dlopen` asks for.
+- **Put only versioned sonames in the farm** (`lib*.so.*`). A bare `libxcb.so` shadowed this repository's own
+  `compat.xcb` and the link failed with `undefined reference to XauDisposeAuth` (mcpp#304). Versioned names are
+  invisible to the linker and are exactly what `dlopen` asks for, so this remains the rule.
+- **Know which directory key produces which flag** — they are not interchangeable, and the split is what makes the
+  point above version-dependent. Read off the emitted `build.ninja` on mcpp 2026.8.27.2:
+
+  | key | renders as |
+  |---|---|
+  | `runtime.library_dirs` | `-Wl,-rpath` |
+  | `runtime.link_library_dirs` | `-L` |
+  | `runtime.transitive_needed_dirs` | `-Wl,-rpath-link` |
+
+  So on this pin `library_dirs` alone does **not** put the farm on the link line (the separate `-L` key arrived in
+  2026.8.10.3; mcpp#304 predates it). Shape G packages want exactly that — nothing links against their farms, they
+  exist so a bare-soname `dlopen` resolves at run time. A package that *is* linked against needs
+  `link_library_dirs` too, or the build dies at `ld: cannot find -l<name>` with a farm that is perfectly correct;
+  see shape I.
 - **The closure has to be complete.** A farm holding `libxcb.so.1` but not the `libXau.so.6` it depends on shadows the
   host copy that would otherwise have resolved, and the executable simply fails to start.
 
