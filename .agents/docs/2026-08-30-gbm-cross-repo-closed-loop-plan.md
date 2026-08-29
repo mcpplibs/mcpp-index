@@ -580,3 +580,190 @@ system_requirements」,因为 `sdl`、`glfw` 这些库需要 `requires` 一个�
 
 但 §10.1 修正了一处预期:即便 R1 + R2b + B3 全部落地,**这个包也不会消失**,
 只会瘦下来 —— 它作为「库→库」传递依赖的载体是长期的。
+
+---
+
+## 11. 任务拆分与依赖关系(执行版)
+
+### 11.1 任务表
+
+| ID | 仓 | 内容 | 依赖 | 可并行 |
+|---|---|---|---|---|
+| **T1** | xim-pkgindex | `graphics.GBM_DIR` + `DISCOVERY` 一行 + `declare_gbm()`;`mesa.lua` 调用 | — | ✔ 起点 |
+| **T2** | xim-pkgindex | T1 的测试(vendor-form harness 同款) | T1 | |
+| **T3** | mcpp | R2b:`[xlings] deps` 首次构建自动供给 | — | ✔ 与 T1 并行 |
+| **T4** | mcpp | B3:工具链 subos 作基座 + 项目 subos 叠加 | T3(供给先于选择) | |
+| **T5** | mcpp | T3/T4 回归测试 | T4 | |
+| **T6** | mcpp-index | `compat.libgbm` 定型 + 文档 | — | ✔ 与 T1/T3 并行 |
+| **T7** | mcpp-index | `stock_usage.cpp` 保留为闭环回归 | T6 | |
+| **T8** | 三仓 | 规范/文档同步(含 zh) | T1/T4/T6 | |
+| **T9** | — | release + gtc 补 CN 资源 | T6 | |
+| **T10** | — | 生态真实验证(`xlings subos --sandbox --cmd`) | T1(+T4) | 终点 |
+
+关键路径:**T1 → T10**。T3/T4 是另一条独立链,不阻塞 GBM 闭环 —— 这是把
+R1 与 R2 拆开的最大收益。
+
+### 11.2 多角度评估
+
+**架构** —— 每个改动都落在**已经拥有该职责**的那一层:发现路径归 `graphics.lua`
+(它已经管 DRI/EGL/XDG),供给归 mcpp(它已经为工具链做过一次),接口暴露归 compat 包。
+没有任何一层被要求承担新职责,所以没有新的抽象。
+
+**稳定性** —— T1 是纯增量:`DISCOVERY` 多一行,旧消费者读不到新变量也不会坏;
+`declare_gbm` 缺目录时 `warn + return false`,不中断安装。T4 是叠加而非替换,
+不会丢工具链的 `libgcc_s`/`libstdc++`(§8.1 实测)。
+
+**优雅简洁** —— T1 全部收益来自「把 GBM 加进一张已经存在的表」,`consumer_envs()`
+与 `declare_subos_env()` 自动跟随,不需要第二处改动。T6 之后包里**没有一行**
+GBM 特有的运行期逻辑。
+
+**用户体验** —— 终态是 `#include <gbm.h>` 就能用,不需要知道任何 mcpp/xlings 概念。
+T3 的失败信息照抄工具链那条:说明失败并给出**手工可执行的等价命令**。
+
+**兼容性** —— `prepend` 而非 `set`,尊重用户已 export 的值(`graphics.lua` 自己论证过
+`set` 会抹掉 NVIDIA 目录)。旧 mesa 版本没有 `lib/gbm` 时安装照常成功。
+
+**跨平台** —— GBM 是 Linux DRM 概念,`xpm` 只有 `linux` 段,测试在非 Linux 编译成
+no-op `main()`(`compat.libaio`/`compat.wil` 同款)。T3/T4 是平台无关的 subos 逻辑。
+
+**一致性** —— `declare_gbm` 是 `declare_dri` 的镜像;`GBM_DIR` 与 `DRI_DIR` 同在
+`usr/` 下(受 `is_permitted_file_destination` 白名单约束,见 11.3);
+T3 复用 `install_packages`,T4 复用既有 `EnvDecl`。
+
+**无感升级** —— 三个改动都不需要消费者改任何东西:T1 在下次 `xlings install/update`
+时随 mesa 的 `config()` 生效;T4 之后旧工程只是多拿到几个变量;T6 删 constructor 时
+公开 API 没有变化(本来就是 `#include <gbm.h>`)。`binding.environment` 参与
+`contractHash`,声明变化自动使快取失效,不会出现「新声明 + 旧产物」。
+
+**测试覆盖** —— §4 的 V1–V5,其中 **V5 是删 constructor 的机械准入**;
+`stock_usage.cpp` 是防止「退回 opt-in 修法」的回归;反向验证(移走 `dri_gbm.so`)
+已实测能让断言转红。
+
+### 11.3 实现期发现的硬约束(写进代码注释)
+
+`graphics.lua` 自己记着:**xlings 只允许 `usr`/`etc`/`share` 开头的 file asset 目标**
+(`xvm/bindings.cppm` 的 `is_permitted_file_destination`),而且**被拒绝不是错误 ——
+放置只是不发生**。所以 `GBM_DIR` 必须是 `usr/lib/gbm`;写成 `lib/gbm` 会得到一个
+安装干净、变量指向不存在目录、`gbm_create_device()` 静默返回 NULL 的配方。
+这与 `DRI_DIR = "usr/lib/dri"` 的理由完全相同。
+
+---
+
+## 12. 实现与验证结果(2026-08-30 执行记录)
+
+### 12.1 结论先行:**B3 不需要**
+
+第 8 节推导出「必须分层继承(B3)」,实现时被实验推翻。**真正的修法是把
+`[xlings] deps` 装到 GLOBAL scope**,因为那个 registry 的 SubOS **就是** mcpp 的
+`--sysroot`。一旦装对了地方,头和库天然可见,不需要任何 `-isystem`/`-L` 叠加。
+
+推翻的过程(每一步都是实测):
+
+| 试的东西 | 结果 |
+|---|---|
+| `install_packages` + `make_project_xlings_env`(**项目** scope) | 装成功、`.xlings.json` 也写了,但头落在 `<proj>/.mcpp/.xlings/subos/_/usr/include`,而 `--sysroot` 指的是 `<MCPP_HOME>/registry/subos/default` → **`gbm.h` 仍然找不到** |
+| `resolve_xpkg_path`(工具链同款,**全局** scope) | 头进了 sysroot,`gbm.h` 找到了 ✔ —— 但它要求 `<name>@<version>`,裸名报 `invalid xpkg target 'xim:mesa': expected <name>@<version>` |
+| **`install_packages` + `make_xlings_env`(全局 scope)** | ✔ 全对:裸名、带命名空间、带版本都能用,歧义名还会列出候选 |
+
+所以 §8.1 那张「项目 subos 缺 libgcc_s/libstdc++」的表仍然是**事实**,但它证明的不是
+「需要分层」,而是「**不该往项目 subos 装**」。结论方向反了,数据没错。
+
+**这也让 mcpp 侧的改动小了一个数量级**:没有碰 `linkmodel.cppm`、
+`plan.runtimeSearch`、`link_line.cppm` 的任何排序不变量 —— 那几处的注释明确写着
+「一个可变视图排在已链接产物之前会让后续安装悄悄改变加载的库,这不是假设,正是本模块诞生的原因」。
+不动它们是这次实现最重要的克制。
+
+### 12.2 已实现并验证
+
+**T1 / C1 — xim-pkgindex** ([openxlings/xim-pkgindex#713](https://github.com/openxlings/xim-pkgindex/pull/713))
+
+`graphics.GBM_DIR` + 一行 `DISCOVERY` + `declare_gbm()`,`mesa.lua` 调用。
+测试:`tests/test_graphics_gbm_discovery.py`(5 例)+ 纯 Lua harness。
+**两种静默失败都实测转红**:删掉 DISCOVERY 行、把 `GBM_DIR` 写成 `lib/gbm`(白名单外)。
+既有 graphics/mesa 测试 22 项全过。
+
+**T3 / R2b — mcpp**(`feat/xlings-subos-layering`)
+
+`[xlings] deps` 首次构建自动供给,全局 scope,内容级幂等(stamp)。
+实测第二次 `mcpp run` 输出 0 行 `Provisioning`。
+
+**T6 — mcpp-index**(PR #281,CI 全绿)
+
+`compat.libgbm` + 两个测试二进制,constructor 形态,已在 §10 论证为传递依赖载体。
+
+### 12.3 生态真实验证(`xlings subos --sandbox --gpu`)
+
+全新 subos `eco-gbm-20260830`,`xlings install xim:mesa@25.0.7.2`:
+
+```
+[xlings] subos eco-gbm-20260830: 4 env var(s) from 1 package(s)      ← 原本 3
+GBM_BACKENDS_PATH=/home/speak/.xlings/subos/eco-gbm-20260830/usr/lib/gbm
+<subos>/usr/lib/gbm/dri_gbm.so
+```
+
+沙箱内真跑(`--sandbox --gpu`):
+
+```
+search paths <subos>/usr/lib/gbm, suffix _gbm        ← 是我们的路径,不是 /usr/lib/gbm
+/dev/dri/renderD128  gbm_create_device = 0x27080ed0  backend = drm
+/dev/dri/card0       gbm_create_device = 0x27080ed0  backend = drm
+/dev/dri/card0       gbm_bo_create = 0x2708b8a0      ← 真的分配出了 buffer object
+RESULT: PASS
+```
+
+`renderD128` 上 `gbm_bo_create` 返回 NULL 并打印
+`KMS: DRM_IOCTL_MODE_CREATE_DUMB failed: Permission denied` —— 那是 render node
+的权限边界(dumb buffer 需要 KMS 权限),不是打包问题;`card0` 上分配成功。
+
+### 12.4 mcpp 侧闭环(全新 MCPP_HOME,零 mcpp-index 依赖)
+
+```toml
+[package]
+name = "nopkg"
+version = "0.1.0"
+
+[xlings]
+deps = ["xim:mesa"]
+
+[build]
+ldflags = ["-lgbm"]
+```
+
+`src/main.cpp` 只 `#include <gbm.h>`:
+
+```
+Provisioning [xlings] deps (xim:mesa)
+Compiling nopkg v0.1.0 (.)
+Running `target/.../bin/nopkg`
+XR24 | GBM_BACKENDS_PATH=<registry>/subos/default/usr/lib/gbm
+```
+
+编译、链接、运行、环境变量四项全通,**没有任何 mcpp-index 包**。
+
+### 12.5 唯一仍未闭合的一环,且不在本方案范围内
+
+`xim-x-mesa/25.0.7.2` 的 payload RUNPATH 指向 `xim-x-glibc/2.39/lib64`,
+而它自己的 `libgallium-25.0.7.so` 需要 `GLIBC_2.43`(store 里有 2.44 和 2.44.2):
+
+```
+MESA-LOADER: failed to open dri: …/xim-x-glibc/2.39/lib64/libm.so.6:
+version `GLIBC_2.43' not found (required by …/libgallium-25.0.7.so)
+(search paths <subos>/usr/lib/gbm, suffix _gbm)
+```
+
+注意 search path 已经是对的 —— **可达性已闭合**,倒在下一跳。12.3 那次成功的运行
+是把 `LD_LIBRARY_PATH` 指向 2.44.2 之后取得的,用来隔离出这一个变量。
+
+`mesa.lua` 自己不做任何 patchelf(全仓只有 `graphics.lua`/`hostlib.lua` 用 patchelf,
+且都是只读的 `--print-rpath`),所以这要在 `xlings-res` 侧重建/重打 payload 解决,
+**不该由 recipe 或 compat 包绕过**。已单独记录待报。
+
+### 12.6 验证期踩到的两个坑(留给下一个人)
+
+1. **`MCPP_HOME` 会再拼一层 `registry/`**。设 `MCPP_HOME=<X>` 时实际用的是
+   `<X>/registry/subos/default`。我一度在检查 `<X>/subos/default` 并得出「envs 是空的」
+   的错误结论,而真正在用的那个里面有东西。查 sysroot 请以 `build.ninja` 里的
+   `--sysroot=` 为准,别自己推。
+2. **mcpp 有自己的一份索引副本**(`<MCPP_HOME>/registry/data/xim-pkgindex`),
+   与 `~/.xlings/data/xim-pkgindex` 是两份。改了后者,mcpp 侧不会看到,
+   要等合并 + artifact 重新发布(本地验证时手工同步了两份)。
