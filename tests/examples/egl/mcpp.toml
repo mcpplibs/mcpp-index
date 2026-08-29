@@ -1,0 +1,17 @@
+# EGL test project.
+#
+# Linux-only like its neighbours, and the dependency is gated so the test
+# compiles to a no-op main() elsewhere.
+#
+# The interesting assertion is not "does -lEGL resolve" but that
+# `#include <EGL/egl.h>` PARSES: eglplatform.h opens with
+# `#include <KHR/khrplatform.h>`, which this package does not ship and
+# deliberately takes from compat.khrplatform instead of adding a third
+# provider of KHR/ to the index. If that dependency edge is ever dropped, this
+# member stops compiling rather than failing subtly later.
+[package]
+name = "egl-tests"
+version = "0.1.0"
+
+[target.'cfg(linux)'.dependencies.compat]
+egl = "2026.08.30"

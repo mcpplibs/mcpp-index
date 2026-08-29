@@ -1,0 +1,17 @@
+# libdrm test project.
+#
+# DRM/KMS is a Linux kernel interface, so like tests/examples/libgbm the
+# descriptor has a `linux` section only, the dependency is gated, and the test
+# compiles to a no-op main() elsewhere.
+#
+# The interesting failure here is the include layout, not the link. libdrm
+# installs its public headers at the include root and the uapi headers they
+# include in a `libdrm/` subdirectory, and `xf86drm.h` line 40 is a bare
+# `#include <drm.h>` — so a package exposing one root builds nothing at all.
+# This member's first assertion is simply that the translation unit compiles.
+[package]
+name = "libdrm-tests"
+version = "0.1.0"
+
+[target.'cfg(linux)'.dependencies.compat]
+libdrm = "2026.08.30"

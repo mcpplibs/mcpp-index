@@ -1,0 +1,25 @@
+# Wayland test project.
+#
+# Linux-only, dependency gated, no-op main() elsewhere — same shape as its
+# neighbours.
+#
+# No compositor is required and none is assumed: the assertions cover the
+# header/library seam and the ONE call that is meaningful without a server
+# (`wl_display_connect` against a socket that is not there must fail cleanly
+# rather than crash). CI runners have no WAYLAND_DISPLAY.
+#
+# The second binary checks the part this package deliberately does not put on
+# the link line: libwayland-server is in the farm, so a consumer can reach it
+# through its own ldflags. If the farm ever stops carrying it, that is a silent
+# regression for compositor authors, and this is what catches it.
+[package]
+name = "wayland-tests"
+version = "0.1.0"
+
+[target.'cfg(linux)'.dependencies.compat]
+wayland = "2026.08.30"
+
+# Exactly the escape hatch the descriptor documents: the package puts only
+# -lwayland-client on the link line, and a consumer adds what else it needs.
+[target.'cfg(linux)'.build]
+ldflags = ["-lwayland-server"]
