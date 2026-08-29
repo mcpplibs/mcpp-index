@@ -4,27 +4,30 @@
 # descriptor has a `linux` section and nothing else, the dependency is gated,
 # and the test compiles to a no-op main() elsewhere.
 #
-# What this member has to prove is not "does -lgbm resolve". compat.libgbm is a
-# BINDING onto the ecosystem's Mesa, and it can be wrong in three ways that all
-# still link:
+# What this member proves is not "does -lgbm resolve". compat.libgbm is a thin
+# BINDING onto the ecosystem's Mesa — it compiles no upstream source and sets
+# no environment — so the interesting failures are all in the seams:
 #
-#   * the header could come from a different Mesa than the library;
-#   * the backend directory could be unreachable, which is the state every
-#     mcpp sandbox is in by default (Mesa compiles in /usr/lib/gbm, which does
-#     not exist there) and which no link check would notice;
-#   * the repair could require the CONSUMER to opt in, which would make it
-#     worthless — libgbm is mostly called from inside other libraries (SDL2's
-#     KMSDRM backend, wlroots, ffmpeg's VAAPI hwcontext) that will never call
-#     a helper of ours.
+#   * the header could come from a different Mesa than the library (both are
+#     taken from the same subos view precisely so they cannot);
+#   * the backend directory could be unreachable, which is the default state of
+#     an mcpp sandbox — Mesa compiles `/usr/lib/gbm` in as its search path and
+#     that does not exist there;
+#   * and the repair for that lives OUTSIDE this repository: `xim:mesa`
+#     declares GBM_BACKENDS_PATH through the graphics discovery layer, and mcpp
+#     carries subos declarations into the processes it launches.
 #
-# Hence TWO test binaries, and the split is deliberate:
+# That last point is why this member matters more than a link check: it is the
+# only place in this repo that notices if either of those two breaks.
 #
-#   tests/gbm.cpp          the full surface, including the optional
-#                          introspection header.
-#   tests/stock_usage.cpp  includes STOCK <gbm.h> and nothing else. If the
-#                          backend path ever regresses to something the
-#                          application has to ask for, this one fails while
-#                          gbm.cpp could still pass.
+# Two binaries, deliberately:
+#
+#   tests/gbm.cpp          the full surface — format canonicalization through
+#                          the real library, symbol presence, invalid-device
+#                          handling, and the backend-path assertions.
+#   tests/stock_usage.cpp  the minimal consumer: one header, one library,
+#                          nothing else. Smallest thing that still detects all
+#                          three regressions above, so a failure is unambiguous.
 #
 # Everything asserted here runs on a CI runner with no /dev/dri. Real device
 # creation is opt-in behind MCPP_RUN_GBM_DEVICE=1.

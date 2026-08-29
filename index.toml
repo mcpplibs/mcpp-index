@@ -5,7 +5,40 @@
 # (E0006 on violation). Bump min_mcpp ONLY together with the CI MCPP_VERSION
 # pin — lint parses descriptors with the pinned mcpp, which enforces the
 # "floor first, new grammar after" rollout rule mechanically.
+#
+# ── 2026-08-30: raised 2026.8.3.3 -> 2026.8.27.2, with the CI pin ──────────
+#
+# The rule above says to move this only together with MCPP_VERSION, and that is
+# what this is: validate.yml has pinned 2026.8.27.2 for some time while this
+# contract still claimed 2026.8.3.3, so the two had drifted apart and the floor
+# was advertising support nobody tested.
+#
+# It was not merely untested, it was FALSE, and measurably so. Two independent
+# reasons, both reproduced against this index:
+#
+#   * 2026.8.3.3 silently ignores `runtime.link_library_dirs` (the key does not
+#     exist in that binary at all) yet still reports `parse OK`, so
+#     `compat.libgbm` resolves, builds, and then dies at link:
+#         libdrm.so.2, needed by .../libgbm.so, not found
+#         undefined reference to `drmGetVersion'
+#     A silently-ignored key is invisible to the lint, which is why the
+#     "floor first, new grammar after" guard did not catch this: the guard
+#     assumes unknown keys are REJECTED, and `runtime.*` subkeys are not.
+#
+#   * 2026.8.10.3 does not get that far. It cannot bootstrap against this index
+#     at all:
+#         error: selected RuntimeBinding glibc@2.44 requires payload
+#                '<store>/xim-x-glibc/2.44', but it is not installed
+#     which is the compiled-in-runtime-binding defect mcpp's own
+#     src/xlings/xlings.cppm documents as the reason it floors xlings at
+#     2026.8.27.2. Every client below that line is already broken here,
+#     for reasons that predate any package in this index.
+#
+# So E0006 is strictly better than what those clients get today: a clear
+# refusal at the index-open choke point instead of an undefined reference or a
+# missing payload three layers down. 2026.8.27.2 is the version this index is
+# actually tested against, and now the contract says so.
 [index]
 spec        = "1"
-min_mcpp    = "2026.8.3.3"
-latest_mcpp = "2026.8.3.3"
+min_mcpp    = "2026.8.27.2"
+latest_mcpp = "2026.8.27.2"

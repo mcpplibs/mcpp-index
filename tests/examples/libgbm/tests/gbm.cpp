@@ -7,23 +7,19 @@
 //      taken from the subos view for exactly this reason, and the assertions
 //      below call through the header into the library to keep that honest.
 //
-//   2. The library could be present and the BACKEND unreachable. That is the
-//      default state of every mcpp sandbox: Mesa compiles `/usr/lib/gbm` in as
-//      its backend search path and that directory does not exist there, so
-//      gbm_create_device() finds nothing. Measured before this package
-//      existed:
+//   2. The library could be present and the BACKEND unreachable. libgbm is a
+//      loader: gbm_create_device() dlopens `<path>/<driver>_gbm.so`, where
+//      <path> is GBM_BACKENDS_PATH or the `/usr/lib/gbm` compiled into Mesa —
+//      correct on a distro, wrong the moment the payload is relocated:
 //
 //          MESA-LOADER: failed to open dri: /usr/lib/gbm/dri_gbm.so: cannot
 //          open shared object file (search paths /usr/lib/gbm, suffix _gbm)
 //
-//   3. **The repair could require the consumer to opt in** — which would make
-//      it useless. This is what section 0 below exists to prevent, and it is
-//      the assertion most worth having: libgbm is mostly called from INSIDE
-//      other libraries (SDL2's KMSDRM backend, wlroots, ffmpeg's VAAPI
-//      hwcontext), and none of them will ever call a helper of ours. So the
-//      package must work for a consumer that writes `#include <gbm.h>` and
-//      nothing else. Section 0 asserts precisely that, by reading the
-//      environment before this program has called anything at all.
+//      Setting that variable is the ENVIRONMENT's job, not this package's, and
+//      `xim:mesa` now does it through the graphics discovery layer
+//      (openxlings/xim-pkgindex#713). So the check below is a check on the
+//      ECOSYSTEM: if the declaration is ever dropped from that table, or the
+//      backends stop being placed into the subos, this goes red here.
 //
 // WHY THE LEGACY ENUM IS ASSERTED. gbm_format_get_name(GBM_FORMAT_XRGB8888) is
 // a weak test on its own — the answer is four bytes of the fourcc and a
@@ -39,17 +35,13 @@
 
 #ifdef __linux__
 
-// Stock libgbm. This include alone is the supported way to use the package.
+// Stock libgbm, and nothing else. This package ships no header of its own.
 #include <gbm.h>
-
-// Optional; only for the introspection the reachability assertions need.
-#include <mcpp_gbm.h>
 
 #include <dirent.h>
 #include <dlfcn.h>
 #include <fcntl.h>
 #include <sys/stat.h>
-#include <sys/wait.h>
 #include <unistd.h>
 
 #include <cstdint>
@@ -104,38 +96,10 @@ bool dir_has_backend(const char *dir)
     return found;
 }
 
-const char *const kSentinel = "/mcpp/sentinel/gbm";
-const char *const kChildMarker = "MCPP_GBM_SELFTEST_CHILD";
-
 } // namespace
 
-int main(int, char **argv)
+int main()
 {
-    // Re-executed by section 4 with GBM_BACKENDS_PATH already set. All this
-    // child does is report whether the constructor left that value alone.
-    if (std::getenv(kChildMarker) != nullptr) {
-        const char *v = std::getenv("GBM_BACKENDS_PATH");
-        return (v != nullptr && std::strcmp(v, kSentinel) == 0) ? 0 : 1;
-    }
-
-    // ── 0. The package works without being asked to ──────────────────────
-    // Read FIRST, before this program has called anything. If this passes,
-    // a consumer that only ever writes `#include <gbm.h>` — including a
-    // third-party library doing so inside its own code — gets a working
-    // gbm_create_device(). If it fails, the package is only usable by callers
-    // who know its private helper, which is to say not usable at all.
-    const char *env_at_entry = std::getenv("GBM_BACKENDS_PATH");
-    check(env_at_entry != nullptr,
-          "GBM_BACKENDS_PATH is set on entry to main (nothing called)");
-    if (env_at_entry != nullptr) {
-        std::printf("   backends dir: %s\n", env_at_entry);
-        struct ::stat st {};
-        check(::stat(env_at_entry, &st) == 0 && S_ISDIR(st.st_mode),
-              "it names a directory that exists");
-        check(dir_has_backend(env_at_entry),
-              "it contains at least one *_gbm.so backend");
-    }
-
     // ── 1. The calls reach Mesa's libgbm ─────────────────────────────────
     // Pure functions: no device, no GPU, no DRM node.
     check(format_name(GBM_FORMAT_XRGB8888) == "XR24",
@@ -170,28 +134,24 @@ int main(int, char **argv)
     check(gbm_create_device(-1) == nullptr,
           "gbm_create_device(-1) == nullptr");
 
-    // The introspection helper agrees with what the constructor published.
-    const char *dir = mcpp_gbm_backends_dir();
-    check(dir != nullptr && env_at_entry != nullptr &&
-              std::strcmp(dir, env_at_entry) == 0,
-          "mcpp_gbm_backends_dir() agrees with the wired value");
+    // ── 4. The ECOSYSTEM supplies the backend path ───────────────────────
+    // Nothing in this package sets this. It comes from `xim:mesa`'s
+    // declaration in the graphics discovery layer, carried into the process by
+    // mcpp's subos-env handling. Asserting it here is what makes a regression
+    // in EITHER of those two land on this package's CI rather than silently on
+    // a user.
+    const char *dir = std::getenv("GBM_BACKENDS_PATH");
+    check(dir != nullptr,
+          "GBM_BACKENDS_PATH is set by the ecosystem, not by this package");
 
-    // ── 4. An explicit setting outranks us ───────────────────────────────
-    // The constructor is a DEFAULT, not an override, so a value inherited from
-    // the environment has to survive it. That can only be observed from a
-    // fresh process, because by the time main runs the constructor is done.
-    {
-        const pid_t pid = ::fork();
-        if (pid == 0) {
-            ::setenv(kChildMarker, "1", 1);
-            ::setenv("GBM_BACKENDS_PATH", kSentinel, 1);
-            ::execv("/proc/self/exe", argv);
-            ::_exit(127);
-        }
-        int status = 0;
-        check(pid > 0 && ::waitpid(pid, &status, 0) == pid &&
-                  WIFEXITED(status) && WEXITSTATUS(status) == 0,
-              "an inherited GBM_BACKENDS_PATH survives the constructor");
+    if (dir != nullptr) {
+        std::printf("   backends dir: %s\n", dir);
+
+        struct ::stat st {};
+        check(::stat(dir, &st) == 0 && S_ISDIR(st.st_mode),
+              "it names a directory that exists");
+        check(dir_has_backend(dir),
+              "it contains at least one *_gbm.so backend");
     }
 
     // ── 5. A real device, opt-in ─────────────────────────────────────────

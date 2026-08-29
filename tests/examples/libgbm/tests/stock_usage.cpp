@@ -1,15 +1,25 @@
-// The whole point of the package, as a separate translation unit.
+// The minimal consumer, as a separate translation unit and a separate binary.
 //
-// This file includes STOCK <gbm.h> and nothing else — no mcpp_gbm.h, no helper
-// declaration, no knowledge that compat.libgbm exists. It is what a consumer
-// ported from any other build system looks like, and more importantly it is
-// what a THIRD-PARTY library looks like from the inside: SDL2's KMSDRM
-// backend, wlroots and ffmpeg's VAAPI hwcontext all call gbm_create_device()
-// out of their own sources and will never call anything of ours.
+// This file includes STOCK <gbm.h> and nothing else -- and since the package
+// ships no header of its own any more, that is now simply what a consumer
+// looks like. It is what a project ported from any other build system looks
+// like, and more importantly what a THIRD-PARTY library looks like from the
+// inside: SDL2's KMSDRM backend, wlroots and ffmpeg's VAAPI hwcontext all call
+// gbm_create_device() out of their own sources, having included only <gbm.h>.
 //
-// So if the backend path ever goes back to being something the application has
-// to opt into, this file fails while gbm.cpp — which does include the optional
-// header — could still pass. That asymmetry is the reason it exists.
+// WHAT IT GUARDS, now that the package sets nothing itself. GBM_BACKENDS_PATH
+// arrives from the ECOSYSTEM: `xim:mesa` places its backends into the subos and
+// declares the variable through the graphics discovery layer
+// (openxlings/xim-pkgindex#713), and mcpp carries subos declarations into the
+// processes it launches. Neither of those is this repository's code, so this
+// binary is the tripwire on both -- if the DISCOVERY row is dropped, or the
+// backends stop being placed, or mcpp stops injecting subos env, it goes red
+// here rather than silently on a user whose gbm_create_device() returns NULL.
+//
+// It is deliberately a SECOND binary rather than more assertions inside
+// gbm.cpp: a consumer that includes one header and links one library is the
+// smallest thing that can still detect all three of those regressions, and
+// keeping it minimal is what makes a failure here unambiguous.
 
 #ifdef __linux__
 
