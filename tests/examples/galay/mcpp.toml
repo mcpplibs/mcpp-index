@@ -1,0 +1,16 @@
+# Public Galay Form-A package consumer. The package is Unix-only in v5.0.0;
+# Windows still builds the no-op test below without resolving the dependency.
+[package]
+name = "galay-tests"
+version = "0.1.0"
+
+[target.'cfg(unix)'.dependencies.gzj-creator]
+galay = "5.0.0"
+
+[target.'cfg(unix)'.build]
+cxxflags = ["-DHAVE_GALAY=1"]
+
+# A member-level redirect replaces the workspace root's compat redirect, so
+# this test exercises the public package descriptor from this checkout.
+[indices]
+gzj-creator = { path = "../../.." }

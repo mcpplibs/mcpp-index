@@ -36,7 +36,7 @@ mcpp self config --mirror CN   # 切换至国内镜像,默认使用 GLOBAL 上�
 
 | 形态 | 示例 | 看点 |
 |------|------|------|
-| 原生模块库(Form A) | [`mcpplibs.tinyhttps`](pkgs/t/tinyhttps.lua) | 上游自带 `mcpp.toml`,描述符只有元数据与下载地址 |
+| 原生模块库(Form A) | [`mcpplibs.tinyhttps`](pkgs/t/tinyhttps.lua) · [`gzj-creator.galay`](pkgs/g/gzj-creator.galay.lua) | 上游自带 `mcpp.toml`;Galay 还展示了多模块包与按 feature 开启协议层 |
 | C 源码 compat | [`compat.cjson`](pkgs/c/compat.cjson.lua) | 单个 `.c` 编成库;可选扩展由 `features` 门控 |
 | header-only | [`compat.gtl`](pkgs/c/compat.gtl.lua) | 没有可编译内容 —— `include_dirs` 加一个 anchor TU |
 | 全源码直编 + 生成 config | [`compat.c-ares`](pkgs/c/compat.c-ares.lua) | 把 configure 本该生成的 config 头快照进 `generated_files` |

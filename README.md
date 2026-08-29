@@ -39,7 +39,7 @@ A few descriptors worth opening first, one per common shape:
 
 | Shape | Example | What it shows |
 |------|------|------|
-| Native module library (Form A) | [`mcpplibs.tinyhttps`](pkgs/t/tinyhttps.lua) | Upstream carries its own `mcpp.toml`, so the descriptor is metadata plus a download address |
+| Native module library (Form A) | [`mcpplibs.tinyhttps`](pkgs/t/tinyhttps.lua) · [`gzj-creator.galay`](pkgs/g/gzj-creator.galay.lua) | Upstream carries its own `mcpp.toml`; Galay also demonstrates a multi-module package with feature-scoped protocol layers |
 | C-source compat | [`compat.cjson`](pkgs/c/compat.cjson.lua) | One `.c` compiled into a lib; the optional extension sits behind a `features` gate |
 | Header-only | [`compat.gtl`](pkgs/c/compat.gtl.lua) | Nothing to compile — `include_dirs` and an anchor TU |
 | Whole-source build + generated config | [`compat.c-ares`](pkgs/c/compat.c-ares.lua) | The config header configure would have produced is snapshotted into `generated_files` |

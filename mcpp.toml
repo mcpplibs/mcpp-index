@@ -112,6 +112,7 @@ members = [
     "tests/examples/httplib-zstd",
     "tests/examples/msdfgen",
     "tests/examples/gtl",
+    "tests/examples/galay",
     "tests/examples/miniaudio",
     "tests/examples/nanosvg",
     "tests/examples/nanodbc",
