@@ -390,3 +390,172 @@ G6   libudev 路线决策 → libseat                ← 最后,单独评估
 > **G1a 三个成员是分水岭 —— 做完它,mcpp 从「EGL 能初始化」变成「能画」;
 > 其余都是补齐,唯一的架构性问题是 Vulkan 的 `XDG_DATA_DIRS` 目录合并,
 > 而那一行改在 xim-pkgindex,不在这里。**
+
+---
+
+## 10. 实现结果与对本设计的更正(2026-08-30 执行记录)
+
+设计写完就动手了。这一节记录**做出来的东西**,以及**设计里被实现推翻的部分** ——
+后者更重要,因为每一条都是被实测否掉的。
+
+### 10.1 交付
+
+| # | 交付 | 状态 |
+|---|---|---|
+| G1a | mcpplibs/libglvnd 加 `mcpp/{glesv2,glesv1,opengl}` 三个成员 | `v1.7.0`,CI 全绿 |
+| G1b | `khronos.{glesv2,glesv1,opengl}` 模块层 | 同上,与 C 库一起做完 |
+| G2 | xim-pkgindex `nvidia-gl-host-link` 0.1.3 声明 Vulkan ICD | PR #731,已实测 |
+| G3 | **mcpplibs/wayland-protocols**(新建)三个 tier | `1.49`,CI 待绿 |
+| G4a | `compat.pixman` 0.46.4 | 已实测 |
+| 索引 | `freedesktop.{glesv2,glesv1,opengl}`、三个 `wayland-protocols-*`、`compat.pixman` | PR #294 |
+| 镜像 | libglvnd / wayland-protocols / pixman 三份 CN,均已核对 sha256 | 完成 |
+
+### 10.2 被推翻的:G3 的「新增仓 0」
+
+设计 §6 写着「新增仓数量 = 0 —— G1 复用 libglvnd,G3 做 wayland fork 的第五个成员」。
+**G3 那半是错的。**
+
+`mcpplibs/wayland` 的 `upstream/` 是 wayland **1.26.0** 且 CI 逐字节 diff;
+wayland-protocols 是**另一个上游项目、另一个版本(1.49)**。一个仓一个上游一个版本,
+所以它必须是独立 fork。**新增仓数量 = 1。**
+
+### 10.3 被推翻的:G3 的「一个包装全部 65 个协议」
+
+设计说「全量预生成」,只提了体积。**体积不是问题,链接才是。**
+
+```
+multiple definition of `zwp_linux_dmabuf_v1_interface'
+```
+
+staging/ 与 unstable/ 携带**同一个协议的不同成熟度**,scanner 为两者生成**同名符号**。
+按导出的 `wl_interface` 数清点:
+
+| | |
+|---|---|
+| stable ∩ staging | **0** |
+| stable ∩ unstable | **13** |
+| staging ∩ unstable | **0** |
+| 任一 tier 内部 | **0** |
+
+所以是**三个包,按 tier 分** —— 而这个边界是上游自己的目录结构,不是发明出来的。
+
+由此还带出两条只有动手才会发现的事:
+
+1. **三个 unstable 协议不能发**:`xdg-shell-unstable-v5`、`linux-dmabuf-unstable-v1`、
+   `tablet-unstable-v2` —— 它们**就是**那 13 个重叠符号,而且各自都已被同名 stable 协议
+   取代。上游留着只为兼容,一个包不可能两个都发。
+2. **staging/unstable 依赖 stable**,实测:两者都引用 `xdg_toplevel_interface`,staging
+   还引用 `zwp_tablet_tool_v2_interface`。fork 内用 path 依赖,于是**消费者不能同时写
+   staging 和 stable** —— mcpp 报「既是 version dep 又是 path dep」。规则:要 staging
+   就只写 staging。
+
+体积那一问也量了,而且答案与担心相反:65 个协议的 `.c` 一共 **5910 行,编出 270KB**;
+3.5MB 几乎全是**头文件**,不 include 就不花钱。
+
+### 10.4 被推翻两次的:G2 的形态
+
+设计 §3 已经把 `VK_DRIVER_FILES` 标成「作废,应当接既有的共享目录机制」。**接完发现两者
+是互补的,不是二选一** —— 但第二个仍然**现在不能做**。
+
+实测三段:
+
+```
+A  改动前                     devices = 1  →  llvmpipe (LLVM 20.1.2)
+B  sentinel 声明 Vulkan ICD   devices = 3  →  NVIDIA RTX 4080 ×2 + llvmpipe
+C  再加 VK_DRIVER_FILES       devices = 1  →  NVIDIA RTX 4080
+```
+
+B 是本轮做的:GPU 到位了。但 NVIDIA **出现两次** —— sentinel 补上 `libXext` 之后,
+宿主 `/usr/share` 里那份裸 soname 的 ICD 也能加载了。C 能消掉重复(而且
+`VK_DRIVER_FILES` **接受目录**,一行 DISCOVERY 就够)。
+
+**C 现在不能做**:`xim:mesa` 的 payload 只带 `radeon_icd.x86_64.json` 一个 ICD。声明
+`VK_DRIVER_FILES` 会让生态集合成为唯一权威,而在 Intel 机器上那个集合是空的 —— 等于拿
+「NVIDIA 重复枚举」换「Intel 上完全没有 Vulkan」。前置条件是 mesa 把它构建的 ICD 都发
+出来(anv / lvp / nouveau),那是 payload 的问题。
+
+### 10.5 被修正的:G4 pixman「SIMD 自带门控」
+
+设计说 pixman 的 SIMD「自带 `#ifdef` 门控,不需要 build.mcpp」。**分类(A 类内联)对了,
+理由错了。**
+
+文件确实自带门控,但**编译标志是逐文件的**:上游每个指令集建一个静态库,各自带
+`-msse2` / `-mssse3`。包级 cflags 表达不了 —— `-mssse3` 加到所有文件上,编译器就可能在
+`pixman-x86.c` 的 CPUID 检查**之前**发出 SSSE3 指令。
+
+真正的答案是 **`[build] flags` 带 `glob`**,而且不是新机制:`compat.sdl2` 早就用它把
+`-msse3` 限定到单个文件。实测标志没有外溢:
+
+```
+pixman-ssse3.o      SSSE3 指令   2   ← 应当有
+pixman-sse2.o       SSSE3 指令   0
+pixman.o            SSSE3 指令   0
+pixman-fast-path.o  SSSE3 指令   0
+pixman-x86.o        SSSE3 指令   0
+```
+
+**由此得到一条判据补充**,值得记住,因为它把 build.mcpp 的边界又划细了一层:
+
+> 按目标变的是**编哪些文件** → `build.mcpp`(GLdispatch 的 entry stub)。
+> 按目标变的是**给哪个文件什么标志** → `[build] flags` 的 `glob`(pixman 的 SIMD)。
+
+### 10.6 G1 的三个坑(都已写进代码注释)
+
+1. **`genglmod.sh` 必须 `LC_ALL=C`。** CI 上重新生成得到**一样的符号数**(358/145/653)
+   却有 48 行 glesv2 和 88 行 opengl 不同 —— `sort` 按 locale 排序混合大小写标识符,
+   开发机 en_US.UTF-8 与 runner 的 C 顺序不同。同样的输入,不同的文件。
+2. **包内测试无法证明 `.so` 身份。** 它链接的是本包的**对象**,所以 test 二进制自己定义
+   `glClear`,dladdr 报的是可执行文件 —— 一条「不是 payload 的副本」的断言会在从未看过
+   任何库的情况下通过。`.so` 级身份检查属于**消费者**,在 mcpp-index 的成员里。
+3. **三个 GL flavour 符号面重叠**(都导出 `glClear`)。同一进程链两个,名字绑到先加载的
+   那个 —— 实测:一个想用 GLESv2 的程序里 `glClear` 落到了 `libGLESv1_CM.so.1`,毫无
+   提示。所以索引测试成员只依赖一个 flavour,并断言 `glClear` 确实解析在它里面。
+
+模块层那个「GL 入口是否外部链接」的风险**解除了**:`KHRONOS_APICALL` 在 Linux 分支展开
+为空,所以 `GL_APICALL void GL_APIENTRY glClear(...)` 就是普通外部链接声明,和 EGL 一样
+不需要 forwarder。
+
+### 10.7 pixman 的一个静默坑
+
+`PIXMAN_API` 定义在 **`pixman-version.h.in`** 里,不在编译器头里。生成 version.h 时漏掉
+它,`pixman.h` 里每个 `PIXMAN_API void pixman_fill(...)` 都解析成未知标识符、声明整个
+丢失 —— 而报出来的错误是某个 SIMD 文件里的
+`implicit declaration of function 'pixman_fill'`,与真正的原因隔了十万八千里。
+
+### 10.8 沙箱验证已扩到渲染链,并重跑
+
+签进仓的 `tests/verify_graphics_closed_loop_sandbox.sh` 加了 GLES2 渲染,在合成 home、
+清空 store、从零构建的沙箱里对分支重跑(`--sandbox --gpu`):
+
+```
+===== 6. did anything come from the host? =====
+  PASS: the host.s copies were present and reachable, and none of them won
+
+===== 7. run it =====
+  /dev/dri/renderD128     drm driver nvidia-drm
+    eglInitialize        EGL 1.5, vendor Mesa Project
+    GL_VERSION           OpenGL ES 3.2 Mesa 25.0.7
+    glReadPixels         64 128 191 255 (wanted 64 128 191 255)
+  /dev/dri/card0          drm driver simpledrm
+    gbm_bo_create        256x256 stride=1024
+    GL_VERSION           OpenGL ES 3.2 Mesa 25.0.7
+    glReadPixels         64 128 191 255 (wanted 64 128 191 255)
+
+  reached EGL on a real device: yes
+  drew and read the pixel back: yes
+RESULT: PASS
+```
+
+**这是本轮之前做不到的那一步。** §19.4 那次止于 `eglInitialize` —— 能初始化不等于能画。
+现在闭环从「打开 DRM 节点」一路走到「读回自己画的像素」,而且是在宿主图形库在场且可达
+的沙箱里。
+
+### 10.9 仍未做
+
+- **G4b `libxkbcommon`**:独立项目,内联描述符可行,但运行期还需要 `xkeyboard-config`
+  的**数据文件**,那是第二个包(纯数据)。
+- **G5 `libinput`**:拖 `libevdev` / `mtdev` / `libudev`。
+- **G6 `libudev` / `libseat`**:systemd 邻域,设计里就写明「先不做,单独评估」。
+
+前两条是普通工作量;G6 是需要决策的。合成器可以在「已有 DRM master」的前提下开发
+(从 TTY 直接启动、或 `SEATD_SOCK`),把 session 管理留到最后。
