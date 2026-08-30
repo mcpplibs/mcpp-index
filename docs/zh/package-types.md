@@ -12,7 +12,7 @@ A–D 是四种**基础**形态,先按它们判定;E–G 是在基础形态之�
 | **A. C 源码 compat** | 纯 C 或少量源码,用户 `#include <foo.h>` | `pkgs/c/compat.cjson.lua`、`compat.zlib.lua`、`compat.gtest.lua` | `sources` 与 `c_standard` |
 | **B. header-only** | 纯头文件,无需编译 | `pkgs/c/compat.eigen.lua`、`compat.opengl.lua`、`compat.khrplatform.lua` | `include_dirs` 与 anchor 源 |
 | **C. C++23 module** | 暴露 `import x.y;` | `pkgs/n/nlohmann.json.lua` | `modules` 与 `generated_files` 或源 `.cppm` |
-| **D. 外部 Form-A 模块仓** | 上游自带 mcpp 描述符的独立仓库,或者构建需要内联描述符表达不了的东西(`build.mcpp`、workspace、必须先编译出来才能跑的代码生成器) | `pkgs/i/imgui.lua`、`pkgs/m/mcpplibs.*`、`pkgs/g/grpc.lua` + `grpcgen.lua` + `grpc-plugin.lua`(一个 fork 出三个条目) | `mcpp = "<repo 路径>"`(Form A) |
+| **D. 外部 Form-A 模块仓** | 上游自带 mcpp 描述符的独立仓库,或者构建需要内联描述符表达不了的东西(`build.mcpp`、workspace、必须先编译出来才能跑的代码生成器) | `pkgs/i/imgui.lua`、`pkgs/m/mcpplibs.*`、`pkgs/f/freedesktop.wayland*.lua`(一个 fork 出四个条目) | `mcpp = "<repo 路径>"`(Form A) |
 | **E. 生成 config 的全源码直编** | 上游用 configure/CMake 生成配置头,此处以 `generated_files` 落一份快照 | `pkgs/c/compat.libpng.lua`、`compat.curl.lua`、`compat.sdl2.lua`、`compat.ffmpeg.lua` | `generated_files` + `include_dirs` |
 | **F. 共享库 compat** | 必须是进程里**唯一**的那个 `.so` —— 或因为会被第三方 `dlopen`,或因为生态 payload 链的是同一个 soname | `pkgs/c/compat.x11.lua` 等 X11 家族、`compat.vulkan.lua`、`compat.libdrm.lua`、`compat.libffi.lua`、`compat.expat.lua` | `targets = { kind = "shared", soname = … }` |
 | **G. 宿主运行时适配** | 驱动之类无法 vendor 的东西,只做符号链接农场 + 元数据 | `pkgs/c/compat.glx-runtime.lua`、`compat.vulkan-runtime.lua` | `runtime.library_dirs` / `capabilities` |

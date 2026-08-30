@@ -1,25 +1,28 @@
-# Wayland test project.
+# wayland test member.
 #
-# Linux-only, dependency gated, no-op main() elsewhere — same shape as its
-# neighbours.
-#
-# No compositor is required and none is assumed: the assertions cover the
-# header/library seam and the ONE call that is meaningful without a server
-# (`wl_display_connect` against a socket that is not there must fail cleanly
-# rather than crash). CI runners have no WAYLAND_DISPLAY.
-#
-# The second binary checks the part this package deliberately does not put on
-# the link line: libwayland-server is in the farm, so a consumer can reach it
-# through its own ldflags. If the farm ever stops carrying it, that is a silent
-# regression for compositor authors, and this is what catches it.
+# THIS MEMBER DECLARES ITS OWN [indices], and has to. The workspace root maps
+# the `compat` namespace to this checkout, and an index is looked up BY
+# NAMESPACE — so `freedesktop.*` would resolve against the published index
+# rather than the packages under test. A member-level table REPLACES the root's
+# rather than merging, which is what keeps this to one repo per member; the
+# transitive `compat.libffi` these packages need therefore comes from the
+# published index, which is correct: it is published.
+[indices]
+freedesktop = { path = "../../.." }
+
 [package]
-name = "wayland-tests"
-version = "0.1.0"
+name     = "wayland-tests"
+version  = "0.1.0"
+standard = "c++23"
 
-[target.'cfg(linux)'.dependencies.compat]
-wayland = "2026.08.30"
-
-# Exactly the escape hatch the descriptor documents: the package puts only
-# -lwayland-client on the link line, and a consumer adds what else it needs.
-[target.'cfg(linux)'.build]
-ldflags = ["-lwayland-server"]
+# Two packages, not one with an ldflags escape hatch. The client and the server
+# are distinct SONAMEs — Mesa's libEGL_mesa carries DT_NEEDED on both — so they
+# are two libraries with disjoint contents, and a compositor asks for the one it
+# needs by name.
+#
+# wayland-util is the third: wayland's public MACROS, which no module can
+# export, mapped to the entities they actually are.
+[target.'cfg(linux)'.dependencies.freedesktop]
+wayland        = "1.26.0"
+wayland-server = "1.26.0"
+wayland-util   = "1.26.0"
