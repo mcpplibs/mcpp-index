@@ -1,0 +1,15 @@
+# WAMR test project: load a hand-assembled wasm module, instantiate it, call an
+# export, and have the guest call back into a host native function.
+#
+# The module bytes are written out by hand rather than produced by a wasm
+# toolchain, so the test has no build-time dependency beyond the package itself.
+#
+# compat.wamr carries a `linux` section only (see the descriptor's header), so
+# the dependency is gated and the test compiles to a no-op main() elsewhere —
+# the same shape tests/examples/libaio uses.
+[package]
+name = "wamr-tests"
+version = "0.1.0"
+
+[target.'cfg(linux)'.dependencies.compat]
+wamr = "2.4.5"
