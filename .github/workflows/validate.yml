@@ -316,7 +316,16 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install lua
         run: sudo apt-get install -y --no-install-recommends lua5.4
-      - name: Check CN mirror assets are reachable
+      # REACHABLE IS NOT ENOUGH, and the gap is not hypothetical: a mirror
+      # asset whose CONTENT is stale answers 200 all day. It happens whenever a
+      # fork tag is re-cut at the same upstream version — gitcode cannot
+      # overwrite a same-named asset (and DELETE on a release returns 405), so
+      # the old tarball stays up while GLOBAL moves on, and CN users silently
+      # get the previous build. Measured twice on mcpplibs/libglvnd v1.7.0.
+      #
+      # tests/list_cn_urls.lua already emits `url<TAB>sha256`; this now uses
+      # the second column instead of throwing it away.
+      - name: Check CN mirror assets are reachable AND match the descriptor
         env:
           PKGS: ${{ needs.select.outputs.pkgs }}
         run: |
@@ -338,16 +347,27 @@ jobs:
           echo "checking $total CN mirror url(s)"
           while IFS=$'\t' read -r url sha; do
             [ -z "$url" ] && continue
-            # follow redirects; gitcode release assets resolve to object storage
-            code=$(curl -fsSL -o /dev/null -w '%{http_code}' --retry 2 --max-time 60 "$url" || echo "000")
-            if [ "$code" != "200" ]; then
-              echo "::error::CN mirror unreachable ($code): $url"
+            # follow redirects; gitcode release assets resolve to object storage.
+            # The body is downloaded either way — a gitcode release page can 200
+            # while the asset behind it is gone — so hashing it costs nothing
+            # extra and answers the second question too.
+            got=$(curl -fsSL --retry 2 --max-time 120 "$url" 2>/dev/null | sha256sum | cut -d' ' -f1)
+            if [ -z "$got" ] || [ "$got" = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" ]; then
+              # empty stream hashes to that constant; treat it as unreachable
+              echo "::error::CN mirror unreachable or empty: $url"
+              fail=1
+            elif [ -n "$sha" ] && [ "$got" != "$sha" ]; then
+              echo "::error::CN mirror CONTENT differs from the descriptor: $url"
+              echo "           descriptor: $sha"
+              echo "           mirror:     $got"
+              echo "           gitcode cannot overwrite a same-named asset; delete the"
+              echo "           release asset and re-publish it with gtc."
               fail=1
             else
               echo "ok: $url"
             fi
           done < /tmp/cn.tsv
-          [ $fail -eq 0 ] && echo "All CN mirror urls reachable."
+          [ $fail -eq 0 ] && echo "All CN mirror urls reachable and matching."
           exit $fail
 
   # ── The whole test surface, as a mcpp workspace ───────────────────────
