@@ -113,9 +113,18 @@ package = {
             ["0.20.2"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/wlroots/archive/refs/tags/0.20.2.tar.gz",
-                    CN     = "https://gitcode.com/mcpp-res/wlroots/releases/download/0.20.2/wlroots-0.20.2.tar.gz",
+                    -- ⚠️ `0.20.2-1`, not `0.20.2`. The fork's tag was re-cut once
+                    -- before this descriptor was ever published — nothing
+                    -- depended on it yet, so re-cutting was safe — and gitcode
+                    -- refuses to REPLACE an asset of the same name in an
+                    -- existing release. The container holding the correct bytes
+                    -- is therefore a new one; the `0.20.2` container still holds
+                    -- the superseded asset and is not referenced.
+                    --
+                    -- Verified: this URL's sha256 equals the GLOBAL one's below.
+                    CN     = "https://gitcode.com/mcpp-res/wlroots/releases/download/0.20.2-1/wlroots-0.20.2.tar.gz",
                 },
-                sha256 = "40c321b79c087d104f9f2b01a61724e0c3a29608a6ff05dda05abd4c73ab929a",
+                sha256 = "97d9e014c9b633946f24396630e9e317e385160396e474c883903cc92c4a8299",
             },
         },
     },
