@@ -15,6 +15,24 @@ Date: 2026-08-30 · 前置:[`2026-08-30-gbm-cross-repo-closed-loop-plan.md`](202
 **判据不重新论证**:可独立分发 → 源码构建;目标相关的决定进 `build.mcpp`,能预先算定的
 生成物签进仓 + CI diff;模块名跟接口所有者。三条都在前一份文档里立过并验证过。
 
+### 0.1 形态判据(本轮补齐的第四条)
+
+前三条决定「怎么建」,这一条决定「放哪、叫什么」:
+
+> **上游源码能直接用的 → `compat.*` 内联描述符;
+> 需要 fork 才能建的 → mcpp 原生模块化(Form A + 模块层),namespace 用上游组织名。**
+
+| | 触发条件 | 形态 | 本轮的例子 |
+|---|---|---|---|
+| **A. `compat.*` 内联** | 上游 tarball 直接就能编:源码列得出来、没有必须先编译才能跑的生成器、没有 workspace | 描述符一个文件,`mcpp = { ... }` | `pixman`、`libxkbcommon`、`libevdev`、`mtdev` |
+| **B. fork + 原生模块化** | 需要 `build.mcpp`、需要 workspace 多成员、或有必须先编译出来才能跑的生成器 | Form A fork,`mcpp = "*/mcpp/<member>/mcpp.toml"`,带模块层 | GL 家族(libglvnd fork)、wayland-protocols(wayland fork) |
+
+判 A 还是 B 的**操作性问题**:「把上游 tarball 解开,能不能只靠一份 `mcpp.toml` 把它编出来?」
+能就是 A,不能就是 B。B 的成本主要在维护一个 fork,所以**不要因为「顺便加个模块层」而
+把 A 推成 B** —— 模块层是 B 的**结果**,不是选 B 的理由。
+
+按这条,本设计里 G1/G3 是 B(都进已有的 fork,新增仓 0),G4 全是 A。
+
 ---
 
 ## 1. 调研结论速览
@@ -22,7 +40,7 @@ Date: 2026-08-30 · 前置:[`2026-08-30-gbm-cross-repo-closed-loop-plan.md`](202
 | # | 目标 | 调研结论 | 规模 |
 |---|---|---|---|
 | **G1** | GL 家族(GLESv2 等) | ✅ **形态完全确定**,四张生成表已实跑通过 | 中,收益最大 |
-| **G2** | Vulkan 去宿主 | ⚠️ **原假设被推翻**,真问题不是 vulkan-runtime | 小,但有永久边界 |
+| **G2** | Vulkan 走生态驱动 | ⚠️ **原假设两次被推翻**,最终是「既有机制的 Vulkan 那一半没接」 | 一处调用,在 xim-pkgindex |
 | **G3** | wayland-protocols | ✅ 形态确定,可全量预生成 | 小 |
 | **G4** | libxkbcommon / pixman | 独立项目,内联描述符 | 中 |
 | **G5** | libinput | 拖 libevdev/mtdev/libudev | 中偏大 |
@@ -155,27 +173,97 @@ physical devices      = 1
 /usr/share/vulkan/icd.d/{asahi,intel,lvp,nouveau,nvidia,radeon,…}_icd.json   ← 宿主的
 ```
 
-### 3.3 结论:三件事,原来只看到一件
+### 3.3 根因:机制早就在,只是 Vulkan 这一半没接
 
-1. **发现机制早就通了。** `mesa.lua` 已经调 `graphics.declare_vulkan_icd(...)`,
-   生态的 ICD 通过 `XDG_DATA_DIRS` 被 loader 找到。这一条**不需要做任何事**。
-2. **`/usr/share` 也在 `XDG_DATA_DIRS` 里,于是宿主 ICD 一并可见。** 这比「找不到」更糟:
-   部分能加载(llvmpipe),部分失败(NVIDIA 缺 libXext)——**结果是静默落到软件光栅化**,
-   而不是干净地报错。这才是真正的问题,而且它**不在 mcpp-index 里**,在 xim-pkgindex
-   的 discovery 层怎么拼 `XDG_DATA_DIRS`。
-3. **专有驱动是永久边界。** NVIDIA 的 Vulkan 驱动不可能进生态 payload。任何方案都要
-   诚实地把「专有 GPU 走宿主」写出来,而不是假装能覆盖。
+生态里**已经有一套完整的「共享 vendor 目录」设计**,而且已经在 EGL 上跑通了。不需要
+新机制,需要的是把 Vulkan 接进同一套。
 
-### 3.4 建议形态(按代价排序)
+`libs/graphics.lua` 与 `nvidia-gl-host-link.lua` 里的既有形态:
 
-| 选项 | 做什么 | 代价 | 评价 |
-|---|---|---|---|
-| **V-a** | discovery 层用 **`VK_DRIVER_FILES`** 精确指向生态 ICD,不再依赖 `XDG_DATA_DIRS` 的目录合并 | xim-pkgindex 一行 | ✅ **推荐**。`VK_DRIVER_FILES` 是 Khronos loader 的显式列表,压过目录扫描,宿主 ICD 自然出局 |
-| V-b | 保留 `XDG_DATA_DIRS`,但把 `/usr/share` 从中摘掉 | 影响面大(XDG 不只服务 Vulkan) | ❌ 会伤到别的东西 |
-| V-c | 维持现状 + `compat.vulkan-runtime` 继续做宿主农场 | 0 | ⚠ 只对专有驱动有意义,应当**明确降级为「专有 GPU 专用」**并在描述符里写清楚 |
+```
+share/glvnd/egl_vendor.d/          ← 共享目录,谁都可以往里放
+    10_nvidia.json                 ← nvidia-gl-host-link 写的(sentinel)
+    50_mesa.json                   ← mesa 写的
+```
 
-**V-a + V-c 并存**是最诚实的形态:生态驱动走 `VK_DRIVER_FILES` 干净闭环;专有驱动仍需
-`compat.vulkan-runtime`,且它的描述符要改写成「这是专有驱动的逃生舱,不是默认路径」。
+优先级**由文件名前缀决定**,和每个发行版的约定一样。`graphics.lua` 的注释写得很清楚:
+之前 mesa 和 nvidia 各自贡献**自己的**目录时,跨 vendor 优先级取决于 xlings 恰好把谁排
+在前面——「correct by alphabetical accident」。改成共享目录之后才有了确定的语义。
+
+而 `nvidia-gl-host-link` 写 JSON 时用的是**绝对路径**,注释说明了为什么:
+
+> a bare name here is a way for the host's stack to get back in through the door we closed
+
+**Vulkan 侧缺的正是这一半。** 该 sentinel:
+
+- ✅ 已经把 `libGLX_nvidia.so.0` 软链进自己的 `lib/`,注释还写着
+  「GLX vendor **AND Vulkan ICD**: same file」
+- ✅ 已经供给 `libX11`/`libXext`/glibc/libglvnd(实测失败的正是 `libXext.so.6`)
+- ✅ 已经有写 ICD JSON 的现成代码路径
+- ❌ **只调了 `graphics.declare_egl_vendor(...)`,没有调 `declare_vulkan_icd(...)`**
+
+于是 loader 找不到生态里的 NVIDIA ICD,退回去扫 `/usr/share`,读到宿主那份**裸 soname**
+的 `nvidia_icd.json`,dlopen 时缺 `libXext.so.6` 而失败,再往下落到宿主的
+`lvp_icd.json`(llvmpipe 依赖少,能加载)——**于是静默变成软件渲染**。
+
+### 3.4 结论:一处改动,形态与 EGL 完全对称
+
+| | 做什么 | 在哪个仓 |
+|---|---|---|
+| **V1** | `nvidia-gl-host-link` 增调 `graphics.declare_vulkan_icd(...)`,把 `10_nvidia.json`(绝对 `library_path`,指向它自己软链的 `libGLX_nvidia.so.0`)写进共享的 `share/vulkan/icd.d` | xim-pkgindex |
+| **V2** | `compat.vulkan-runtime` 描述符改写:说明它是**专有驱动的最小 host 面**,不是默认路径;生态驱动走 V1 | mcpp-index |
+
+#### V1 已实测验证(2026-08-30,`default` subos,`--sandbox --gpu`)
+
+提案在写任何代码之前先验过。非破坏性做法:不动 subos 的共享目录,用 `VK_DRIVER_FILES`
+指一份**等效**的 JSON —— `library_path` 写成 sentinel 那个软链的**绝对路径**:
+
+```
+===== A. 现状(生态 + 宿主 /usr/share 混在一起)=====
+  devices = 1
+    - llvmpipe (LLVM 20.1.2, 256 bits)          ← 软件渲染
+
+===== B. V1 假设:NVIDIA ICD 用【绝对路径】声明 =====
+  library_path = <subos>/lib/libGLX_nvidia.so.0
+  devices = 1
+    - NVIDIA GeForce RTX 4080                    ← 真 GPU
+```
+
+**差别只有「那份 JSON 在不在、路径是不是绝对的」。** sentinel 供给的
+`libX11`/`libXext` 让 NVIDIA 的驱动这次加载成功了,而现状下 loader 读的是宿主那份裸
+soname 的 JSON、缺 `libXext.so.6` 而放弃。所以 V1 不是推理,是已验证的结论。
+
+**顺带发现的第二处、更小的泄漏**:`libVkLayer_MESA_device_select.so`(宿主的 Vulkan
+**layer**,不是驱动)同样从 `/usr/share` 被扫到并加载失败。它不影响结果(layer 缺失
+只是少一层),但说明 `XDG_DATA_DIRS` 里的 `/usr/share` 会同时把 layer 带进来。
+**layer 的清理是独立的一小步,不阻塞 V1。**
+
+V1 之后共享目录里是 `10_nvidia.json`(sentinel)+ `50_mesa.json`(mesa),而 subos 的
+`share` 在 `XDG_DATA_DIRS` **最前面**(实测确认),所以生态的 ICD 先被扫到、`10_` 前缀
+让 NVIDIA 优先——**与 EGL 那一半逐字对称**。宿主的 `/usr/share` 仍在列表后面,但已经
+轮不到它。
+
+~~原提案 `VK_DRIVER_FILES`~~ **作废**:那是在既有机制之外另起一套。既有的共享目录 +
+文件名优先级已经解决了同一个问题,而且已经过 EGL 验证。
+
+### 3.5 最小 Host 面:这是设计,不是妥协
+
+**不开源的驱动/运行时层**(NVIDIA 专有 GL/EGL/Vulkan、CUDA)不可能进生态 payload。
+生态对此的既有答案是 **sentinel + 共享目录**:
+
+```
+nvidia-gl-host-link      Sentinel: stable symlinks to the host's NVIDIA proprietary GL/EGL userspace
+libcuda-host-link        同上,CUDA
+wsl-gl-host-link         同上,WSL
+```
+
+sentinel 的性质值得点明:它**只做符号链接与一份 JSON**,把宿主面收敛到
+「几个具名文件 + 一个 vendor 声明」,而不是让每个消费者各自去 `/usr/lib` 捞。
+`install()` 在没有 NVIDIA 的机器上**成功且什么都不链** —— 注释原话:
+「"no NVIDIA on this machine" is a normal state, not a failure」。
+
+**所以设计原则是:host 面保留,但收敛到 sentinel,并且只对不开源的那一层。**
+V2 要做的就是把 `compat.vulkan-runtime` 归到这一类里说清楚,而不是删掉它。
 
 ---
 
@@ -234,9 +322,9 @@ G1a  glesv2/glesv1/opengl 三个成员(C 库)      ← 无前置,规模最小,�
  │
  ├─ G1b  khronos.glesv2 等模块层               ← 依赖 G1a;先验外部链接风险
  │
-G2a  VK_DRIVER_FILES(xim-pkgindex)            ← 无前置,与 G1 并行
+G2a  nvidia-gl-host-link 增调 declare_vulkan_icd  ← 无前置,与 G1 并行(xim-pkgindex)
  │
- └─ G2b  compat.vulkan-runtime 降级为专有驱动逃生舱   ← 依赖 G2a
+ └─ G2b  compat.vulkan-runtime 归类为「专有驱动的最小 host 面」 ← 依赖 G2a
                                                     
 G3   wayland-protocols(wayland fork 第五成员)  ← 无前置,与 G1/G2 并行
 G4a  libxkbcommon + xkeyboard-config           ← 无前置
@@ -251,7 +339,7 @@ G6   libudev 路线决策 → libseat                ← 最后,单独评估
 
 **排序建议**:`G1a → G3 → G2a → G4 → G1b → G2b → G5 → G6`
 
-理由:G1a 是从「能初始化」到「能画」的分水岭;G3 之后才谈得上实现一个 shell;G2a 一行
+理由:G1a 是从「能初始化」到「能画」的分水岭;G3 之后才谈得上实现一个 shell;G2a 一处调用
 改动换掉一处静默降级;模块层(G1b)放在 C 库稳定之后,免得两个风险叠在一起。
 
 ---
@@ -278,7 +366,7 @@ G6   libudev 路线决策 → libseat                ← 最后,单独评估
 | V1 | 三个 GL 库 soname 正确且**非空** | CI:`readelf -d` + 符号断言 + obj 计数(沿用 libglvnd 现有检查) |
 | V2 | GLESv2 与 EGL 用**同一个** GLdispatch | 测试里 `dladdr(&glClear)` 与 `dladdr(&eglInitialize)` 的 GLdispatch 路径一致 |
 | V3 | **拿到 context 之后真能画** | 沙箱 `--gpu`:GBM→EGL→`eglMakeCurrent`→`glClear`+`glReadPixels` 读回像素值 |
-| V4 | Vulkan 落到**真实** GPU 而非 llvmpipe | 沙箱:`vkEnumeratePhysicalDevices` 的 `deviceName` 不含 `llvmpipe`(在有 Mesa 支持的 GPU 上) |
+| V4 | Vulkan 落到**真实** GPU 而非 llvmpipe | ✅ **已验证**(见 §3.4):`deviceName` 从 `llvmpipe` 变成 `NVIDIA GeForce RTX 4080`。做成 V1 之后应固化为沙箱回归 |
 | V5 | 宿主一条都没赢 | 沿用 `tests/verify_graphics_closed_loop_sandbox.sh`,扩到 GL/Vulkan |
 | V6 | 生成表无漂移 | CI `generated` job 扩四行 diff |
 
