@@ -86,7 +86,33 @@ package = {
             "lib/xmlrole.c",
         },
 
-        targets = { ["expat"] = { kind = "shared", soname = "libexpat.so.1" } },
+        -- STATIC, unlike compat.libdrm's shared build, and the difference is
+        -- not an oversight.
+        --
+        -- libdrm is shared because Mesa's payload has DT_NEEDED on
+        -- `libdrm.so.2` and the two must be ONE mapping — libdrm keeps mutable
+        -- file-static state (`drmHashTable`, `nr_fds`, `connection`) over a
+        -- shared set of fds, so a second copy is a split ledger. Expat has no
+        -- equivalent: every bit of parser state hangs off the XML_Parser the
+        -- caller owns, so a consumer that merges these objects while Mesa loads
+        -- the payload's libexpat.so.1 is not sharing anything to corrupt.
+        --
+        -- And there is a concrete reason to prefer static here. Expat's only
+        -- consumer in this index is `freedesktop.wayland-scanner`, a
+        -- `kind = "bin"` HOST TOOL that mcpp builds in a sub-build and then
+        -- RUNS during another package's build.mcpp. A host tool linking a
+        -- shared dependency comes out with a DT_NEEDED nothing satisfies —
+        -- mcpp does not stage the .so beside the tool, and the sub-build's
+        -- bin/ holds the executable alone:
+        --
+        --     wayland-scanner: error while loading shared libraries:
+        --     libexpat.so.1: cannot open shared object file
+        --
+        -- That reproduces only on a machine without a graphics stack: with
+        -- Mesa installed the tool's RPATH reaches `<registry>/subos/default/lib`
+        -- and silently binds to `xim:expat`'s copy instead — the WRONG library,
+        -- succeeding. Static removes the question.
+        targets = { ["expat"] = { kind = "lib" } },
         deps    = {},
 
         generated_files = {

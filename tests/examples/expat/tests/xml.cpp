@@ -97,17 +97,22 @@ int main()
     }
 
     // ── 4. It is THIS build that ran ─────────────────────────────────────
+    // The package is `kind = "lib"`, so these objects are merged into the
+    // consumer and dladdr reports the EXECUTABLE. The check that matters is
+    // the same either way: the code that just parsed must not have come from
+    // the ecosystem's `xim:expat`, which is present whenever Mesa is and would
+    // otherwise answer silently.
     {
         Dl_info info{};
         const bool located =
             ::dladdr(reinterpret_cast<void *>(&XML_ParserCreate), &info) != 0
             && info.dli_fname != nullptr;
-        check(located, "dladdr locates the loaded libexpat");
+        check(located, "dladdr locates the code that parsed");
         if (located) {
             const std::string from = info.dli_fname;
-            std::printf("   loaded from: %s\n", from.c_str());
+            std::printf("   resolved from: %s\n", from.c_str());
             check(from.find("xim-x-expat") == std::string::npos,
-                  "the loaded libexpat is not the ecosystem payload's copy");
+                  "it is not the ecosystem payload's libexpat");
         }
     }
 
