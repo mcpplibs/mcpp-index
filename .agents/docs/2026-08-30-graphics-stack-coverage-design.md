@@ -1733,7 +1733,7 @@ error: dependency 'gnome.glib' is requested as both a version dep
 `glib` 传递而来。两个包的描述符和 README 都写了这条 —— 它是消费者第一次用就会
 撞上的。
 
-### 19.10 沙箱闭环:实测结果
+### 19.10 沙箱闭环:六个包的实测结果
 
 `xlings subos use eco-2026-8-31-x --sandbox` —— 合成 home、mcpp 与索引与全部包
 从零拉取,而 `/usr` 仍是宿主的(宿主自带 libglib-2.0/libgobject-2.0/libpcre2-8/
@@ -1741,18 +1741,33 @@ libfribidi,所以「用的是我们这份」是个可以为假的判断):
 
 ```
 host has  /usr/lib/x86_64-linux-gnu/libglib-2.0.so.0
+host has  /usr/lib/x86_64-linux-gnu/libgobject-2.0.so.0
 host has  /usr/lib/x86_64-linux-gnu/libpcre2-8.so.0
 host has  /usr/lib/x86_64-linux-gnu/libfribidi.so.0
-...
+…
 PASS: only the ecosystem's own libraries, plus the C runtime
-wlroots 0.20.2 / drm=1 libinput=1 session=1 gles2=1 gbm=1 / x11=0 vulkan=0 xwayland=0
-pnp ACR = Acer Technologies
-pcre2 10.44 / \p{Han} 编译通过
-fribidi 1.0.16 / 希伯来段落解析为 RTL / '(' 镜像为 ')'
+
+wlroots 0.20.2      drm=1 libinput=1 session=1 gles2=1 gbm=1
+                    x11=0 vulkan=0 xwayland=0
+                    wlr_scene_rect_create 走被改写的 [static 4],调用成功
+                    pnp ACR = Acer Technologies   ← 钉版 hwdata v0.410
+pcre2 10.44         \p{Han} 编译通过 → SUPPORT_UNICODE 确实开着
+fribidi 1.0.16      希伯来段落解析为 RTL;'(' 镜像为 ')'
+glib 2.82.5         GRegex 经 pcre2 匹配 Han
+                    g_utf8_strup(straße) = STRASSE
+gobject             G_UNICODE_SCRIPT_HAN,nick "han"
+gmodule             dl loader;g_module_build_path = /opt/plug/libdemo.so
+
 0 failure(s)   RESULT: PASS
 ```
 
-⚠️ 脚本本身也踩了一次值得记的坑:第 5 步「有没有东西来自宿主」用
+加载器解析到的**全部**是 `<project>/target/…` 或生态的 xpkgs —— libEGL、
+libGLESv2、libwayland-client/server、libdrm、libudev、libgbm、libffi 无一来自
+`/usr/lib`,而宿主那四个同名库是**存在且可达**的。
+
+⚠️ 脚本自己也错过两次,两次都值得记:
+
+**一、`ldd` 里的解释器行。** 第 5 步「有没有东西来自宿主」用
 `grep '=> /(usr|lib)'`,而 `ldd` 会打印
 
 ```
@@ -1761,4 +1776,9 @@ fribidi 1.0.16 / 希伯来段落解析为 RTL / '(' 镜像为 ')'
 
 —— 左边是生态的,右边是**内核写死的解释器路径**,任何包都替换不了也不该替换。
 匹配到它,就会在一次「每个真实依赖都来自生态」的运行上报告「有宿主库」。
-**判据本身也要能被证伪一次。**
+
+**二、转义写坏的正则。** `"^\\\\p{Han}+$"` 在 C++ 里是字面反斜杠加 `p`,
+GRegex 当然不匹配汉字 —— 断言**正确地失败了**。
+
+两条合起来是同一句:**判据本身也要能被证伪一次**,否则分不清「它在检查」和
+「它在点头」。
