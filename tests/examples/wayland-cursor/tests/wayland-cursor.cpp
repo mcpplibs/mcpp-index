@@ -97,8 +97,27 @@ int main()
     // Unlike libwayland-egl, this library CALLS into libwayland-client — that
     // is exactly why §3's theme loader needs a live wl_shm. The two are in one
     // program by necessity rather than by convention.
-    check(&wl_shm_create_pool != nullptr,
-          "libwayland-client is linked in (wl_shm_create_pool)");
+    //
+    // `wl_display_connect` AND NOT `wl_shm_create_pool`, which is what this
+    // check said first and what the llvm leg rejected:
+    //
+    //     ld.lld: error: undefined symbol: wl_proxy_get_version
+    //     >>>   wayland-cursor.o:(wl_shm_create_pool(wl_shm*, int, int))
+    //
+    // `wl_shm_create_pool` is one of wayland-scanner's `static inline`
+    // protocol wrappers (mcpp/generated/wayland-client-protocol.h:2202), so
+    // taking its address FORCES this translation unit to emit a copy — and
+    // that copy calls `wl_proxy_marshal_flags` and friends, which live in
+    // libwayland-client. GNU ld resolves those through the transitive
+    // DT_NEEDED of libwayland-cursor; lld deliberately does not, and lld is
+    // right: a program that names a symbol should link the library that
+    // defines it.
+    //
+    // `wl_display_connect` is an ordinary exported function, so referencing it
+    // proves the same thing without emitting anything. Same form the sibling
+    // wayland-egl test uses, which is why that one was green on both legs.
+    check(&wl_display_connect != nullptr,
+          "libwayland-client is linked in (wl_display_connect)");
 
     // ── 5. Report the environment the ecosystem is expected to fill ───────
     // Not asserted: nothing in the index or in xim ships cursor themes yet, so

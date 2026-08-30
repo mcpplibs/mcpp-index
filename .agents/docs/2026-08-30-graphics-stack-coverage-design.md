@@ -1,6 +1,6 @@
 # mcpp 图形栈:从「能跑通」到「能开发」的覆盖面设计
 
-Date: 2026-08-30 · 前置:[`2026-08-30-gbm-cross-repo-closed-loop-plan.md`](2026-08-30-gbm-cross-repo-closed-loop-plan.md) §19/§20 · **状态:已实现并闭环验证(v1.1,见 §11 交付总账 / §12 客户端侧)**
+Date: 2026-08-30 · 前置:[`2026-08-30-gbm-cross-repo-closed-loop-plan.md`](2026-08-30-gbm-cross-repo-closed-loop-plan.md) §19/§20 · **状态:已实现并闭环验证(v1.2,见 §11 交付总账 / §12 客户端侧 / §13 仍缺的部分)**
 
 ## 0. 这份文档解决什么
 
@@ -1074,3 +1074,93 @@ main 是坏的,而重切方案无论顺序怎么排都有。
 前两个是普通工作量。**wlroots 是需要决策的**:它是几乎每个现代合成器的基座
 (sway / hyprland / river / wayfire),没有它,「用 mcpp 写合成器」的意思是从
 DRM/GBM/EGL 直接起手写一万行。
+
+### 12.5 `libwayland-cursor` —— 第六个也是最后一个成员(#306)
+
+Wayland **没有服务端光标**:客户端要指针,就得自己加载主题、把图像变成
+`wl_buffer`、附到交给 `wl_pointer.set_cursor` 的 surface 上。没有这个库,每个应用
+都得自己解析 XCursor 文件格式。
+
+⚠ 不是 `compat.xcursor` —— 那是 X11 的 `libXcursor.so.1`,要和 X 服务器说话。
+
+**至此 fork 建齐了上游发布的每一个库,没有第七个。** 与 `-egl` 的实质差别:cursor
+**真的链** libwayland-client(`wl_shm_create_pool` 等),egl 只要头。两者 manifest
+长得一样而实质不同,所以 CI 分别断言。
+
+**第七个发现变量:`XCURSOR_PATH`。** `xcursor.c:493` 写死
+`"~/.icons:/usr/share/icons:/usr/share/pixmaps:…"`,而 `xcursor.c:515` 先读
+`getenv("XCURSOR_PATH")` 且设置了就原样返回 —— 和 `LIBINPUT_QUIRKS_DIR` /
+`XKB_CONFIG_ROOT` 完全对称,所以同样编译期置空。fork CI 里 **grep 二进制**确认,
+因为值错了的失败方式是**在恰好有 `/usr/share/icons` 的机器上静默正常工作**。
+
+---
+
+## 13. 仍缺的部分(收尾备注)
+
+排在这里的都**核实过**,不是猜测。
+
+### 13.1 wlroots 只卡在两个包 —— 从它自己的 meson 逐条读出
+
+| wlroots 0.18.2 需要 | 状态 |
+|---|---|
+| wayland-server / client / protocols / scanner / **egl** | ✅ 六个成员齐了 |
+| libdrm · pixman · xkbcommon · libinput · libudev · libseat · egl · glesv2 · gbm | ✅ |
+| vulkan(可选渲染器)· lcms2(可选色彩管理)· libliftoff(可选) | ✅ / 可选 |
+| **hwdata**(构建期,读 `pnp.ids` 生成 `pnpids.c`) | ❌ |
+| **libdisplay-info** | ❌ |
+| cairo | **不需要** —— 只在 `examples/`,`required: false` |
+
+⚠ 本文档早前把 cairo 列为 wlroots 的缺口,**是错的**;而把 `libdisplay-info` 标为
+「小」也没说清 —— 它体量确实小,但**它是整个 wlroots 的闸门**。
+
+`libdisplay-info` 该走 **fork + 预生成**(和 libevdev / libxkbcommon 同形):它要跑
+`tool/gen-search-table.py` 生成 2568 行的 `pnp-id-table.c`,放不进
+`generated_files` 字面量。而且 **`pnp.ids` 必须取上游 hwdata 的发布物,不能用宿主
+那份** —— 上游 meson 找不到 hwdata 时会回落到 `/usr/share/hwdata/pnp.ids`,正是要
+消的宿主边;这也是 libevdev 那次「宿主内核头给出不同的表」的同一教训。
+
+### 13.2 桌面侧仍缺的
+
+| 缺口 | 后果 | 规模 |
+|---|---|---|
+| `fontconfig` | **按名字找字体**。`freetype` ✓ `harfbuzz` ✓ 只给字形,不给发现 | 中 |
+| `pango` | 段落级排版:换行、双向文字、CJK、组合字符 | 中(拖 glib) |
+| `cairo` | 2D 矢量绘制,或全用 GLES 自己画 | 中 |
+| `dbus` | 通知、portal、会话、媒体键 | 中 |
+| `PipeWire` | 音频 + 屏幕共享 | 大 |
+| `libjpeg-turbo` | png/webp 有了,jpeg 没有 | 小 |
+| XWayland | 跑 X 应用(本轮明确不考虑) | 大 |
+
+**数据包(xim 侧,和 `xkeyboard-config` 同形)**:光标主题(填 `XCURSOR_PATH`)、
+图标主题、字体。三者都是「机制已就位、缺提供方」。
+
+### 13.3 发现变量总表(收尾状态)
+
+| 子系统 | 变量 | 提供方 |
+|--------|------|--------|
+| DRI 驱动 | `LIBGL_DRIVERS_PATH` | `xim:mesa` ✅ |
+| EGL vendor | `__EGL_VENDOR_LIBRARY_DIRS` | `xim:mesa` + host-link 哨兵 ✅ |
+| Vulkan ICD | `XDG_DATA_DIRS` | 同上 ✅ |
+| GBM 后端 | `GBM_BACKENDS_PATH` | `xim:mesa` ✅ |
+| 键盘布局 | `XKB_CONFIG_ROOT` | `xim:xkeyboard-config` ✅ |
+| 输入 quirks | `LIBINPUT_QUIRKS_DIR` | `xim:libinput-quirks` ✅ |
+| **光标主题** | **`XCURSOR_PATH`** | **— 机制已就位,缺提供方** |
+| USB 名字库 | `USB_IDS_PATH` | — 经核实**不该补**(§10.9.4) |
+
+七格里六格有提供方,第七格(光标主题)是纯数据包,补法与 xkeyboard-config 完全相同。
+
+### 13.4 本轮被自己的测试抓住的三处
+
+都记在这里,因为它们是同一类:**我从假设写断言,而不是从源码**。
+
+1. **`get_attached_size` 返回创建尺寸** → 实际 `0 x 0`。`attached_*` 是 EGL 实现
+   附加缓冲时才写的字段(§12.3)。
+2. **null `wl_shm` 只会跑到主题解析器** → 实际 `wayland-cursor.c:410` 无保护解引用,
+   段错误 exit 139。`wl_cursor_theme_load` 真的需要活的 `wl_shm`。
+3. **`&wl_shm_create_pool` 能证明链了 client** → 它是 wayland-scanner 的
+   `static inline` 协议包装,取地址会**强制本 TU 实例化**,把
+   `wl_proxy_marshal_flags` 等私有符号拖进来。GNU ld 经传递 DT_NEEDED 解析,
+   **lld 不会,而 lld 是对的**。改用 `wl_display_connect`(真外部符号)。
+
+第 3 条只有 llvm 那条腿抓得到 —— 它没有 sysroot 且用 lld,而这正是
+`validate.yml` 注释里说的「gcc 腿结构上看不见这一类 bug」。
