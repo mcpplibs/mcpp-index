@@ -79,6 +79,7 @@ members = [
     "tests/examples/redis-plus-plus-async",
     "tests/examples/sdl2",
     "tests/examples/spdlog",
+    "tests/examples/fontconfig",
     "tests/examples/freetype",
     "tests/examples/glad",
     "tests/examples/libaio",

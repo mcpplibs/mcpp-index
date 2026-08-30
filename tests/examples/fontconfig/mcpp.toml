@@ -1,0 +1,14 @@
+# fontconfig test member — the three generated tables.
+[indices]
+freedesktop = { path = "../../.." }
+
+[package]
+name     = "fontconfig-tests"
+version  = "0.1.0"
+standard = "c++23"
+
+# `compat.expat` and `compat.freetype` arrive transitively; naming them here as
+# version deps as well is fine because the package declares them the same way
+# (not as path deps), unlike the wayland members.
+[target.'cfg(linux)'.dependencies.freedesktop]
+fontconfig = "2.15.0"
