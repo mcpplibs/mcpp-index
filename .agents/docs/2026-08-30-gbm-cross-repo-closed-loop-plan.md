@@ -9,7 +9,8 @@ Date: 2026-08-30 · 起因:`compat.libgbm`(mcpp-index PR #281)· 状态:待 revi
 
 | 想知道 | 看哪节 | 注意 |
 |---|---|---|
-| **最新一轮(EGL 源码化 + 模块命名)** | **§19** | 最权威;§19.6 记了一处自己造成的破坏 |
+| **系统级开发到底覆盖到哪(#527 的答案)** | **§20** | 三个场景逐个给结论,缺口逐个点名 |
+| **最新一轮(EGL 源码化 + 模块命名)** | **§19** | §19.6 记了一处自己造成的破坏 |
 | **沙箱干净房间验证** | **§19.4** | 宿主库在场且可达却全部落败 |
 | 模块该叫什么名字 | §19.2 | 跟接口的所有者,不跟发实现的人 |
 | 生成器放 build.mcpp 还是签进仓 | §19.3 | 判据是「依不依赖目标平台」 |
@@ -1395,11 +1396,95 @@ rm -rf ~/.mcpp/registry/data/xpkgs/freedesktop-x-wayland*/1.26.0 \
 ### 19.8 仍未闭合
 
 - ~~PR #293 必须合并~~ **已合并**(`dc961cc`),§19.6 的破坏随之修复并已复验。
-- 示例 09 的更新已推到 mcpp PR #532(CI 20/20 通过)。曾以为「推上去会把已绿的 CI 弄红」
-  而扣着不推,**那是假设、没查**:mcpp 的 CI 根本不构建 `examples/09-graphics-stack`
-  (只有 `openkal-cross.yml` 碰一个无关示例)。扣着不推让工作停在本地,比推上去更糟。
+- mcpp 的示例 PR #532 **已关闭,不需要合并** —— 示例只是把用法写出来给人看,不是生态的
+  一部分。生态是否可用由索引 + 沙箱验证(§19.4)回答,与那个 PR 无关。
+- **真正剩下的不是收尾,是覆盖面**,见下面的 §20。
 - `libGL` / `libGLX` / `libGLESv{1,2}` 未构建。各自是 fork 里一个成员加一张
   `mcpp/generated/` 里的 dispatch 表;索引里目前没有消费者。
 - `freedesktop.egl` 的 `libEGL.so.1` 比 payload 的多三条 `DT_NEEDED`
   (libstdc++/libm/libgcc_s),因为模块接口单元被编译进库里。`freedesktop.wayland` 完全
   同形,是「模块层随库一起发」的既定结果,已写进描述符。
+
+---
+
+## 20. 覆盖面盘点:系统级开发,mcpp 推荐方式到底能做到哪
+
+issue #527 问的是「在系统级开发(Wayland 合成器、Mesa/Vulkan 扩展、GBM 显存管理)中,
+代码直接 `-lgbm` 链宿主库 —— 用 mcpp 推荐方式能不能满足」。§19 证明了栈能跑通,
+但**「能跑通」不等于「够用」**。这一节按它点名的三个场景逐个给结论,并且把没覆盖的
+点名说清楚,不含糊。
+
+### 20.1 三个场景的结论
+
+| 场景 | 结论 | 依据 |
+|---|---|---|
+| **GBM 显存管理** | ✅ **完全覆盖** | §19.4 实测:`gbm_create_device` + `gbm_bo_create` 真分配 256x256,拿到驱动自己的 stride;宿主 `libgbm.so.1` 在场可达却没被选中 |
+| **Wayland 合成器** | ⚠️ **只覆盖了协议库那一层** | 协议库(client/server/scanner/util)+ EGL + GBM + DRM 都有;但**渲染链和输入链整条缺**,见 20.2 |
+| **Mesa/Vulkan 扩展** | ❌ **Vulkan 侧仍伸手够宿主** | `compat.vulkan-runtime` 明写着它把宿主 `/usr/lib` 的 ICD 做成符号链接农场,是这个栈里最后一处 host 边 |
+
+**所以对 #527 的诚实回答是**:`-lgbm` 那个具体诉求,推荐方式**完全能覆盖且已证明**;
+但把「系统级开发」整体说成已覆盖,是不成立的。
+
+### 20.2 Wayland 合成器缺什么(逐个点名)
+
+一个真实合成器(wlroots / weston 量级)需要的,索引里的实际情况:
+
+| 需要 | 索引里 | 性质 |
+|---|---|---|
+| `libwayland-server` / `-client` / `-scanner` | ✅ 有,源码构建 | 已完成 |
+| EGL、GBM、libdrm | ✅ 有 | 已完成 |
+| **`libGLESv2`** | ❌ **没有** | ⚠ **最要命的一个** |
+| `wayland-protocols`(xdg-shell 等 XML) | ❌ 没有 | 没有它连基本桌面 shell 都实现不了 |
+| `libxkbcommon` | ❌ 没有 | 键盘 |
+| `libinput` | ❌ 没有 | 输入 |
+| `libudev` / `libseat` | ❌ 没有 | 设备枚举、session / DRM master |
+| `pixman` | ❌ 没有 | 软件合成路径 |
+
+**`libGLESv2` 为什么最要命**:合成器是通过 EGL 拿 context、然后用 **GLES2** 画的。
+这一轮建出了 `libEGL.so.1`,但 libglvnd 的 GL/GLES 系列(`libGL`、`libGLX`、`libOpenGL`、
+`libGLESv1`、`libGLESv2`)**一个都没建** —— 见 mcpplibs/libglvnd 的 `README.mcpp.md`
+"Not built here"。也就是说:**EGL 能初始化,但拿到 context 之后没有 GL 可调**。
+索引里 `grep -rl GLESv2 pkgs/` 返回空。
+
+### 20.3 Vulkan 那条 host 边
+
+`compat.vulkan-runtime` 的注释自己写得很清楚:
+
+> The libraries are right there in `/usr/lib/x86_64-linux-gnu`. What cannot reach
+> them is the process: an mcpp-built binary runs under mcpp's OWN glibc …
+> `runtime.library_dirs` below puts a package-owned directory of symlinks on that
+> path, which is precisely how `compat.glx-runtime` makes host OpenGL work
+
+它是**有意为之的权宜**,不是疏漏:当时没有可绑的生态 payload。但 §17.2 已经查明前提变了 ——
+`xim:mesa` 的 payload 里就有 `lib/libvulkan_radeon.so` 和
+`share/vulkan/icd.d/*.json`,而且 `mesa.lua` 的 `config()` 里已经调了
+`graphics.declare_vulkan_icd(...)`。**所以这条 host 边现在是可以拆掉的**,做法与
+`compat.libgbm` 用 `GBM_BACKENDS_PATH`、`freedesktop.egl` 用
+`__EGL_VENDOR_LIBRARY_DIRS` 完全同构:让环境声明 `VK_ICD_FILENAMES` / `VK_DRIVER_FILES`,
+包自己什么都不设。
+
+### 20.4 补齐的形态与排序(判据都已确立,不需要再论证)
+
+每一条的形态都能从这一轮已经确立的判据直接推出来 —— 全部是「可独立分发」→ 源码构建。
+
+| # | 补什么 | 形态 | 规模 |
+|---|---|---|---|
+| **G1** | `libGLESv2` / `libGL` / `libGLX` | **现有 fork 加成员**:mcpplibs/libglvnd 已经有 `mcpp/generated/` 与 dispatch 机制,每个库就是一个成员 + 一张生成表 | 小,收益最大 —— 它补上渲染链 |
+| **G2** | `wayland-protocols` | 纯 XML,`wayland-scanner` 已经有了;可以是 mcpplibs/wayland 的第五个成员或独立条目 | 小 |
+| **G3** | `libxkbcommon`、`pixman` | 独立项目,内联描述符即可(与 `compat.libdrm` 同形) | 中 |
+| **G4** | `libinput` | 独立项目,但拖 `libevdev` / `mtdev` / `libudev` | 中偏大 |
+| **G5** | `compat.vulkan-runtime` 去掉 host 边 | 照 §17.2,走 `xim:mesa` 的 ICD 声明 | 小 |
+| **G6** | `libudev` / `libseat` | systemd 邻域,最难;可先用 logind-less 路径绕开 | 大 |
+
+**排序建议:G1 → G5 → G2 → G3 → G4 → G6。**
+G1 之后「EGL + GLES 渲染」这条链完整,是从「能初始化」到「能画」的分水岭;
+G5 之后整个图形栈**零 host 边**(现在只剩它一处)。
+
+### 20.5 一句话
+
+> **GBM/DRM/EGL/Wayland-协议 这一层,mcpp 推荐方式已经完整覆盖并已实测;
+> 但要做一个能跑的合成器,还差渲染链(GLES)和输入链;要做 Vulkan,
+> 还有一处宿主依赖没拆。**
+
+把「能不能用」答成「能」是不诚实的,答成「不能」也不对。准确的说法是:
+**这一轮把可行性证明了,覆盖面还没到。** 缺口已经点名、形态已经确定、排序已经给出。
