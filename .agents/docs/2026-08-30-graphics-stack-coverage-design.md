@@ -1,0 +1,304 @@
+# mcpp 图形栈:从「能跑通」到「能开发」的覆盖面设计
+
+Date: 2026-08-30 · 前置:[`2026-08-30-gbm-cross-repo-closed-loop-plan.md`](2026-08-30-gbm-cross-repo-closed-loop-plan.md) §19/§20 · 状态:待 review
+
+## 0. 这份文档解决什么
+
+前一份文档证明了 GBM/DRM/EGL/Wayland-协议 这条栈**能跑通**(沙箱干净房间,宿主库在场
+可达却全部落败)。但 §20 的盘点显示,「跑通」离「能写一个合成器」还差两条链:
+
+- **渲染链**:EGL 能初始化,但拿到 context 之后**没有 GL 可调**
+- **输入链**:整条缺
+
+以及 Vulkan 那一处宿主依赖。这份文档把每一条**调研到能直接动手的程度**,而不是列愿望。
+
+**判据不重新论证**:可独立分发 → 源码构建;目标相关的决定进 `build.mcpp`,能预先算定的
+生成物签进仓 + CI diff;模块名跟接口所有者。三条都在前一份文档里立过并验证过。
+
+---
+
+## 1. 调研结论速览
+
+| # | 目标 | 调研结论 | 规模 |
+|---|---|---|---|
+| **G1** | GL 家族(GLESv2 等) | ✅ **形态完全确定**,四张生成表已实跑通过 | 中,收益最大 |
+| **G2** | Vulkan 去宿主 | ⚠️ **原假设被推翻**,真问题不是 vulkan-runtime | 小,但有永久边界 |
+| **G3** | wayland-protocols | ✅ 形态确定,可全量预生成 | 小 |
+| **G4** | libxkbcommon / pixman | 独立项目,内联描述符 | 中 |
+| **G5** | libinput | 拖 libevdev/mtdev/libudev | 中偏大 |
+| **G6** | libudev / libseat | systemd 邻域,最难 | 大 |
+
+---
+
+## 2. G1 — libglvnd 的 GL 家族
+
+### 2.1 五个库的精确构成(读 meson 得到,非推测)
+
+`src/GLdispatch/vnd-glapi/meson.build` 有一个 `foreach`,为四种 API 风味各建一个静态库:
+
+```meson
+foreach g : ['gl', 'opengl', 'glesv1', 'glesv2']
+  _lib = static_library(
+    'glapi_' + g,
+    ['stub.c', _entry_files, header],          # header = g_glapi_mapi_<g>_tmp.h
+    c_args : ['-DSTATIC_DISPATCH_ONLY',
+              '-DMAPI_ABI_HEADER="…"'],
+  )
+endforeach
+```
+
+然后各个共享库:
+
+| 库 | soname | 构成 | X11? |
+|---|---|---|---|
+| `libGLESv2` | `libGLESv2.so.2` | `libopengl.c` + `idep_glapi_glesv2` + gldispatch | **否** |
+| `libGLESv1` | `libGLESv1_CM.so.1` | `libopengl.c` + `idep_glapi_glesv1` + gldispatch | **否** |
+| `libOpenGL` | `libOpenGL.so.0` | `libopengl.c` + `idep_glapi_opengl` + gldispatch | **否** |
+| `libGLX` | `libGLX.so.0` | `libglx.c` `libglxmapping.c` `libglxproto.c` `glvnd_genentry.c` + 生成的 stub list | **是**(`dep_x11` `dep_xext` `dep_glproto`) |
+| `libGL` | `libGL.so.1` | `libgl.c` + `idep_glapi_gl` + **`dep_glx`** | **是**(经 libGLX) |
+
+**这个分层是本节最有用的发现**:三个无 X11 的库覆盖了合成器的全部需要;`libGLX`/`libGL`
+只有 X11 应用需要,而索引里 `compat.x11` / `compat.xext` / `compat.xorgproto` 已经齐备。
+**所以 G1 可以只做前三个**,规模立刻小一半,而且不引入 X11 依赖。
+
+### 2.2 四张生成表 —— 已实跑验证
+
+命令从 `src/generate/meson.build` 逐字转写,2026-08-30 实跑:
+
+```bash
+cd upstream/src/generate
+python3 gen_gldispatch_mapi.py opengl xml/gl.xml xml/gl_other.xml > g_glapi_mapi_opengl_tmp.h   # 30197 行 ✓
+python3 gen_gldispatch_mapi.py glesv1 xml/gl.xml xml/gl_other.xml > g_glapi_mapi_glesv1_tmp.h   # 11292 行 ✓
+python3 gen_gldispatch_mapi.py glesv2 xml/gl.xml xml/gl_other.xml > g_glapi_mapi_glesv2_tmp.h   # 15788 行 ✓
+# libGL 特殊:符号表从文件读,不从 XML 生成
+python3 gen_gldispatch_mapi.py ../GL/gl.symbols xml/gl.xml xml/gl_other.xml \
+                                                            > g_glapi_mapi_gl_tmp.h            # 78373 行 ✓
+```
+
+四条全部成功。**都签进 `mcpp/generated/`**,与已有的 `glapi_mapi_tmp.h` 并列,CI 的
+`generated` job 加四行 diff 即可 —— 构建期依然不跑 Python。
+
+### 2.3 为什么必须是独立成员,而不是给 gldispatch 加 target
+
+`stub.c` 和那组 per-arch entry 文件**被编译两次,用不同的宏**:
+
+| | 宏 |
+|---|---|
+| `libglapi`(在 gldispatch 里) | `-DMAPI_ABI_HEADER="glapi_mapi_tmp.h"` |
+| `glapi_<g>`(每个 GL 库) | `-DSTATIC_DISPATCH_ONLY -DMAPI_ABI_HEADER="g_glapi_mapi_<g>_tmp.h"` |
+
+mcpp 把一个包的源码**编一次**、让每个库 target 链接全部对象。同一个 `.c` 需要两套宏,
+一个包做不到 —— 这与 `freedesktop.wayland` 拆四个成员是同一条约束,mcpp 自己的告警
+也点了这个办法(「split into a workspace member」)。
+
+**结论**:`mcpp/glesv2`、`mcpp/glesv1`、`mcpp/opengl` 各是一个成员,各自 path 依赖
+`mcpp/gldispatch`,与 `mcpp/egl` 平级。
+
+### 2.4 源码构建 vs 绑定 payload —— 为什么仍然是源码
+
+`xim:libglvnd` 的 payload **确实带** `libGLESv2.so.2`(实测,连 libGL/libGLX/libOpenGL
+都有)。所以这里存在真实的选择,不是只有一条路。
+
+判据本身已经给出答案(libglvnd 可独立分发 → 源码)。但还有一条**具体**理由:
+
+```
+payload libGLESv2.so.2  →  DT_NEEDED: libGLdispatch.so.0     (实测)
+```
+
+如果绑 payload 的 GLESv2、同时用我们源码构建的 `freedesktop.egl`,那么 payload 的
+GLESv2(glvnd **1.7.0.1**)会因为 soname 复用去用我们建的 GLdispatch(glvnd **1.7.0**)。
+这**能跑**(soname 复用已实测),但它是一处跨构建耦合,靠
+`__glDispatchGetABIVersion` 在运行期兜底。源码构建让整个 dispatch 家族**同一份构建、
+同一个版本**,这个耦合根本不存在。
+
+### 2.5 模块层
+
+按已立的规则,模块名跟接口所有者 —— GLES 与 OpenGL 都是 **Khronos** 的规范:
+
+```
+import khronos.glesv2;      // 与 khronos.egl 并列
+import khronos.glesv1;
+import khronos.opengl;
+```
+
+⚠ **一个必须先验证的风险**:GL 的入口点是否都是外部链接。`khronos.egl` 不需要
+forwarder 是因为 EGL 入口是 `EGLAPI … EGLAPIENTRY`;GL 的头(`GLES2/gl2.h`)用的是
+`GL_APICALL … GL_APIENTRY`,展开后是否同样是外部链接**需要先验一次**,否则会重演
+wayland 那次 clang 报 `using declaration referring to … with internal linkage cannot be
+exported`。**建议:先只做 C 库三个成员,模块层作为独立一步。**
+
+---
+
+## 3. G2 — Vulkan:调研推翻了原来的判断
+
+### 3.1 原假设
+
+§20 写的是「`compat.vulkan-runtime` 把宿主 `/usr/lib` 的 ICD 做成符号链接农场,是最后
+一处 host 边;照 §17.2 走 `xim:mesa` 的 ICD 声明就能拆掉」。
+
+### 3.2 实测(沙箱,**不装** vulkan-runtime,只用 `compat.vulkan` 源码构建 loader)
+
+```
+vkCreateInstance      = 0 (ok)
+physical devices      = 1
+  - llvmpipe (LLVM 20.1.2, 256 bits)
+
+[Vulkan Loader] ERROR: libXext.so.6: cannot open shared object file
+[Vulkan Loader] ERROR | DRIVER: loader_icd_scan: Failed loading library associated with
+                        ICD JSON libGLX_nvidia.so.0. Ignoring this JSON
+```
+
+`XDG_DATA_DIRS` 的实际内容:
+
+```
+<subos>/share/vulkan/icd.d/radeon_icd.x86_64.json      ← 生态的(xim:mesa)
+/usr/share/vulkan/icd.d/{asahi,intel,lvp,nouveau,nvidia,radeon,…}_icd.json   ← 宿主的
+```
+
+### 3.3 结论:三件事,原来只看到一件
+
+1. **发现机制早就通了。** `mesa.lua` 已经调 `graphics.declare_vulkan_icd(...)`,
+   生态的 ICD 通过 `XDG_DATA_DIRS` 被 loader 找到。这一条**不需要做任何事**。
+2. **`/usr/share` 也在 `XDG_DATA_DIRS` 里,于是宿主 ICD 一并可见。** 这比「找不到」更糟:
+   部分能加载(llvmpipe),部分失败(NVIDIA 缺 libXext)——**结果是静默落到软件光栅化**,
+   而不是干净地报错。这才是真正的问题,而且它**不在 mcpp-index 里**,在 xim-pkgindex
+   的 discovery 层怎么拼 `XDG_DATA_DIRS`。
+3. **专有驱动是永久边界。** NVIDIA 的 Vulkan 驱动不可能进生态 payload。任何方案都要
+   诚实地把「专有 GPU 走宿主」写出来,而不是假装能覆盖。
+
+### 3.4 建议形态(按代价排序)
+
+| 选项 | 做什么 | 代价 | 评价 |
+|---|---|---|---|
+| **V-a** | discovery 层用 **`VK_DRIVER_FILES`** 精确指向生态 ICD,不再依赖 `XDG_DATA_DIRS` 的目录合并 | xim-pkgindex 一行 | ✅ **推荐**。`VK_DRIVER_FILES` 是 Khronos loader 的显式列表,压过目录扫描,宿主 ICD 自然出局 |
+| V-b | 保留 `XDG_DATA_DIRS`,但把 `/usr/share` 从中摘掉 | 影响面大(XDG 不只服务 Vulkan) | ❌ 会伤到别的东西 |
+| V-c | 维持现状 + `compat.vulkan-runtime` 继续做宿主农场 | 0 | ⚠ 只对专有驱动有意义,应当**明确降级为「专有 GPU 专用」**并在描述符里写清楚 |
+
+**V-a + V-c 并存**是最诚实的形态:生态驱动走 `VK_DRIVER_FILES` 干净闭环;专有驱动仍需
+`compat.vulkan-runtime`,且它的描述符要改写成「这是专有驱动的逃生舱,不是默认路径」。
+
+---
+
+## 4. G3–G6 — 合成器其余依赖
+
+### 4.1 wayland-protocols 1.49
+
+**纯 XML,没有代码。** 消费者需要对 `xdg-shell.xml` 等跑 `wayland-scanner` 生成
+`.h`/`.c`。索引已经有 `freedesktop.wayland-scanner`。
+
+两种形态,判据已经给出答案:
+
+| | 做法 | 判据 |
+|---|---|---|
+| ❌ 消费者构建期生成 | 包只发 XML,消费者用 `build.mcpp` + `dep_bin(...)` 调 scanner | 输出**与目标平台无关** → 不该放构建期 |
+| ✅ **全量预生成** | fork 里对每个协议跑 scanner,产物签进仓,CI diff | 与 `freedesktop.wayland` 的协议代码同一形态 |
+
+**建议**:作为 `mcpplibs/wayland` 的**第五个成员**(`mcpp/protocols`),而不是新建仓 ——
+scanner 就在同一个 workspace 里,`mcpp/generated/` 机制现成。索引条目
+`freedesktop.wayland-protocols = "1.49"`。
+
+⚠ 需要实测的一点:全量生成后的体积。约 40 个协议,预计 3–5 万行,可接受但要量过再定。
+
+### 4.2 libxkbcommon 1.13.2 / pixman 0.46.4
+
+两个都是独立项目,**内联描述符即可**(与 `compat.libdrm` 同形)。
+
+- **libxkbcommon**:上游活跃仓在 GitHub(`xkbcommon/libxkbcommon`),freedesktop 那个
+  停在 0.3.0 —— 别取错。运行期需要 `xkeyboard-config` 的数据文件,这是**第二个包**,
+  且是纯数据。
+- **pixman**:有 per-arch SIMD(SSE2/AVX2/NEON/…),各自独立 TU 且**带 `#ifdef` 自门控**
+  (与 libffi 同形),所以**不需要 `build.mcpp`** —— 全列进 `sources` 让它们自己关掉即可。
+  这一点与 GLdispatch 的 entry stub 正相反,是判据的一个好对照。
+
+### 4.3 libinput 1.31.3
+
+拖 `libevdev` 1.13.7、`mtdev`、以及 **`libudev`**。前两个是普通独立项目;`libudev` 是难点,
+见下。
+
+### 4.4 libudev / libseat — 真正的难点
+
+- **libudev** 是 systemd 的一部分。可选替代:`eudev`(独立 fork,已停更)或
+  `libudev-zero`(极简重实现)。**需要单独决策,不要顺手做。**
+- **libseat**:`seatd` 0.9.3 提供,支持无 logind 的 `seatd` 后端 —— 合成器可以只用
+  seatd 后端,绕开 systemd。
+
+**建议**:这一层**先不做**。合成器可以在「已有 DRM master」的前提下开发(如从 TTY 直接
+启动、或 `SEATD_SOCK`),把 session 管理留到最后。
+
+---
+
+## 5. 任务依赖图与排序
+
+```
+G1a  glesv2/glesv1/opengl 三个成员(C 库)      ← 无前置,规模最小,解锁渲染链
+ │
+ ├─ G1b  khronos.glesv2 等模块层               ← 依赖 G1a;先验外部链接风险
+ │
+G2a  VK_DRIVER_FILES(xim-pkgindex)            ← 无前置,与 G1 并行
+ │
+ └─ G2b  compat.vulkan-runtime 降级为专有驱动逃生舱   ← 依赖 G2a
+                                                    
+G3   wayland-protocols(wayland fork 第五成员)  ← 无前置,与 G1/G2 并行
+G4a  libxkbcommon + xkeyboard-config           ← 无前置
+G4b  pixman                                    ← 无前置
+ │
+G5   libinput(+ libevdev + mtdev)             ← 依赖 G6 的 libudev 决策
+ │
+G6   libudev 路线决策 → libseat                ← 最后,单独评估
+```
+
+**可并行的三条**:G1a / G2a / G3。它们互不依赖,而且各自独立可验证。
+
+**排序建议**:`G1a → G3 → G2a → G4 → G1b → G2b → G5 → G6`
+
+理由:G1a 是从「能初始化」到「能画」的分水岭;G3 之后才谈得上实现一个 shell;G2a 一行
+改动换掉一处静默降级;模块层(G1b)放在 C 库稳定之后,免得两个风险叠在一起。
+
+---
+
+## 6. 多角度评估
+
+| 角度 | 评估 |
+|---|---|
+| **架构** | G1 不新建仓,复用 mcpplibs/libglvnd 已有的 `mcpp/generated/` 与 path 依赖机制;G3 复用 mcpplibs/wayland 的 scanner。**新增仓数量 = 0** |
+| **稳定性** | 四张生成表已实跑;CI 的 diff 守卫扩四行即可。风险集中在 G1b(模块导出)与 G3(体积),两者都可先验 |
+| **优雅/简洁** | 只做三个无 X11 的 GL 库,不碰 GLX/GL —— 覆盖合成器的全部需要,且不把 X11 拖进任何消费者 |
+| **用户体验** | 合成器作者的 `mcpp.toml` 从「缺渲染链」变成可写;`import khronos.glesv2;` 与既有命名一致 |
+| **兼容性** | 全部是新增条目,不动任何已发布包。唯一的行为变更是 G2a,而它修的是「静默落到软件渲染」 |
+| **跨平台** | GL 家族的 per-arch entry stub 沿用 `build.mcpp` 里已有的 `target_arch()` 选择,aarch64/ppc64 由构造成立;pixman 的 SIMD 自门控,不需要额外机制 |
+| **一致性** | 模块命名(khronos.*)、生成物签进仓、path 依赖三条规则原样复用,不引入新范式 |
+| **无感升级** | 全是新增包,无同版本重切 tag 的问题(那正是上一轮的教训) |
+
+---
+
+## 7. 验证矩阵
+
+| # | 断言 | 怎么验 |
+|---|---|---|
+| V1 | 三个 GL 库 soname 正确且**非空** | CI:`readelf -d` + 符号断言 + obj 计数(沿用 libglvnd 现有检查) |
+| V2 | GLESv2 与 EGL 用**同一个** GLdispatch | 测试里 `dladdr(&glClear)` 与 `dladdr(&eglInitialize)` 的 GLdispatch 路径一致 |
+| V3 | **拿到 context 之后真能画** | 沙箱 `--gpu`:GBM→EGL→`eglMakeCurrent`→`glClear`+`glReadPixels` 读回像素值 |
+| V4 | Vulkan 落到**真实** GPU 而非 llvmpipe | 沙箱:`vkEnumeratePhysicalDevices` 的 `deviceName` 不含 `llvmpipe`(在有 Mesa 支持的 GPU 上) |
+| V5 | 宿主一条都没赢 | 沿用 `tests/verify_graphics_closed_loop_sandbox.sh`,扩到 GL/Vulkan |
+| V6 | 生成表无漂移 | CI `generated` job 扩四行 diff |
+
+**V3 是这一轮的核心验证** —— 它是「能画」的定义。`glReadPixels` 读回一个已知颜色,
+比任何符号存在性检查都硬。
+
+---
+
+## 8. 明确不做的事
+
+- **libGLX / libGL**:合成器不需要,而且会把 X11 拖进依赖图。X11 应用要用时再做,
+  索引里 `compat.x11`/`compat.xext`/`compat.xorgproto` 已经齐备。
+- **HGL**(Haiku 的 libGL):平台不相关。
+- **把 NVIDIA 专有驱动纳入生态**:不可能,也不该假装。
+- **libudev 的重实现**:超出图形栈范围,单独评估。
+
+---
+
+## 9. 一句话
+
+> **G1a 三个成员是分水岭 —— 做完它,mcpp 从「EGL 能初始化」变成「能画」;
+> 其余都是补齐,唯一的架构性问题是 Vulkan 的 `XDG_DATA_DIRS` 目录合并,
+> 而那一行改在 xim-pkgindex,不在这里。**
