@@ -1134,7 +1134,7 @@ backends dir: <registry>/subos/default/usr/lib/gbm      ← subos 给的,不是�
 | **mcpplibs/libglvnd**(新建) | libglvnd v1.7.0 + mcpp 构建支持,出 `libEGL.so.1` 与 `libGLdispatch.so.0` | `v1.7.0`,CI 四 job 全绿 |
 | **mcpplibs/wayland** | 三个模块重命名;CI 钉 xlings | `v1.26.0` 重切,CI 全绿 |
 | **mcpp-index** | `compat.egl` → `freedesktop.egl`;5 个描述符 sha256;测试成员;文档 | PR #293 |
-| **mcpp-community/mcpp** | 示例 09 改用 `freedesktop.egl`,打印两个发现变量 | 待 #293 合并后推 |
+| **mcpp-community/mcpp** | 示例 09 改用 `freedesktop.egl`,模块改名,打印两个发现变量,闭包实测重新测量 | PR #532,已推 |
 | mcpp-res(gitcode) | wayland / libglvnd 两个 CN 镜像 | 已发布,与 GLOBAL 字节一致 |
 
 ### 19.2 模块命名:跟**接口的所有者**,不跟发实现的人
@@ -1190,59 +1190,126 @@ GLdispatch 那条则相反:entry stub 分架构**且**分线程存储模型,而�
 **它们自身没有任何门控**。在 `sources` 里写死 x86_64 会让包只能在 x86_64 上用、而且哪儿
 都不写明;`build.mcpp` 用 `mcpp::target_arch()` 做的正是上游 `gl_dispatch_type` 的选择。
 
-### 19.4 生态真实验证:沙箱干净房间(`--sandbox --gpu`)
+### 19.4 生态真实验证:沙箱干净房间(`--sandbox --gpu`)—— 已完成并记录
 
-§12.3 验证过的是 **GBM**。这一轮验证的是**整条链**,而且在一个 `/home/speak` 是合成的、
-开发机上任何 checkout / 缓存 / 构建树都进不来的沙箱里,**从零 clone + 安装 + 构建**。
+§12.3 验证过的是 **GBM**。这一节验证的是**整条链**,包含这一轮新增的源码构建 EGL 与
+重命名后的模块,而且是**从零安装 + 从零构建**。
 
-关键在于:**沙箱里 `/usr` 是宿主的**。
+**脚本已签进仓**:[`tests/verify_graphics_closed_loop_sandbox.sh`](../../tests/verify_graphics_closed_loop_sandbox.sh)
 
-```
-host has  /usr/lib/x86_64-linux-gnu/libEGL.so.1
-host has  /usr/lib/x86_64-linux-gnu/libgbm.so.1
-host has  /usr/lib/x86_64-linux-gnu/libdrm.so.2
-host has  /usr/lib/x86_64-linux-gnu/libwayland-client.so.0
-```
+复现:
 
-所以要证的**不是**「宿主不在」,而是「宿主在、可达、且依然全部落败」—— 后者才是用户机器
-上会发生的情形。用二进制自己的 loader 列闭包:
-
-```
-libgbm.so.1            => <registry>/xpkgs/compat-x-libgbm/25.0.7/.../libgbm.so.1
-libdrm.so.2            => <project>/target/.../bin/libdrm.so.2
-libEGL.so.1            => <project>/target/.../bin/libEGL.so.1
-libGLdispatch.so.0     => <project>/target/.../bin/libGLdispatch.so.0
-libwayland-client.so.0 => <project>/target/.../bin/libwayland-client.so.0
-libwayland-server.so.0 => <project>/target/.../bin/libwayland-server.so.0
-libffi.so.8            => <project>/target/.../bin/libffi.so.8
-
-PASS: the host's copies were present and reachable, and none of them won
+```bash
+# 一个装了图形栈的 subos,例如 xlings install xim:mesa@25.0.7.2
+cp tests/verify_graphics_closed_loop_sandbox.sh ~/.xlings/subos/<subos>/verify.sh
+xlings subos use <subos> --sandbox --gpu \
+  --cmd "BRANCH=<ref> sh /home/speak/.xlings/subos/<subos>/verify.sh"
 ```
 
-真跑(`--gpu`):
+拷贝那一步不是多余的:**沙箱不挂当前工作目录**,放在别处的脚本在里面根本看不到。
+
+#### 为什么这个沙箱有说服力
+
+关键不是「隔离得干净」,而是**沙箱里 `/usr` 仍然是宿主的**。所以要证的**不是**「宿主
+不在」—— 一个把 `/usr` 藏起来的沙箱对用户的机器什么也证明不了 —— 而是「宿主在、可达、
+且依然全部落败」。后者才是真实机器上会发生的情形。
+
+#### 完整输出(2026-08-30,`eco-gbm-20260830`,分支 `feat/freedesktop-egl` @ 2f4458d)
 
 ```
-EGL_VERSION            1.5 libglvnd            ← 自建 dispatch 在答
-/dev/dri/renderD128    drm driver nvidia-drm
-  eglInitialize        EGL 1.5, vendor Mesa Project
-/dev/dri/card0         drm driver simpledrm
-  gbm_bo_create        256x256 stride=1024     ← 真分配出 buffer object
-  eglInitialize        EGL 1.5, vendor Mesa Project
+===== 0. where we are =====
+  home contents: . .. .bashrc closed-loop .config .mcpp mcpp-index .profile .xlings .zshrc
+  host has  /usr/lib/x86_64-linux-gnu/libEGL.so.1
+  host has  /usr/lib/x86_64-linux-gnu/libgbm.so.1
+  host has  /usr/lib/x86_64-linux-gnu/libdrm.so.2
+  host has  /usr/lib/x86_64-linux-gnu/libwayland-client.so.0
+  GBM_BACKENDS_PATH         = <subos>/usr/lib/gbm
+  __EGL_VENDOR_LIBRARY_DIRS = <subos>/share/glvnd/egl_vendor.d
+
+===== 1. install mcpp through xlings =====
+  mcpp: <subos>/bin/mcpp
+mcpp 2026.8.29.1
+
+===== 2. clone the index under test =====
+  branch feat/freedesktop-egl @ 2f4458d
+
+===== 3. a project that names the whole stack =====
+
+===== 4. build from scratch =====
+  build.mcpp compiling
+  build.mcpp running
+      Target x86_64-linux-gnu → x86_64-unknown-linux-gnu
+    Inferred sources [src/**/*.{cppm,cpp,cc,c,S,s,asm}]
+    Inferred target closed-loop (bin from src/main.cpp)
+   Compiling closed-loop v0.1.0 (.)
+      Cached compat.libdrm v2.4.134 (5 units)
+      Cached compat.libgbm v25.0.7 (1 unit)
+   Compiling freedesktop.egl v1.7.0
+      Cached freedesktop.wayland v1.26.0 (1 unit)
+      Cached freedesktop.wayland-server v1.26.0 (1 unit)
+    Finished dev [unoptimized + debuginfo] in 0.31s
+
+===== 5. what the loader actually resolved =====
+	libgbm.so.1            => <registry>/xpkgs/compat-x-libgbm/25.0.7/mcpp_generated/libgbm/lib/libgbm.so.1
+	libdrm.so.2            => <project>/target/x86_64-linux-gnu/78e15402517d6f84/bin/libdrm.so.2
+	libEGL.so.1            => <project>/target/x86_64-linux-gnu/78e15402517d6f84/bin/libEGL.so.1
+	libwayland-client.so.0 => <project>/target/x86_64-linux-gnu/78e15402517d6f84/bin/libwayland-client.so.0
+	libwayland-server.so.0 => <project>/target/x86_64-linux-gnu/78e15402517d6f84/bin/libwayland-server.so.0
+	libexpat.so.1          => <registry>/xpkgs/xim-x-expat/2.6.2/lib/libexpat.so.1
+	libGLdispatch.so.0     => <project>/target/x86_64-linux-gnu/78e15402517d6f84/bin/libGLdispatch.so.0
+	libffi.so.8            => <project>/target/x86_64-linux-gnu/78e15402517d6f84/bin/libffi.so.8
+
+===== 6. did anything come from the host? =====
+  PASS: the host's copies were present and reachable, and none of them won
+
+===== 7. run it =====
+KMS: DRM_IOCTL_MODE_CREATE_DUMB failed: Permission denied
+kmsro: driver missing
+  -- the modules carry the API --
+  EGL_VERSION            1.5 libglvnd
+  wl_display_create      0x2bd0dbf0
+  -- DRM node -> GBM device -> EGL display --
+  /dev/dri/renderD128
+    drm driver           nvidia-drm
+    gbm_create_device    0x2bd65e60
+    gbm_bo_create        (driver declined)
+    eglInitialize        EGL 1.5, vendor Mesa Project
+  /dev/dri/card0
+    drm driver           simpledrm
+    gbm_create_device    0x2bd65e60
+    gbm_bo_create        256x256 stride=1024
+    eglInitialize        EGL 1.5, vendor Mesa Project
+
+  reached EGL on a real device: yes
+
+===== RESULT =====
+  PASS
 ```
 
-`import khronos.egl;` 与两个 `import freedesktop.wayland.*;` 一起编译链接通过 ——
-模块层与 C 库在同一次干净构建里都成立。
+#### 这份输出证明了什么
 
-复现脚本见提交历史;三个坑值得记下:
+| 断言 | 证据 |
+|---|---|
+| 模块层在干净构建里成立 | `import khronos.egl;` + 两个 `import freedesktop.wayland.*;` 编译链接通过 |
+| 加载的是**自建**的 EGL 而非 payload | `libEGL.so.1 => <project>/target/…`,且 `EGL_VERSION` 由它答出 |
+| 自建 dispatch 真能加载 vendor | `eglInitialize → EGL 1.5, vendor Mesa Project` |
+| GBM 真分配了显存 | `gbm_bo_create 256x256 stride=1024`(card0) |
+| 宿主一条都没赢 | 第 6 步:四个宿主库在场且可达,闭包里零条来自 `/usr/lib` |
+| 发现路径来自生态而非包 | 两个变量都由 `xim:mesa` 声明,包自己什么都不设 |
+
+两条**不是**缺陷的输出:`renderD128` 上 `gbm_bo_create` 被驱动拒绝,是 NVIDIA 后端不接受
+该 format/usage 组合;`DRM_IOCTL_MODE_CREATE_DUMB failed: Permission denied` 是 render node
+的权限边界(dumb buffer 需 KMS 权限)。`card0` 上两者都成功。
+
+#### 三个坑(留给下一个人)
 
 1. **`[indices]` 同一个 path 不能挂两个键**。写 `compat` 和 `freedesktop` 都指向同一个
-   checkout,会注册成两个独立 project,之后每次查找都报
+   checkout,会注册成两个独立 project repo,之后每次查找都报
    `package 'compat:libdrm@2.4.134' is ambiguous, candidates: … 'compat' … 'freedesktop'`。
    只重定向被测的那个 namespace,其余走已发布索引。
 2. **沙箱里 `find ~/.xlings -name mcpp` 会抓到别的 subos 的二进制**,它们的 interpreter
    不在,失败信息是干巴巴的 `not found`,读起来像「mcpp 没装上」。要先试本 subos 的 `bin/`。
-3. **沙箱不挂 cwd**,落点是合成的 `/home/speak`(只有 dotfile)。脚本要放进 subos 目录
-   才进得去。
+3. **沙箱不挂 cwd**,落点是合成的 `/home/speak`(只有 dotfile)。脚本必须拷进 subos 目录。
 
 ### 19.5 xlings pin:§15 的结论仍然成立,但它指出的缺口是真的
 
@@ -1296,8 +1363,10 @@ rm -rf ~/.mcpp/registry/data/xpkgs/freedesktop-x-wayland*/1.26.0 \
 
 ### 19.8 仍未闭合
 
-- **PR #293 必须合并**才能修好 main 上 wayland 的 sha256(§19.6)。
-- 示例 09 的更新(mcpp PR #532)在本地待推,依赖 #293 先合。
+- **PR #293 必须合并**才能修好 main 上 wayland 的 sha256(§19.6)。这是唯一真正阻塞的一条。
+- 示例 09 的更新已推到 mcpp PR #532。曾以为「推上去会把已绿的 CI 弄红」而扣着不推,
+  **那是假设、没查**:mcpp 的 CI 根本不构建 `examples/09-graphics-stack`(只有
+  `openkal-cross.yml` 碰一个无关示例)。扣着不推让工作停在本地,比推上去更糟。
 - `libGL` / `libGLX` / `libGLESv{1,2}` 未构建。各自是 fork 里一个成员加一张
   `mcpp/generated/` 里的 dispatch 表;索引里目前没有消费者。
 - `freedesktop.egl` 的 `libEGL.so.1` 比 payload 的多三条 `DT_NEEDED`
