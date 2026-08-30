@@ -1,0 +1,11 @@
+# pixman test project.
+#
+# Linux-only like its graphics-stack neighbours; the test compiles to a no-op
+# main() elsewhere.
+[package]
+name     = "pixman-tests"
+version  = "0.1.0"
+standard = "c++23"
+
+[target.'cfg(linux)'.dependencies.compat]
+pixman = "0.46.4"

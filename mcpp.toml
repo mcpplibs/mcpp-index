@@ -87,6 +87,7 @@ members = [
     "tests/examples/wayland",
     "tests/examples/egl",
     "tests/examples/gl",
+    "tests/examples/pixman",
     "tests/examples/wayland-protocols",
     "tests/examples/libgbm",
     "tests/examples/libpng",
