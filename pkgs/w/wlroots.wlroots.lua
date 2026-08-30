@@ -113,18 +113,23 @@ package = {
             ["0.20.2"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/wlroots/archive/refs/tags/0.20.2.tar.gz",
-                    -- ⚠️ `0.20.2-1`, not `0.20.2`. The fork's tag was re-cut once
-                    -- before this descriptor was ever published — nothing
-                    -- depended on it yet, so re-cutting was safe — and gitcode
-                    -- refuses to REPLACE an asset of the same name in an
-                    -- existing release. The container holding the correct bytes
-                    -- is therefore a new one; the `0.20.2` container still holds
-                    -- the superseded asset and is not referenced.
+                    -- ⚠️ THE CONTAINER TAG IS NOT THE PACKAGE VERSION.
+                    --
+                    -- The fork's tag was re-cut twice while this descriptor was
+                    -- still unpublished — safe precisely because nothing in the
+                    -- world had extracted it yet, which is the only time re-
+                    -- cutting ever is — and gitcode refuses to REPLACE an asset
+                    -- of the same name in an existing release. So each corrected
+                    -- tarball needed a new container: `0.20.2`, `0.20.2-1` and
+                    -- now `0.20.2-2`. Only the last is referenced; the earlier
+                    -- two hold superseded bytes and are left alone rather than
+                    -- deleted, so a stale reference fails a checksum rather than
+                    -- a download.
                     --
                     -- Verified: this URL's sha256 equals the GLOBAL one's below.
-                    CN     = "https://gitcode.com/mcpp-res/wlroots/releases/download/0.20.2-1/wlroots-0.20.2.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/wlroots/releases/download/0.20.2-2/wlroots-0.20.2.tar.gz",
                 },
-                sha256 = "97d9e014c9b633946f24396630e9e317e385160396e474c883903cc92c4a8299",
+                sha256 = "c8226cdc81b0ec6cbe77d8dc21b5178289a4a276cf946305f92030041daa1afd",
             },
         },
     },
