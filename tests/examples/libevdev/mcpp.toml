@@ -1,0 +1,14 @@
+# libevdev test project.
+#
+# THIS MEMBER DECLARES ITS OWN [indices]: an index is looked up BY NAMESPACE,
+# and the workspace root maps `compat`.
+[indices]
+freedesktop = { path = "../../.." }
+
+[package]
+name     = "libevdev-tests"
+version  = "0.1.0"
+standard = "c++23"
+
+[target.'cfg(linux)'.dependencies.freedesktop]
+libevdev = "1.13.7"

@@ -1,0 +1,7 @@
+[package]
+name = "libudev-tests"
+version = "0.1.0"
+standard = "c++23"
+
+[target.'cfg(linux)'.dependencies.compat]
+libudev = "1.0.5"
