@@ -638,6 +638,32 @@ xkb_keymap_new_from_names(evdev/pc105/us) against that root ok
 消费侧断言写在 `tests/examples/libxkbcommon`,且是**条件式**的:`XKB_CONFIG_ROOT` 未
 设置时只报告,设置了才要求编得出来。没有数据集的机器不是这个包的缺陷。
 
+**合并后又从「已发布索引 + 全新 subos + 沙箱」复验了一遍**,因为上面那次用的是
+`xlings config --add-xpkg` 的本地副本:
+
+```
+xim:xkeyboard-config@2.48 installed          ← 来自已发布索引,不是 local:
+ROOT=[.../subos/eco-2026-8-30-2/share/X11/xkb]
+compat geometry keycodes rules symbols types
+  rules/evdev 行数: 512
+  布局数: 151
+```
+
+**这次复验抓到一个真实陷阱,而且差点得出"包坏了"的结论**:第一次从已发布索引装,
+数据**没有**放进去。原因不在包 —— store 里还留着本地验证时的
+`local:xkeyboard-config@2.48`,而 xlings 的 store 查找**忽略 namespace**,
+`(name, version)` 撞上就把 `install()` 静默跳过,payload 是空的,而 `config()` 照常跑。
+清掉 store 重装即正常。
+
+**两条要记住的**:
+
+1. 用 `--add-xpkg` 本地验证过的包,发布后必须**先清 store 再验一遍**,否则验的
+   仍然是本地那份。
+2. `declare_xkb` 的 `os.isdir` 守卫确实触发了,但那条 `log.warn`
+   **在 install 输出里根本没出现**(同一次输出里 xlings 自己的 `[warn]` 是打出来的)。
+   所以 `declare_dri` / `declare_gbm` / `declare_xkb` 的警告都不能当诊断依赖 ——
+   判断内容有没有真放进去只能直接 `ls`。
+
 #### 10.9.2 同一形状的第三处:libinput quirks
 
 写 `compat.libinput` 时把 `LIBINPUT_QUIRKS_DIR` 也编译成空,注释里当时写的是「编译期
