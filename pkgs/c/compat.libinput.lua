@@ -95,11 +95,13 @@ package = {
 #define MCPP_LIBINPUT_CONFIG_H
 /* meson's config.h, written out for Linux with a GCC-compatible toolchain.
 
-   LIBINPUT_QUIRKS_DIR is EMPTY on purpose. quirks.c reads model-specific
-   `.quirks` files from it at runtime; upstream's default points into the
-   build prefix, which after relocation is the HOST's dataset. Empty means a
-   device gets libinput's built-in defaults instead of another machine's
-   quirks — the same stance compat.libgbm takes with GBM_BACKENDS_PATH.
+   LIBINPUT_QUIRKS_DIR is EMPTY on purpose, and it is a FALLBACK rather than
+   the only way in: `libinput.c:1911` reads `getenv("LIBINPUT_QUIRKS_DIR")`
+   first. Upstream's compiled-in default points into the build prefix, which
+   after relocation is the HOST's dataset — so empty means a device gets
+   libinput's built-in defaults instead of another machine's quirks, and an
+   environment that has a dataset can still name it. Exactly the shape
+   compat.libgbm has with GBM_BACKENDS_PATH, down to the variable.
 
    HAVE_LUA and HAVE_LIBWACOM are absent: both are optional upstream and both
    would add a dependency this package does not need to do its job. */
@@ -140,8 +142,8 @@ package = {
 #define HAVE_MTDEV 1
 
 /* HAVE_C23_AUTO is deliberately ABSENT. meson probes for it by compiling
-   `auto foo = gmtime(NULL);`, which needs C23; this package builds as gnu11,
-   so the probe would fail there too and upstream's non-auto path is correct. */
+   `auto foo = gmtime(NULL);`, which needs C23; this package builds as c11, so
+   the probe would fail here too and upstream's non-auto path is correct. */
 #endif
 ]==],
 
