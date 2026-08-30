@@ -1,17 +1,18 @@
 # EGL test project.
 #
-# Linux-only like its neighbours, and the dependency is gated so the test
-# compiles to a no-op main() elsewhere.
-#
-# The interesting assertion is not "does -lEGL resolve" but that
-# `#include <EGL/egl.h>` PARSES: eglplatform.h opens with
-# `#include <KHR/khrplatform.h>`, which this package does not ship and
-# deliberately takes from compat.khrplatform instead of adding a third
-# provider of KHR/ to the index. If that dependency edge is ever dropped, this
-# member stops compiling rather than failing subtly later.
-[package]
-name = "egl-tests"
-version = "0.1.0"
+# THIS MEMBER DECLARES ITS OWN [indices], and has to. The workspace root maps
+# the `compat` namespace to this checkout, and an index is looked up BY
+# NAMESPACE — so `freedesktop.*` would resolve against the published index
+# rather than the package under test. A member-level table REPLACES the root's
+# rather than merging.
+[indices]
+freedesktop = { path = "../../.." }
 
-[target.'cfg(linux)'.dependencies.compat]
+[package]
+name     = "egl-tests"
+version  = "0.1.0"
+standard = "c++23"
+
+# Linux-only like its neighbours; the test compiles to a no-op main() elsewhere.
+[target.'cfg(linux)'.dependencies.freedesktop]
 egl = "1.7.0"
