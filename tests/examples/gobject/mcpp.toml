@@ -1,0 +1,11 @@
+# gnome.gobject — the type system, registered and exercised at run time.
+[indices]
+gnome = { path = "../../.." }
+
+[package]
+name     = "gobject-tests"
+version  = "0.1.0"
+standard = "c++23"
+
+[target.'cfg(linux)'.dependencies.gnome]
+gobject = "2.82.5"
