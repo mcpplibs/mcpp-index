@@ -60,6 +60,33 @@
 -- here. Measured and recorded rather than left as an unexplained gap.
 --
 -- ─────────────────────────────────────────────────────────────────────────
+-- ⚠️ NAME gobject AND gmodule; DO NOT NAME glib
+--
+--     [dependencies]
+--     gnome.gobject = "2.82.5"
+--     gnome.gmodule = "2.82.5"
+--     # gnome.glib arrives transitively
+--
+-- gobject and gmodule declare glib as a workspace PATH dependency — they are
+-- built from one tree — and mcpp rejects a package requested both ways:
+--
+--     error: dependency 'gnome.glib' is requested as both a version dep
+--            (by 'your-package') and a path dep (by 'gnome.gmodule.82.5')
+--
+-- Same shape as freedesktop.wayland-protocols-*. A consumer that only wants
+-- glib itself may of course name it alone.
+--
+-- ─────────────────────────────────────────────────────────────────────────
+-- ⚠️ NO extern "C" WRAPPER
+--
+-- glib decorates every header with G_BEGIN_DECLS, so a wrapper is redundant —
+-- and harmful: glib.h pulls <stdlib.h>, which libc++ routes through <cstdlib>,
+-- which defines TEMPLATES. Inside an extern "C" block that is
+-- `templates must have C++ linkage`, dozens of times, against a header the
+-- consumer never named. libstdc++ does not route them that way, so gcc is
+-- green and clang is a wall.
+--
+-- ─────────────────────────────────────────────────────────────────────────
 -- LINUX ONLY
 --
 -- The generated `glibconfig.h` fixes `G_OS_UNIX`, the POSIX thread
@@ -88,9 +115,9 @@ package = {
                     -- yet — and gitcode refuses to REPLACE an asset of the same
                     -- name in an existing release. Verified: this URL's sha256
                     -- equals the GLOBAL tarball's.
-                    CN     = "https://gitcode.com/mcpp-res/glib/releases/download/2.82.5-1/glib-2.82.5.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/glib/releases/download/2.82.5-2/glib-2.82.5.tar.gz",
                 },
-                sha256 = "98118dacf3ebc9d5aefba340e9248385f1643b76ca672b864c37a3e4fb71caf6",
+                sha256 = "fb65671207e5ec409a1fdb2156dafb49bf8c772ada252a17844991a14de99ea8",
             },
         },
     },

@@ -1,6 +1,6 @@
 # mcpp 图形栈:从「能跑通」到「能开发」的覆盖面设计
 
-Date: 2026-08-30 · 前置:[`2026-08-30-gbm-cross-repo-closed-loop-plan.md`](2026-08-30-gbm-cross-repo-closed-loop-plan.md) §19/§20 · **状态:已实现并闭环验证(v1.6,§11 总账 / §14 fork 规范 / §18 八角度复核 / §19 合成器闸门与 GObject 栈)**
+Date: 2026-08-30 · 前置:[`2026-08-30-gbm-cross-repo-closed-loop-plan.md`](2026-08-30-gbm-cross-repo-closed-loop-plan.md) §19/§20 · **状态:已实现并闭环验证(v1.6,§11 总账 / §14 fork 规范 / §18 八角度复核 / §19 合成器闸门与 GObject 栈,含沙箱实测)**
 
 ## 0. 这份文档解决什么
 
@@ -1692,3 +1692,73 @@ fork 之前只生成 client/server 两种,而 wlroots 0.20 的**十个公共头*
 `vulkan-renderer`(要 glslang)、`x11-backend` / `xwayland`(要 xcb)、
 `color-management`(要 lcms2)同理:每一个都在包里写明「为什么缺席」而不是
 默默不提。
+
+### 19.8 「引用别的包生成的文件」是静默的
+
+§19.3 那四个失败都是「include 成功了但内容不对」。GObject 这条更隐蔽一层:
+**源码条目匹配不到任何文件,不会报错。**
+
+`gnome.gobject` 的 `sources` 里写过 `../include/gobject/glib-enumtypes.c` ——
+那是 **glib 的** build 程序产出的文件。单独用 gobject 或单独用 gmodule 都正常;
+一个消费者**同时点名两个**时:
+
+```
+undefined reference to `g_unicode_script_get_type'
+```
+
+因为 gobject 和 gmodule 各自 path 依赖 `../glib`,而 mcpp 把两个解析成了**一个**
+包 —— 于是只有其中一个成员的 `include/` 被写过,另一个的源码条目**匹配到零个
+文件**。不是「file not found」:那个 .o 压根没出现在 ninja 里。
+
+> **一个包不能命名另一个包的 build 程序产出的文件。**
+
+改法:生成器移到 `mcpp/common/generators.h`,每个成员三十行的 `build.mcpp` 调
+自己需要的那几个,写进**自己的** `include/`。共享的四项(config.h、
+glibconfig.h、gversionmacros.h、glib-visibility.h)由三个成员各生成一份 ——
+生成器是确定性的,同输入同字节,三份不会分歧。
+
+代价是每个成员各自重建一次 glib,CI 时间约三倍。换来的是「成员自给自足」这个
+性质,而它挡住的那个 bug 只有消费者能碰到。
+
+### 19.9 path 依赖的兄弟不能被消费者再点名
+
+同一个形态在 wayland-protocols 上已经出现过,glib 这里又一次:
+
+```
+error: dependency 'gnome.glib' is requested as both a version dep
+       (by 'compositor-stack') and a path dep (by 'gnome.gmodule@2.82.5')
+```
+
+`gobject`/`gmodule` 用 workspace path 依赖拉 `glib`,所以消费者**只点名那两个**,
+`glib` 传递而来。两个包的描述符和 README 都写了这条 —— 它是消费者第一次用就会
+撞上的。
+
+### 19.10 沙箱闭环:实测结果
+
+`xlings subos use eco-2026-8-31-x --sandbox` —— 合成 home、mcpp 与索引与全部包
+从零拉取,而 `/usr` 仍是宿主的(宿主自带 libglib-2.0/libgobject-2.0/libpcre2-8/
+libfribidi,所以「用的是我们这份」是个可以为假的判断):
+
+```
+host has  /usr/lib/x86_64-linux-gnu/libglib-2.0.so.0
+host has  /usr/lib/x86_64-linux-gnu/libpcre2-8.so.0
+host has  /usr/lib/x86_64-linux-gnu/libfribidi.so.0
+...
+PASS: only the ecosystem's own libraries, plus the C runtime
+wlroots 0.20.2 / drm=1 libinput=1 session=1 gles2=1 gbm=1 / x11=0 vulkan=0 xwayland=0
+pnp ACR = Acer Technologies
+pcre2 10.44 / \p{Han} 编译通过
+fribidi 1.0.16 / 希伯来段落解析为 RTL / '(' 镜像为 ')'
+0 failure(s)   RESULT: PASS
+```
+
+⚠️ 脚本本身也踩了一次值得记的坑:第 5 步「有没有东西来自宿主」用
+`grep '=> /(usr|lib)'`,而 `ldd` 会打印
+
+```
+/…/xim-x-glibc/…/ld-linux-x86-64.so.2 => /lib64/ld-linux-x86-64.so.2
+```
+
+—— 左边是生态的,右边是**内核写死的解释器路径**,任何包都替换不了也不该替换。
+匹配到它,就会在一次「每个真实依赖都来自生态」的运行上报告「有宿主库」。
+**判据本身也要能被证伪一次。**
