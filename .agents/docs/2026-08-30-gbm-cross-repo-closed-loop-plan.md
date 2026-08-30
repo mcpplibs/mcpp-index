@@ -1214,6 +1214,37 @@ xlings subos use <subos> --sandbox --gpu \
 不在」—— 一个把 `/usr` 藏起来的沙箱对用户的机器什么也证明不了 —— 而是「宿主在、可达、
 且依然全部落败」。后者才是真实机器上会发生的情形。
 
+#### 结论:闭环成立,已对**已发布的 main** 复验
+
+#293 合并(`dc961cc`)之后又跑了一遍,这次 `BRANCH=main`,并且**先把沙箱里上一轮的
+store 清空**,确保是真从已发布索引取而不是复用分支那次的产物:
+
+```
+store cleared; now building from the PUBLISHED index
+   Compiling compat.libdrm v2.4.134          ← 没有 "Cached",全部重新下载编译
+   Compiling compat.libgbm v25.0.7
+   Compiling freedesktop.egl v1.7.0
+   Compiling freedesktop.wayland v1.26.0
+   Compiling freedesktop.wayland-server v1.26.0
+
+PASS: the host's copies were present and reachable, and none of them won
+  EGL_VERSION            1.5 libglvnd
+  gbm_bo_create          256x256 stride=1024
+  eglInitialize          EGL 1.5, vendor Mesa Project
+RESULT: PASS
+```
+
+闭包与下面分支那次逐条一致。**这一次才是权威的** —— 按 §18.2 自己立的规矩:对着已发布的
+artifact 验证,而不是本地打补丁的副本。
+
+§19.6 记的那处自己造成的破坏也随合并修复,已复验:
+
+```
+main 的 freedesktop.wayland.lua sha256  ==  v1.26.0 tag 上 tarball 的 sha256   ✓
+main 的 freedesktop.egl.lua     sha256  ==  v1.7.0  tag 上 tarball 的 sha256   ✓
+pkgs/c/compat.egl.lua                        HTTP 404(已删除)                ✓
+```
+
 #### 完整输出(2026-08-30,`eco-gbm-20260830`,分支 `feat/freedesktop-egl` @ 2f4458d)
 
 ```
@@ -1363,10 +1394,10 @@ rm -rf ~/.mcpp/registry/data/xpkgs/freedesktop-x-wayland*/1.26.0 \
 
 ### 19.8 仍未闭合
 
-- **PR #293 必须合并**才能修好 main 上 wayland 的 sha256(§19.6)。这是唯一真正阻塞的一条。
-- 示例 09 的更新已推到 mcpp PR #532。曾以为「推上去会把已绿的 CI 弄红」而扣着不推,
-  **那是假设、没查**:mcpp 的 CI 根本不构建 `examples/09-graphics-stack`(只有
-  `openkal-cross.yml` 碰一个无关示例)。扣着不推让工作停在本地,比推上去更糟。
+- ~~PR #293 必须合并~~ **已合并**(`dc961cc`),§19.6 的破坏随之修复并已复验。
+- 示例 09 的更新已推到 mcpp PR #532(CI 20/20 通过)。曾以为「推上去会把已绿的 CI 弄红」
+  而扣着不推,**那是假设、没查**:mcpp 的 CI 根本不构建 `examples/09-graphics-stack`
+  (只有 `openkal-cross.yml` 碰一个无关示例)。扣着不推让工作停在本地,比推上去更糟。
 - `libGL` / `libGLX` / `libGLESv{1,2}` 未构建。各自是 fork 里一个成员加一张
   `mcpp/generated/` 里的 dispatch 表;索引里目前没有消费者。
 - `freedesktop.egl` 的 `libEGL.so.1` 比 payload 的多三条 `DT_NEEDED`
