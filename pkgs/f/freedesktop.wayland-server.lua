@@ -1,4 +1,4 @@
--- freedesktop.wayland-server — libwayland-server, plus `import wayland.server;`.
+-- freedesktop.wayland-server — libwayland-server, plus `import freedesktop.wayland.server;`.
 --
 -- Form A: the manifest lives in mcpplibs/wayland, a fork of freedesktop's
 -- wayland 1.26.0 that adds mcpp build support and patches no upstream file.
