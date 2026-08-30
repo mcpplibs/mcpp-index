@@ -90,6 +90,7 @@ members = [
     "tests/examples/libevdev",
     "tests/examples/libseat",
     "tests/examples/libudev",
+    "tests/examples/libxkbcommon",
     "tests/examples/mtdev",
     "tests/examples/pixman",
     "tests/examples/wayland-protocols",

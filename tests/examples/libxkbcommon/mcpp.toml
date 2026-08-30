@@ -1,0 +1,11 @@
+# libxkbcommon test project.
+[indices]
+freedesktop = { path = "../../.." }
+
+[package]
+name     = "libxkbcommon-tests"
+version  = "0.1.0"
+standard = "c++23"
+
+[target.'cfg(linux)'.dependencies.freedesktop]
+libxkbcommon = "1.13.2"
