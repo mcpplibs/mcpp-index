@@ -82,9 +82,15 @@ package = {
             ["2.82.5"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/glib/archive/refs/tags/2.82.5.tar.gz",
-                    CN     = "https://gitcode.com/mcpp-res/glib/releases/download/2.82.5/glib-2.82.5.tar.gz",
+                    -- ⚠️ The container tag is `2.82.5-1`, not `2.82.5`. The fork's
+                    -- tag was re-cut once while this descriptor was still
+                    -- unpublished — safe only because nothing had extracted it
+                    -- yet — and gitcode refuses to REPLACE an asset of the same
+                    -- name in an existing release. Verified: this URL's sha256
+                    -- equals the GLOBAL tarball's.
+                    CN     = "https://gitcode.com/mcpp-res/glib/releases/download/2.82.5-1/glib-2.82.5.tar.gz",
                 },
-                sha256 = "ea18347c494e6df76cfce4838473b0d53992e670499d5714342829b22c92c308",
+                sha256 = "98118dacf3ebc9d5aefba340e9248385f1643b76ca672b864c37a3e4fb71caf6",
             },
         },
     },
