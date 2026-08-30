@@ -1,0 +1,11 @@
+# gnome.glib — the generated headers, and the subsystems that depend on them.
+[indices]
+gnome = { path = "../../.." }
+
+[package]
+name     = "glib-tests"
+version  = "0.1.0"
+standard = "c++23"
+
+[target.'cfg(linux)'.dependencies.gnome]
+glib = "2.82.5"

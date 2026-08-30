@@ -1,6 +1,6 @@
 # mcpp 图形栈:从「能跑通」到「能开发」的覆盖面设计
 
-Date: 2026-08-30 · 前置:[`2026-08-30-gbm-cross-repo-closed-loop-plan.md`](2026-08-30-gbm-cross-repo-closed-loop-plan.md) §19/§20 · **状态:已实现并闭环验证(v1.5,§11 总账 / §14 fork 规范 / §17 桌面栈补齐 / §18 八角度实现后复核)**
+Date: 2026-08-30 · 前置:[`2026-08-30-gbm-cross-repo-closed-loop-plan.md`](2026-08-30-gbm-cross-repo-closed-loop-plan.md) §19/§20 · **状态:已实现并闭环验证(v1.6,§11 总账 / §14 fork 规范 / §18 八角度复核 / §19 合成器闸门与 GObject 栈)**
 
 ## 0. 这份文档解决什么
 
@@ -1548,3 +1548,147 @@ tag**——把新内容作为 release 资产发布,旧资产原样保留,零窗�
 
 设计时的判断有一半没扛过实现——而这正是「验证要更新到文档」的意义:留下的应该是
 **被证伪之后的那一版**。
+
+---
+
+## 19. 合成器闸门与 GObject 栈(2026-08-31)
+
+§18 结尾说 wlroots「是『要不要』而不是『能不能』」。这一轮做了,答案是能 ——
+连同 pango 那条线上能做的部分,以及**做不到的那一段的确切边界**。
+
+| 包 | 版本 | 形态 | 为什么 |
+|---|---|---|---|
+| `wlroots.wlroots` | 0.20.2 | fork | 六个生成器 |
+| `compat.pcre2` | 10.44 | 描述符 | 133k 行,**零生成器**(发布包自带 `.generic`/`.dist`) |
+| `compat.fribidi` | 1.0.16 | 描述符 | 有八个生成程序,但**输出随发布包一起发** |
+| `gnome.glib` / `gobject` / `gmodule` | 2.82.5 | fork | 六个生成器,含 816 行的 `glib-mkenums` |
+| `freedesktop.wayland-protocols-*` | 1.49.1 | 补 enum 头 | 上游装、fork 之前没生成 |
+
+**判据再次被证明是「生成器」而不是行数**:pcre2 比 cairo 还大 29k 行,仍然是
+描述符;libdisplay-info 两千行是 fork。fribidi 更细一层 —— 它**有**生成器,但
+release tarball 里带着七张表的输出,所以没有东西需要跑。
+
+### 19.1 `import wlroots;` 不是便利,是唯一入口
+
+这是本轮最值得记的一条。wlroots 的 121 个公共头**没有一个 `extern "C"`**,而且
+其中两个**根本不是合法 C++**:
+
+```c
+void wlr_scene_rect_set_color(struct wlr_scene_rect *rect,
+                              const float color[static 4]);   /* C99 专有 */
+```
+
+g++ 报 `expected primary-expression before 'static'`,而且解析再也没恢复,于是
+文件里**后面每一条**声明都被报成「has not been declared」—— 把人引向「是不是
+少了 feature 守卫」。另有三个结构体成员叫 `namespace`、`delete`、`class`。
+
+所以 C++ 消费者用任何 `extern "C"` 组合都 include 不了这些头。fork 的做法:
+
+| 上游 C | C++ |
+|---|---|
+| `[static N]` | `[N]` |
+| `wlr_layer_surface_v1::namespace` | `::namespace_` |
+| `wlr_input_method_v2::delete` | `::delete_` |
+
+关键字成员用 `#ifdef __cplusplus` 双臂给出,`#else` 一字不改是上游原文 ——
+**同一偏移、同一 ABI,一种语言一种拼法**。C++ 拼不出 `namespace` 这个名字,所以
+给出 `namespace_` 不是改上游 API,而是它在这一侧唯一存在的形态。
+
+**与 glib 对照可以看出这不是家风。** glib 没有模块:它的 API 是宏重的
+(`G_DEFINE_TYPE`、`g_signal_connect` 全是宏),而**宏不跨模块边界**,`import`
+会把声明给你、把让声明可用的那一半扣下。形态跟着上游的头长什么样,不跟风格。
+
+### 19.2 模块的两条固有限制
+
+| | |
+|---|---|
+| 宏不跨模块 | `WLR_HAS_*`、`wl_container_of` 都来自头。`#include <wlr/config.h>` 与 import 并存是安全的 —— 它只有 `#define` |
+| **会声明东西的头不能与模块并存** | `<wlr/version.h>` 没有 `extern "C"`,并存会让那三个名字拿到 C++ 链接,而模块里是 C 链接。链接错误是 ``undefined reference to `wlr_version_get_major()'`` —— **括号就是线索**:名字被修饰了 |
+
+### 19.3 四个「看起来成功、其实拿错文件」的失败
+
+本轮代价最高的一类,全部只在 CI 出现、本地四种清理方式都复现不了:
+
+1. **`config.h` 是 C 里最挤的文件名。** wlroots 的 include 路径上有**六个**,
+   而 `mcpp::include_dir()`(build 程序发的)排在**所有依赖之后** —— 我们那份是
+   59/59。十一个 wlroots 源码读到的是 `compat.libinput` 的,`if (!HAVE_EVENTFD)`
+   ——wlroots 把它当**普通 C 表达式**用——报 `HAVE_EVENTFD undeclared`。
+
+2. **清单里的 `include_dirs` 排在最前**,所以生成的头要写进清单点名的目录。
+   但 mcpp 在**运行 build 程序之前**就构造好命令行,并且**静默丢弃**尚不存在的
+   条目 —— 干净 clone 的第一次构建里,config.h 生成正确然后被无视。
+   `include/.gitkeep` 就是为这个提交的。
+
+3. 同样的道理适用于**协议头**。先是用 `#include_next` 让 shim 找到真头,CI 报
+   `use of enum 'zwlr_layer_surface_v1_keyboard_interactivity' without previous
+   declaration` —— 一个**成功了但拿到错文件**的 include(文件缺失会明说)。改成
+   绝对路径后,另一个头又以同样方式失败。最终把**所有生成的头**都放进清单首位
+   目录,这一类才根除。
+
+4. **本地绿可能链的是别的库。** `mcpp::link_lib("EGL")` 只发一个**标志**,ninja
+   拿不到到 `bin/libEGL.so` 的边;本地能过是因为 mcpp subos 里正好有一份
+   `libEGL.so.1`,`ldd` 指着它。lld 在干净树上直接说 `unable to find library
+   -lEGL`。
+
+### 19.4 `[feature-deps]` 只对 `kind = "lib"` 有效
+
+实测,而且判据很干脆:
+
+- `kind = "lib"` 的 feature 依赖(libseat、libinput、libudev、libdisplay-info)
+  **正常** —— 它们的对象并进本包,压根不需要 `-l`。
+- `kind = "shared"` 的(egl、glesv2)**不链接**,报 30 多个 `undefined symbol:
+  glActiveTexture / eglMakeCurrent`。
+
+所以 EGL/GLESv2/gbm 移到普通 `[dependencies]`:它既链接又建立 ninja 边。代价是
+`default-features = false` 也会构建它们;feature 仍然决定**渲染器源码编不编**
+和 `WLR_HAS_GLES2_RENDERER` 说什么,那才是消费者观察得到的部分。
+
+### 19.5 探测宏:两个方向都踩过
+
+§17 记的是「`#ifdef` 测的宏不能写 0」。这轮同时踩到了它和它的反面:
+
+| 文件 | 测法 | 正确写法 |
+|---|---|---|
+| glib `config.h` | `#ifdef HAVE_ISSETUGID` | **缺席**。写 `0` 让 glib 调了 glibc 没有的 BSD 接口 |
+| wlroots `wlr/config.h` | `#if WLR_HAS_DRM_BACKEND` | **总是定义**,0 或 1。漏掉会让 `#if` 静默为假 |
+| glib `gmoduleconf.h.in` | `#if (@X@)` | **值**,所以 0 是对的,省略是语法错 |
+
+**测法决定,每一次。** 名字长得像不算数。
+
+还有一对几乎同名的宏:`USE_SYSTEM_PRINTF`(config.h,**选择**)与
+`GLIB_USING_SYSTEM_PRINTF`(公共 glibconfig.h,只**报告**)。只设第二个,glib
+继续调它自带的 gnulib printf,而那部分根本没编 —— 一页
+`undefined reference to _g_gnulib_snprintf`。
+
+### 19.6 包无法导出生成的头(2026-08-31 实测)
+
+两个包的探针,结论干脆:
+
+| | 消费者看得见吗 |
+|---|---|
+| `mcpp::include_dir()`(build 程序发的) | ❌ **包私有**,消费者报 `No such file or directory` |
+| `[build] include_dirs`(清单里的) | ✅ 传播 |
+
+**产物本身就是头的包,不能在构建期生成它们。** 这解释了
+`freedesktop.wayland-protocols-*` 为什么把 195 个生成文件签进仓 —— 那不是历史
+包袱,是被迫的。§14 的规则对**自用**生成物成立,对**导出**生成物不成立。
+
+1.49.1 就是按这条补的:上游的 meson 会装 `wayland-protocols/<name>-enum.h`,
+fork 之前只生成 client/server 两种,而 wlroots 0.20 的**十个公共头**要它们。
+
+### 19.7 仍然缺的:gio,以及被它挡住的 pango
+
+这不是「还没做」,是量过的边界:
+
+- gio 的六个生成器里有两个是 **`gdbus-codegen`,8,351 行 Python**,把 D-Bus
+  接口 XML 变成 GObject skeleton。
+- **七个** gio 源码 include 它的产物,另有**两个**引用那七个。
+- 所以不能绕过它而仍然是 gio;在 `build.mcpp` 里复刻一个 8.3k 行的代码生成器
+  与消费者的需要不成比例。
+
+**pango 用 `GListModel`,它在 gio 里。** 所以文本排版那条线停在这里 —— 其余
+四个依赖(harfbuzz、fribidi、fontconfig、cairo)都已在索引中,只差这一环。
+
+`vulkan-renderer`(要 glslang)、`x11-backend` / `xwayland`(要 xcb)、
+`color-management`(要 lcms2)同理:每一个都在包里写明「为什么缺席」而不是
+默默不提。

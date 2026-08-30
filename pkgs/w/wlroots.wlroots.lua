@@ -115,21 +115,21 @@ package = {
                     GLOBAL = "https://github.com/mcpplibs/wlroots/archive/refs/tags/0.20.2.tar.gz",
                     -- ⚠️ THE CONTAINER TAG IS NOT THE PACKAGE VERSION.
                     --
-                    -- The fork's tag was re-cut twice while this descriptor was
+                    -- The fork's tag was re-cut three times while this descriptor was
                     -- still unpublished — safe precisely because nothing in the
                     -- world had extracted it yet, which is the only time re-
                     -- cutting ever is — and gitcode refuses to REPLACE an asset
                     -- of the same name in an existing release. So each corrected
                     -- tarball needed a new container: `0.20.2`, `0.20.2-1` and
-                    -- now `0.20.2-2`. Only the last is referenced; the earlier
+                    -- now `0.20.2-3`. Only the last is referenced; the earlier
                     -- two hold superseded bytes and are left alone rather than
                     -- deleted, so a stale reference fails a checksum rather than
                     -- a download.
                     --
                     -- Verified: this URL's sha256 equals the GLOBAL one's below.
-                    CN     = "https://gitcode.com/mcpp-res/wlroots/releases/download/0.20.2-2/wlroots-0.20.2.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/wlroots/releases/download/0.20.2-3/wlroots-0.20.2.tar.gz",
                 },
-                sha256 = "c8226cdc81b0ec6cbe77d8dc21b5178289a4a276cf946305f92030041daa1afd",
+                sha256 = "a9a9c2d8604486f655c919c5f94f90f75d04b09710eb3b151f2ec6ea866fd04e",
             },
         },
     },
