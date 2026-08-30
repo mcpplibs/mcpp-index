@@ -1,0 +1,136 @@
+// freedesktop.libdisplay-info — parse a real monitor's EDID.
+//
+// EDID parsing needs no device, no compositor and no permissions: it is a
+// function from 128 bytes to a struct. So unlike most of this stack, the whole
+// library is honestly testable on a CI runner.
+//
+// THE BLOB IS INLINE, not read from the package's own test data. A test member
+// resolves its dependency into the mcpp store, and reaching into that tree by
+// relative path would tie this file to a layout that is mcpp's business. 256
+// bytes of a real Acer P1276's EDID, taken from upstream's
+// `test/data/acer-p1276.edid`, is cheaper than that coupling.
+//
+// THE EXPECTED VALUES ARE UPSTREAM'S, from the `.ref` beside that blob:
+//
+//     EDID Structure Version & Revision: 1.3
+//     Manufacturer: ACR
+//     Model: 5654                       (0x1616)
+//
+// WHAT IS ACTUALLY UNDER TEST is the generated PNP table. "ACR" is the raw
+// vendor id in the blob; turning it into "Acer Technologies" is what
+// `pnp-id-table.c` does — the file this package is a fork in order to
+// pre-generate. A build that used the host's pnp.ids instead of the pinned one
+// would still parse the EDID and could still answer differently here.
+
+#ifdef __linux__
+
+// WRAPPED, and it has to be: not one of libdisplay-info's seven public headers
+// contains an `extern "C"` block — zero occurrences, measured — so a C++
+// translation unit mangles every declaration and the link fails with
+// `undefined reference to di_info_get_make(di_info const*)`, naming a symbol
+// that is right there in the library. Same as compat.libseat.
+extern "C" {
+#include <libdisplay-info/info.h>
+#include <libdisplay-info/edid.h>
+}
+
+#include <cstdio>
+#include <cstring>
+#include <cstdlib>
+
+namespace {
+
+int failures = 0;
+
+void check(bool ok, const char *what)
+{
+    std::printf("%-58s %s\n", what, ok ? "ok" : "FAILED");
+    if (!ok) {
+        ++failures;
+    }
+}
+
+// An Acer P1276, from upstream/test/data/acer-p1276.edid.
+const unsigned char ACER_P1276[] = {
+    
+0x00, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00, 0x04, 0x72, 0x16, 0x16,
+    0x3e, 0x13, 0x00, 0x00, 0x17, 0x17, 0x01, 0x03, 0x0e, 0x00, 0x00, 0x00,
+    0x2f, 0x41, 0xf0, 0x9e, 0x5c, 0x58, 0x89, 0x25, 0x16, 0x53, 0x5f, 0x3f,
+    0xcf, 0x80, 0x31, 0x7c, 0x45, 0x7c, 0x61, 0x7c, 0x81, 0x80, 0xa9, 0x40,
+    0x95, 0x00, 0x81, 0xc0, 0x81, 0x00, 0x64, 0x19, 0x00, 0x40, 0x41, 0x00,
+    0x26, 0x30, 0x18, 0x88, 0x36, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x18,
+    0x00, 0x00, 0x00, 0xfd, 0x00, 0x32, 0x78, 0x1e, 0x64, 0x11, 0x00, 0x0a,
+    0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x00, 0x00, 0x00, 0xfc, 0x00, 0x50,
+    0x31, 0x32, 0x37, 0x36, 0x0a, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20,
+    0x00, 0x00, 0x00, 0xff, 0x00, 0x4a, 0x47, 0x47, 0x31, 0x31, 0x30, 0x30,
+    0x31, 0x35, 0x39, 0x30, 0x30, 0x0a, 0x01, 0xa2, 0x02, 0x03, 0x04, 0x00,
+    0x66, 0x21, 0x56, 0xaa, 0x51, 0x00, 0x1e, 0x30, 0x46, 0x8f, 0x33, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x1e, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0xab
+};
+
+} // namespace
+
+int main()
+{
+    std::printf("   %zu bytes of EDID\n", sizeof ACER_P1276);
+
+    di_info *info = di_info_parse_edid(ACER_P1276, sizeof ACER_P1276);
+    check(info != nullptr, "di_info_parse_edid on a real monitor's EDID");
+    if (info == nullptr) {
+        std::printf("\n%d check(s) failed\n", failures);
+        return 1;
+    }
+
+    // ── The generated PNP table, which is why this package is a fork ─────
+    char *make = di_info_get_make(info);
+    std::printf("   make  = %s\n", make ? make : "(null)");
+    check(make != nullptr, "di_info_get_make returned a manufacturer");
+    check(make != nullptr && std::strstr(make, "Acer") != nullptr,
+          "…and the pinned PNP table resolved ACR to Acer");
+
+    char *model = di_info_get_model(info);
+    std::printf("   model = %s\n", model ? model : "(null)");
+    check(model != nullptr, "di_info_get_model returned a model");
+
+    // ── The parse agrees with upstream's own reference output ────────────
+    const di_edid *edid = di_info_get_edid(info);
+    check(edid != nullptr, "di_info_get_edid exposes the parsed block");
+    if (edid != nullptr) {
+        const int major = di_edid_get_version(edid);
+        const int minor = di_edid_get_revision(edid);
+        std::printf("   EDID version %d.%d\n", major, minor);
+        check(major == 1 && minor == 3, "…and it is 1.3, as upstream's .ref says");
+
+        const di_edid_vendor_product *vp = di_edid_get_vendor_product(edid);
+        check(vp != nullptr, "di_edid_get_vendor_product");
+        if (vp != nullptr) {
+            std::printf("   pnp id %.3s, product 0x%04x\n",
+                        vp->manufacturer, vp->product);
+            check(std::strncmp(vp->manufacturer, "ACR", 3) == 0,
+                  "…and the raw PNP id is ACR");
+            check(vp->product == 0x1616,
+                  "…and the product code is 5654, as the .ref says");
+        }
+    }
+
+    std::free(make);
+    std::free(model);
+    di_info_destroy(info);
+    check(true, "di_info_destroy");
+
+    std::printf("\n%d check(s) failed\n", failures);
+    return failures == 0 ? 0 : 1;
+}
+
+#else
+int main() { return 0; }
+#endif

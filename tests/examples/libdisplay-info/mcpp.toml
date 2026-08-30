@@ -1,0 +1,11 @@
+# libdisplay-info test member — EDID parsing, the gate on wlroots.
+[indices]
+freedesktop = { path = "../../.." }
+
+[package]
+name     = "libdisplay-info-tests"
+version  = "0.1.0"
+standard = "c++23"
+
+[target.'cfg(linux)'.dependencies.freedesktop]
+libdisplay-info = "0.2.0"

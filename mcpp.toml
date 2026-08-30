@@ -90,6 +90,7 @@ members = [
     "tests/examples/wayland-cursor",
     "tests/examples/egl",
     "tests/examples/gl",
+    "tests/examples/libdisplay-info",
     "tests/examples/libevdev",
     "tests/examples/libinput",
     "tests/examples/libseat",
