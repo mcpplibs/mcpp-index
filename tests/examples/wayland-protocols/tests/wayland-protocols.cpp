@@ -93,12 +93,6 @@ int main()
     return failures == 0 ? 0 : 1;
 }
 
-#else
-
-int main() { return 0; }
-
-#endif
-
 // ── 1.49.1: the enum headers upstream installs ───────────────────────────────
 //
 // `wayland-scanner enum-header` output, which this fork did not generate before
@@ -117,3 +111,9 @@ static_assert(XDG_TOPLEVEL_STATE_MAXIMIZED == 1,
               "xdg-shell-enum.h did not come from the scanner");
 static_assert(ZWP_TABLET_TOOL_V2_TYPE_PEN == 0x140,
               "tablet-v2-enum.h did not come from the scanner");
+
+#else
+
+int main() { return 0; }
+
+#endif
