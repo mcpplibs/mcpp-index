@@ -378,7 +378,48 @@ fi
 echo "  PASS: none of libinput/libevdev/libmtdev/libxkbcommon/pixman is a DT_NEEDED"
 
 say "7. run it"
-"$BIN"
+# Captured rather than streamed, because one of the assertions below is about
+# what libinput printed. Shown in full either way.
+OUT=/home/speak/closed-loop.out
+"$BIN" >"$OUT" 2>&1 || true
+cat "$OUT"
+
+say "8. the datasets the ecosystem supplies, checked by their absence of complaint"
+# Two of the discovery variables lead to DATA rather than to code, and both
+# degrade GRACEFULLY when unset — libinput runs on built-in defaults, xkbcommon
+# compiles only keymaps handed to it as strings. A run without them still says
+# PASS everywhere above, which is exactly why they need their own check.
+#
+# The observable is the complaint. libinput logs
+#
+#     failed to find data files ... will negatively affect device behavior
+#
+# when its quirks directory is empty or unset. So: if the variable is set, that
+# message must be GONE. If it is not set, this reports rather than fails —
+# a subos without the datasets is a legitimate configuration, not a defect.
+data_fail=0
+if [ -n "${LIBINPUT_QUIRKS_DIR:-}" ]; then
+    echo "  LIBINPUT_QUIRKS_DIR = $LIBINPUT_QUIRKS_DIR ($(ls "$LIBINPUT_QUIRKS_DIR"/*.quirks 2>/dev/null | wc -l) files)"
+    if grep -q 'failed to find data files' "$OUT"; then
+        echo "  FAIL: the quirks database is declared but libinput did not load it"
+        data_fail=1
+    else
+        echo "  ok: libinput loaded the quirks database (no 'failed to find data files')"
+    fi
+else
+    echo "  LIBINPUT_QUIRKS_DIR unset — install xim:libinput-quirks to exercise this"
+    grep -q 'failed to find data files' "$OUT" \
+        && echo "  (and libinput said so, as it should)"
+fi
+
+if [ -n "${XKB_CONFIG_ROOT:-}" ]; then
+    echo "  XKB_CONFIG_ROOT     = $XKB_CONFIG_ROOT ($(ls "$XKB_CONFIG_ROOT/symbols" 2>/dev/null | wc -l) layouts)"
+    grep -q 'the real us layout compiled: yes' "$OUT" \
+        || { echo "  FAIL: the dataset is declared but the us layout did not compile"; data_fail=1; }
+else
+    echo "  XKB_CONFIG_ROOT unset — install xim:xkeyboard-config to exercise this"
+fi
+[ "$data_fail" -eq 0 ] || exit 1
 
 say "RESULT"
 echo "  PASS"

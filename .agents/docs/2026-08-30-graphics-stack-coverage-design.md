@@ -619,8 +619,54 @@ RESULT: PASS
 生态 payload 共存;这是那条判断第一次被放进「宿主有同名库、可达、就在 `/usr/lib`」的
 环境里正面检验 —— 而它赢了。
 
-> 运行期那两条 `libinput error: failed to find data files` 是**预期的**,见 §10.9.2:
-> quirks 数据集还没有提供方。枚举、事件、dispatch 全部正常,丢的是逐机型调校。
+#### 10.8.2 最终一次性闭环验证(全部数据集齐备)
+
+上一节跑的时候 quirks 还没有提供方,输出里带着两条 `libinput error: failed to find
+data files`。xim#734 之后重跑,**一次跑完整条链**,`eco-2026-8-30-3`,`--sandbox --gpu`:
+
+```
+===== 6. did anything come from the host? =====
+  PASS: the host's copies were present and reachable, and none of them won
+===== 6b. and the merged-in ones brought no shared library at all =====
+  PASS: none of libinput/libevdev/libmtdev/libxkbcommon/pixman is a DT_NEEDED
+
+===== 7. run it =====
+  EGL_VERSION            1.5 libglvnd
+  /dev/dri/renderD128   nvidia-drm    GL_VERSION OpenGL ES 3.2 Mesa 25.0.7
+    glReadPixels         64 128 191 255 (wanted 64 128 191 255)
+  /dev/dri/card0        simpledrm     gbm_bo_create 256x256 stride=1024
+    glReadPixels         64 128 191 255 (wanted 64 128 191 255)
+  reached EGL on a real device: yes
+  drew and read the pixel back: yes
+
+  -- input --
+    libevdev  KEY_A -> KEY_A
+    xkbcommon keycode 24 -> "q"
+    libinput  assign_seat=0 fd=3 dispatch=0
+    libinput came up on libudev: yes
+    evdev/pc105/us  keycode 24 -> "q"
+    the real us layout compiled: yes
+  input chain answers: yes
+
+===== 8. the datasets the ecosystem supplies, checked by their absence of complaint =====
+  LIBINPUT_QUIRKS_DIR = .../share/libinput (52 files)
+  ok: libinput loaded the quirks database (no 'failed to find data files')
+  XKB_CONFIG_ROOT     = .../share/X11/xkb (151 layouts)
+
+===== RESULT =====
+  PASS
+```
+
+**第 8 步是新加的,而且它的判据是「没有抱怨」。** 两条数据变量都**优雅降级** ——
+不设也照样一路 PASS,libinput 用内置默认、xkbcommon 只编字符串 keymap。所以它们必须
+有自己的检查,而唯一可观测的信号是那条消息在不在:
+
+```
+不设 LIBINPUT_QUIRKS_DIR:  libinput error: failed to find data files    ← 在
+设了:                      (无)                                          ← 没了
+```
+
+变量未设时这一步**报告而不失败** —— 没装数据集的 subos 是合法配置,不是缺陷。
 
 ### 10.9 xkeyboard-config 属于生态,不属于 mcpp-index
 
@@ -728,8 +774,83 @@ failed to find data files ... will negatively affect device behavior
 并跑在内置默认上。这是**优雅降级**:枚举、事件、手势都正常,丢的是逐机型调校(比如
 某块触摸板的压力区间)。`tests/examples/libinput` 就是在这条消息存在的情况下全绿的。
 
-补法与 xkeyboard-config 完全对称(xim 数据包 + 一行 DISCOVERY),优先级低于布局数据:
-布局缺了是**硬失败**,quirks 缺了只是不够贴合。
+补法与 xkeyboard-config 对称(xim 数据包 + 一行 DISCOVERY)。**已做**,见 §10.9.3。
+
+#### 10.9.3 已落地(openxlings/xim-pkgindex#734)
+
+**没建新仓,也没发新 release** —— 这是它与 xkeyboard-config 的关键差别,而差别的
+判据是**数据是不是构建出来的**:
+
+| | 数据来源 | 结论 |
+|---|---|---|
+| xkeyboard-config | 上游 meson 跑规则编译器,`rules/evdev` 由 ~40 片段拼出 | 必须预生成 + 重新发布 |
+| libinput quirks | 签在 libinput 树里,`install_subdir` 原样安装 | **直接用上游 tarball** |
+
+所以 `libinput-quirks` 下的是 libinput **自己的** tarball —— 与 `compat.libinput`
+**同一个 URL、同一个 sha256** —— 只保留 `quirks/`。为 240KB 数据下 1.1MB,换来没有第二
+份归档要发布、没有镜像要同步,而且数据集**可证明**就是 libinput 1.31.3。
+
+版本跟库走不是装饰:quirks 文件里写 libinput 的特性名(`AttrPressureRange`、
+`ModelBouncingKeys`),数据集比库新就可能带库不认识的键。
+
+`LIBINPUT_QUIRKS_DIR` 是 DISCOVERY 表里第二个 `op = "set"` 的标量(`quirks.c:1217`
+只 scandir 一个目录),排序用 `versionsort` —— 所以 `10-` / `30-` / `50-` 文件名前缀
+决定优先级,与 glvnd vendor JSON 同一套约定,也正是 `compat.libinput` 里
+`HAVE_VERSIONSORT` 不可省的原因。
+
+**实现中撞到的:`install()` 里的 `os` 表是受限子集。** 写日志逐个 `type()` 探出来:
+
+| nil | 可用 |
+|---|---|
+| `os.files` `os.filedirs` `os.exists` `os.curdir` `os.iorunv` | `os.dirs` `os.isdir` `os.isfile` `os.mv` `os.cp` `os.mkdir` `os.tryrm` `os.cd` |
+
+坑不在「调了会报错」,而在惯用的 `#(os.files(...) or {}) == 0` —— 它把**「这个函数
+不存在」变成「目录是空的」**。第一版就是这么把一次**已经成功**的移动报成失败的:探针
+打出来 `isdir(dst) = true`,数据早就在位,挂的只是计数那一行。
+
+改法:**先做再验结果,不预探测**;计数换成 `os.isdir` + 一个规范文件名
+(`10-generic-keyboard.quirks`)。耦合一个文件名比 glob 差,但比受限表下**根本没有
+检查**好 —— 空目录是唯一会**静默**失败的情况:scandir 到零个匹配,libinput 用内置
+默认继续跑,连那条报错都不打。
+
+前后对照(`tests/examples/libinput`):
+
+```
+不设变量:  libinput error: failed to find data files       ← 在
+设了变量:  (无)                                             ← 没了
+           52 个 .quirks 已加载,6 项断言全过
+```
+
+#### 10.9.4 `USB_IDS_PATH` 是**不该补**的那一格
+
+`compat.libudev` 也把 `USB_IDS_PATH` 编译成空,本文档早前把它与 quirks 并列成
+「机制在、提供方缺」。**核实后两句都是错的**:
+
+1. **机制不在。** libudev-zero 全树**零个 `getenv`**,`udev.c:95` 是
+   `fopen(USB_IDS_PATH, "r")` —— 编译期常量,没有环境出口。加数据包不会让它生效。
+2. **补了也没用。** 它只喂 `udev_hwdb_get_properties_list_entry()` 的两个属性
+   (`ID_MODEL_FROM_DATABASE` / `ID_VENDOR_FROM_DATABASE`),而 **libinput 一次都没
+   读过**(`src/*.c` 里 grep `FROM_DATABASE` 为空)。设备名走的是
+   `libinput_device_get_name → evdev_device_get_name →` 内核 `EVIOCGNAME`。
+
+而且这压根不是 libudev 的标准做法:systemd 的 udev **运行期不读 `usb.ids`**,它读
+编译好的 `hwdb.bin`(由 `hwdb.d/*.hwdb` 文本编译,而那些文本在构建期从 usb.ids 生成)。
+宿主上 `/usr/share/hwdata/usb.ids` 是给 `lsusb` 之类用的。libudev-zero 直接 parse
+文本是它自己对 hwdb 的简化实现。
+
+**结论:这一格留空对本栈影响为零,不列为缺口。**
+
+#### 10.9.5 发行版为什么不需要这些变量
+
+值得单独写一句,因为它解释了整类问题:**发行版拥有 `/usr`**。
+
+```
+libinput-bin: /usr/share/libinput/*.quirks     ← 库和数据同一个包,--prefix=/usr 写死
+/usr/lib/udev/hwdb.d/20-usb-vendor-model.hwdb  ← systemd udev 编译成 hwdb.bin
+```
+
+路径永远不会错,所以不需要任何环境变量。需要环境变量的恰恰是**可重定位**的那一类 ——
+Nix、Flatpak、Snap、Conda,和我们。这不是本生态特殊,是同一类系统的共同解法。
 
 ### 10.10 仍未做
 
@@ -764,11 +885,12 @@ failed to find data files ... will negatively affect device behavior
 - ~~G6 `libudev` / `libseat`~~ **已做**,而且没有碰 systemd:libudev 用
   **libudev-zero**(三个实现里唯一既活着又可独立分发的),libseat 只开 seatd 与
   builtin 后端。两者的代价都在描述符里点名了。
-- ~~**xkeyboard-config**~~ **已做**(xim-pkgindex#732),见 §10.9.1。跨索引闭环已实测。
-- **libinput quirks 数据**:见 §10.9.2。形状与 xkeyboard-config 对称,优先级更低 ——
-  布局缺了是硬失败,quirks 缺了只是不够贴合。**未做**。
+- ~~**xkeyboard-config**~~ **已做**(xim-pkgindex#732),见 §10.9.1。
+- ~~**libinput quirks 数据**~~ **已做**(xim-pkgindex#734),见 §10.9.3。
+- ~~**`USB_IDS_PATH`**~~ **不补**,理由见 §10.9.4:机制不在(零 `getenv`),而且补了
+  也没用(libinput 从不读那两个属性)。
 
-至此渲染链与输入链都不再有「静默落到宿主」的边:
+至此渲染链与输入链都不再有「静默落到宿主」的边,而且**没有一格是留着的**:
 
 | 子系统 | 发现变量 | 提供方 | 状态 |
 |--------|---------|--------|------|
@@ -777,11 +899,12 @@ failed to find data files ... will negatively affect device behavior
 | Vulkan ICD | `XDG_DATA_DIRS` / 共享 vendor 目录 | 同上 | ✅ xim#731 |
 | GBM 后端 | `GBM_BACKENDS_PATH` | `xim:mesa` | ✅ |
 | 键盘布局 | `XKB_CONFIG_ROOT` | `xim:xkeyboard-config` | ✅ xim#732 |
-| 输入 quirks | `LIBINPUT_QUIRKS_DIR` | *(无)* | ⬜ 优雅降级中 |
-| USB 名字库 | `USB_IDS_PATH` | *(无)* | ⬜ 优雅降级中 |
+| 输入 quirks | `LIBINPUT_QUIRKS_DIR` | `xim:libinput-quirks` | ✅ xim#734 |
+| USB 名字库 | `USB_IDS_PATH` | — | ➖ 无影响,见 §10.9.4 |
 
-最后两行是同一类:机制在、提供方缺、缺了只丢锦上添花的东西。**它们缺失时会说出来**
-—— 这正是当初把编译期默认值一律留空要换的东西。
+**留空编译期默认值换来的东西,到这里可以结账了**:六个子系统里没有一个会悄悄读宿主
+的数据;缺失的那些在补上之前**都会自己说出来**(GBM 的 `MESA-LOADER: failed to open`、
+libinput 的 `failed to find data files`),而这些消息正是本轮把它们一个个补上的线索。
 
 #### 10.10.1 加一行进这张表,同时是一次对**现有提供方**的改动
 
