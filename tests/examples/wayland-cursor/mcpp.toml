@@ -1,0 +1,19 @@
+# wayland-cursor test member — the client-side pointer.
+#
+# Own `[indices]` for the reason the sibling wayland members document: the
+# workspace root maps `compat` to this checkout and lookup is BY NAMESPACE.
+[indices]
+freedesktop = { path = "../../.." }
+
+# ONE package named, and libwayland-client arrives with it — `wayland-cursor`
+# declares it as a PATH dependency (they are workspace members of one fork), and
+# naming it here as a version dependency too is rejected outright. Same shape as
+# tests/examples/wayland-egl; the note there explains why the diagnostic is
+# right.
+[package]
+name     = "wayland-cursor-tests"
+version  = "0.1.0"
+standard = "c++23"
+
+[target.'cfg(linux)'.dependencies.freedesktop]
+wayland-cursor = "1.26.0"

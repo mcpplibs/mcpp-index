@@ -87,6 +87,7 @@ members = [
     "tests/examples/expat",
     "tests/examples/wayland",
     "tests/examples/wayland-egl",
+    "tests/examples/wayland-cursor",
     "tests/examples/egl",
     "tests/examples/gl",
     "tests/examples/libevdev",
