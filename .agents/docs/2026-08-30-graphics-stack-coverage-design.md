@@ -560,6 +560,17 @@ pixman-x86.o        SSSE3 指令   0
 RESULT: PASS
 ```
 
+脚本后来又扩了一次,把输入链也纳入(只纳入 `freedesktop.*` 的两个 —— 这个项目声明
+单一索引键,`compat.libinput` / `libudev` / `mtdev` / `libseat` 从**已发布**索引解析,
+所以它们要等发布后才能进这个脚本):
+
+```
+  -- input --
+    libevdev  KEY_A -> KEY_A
+    xkbcommon keycode 24 -> "q"
+  input chain answers: yes
+```
+
 **这是本轮之前做不到的那一步。** §19.4 那次止于 `eglInitialize` —— 能初始化不等于能画。
 现在闭环从「打开 DRM 节点」一路走到「读回自己画的像素」,而且是在宿主图形库在场且可达
 的沙箱里。

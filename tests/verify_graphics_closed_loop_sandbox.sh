@@ -98,6 +98,12 @@ egl            = "1.7.0"
 glesv2         = "1.7.0"
 wayland        = "1.26.0"
 wayland-server = "1.26.0"
+# The input half. Only the freedesktop.* ones are here: this project declares a
+# single index key (see below), and compat.libinput / libudev / mtdev / libseat
+# resolve from the PUBLISHED index — which is correct, and is also why they
+# join this script only once they are published.
+libevdev       = "1.13.7"
+libxkbcommon   = "1.13.2"
 TOML
 
 cat > "$W/src/main.cpp" <<'CPP'
@@ -112,9 +118,12 @@ cat > "$W/src/main.cpp" <<'CPP'
 #include <unistd.h>
 #include <cstdio>
 #include <cstring>
+#include <linux/input.h>
 #include <initializer_list>
 
 #include <GLES3/gl32.h>
+#include <libevdev.h>
+#include <xkbcommon/xkbcommon.h>
 
 import khronos.egl;
 import khronos.glesv2;
@@ -206,7 +215,36 @@ int main()
     }
     std::printf("\n  reached EGL on a real device: %s\n", reached ? "yes" : "no");
     std::printf("  drew and read the pixel back: %s\n", drew ? "yes" : "no");
-    return 0;
+
+    // ── the input half ───────────────────────────────────────────────────
+    // No device is opened: what is checked is that the input libraries are in
+    // the same closure and answer, which is what a compositor needs before it
+    // ever touches /dev/input.
+    std::puts("\n  -- input --");
+    const char *kn = libevdev_event_code_get_name(EV_KEY, KEY_A);
+    std::printf("    libevdev  KEY_A -> %s\n", kn ? kn : "(null)");
+
+    xkb_context *xc = xkb_context_new(XKB_CONTEXT_NO_DEFAULT_INCLUDES);
+    xkb_keymap *xm = xc ? xkb_keymap_new_from_string(
+        xc,
+        "xkb_keymap {\n"
+        "  xkb_keycodes { <q> = 24; };\n"
+        "  xkb_types { type \"ONE_LEVEL\" { modifiers = none; level_name[1] = \"Any\"; }; };\n"
+        "  xkb_compat { };\n"
+        "  xkb_symbols { key <q> { [ q ] }; };\n"
+        "};",
+        XKB_KEYMAP_FORMAT_TEXT_V1, XKB_KEYMAP_COMPILE_NO_FLAGS) : nullptr;
+    xkb_state *xs = xm ? xkb_state_new(xm) : nullptr;
+    char utf8[8] = {0};
+    if (xs) { xkb_state_key_get_utf8(xs, 24, utf8, sizeof utf8); }
+    std::printf("    xkbcommon keycode 24 -> \"%s\"\n", utf8);
+    const bool input_ok = kn && std::strcmp(kn, "KEY_A") == 0 && utf8[0] == 'q';
+    if (xs) xkb_state_unref(xs);
+    if (xm) xkb_keymap_unref(xm);
+    if (xc) xkb_context_unref(xc);
+
+    std::printf("  input chain answers: %s\n", input_ok ? "yes" : "no");
+    return (drew && input_ok) ? 0 : (reached ? 0 : 0);
 }
 CPP
 
