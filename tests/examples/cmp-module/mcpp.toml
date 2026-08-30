@@ -1,0 +1,11 @@
+# A member-level redirect replaces the workspace root's compat redirect, so
+# this test resolves mcpplibs.cmp from the current checkout.
+[indices]
+default = { path = "../../.." }
+
+[package]
+name    = "cmp-module-tests"
+version = "0.1.0"
+
+[dependencies]
+cmp = "0.1.0"

@@ -27,6 +27,7 @@ members = [
     "tests/examples/capi-lua",
     "tests/examples/cjson",
     "tests/examples/cmdline",
+    "tests/examples/cmp-module",
     "tests/examples/cli11",
     "tests/examples/concurrentqueue",
     "tests/examples/concurrentqueue-c-api",
