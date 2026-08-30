@@ -1,0 +1,13 @@
+# cairo test member — draws, reads the pixels back, and checks the feature split.
+[indices]
+freedesktop = { path = "../../.." }
+
+[package]
+name     = "cairo-tests"
+version  = "0.1.0"
+standard = "c++23"
+
+# No `features` named, so the package's own default set applies — which is the
+# thing under test: ft/fc/png on, xlib/xcb off.
+[target.'cfg(linux)'.dependencies.freedesktop]
+cairo = "1.18.2"

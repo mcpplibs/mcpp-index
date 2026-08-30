@@ -20,6 +20,7 @@ members = [
     "tests/examples/brotli",
     "tests/examples/build-mcpp",
     "tests/examples/c-ares",
+    "tests/examples/cairo",
     "tests/examples/catch2",
     "tests/examples/catch2-main",
     "tests/examples/catch2-v2",
