@@ -12,12 +12,40 @@ A–D 是四种**基础**形态,先按它们判定;E–G 是在基础形态之�
 | **A. C 源码 compat** | 纯 C 或少量源码,用户 `#include <foo.h>` | `pkgs/c/compat.cjson.lua`、`compat.zlib.lua`、`compat.gtest.lua` | `sources` 与 `c_standard` |
 | **B. header-only** | 纯头文件,无需编译 | `pkgs/c/compat.eigen.lua`、`compat.opengl.lua`、`compat.khrplatform.lua` | `include_dirs` 与 anchor 源 |
 | **C. C++23 module** | 暴露 `import x.y;` | `pkgs/n/nlohmann.json.lua` | `modules` 与 `generated_files` 或源 `.cppm` |
-| **D. 外部 Form-A 模块仓** | 上游自带 mcpp 描述符,独立仓库 | `pkgs/i/imgui.lua`、`pkgs/m/mcpplibs.*` | `mcpp = "<repo 路径>"`(Form A) |
+| **D. 外部 Form-A 模块仓** | 上游自带 mcpp 描述符的独立仓库,或者构建需要内联描述符表达不了的东西(`build.mcpp`、workspace、必须先编译出来才能跑的代码生成器) | `pkgs/i/imgui.lua`、`pkgs/m/mcpplibs.*`、`pkgs/g/grpc.lua` + `grpcgen.lua` + `grpc-plugin.lua`(一个 fork 出三个条目) | `mcpp = "<repo 路径>"`(Form A) |
 | **E. 生成 config 的全源码直编** | 上游用 configure/CMake 生成配置头,此处以 `generated_files` 落一份快照 | `pkgs/c/compat.libpng.lua`、`compat.curl.lua`、`compat.sdl2.lua`、`compat.ffmpeg.lua` | `generated_files` + `include_dirs` |
-| **F. 共享库 compat** | 必须是**唯一**的那个 `.so`(会被第三方 `dlopen`) | `pkgs/c/compat.x11.lua` 等 X11 家族、`compat.vulkan.lua`(linux) | `targets = { kind = "shared", soname = … }` |
+| **F. 共享库 compat** | 必须是进程里**唯一**的那个 `.so` —— 或因为会被第三方 `dlopen`,或因为生态 payload 链的是同一个 soname | `pkgs/c/compat.x11.lua` 等 X11 家族、`compat.vulkan.lua`、`compat.libdrm.lua`、`compat.libffi.lua`、`compat.expat.lua` | `targets = { kind = "shared", soname = … }` |
 | **G. 宿主运行时适配** | 驱动之类无法 vendor 的东西,只做符号链接农场 + 元数据 | `pkgs/c/compat.glx-runtime.lua`、`compat.vulkan-runtime.lua` | `runtime.library_dirs` / `capabilities` |
 | **H. 宿主工具提供方** | 上游 tarball 里除了库,还带着消费者在构建期要跑的**代码生成器** | `pkgs/c/compat.protobuf.lua`(`protoc`) | `targets` 里一条 `kind = "bin"` + `main`,配 `required_features` |
-| **I. 生态栈绑定** | 这个库是某个**生态已经拥有**的项目的内部 build target,vendor 它就等于 fork 那个项目 | `pkgs/c/compat.libgbm.lua`(Mesa 的 GBM,经 `xim:mesa`) | `xpm.<plat>.deps.runtime = { "xim:<pkg>" }` + 从 `system.subos_sysrootdir()` 建农场,`runtime.library_dirs` **和** `link_library_dirs` 都要 |
+| **I. 生态栈绑定** | 这个库是某个**生态已经拥有**的项目的内部 build target,且上游不单独发布,vendor 它就等于 fork 那个项目。**不适用**于只是「和 payload 共存」的库 —— 见下 | `pkgs/c/compat.libgbm.lua`(Mesa 的 GBM,经 `xim:mesa`) | `xpm.<plat>.deps.runtime = { "xim:<pkg>" }` + 从 `system.subos_sysrootdir()` 建农场,`runtime.library_dirs` **和** `link_library_dirs` 都要 |
+
+### 源码构建还是绑定:判据只有「可否独立分发」
+
+本索引的默认是源码构建。唯一要问的是上游有没有把它作为**可独立分发的单元**
+发布 —— 有自己的 release,不 fork 宿主项目就能建出来。
+
+`compat.libgbm` 不满足,所以是形态 I:GBM 是 Mesa 内部的 build target
+(`src/gbm/meson.build` 写着 `link_with: [libloader]`,而 `libloader` 又要
+`idep_mesautil` —— 为一个函数拖进 Mesa 整个内部 util 库约 120 个 TU),而且它
+是个 loader,后端就是 Mesa 自己的。`compat.libdrm` **满足**,所以是形态 F,
+哪怕生态的 Mesa payload 里也有一份 `libdrm.so.2`。
+
+**「payload 里已经有一份」不构成绑定的理由。** 这里一度这么认为,是错的,已实测
+推翻(mcpp 2026.8.29.1):
+
+- 单独看 Mesa 的 `libgbm.so.1`,它通过自己的**绝对 RUNPATH** 把 `libdrm.so.2`
+  解析到 `xim-x-libdrm/<ver>/lib`。
+- 但在真实消费者进程里(消费者链了 `compat.libdrm`),同一个 `libgbm.so.1`
+  绑到的是**消费者那份**,进程里只映射了一份 `libdrm.so.2`;Mesa 的 GBM 就用它
+  分配出了 buffer。
+
+原因是:DT_NEEDED 的 soname 一旦已在 link map 中就会被**复用**,ld.so 不再搜索,
+自然也不会去看 payload 的 RUNPATH。消费者直接链接的库先被映射,其余的跟着它走。
+
+这只在 `kind = "shared"` **且 soname 正确**时成立。若用本索引默认的
+`kind = "lib"`(对象并进消费者),就没有 `.so` 可复用:payload 那份照常为 Mesa
+加载,消费者另有一份合并进来的,于是库的 file-static 状态在同一批句柄上分成两套。
+这正是 soname 要避免的失败,也是这些包为什么要设它。
 
 完整的样例索引见[描述符示例总览(按形态)](descriptor-examples.md)。
 

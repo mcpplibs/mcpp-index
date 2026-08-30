@@ -14,12 +14,44 @@ combined as needed.
 | **A. C-source compat** | plain C or a handful of sources; the user writes `#include <foo.h>` | `pkgs/c/compat.cjson.lua`, `compat.zlib.lua`, `compat.gtest.lua` | `sources` and `c_standard` |
 | **B. header-only** | headers only, nothing to compile | `pkgs/c/compat.eigen.lua`, `compat.opengl.lua`, `compat.khrplatform.lua` | `include_dirs` and an anchor source |
 | **C. C++23 module** | exposes `import x.y;` | `pkgs/n/nlohmann.json.lua` | `modules` plus `generated_files` or a source `.cppm` |
-| **D. External Form-A module repo** | upstream ships its own mcpp descriptor in a separate repository | `pkgs/i/imgui.lua`, `pkgs/m/mcpplibs.*` | `mcpp = "<repo path>"` (Form A) |
+| **D. External Form-A module repo** | upstream ships its own mcpp descriptor in a separate repository — or the build needs something an inline descriptor cannot express (`build.mcpp`, a workspace, a code generator that must be compiled first) | `pkgs/i/imgui.lua`, `pkgs/m/mcpplibs.*`, `pkgs/g/grpc.lua` + `grpcgen.lua` + `grpc-plugin.lua` (three entries out of one fork) | `mcpp = "<repo path>"` (Form A) |
 | **E. Whole-source direct build with a generated config** | upstream generates its config header through configure/CMake; here a snapshot of it lands in `generated_files` | `pkgs/c/compat.libpng.lua`, `compat.curl.lua`, `compat.sdl2.lua`, `compat.ffmpeg.lua` | `generated_files` + `include_dirs` |
-| **F. Shared-library compat** | has to be the **only** copy of that `.so` in the process (third parties `dlopen` it) | the X11 family such as `pkgs/c/compat.x11.lua`, and `compat.vulkan.lua` (linux) | `targets = { kind = "shared", soname = … }` |
+| **F. Shared-library compat** | has to be the **only** copy of that `.so` in the process — either because third parties `dlopen` it, or because the ecosystem payload links the same soname | the X11 family such as `pkgs/c/compat.x11.lua`, `compat.vulkan.lua`, `compat.libdrm.lua`, `compat.libffi.lua`, `compat.expat.lua` | `targets = { kind = "shared", soname = … }` |
 | **G. Host runtime adaptation** | things that cannot be vendored, such as drivers — only a symlink farm plus metadata | `pkgs/c/compat.glx-runtime.lua`, `compat.vulkan-runtime.lua` | `runtime.library_dirs` / `capabilities` |
 | **H. Host tool provider** | the upstream tarball also holds a **code generator** consumers run at build time | `pkgs/c/compat.protobuf.lua` (`protoc`) | a `targets` entry with `kind = "bin"` + `main`, plus `required_features` |
-| **I. Ecosystem-stack binding** | the library is an internal build target of a project the **ecosystem already owns**, so vendoring it would fork that project | `pkgs/c/compat.libgbm.lua` (Mesa's GBM, via `xim:mesa`) | `xpm.<plat>.deps.runtime = { "xim:<pkg>" }` + a farm from `system.subos_sysrootdir()`, with `runtime.library_dirs` **and** `link_library_dirs` |
+| **I. Ecosystem-stack binding** | the library is an internal build target of a project the **ecosystem already owns** and upstream ships no separable unit, so vendoring it would fork that project. NOT for libraries that merely coexist with a payload — see below | `pkgs/c/compat.libgbm.lua` (Mesa's GBM, via `xim:mesa`) | `xpm.<plat>.deps.runtime = { "xim:<pkg>" }` + a farm from `system.subos_sysrootdir()`, with `runtime.library_dirs` **and** `link_library_dirs` |
+
+### Source build or binding: the criterion is separability, and only that
+
+The index's default is to build from source. The only question is whether
+upstream ships the thing as a **separable unit** — its own releases, buildable
+without forking the project it lives in.
+
+`compat.libgbm` fails that test and is shape I: GBM is a target inside Mesa
+(`src/gbm/meson.build` is `link_with: [libloader]`, and `libloader` pulls
+`idep_mesautil` — ~120 TUs of Mesa's internal util library for one function),
+and it is a loader whose backends are Mesa's own. `compat.libdrm` PASSES it and
+is shape F, even though the ecosystem's Mesa payload also carries a
+`libdrm.so.2`.
+
+**"The payload already has one" is not a reason to bind.** That was believed
+here and is wrong, measured on mcpp 2026.8.29.1:
+
+- Examined alone, Mesa's `libgbm.so.1` resolves `libdrm.so.2` through its own
+  ABSOLUTE RUNPATH into `xim-x-libdrm/<ver>/lib`.
+- In a real consumer process that links `compat.libdrm`, the same `libgbm.so.1`
+  binds to the CONSUMER's copy instead, and exactly one `libdrm.so.2` is
+  mapped. Mesa's GBM then allocated a buffer through it.
+
+A DT_NEEDED soname already present in the link map is REUSED — ld.so never
+searches again, so it never consults the payload's RUNPATH. The consumer links
+the library directly, so it is mapped first and everything else follows it.
+
+This only holds for `kind = "shared"` with the canonical soname. Built as this
+index's default `kind = "lib"` (objects merged into the consumer) there is no
+`.so` to reuse: the payload's copy loads for Mesa and the consumer keeps its
+own merged one, so the library's file-static state exists twice over one set of
+handles. That is the failure the soname prevents, and why these packages set it.
 
 For the complete sample index, see [Descriptor examples by shape](descriptor-examples.md).
 
