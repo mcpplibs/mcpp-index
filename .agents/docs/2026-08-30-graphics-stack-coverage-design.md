@@ -1,6 +1,6 @@
 # mcpp 图形栈:从「能跑通」到「能开发」的覆盖面设计
 
-Date: 2026-08-30 · 前置:[`2026-08-30-gbm-cross-repo-closed-loop-plan.md`](2026-08-30-gbm-cross-repo-closed-loop-plan.md) §19/§20 · **状态:已实现并闭环验证(v1.0,见 §11 交付总账)**
+Date: 2026-08-30 · 前置:[`2026-08-30-gbm-cross-repo-closed-loop-plan.md`](2026-08-30-gbm-cross-repo-closed-loop-plan.md) §19/§20 · **状态:已实现并闭环验证(v1.1,见 §11 交付总账 / §12 客户端侧)**
 
 ## 0. 这份文档解决什么
 
@@ -1010,3 +1010,67 @@ CI 从来没有机会看那个文件。
 发现变量表六格全部有提供方,第七格经核实不该补(§10.9.4)。闭环验证一次跑完
 (§10.8.2),用户侧产物已核验为 `xim-index-ea36f6b.tar.gz`(含全部修复),两份数据
 归档的 GLOBAL/CN 镜像均已发布且逐字节一致(sha256 比对,非可达性)。
+
+---
+
+## 12. 「完备」是对谁而言 —— 客户端那半的缺口
+
+本设计通篇是从**合成器**视角写的,而这带来一个直到最后才浮出来的偏差:整条栈从
+服务端看是完整的,从**客户端**看是不能用的。
+
+### 12.1 `libwayland-egl` —— 断掉的第二步(mcpp-index#304,已合)
+
+一个 Wayland 客户端要用 EGL 画东西,需要三样:libwayland-client 给的 `wl_surface`、
+libEGL 给的 `EGLDisplay`,以及把两者接起来的东西。那个东西是
+`wl_egl_window_create` —— Wayland 上拿到 `EGLNativeWindowType` 的**唯一**办法。
+
+```
+wl_surface  ->  wl_egl_window  ->  eglCreateWindowSurface  ->  draw
+                ^^^^^^^^^^^^^ 之前不存在
+```
+
+漏掉的原因很具体:fork 建了 client / server / util / scanner 四个成员就停了 ——
+**合成器渲染进 GBM 缓冲,永远不会问这个**。上游把源码放在同一个 tarball 里
+(`upstream/egl/`,118 行),所以这是一个从没写过的成员,不是一个权衡过的决定。
+
+**判据修正**:「这个包的功能齐了吗」不够,得问「**齐了给谁用**」。同一条栈,
+服务端消费者和客户端消费者要的东西不重叠,而本轮之前只有前者有测试成员。
+
+### 12.2 换 tarball 而不重切 tag
+
+加第五个成员改变了归档内容,而**一份归档支撑五个索引条目**。原来 GLOBAL 指向
+**tag archive**(`archive/refs/tags/v1.26.0.tar.gz`),重切 tag 会当场打断已发布的
+四个描述符的 sha256 —— 就是 §19.6 那条教训。
+
+**解法是根本不重切**:把新内容作为 **release 资产**发布
+(`wayland-1.26.0-mcpp2.tar.gz`),旧 tag 归档原样保留。这样没有任何时间窗口里
+main 是坏的,而重切方案无论顺序怎么排都有。
+
+顺带两个收益:GLOBAL 与 CN 形态对称(都是 release 资产);重打包时解引用了
+`upstream/git-blame-ignore-revs` 符号链接,消掉「符号链接归档咬 Windows」那条隐患。
+
+> **这一条比 §19.6 更该被记住**:重切 tag 的正确顺序是个精细活,而**不重切**把
+> 问题整个消掉。tag 指向历史,资产承载分发,两者不必是同一个东西。
+
+### 12.3 一处我断言错了、被测试抓住的地方
+
+`tests/examples/wayland-egl` 第一版断言 `wl_egl_window_get_attached_size` 在
+`create` 之后返回创建尺寸。实测是 `0 x 0`。读源码才知道 `attached_width/height`
+是 **EGL 实现附加缓冲时才写**的字段,`create` 用 `calloc` 归零、`resize` 也不碰。
+
+现在断言的是真契约:**没有东西渲染进去的窗口报告「什么都没附加」**。这也是为什么
+测试包含 `wayland-egl-backend.h` —— 那是这个库与 EGL 实现之间的契约(Mesa 就包含
+它),否则透过公共头只能观测到「create 返回非空」。
+
+### 12.4 客户端侧仍缺的
+
+| 缺口 | 后果 | 规模 |
+|---|---|---|
+| `fontconfig` / `cairo` | `freetype` ✓ `harfbuzz` ✓ 能渲染字形,但**不能按名字找到字体**,也没有 2D 矢量绘制 | 中 |
+| `libdisplay-info` | EDID 解析,较新的 wlroots 需要 | 小 |
+| **wlroots** | 原材料齐了但没有这一层,等于要自己写它 | 大 |
+| XWayland | 跑不了 X 应用 | 大(拖 xorg-server) |
+
+前两个是普通工作量。**wlroots 是需要决策的**:它是几乎每个现代合成器的基座
+(sway / hyprland / river / wayfire),没有它,「用 mcpp 写合成器」的意思是从
+DRM/GBM/EGL 直接起手写一万行。
