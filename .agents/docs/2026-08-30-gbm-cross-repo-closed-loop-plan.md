@@ -1441,11 +1441,16 @@ issue #527 问的是「在系统级开发(Wayland 合成器、Mesa/Vulkan 扩展
 | **`libGLESv2`** | ❌ **没有**(最要命的一个) | ✅ `freedesktop.glesv2`,连同 glesv1 / opengl |
 | `wayland-protocols`(xdg-shell 等 XML) | ❌ 没有 | ✅ 三个 tier 包 stable / staging / unstable |
 | `pixman` | ❌ 没有 | ✅ `compat.pixman` |
-| `libxkbcommon` | ❌ 没有 | ❌ **仍缺**(键盘;还需 xkeyboard-config 数据包) |
-| `libinput` | ❌ 没有 | ❌ **仍缺**(输入;拖 libevdev / mtdev / libudev) |
-| `libudev` / `libseat` | ❌ 没有 | ❌ **仍缺**,需单独决策 |
+| `libxkbcommon` | ❌ 没有 | ✅ `freedesktop.libxkbcommon`(fork,bison parser 预生成) |
+| `libinput` | ❌ 没有 | ✅ `compat.libinput`,连同 `libevdev` / `mtdev` |
+| `libudev` / `libseat` | ❌ 没有 | ✅ `compat.libudev`(libudev-zero)、`compat.libseat`,**都没碰 systemd** |
+| xkeyboard-config 数据 | ❌ 没有 | ⚠ **属于生态而非本索引** —— 见覆盖面设计 §10.9 |
 
-**所以现在缺的是输入链,不再是渲染链。**
+**当天之内渲染链和输入链都补齐了。** 唯一剩下的是 xkeyboard-config 的**数据集**,而它
+的正确归属是 xim-pkgindex:那是运行期数据发现,与 `GBM_BACKENDS_PATH` /
+`__EGL_VENDOR_LIBRARY_DIRS` 同类,一律由环境声明。实测生态里的 `xim:libxkbcommon`
+payload 只有库、不带 xkb 数据,所以 `XKB_CONFIG_ROOT` 无处可指 —— 与 Vulkan 静默落到
+llvmpipe 完全同构的一个缺口。
 
 **`libGLESv2` 为什么最要命**:合成器是通过 EGL 拿 context、然后用 **GLES2** 画的。
 这一轮建出了 `libEGL.so.1`,但 libglvnd 的 GL/GLES 系列(`libGL`、`libGLX`、`libOpenGL`、

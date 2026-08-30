@@ -31,7 +31,10 @@ Date: 2026-08-30 · 前置:[`2026-08-30-gbm-cross-repo-closed-loop-plan.md`](202
 能就是 A,不能就是 B。B 的成本主要在维护一个 fork,所以**不要因为「顺便加个模块层」而
 把 A 推成 B** —— 模块层是 B 的**结果**,不是选 B 的理由。
 
-按这条,本设计里 G1/G3 是 B(都进已有的 fork,新增仓 0),G4 全是 A。
+按这条,本设计里 G1/G3 是 B,G4 全是 A。
+⚠ 设计时以为「都进已有的 fork,新增仓 0」——**实现推翻了这一半**:wayland-protocols、
+libevdev、libxkbcommon 各是独立上游、独立版本,一个仓一个上游一个版本,所以新增了三个
+fork。见 §10.2。
 
 ---
 
@@ -408,16 +411,27 @@ G6   libudev 路线决策 → libseat                ← 最后,单独评估
 | G3 | **mcpplibs/wayland-protocols**(新建)三个 tier | `1.49`,CI 待绿 |
 | G4a | `compat.pixman` 0.46.4 | 已实测 |
 | 索引 | `freedesktop.{glesv2,glesv1,opengl}`、三个 `wayland-protocols-*`、`compat.pixman` | PR #294 |
-| 镜像 | libglvnd / wayland-protocols / pixman 三份 CN,均已核对 sha256 | 完成 |
+| G4b | **mcpplibs/libxkbcommon**(新建)bison parser 预生成 | `1.13.2`,CI 全绿 |
+| G5 | `compat.mtdev`、`compat.libudev`(libudev-zero)、**mcpplibs/libevdev**(新建)、`compat.libinput` | 全部实测 |
+| G6 | `compat.libseat`,只开 seatd + builtin,**没碰 systemd** | 实测 |
+| 镜像 | libglvnd / wayland-protocols / pixman / mtdev / libudev-zero / seatd / libevdev / libxkbcommon / libinput 九份 CN,均已核对 sha256 | 完成 |
 
-### 10.2 被推翻的:G3 的「新增仓 0」
+### 10.2 被推翻的:「新增仓 0」——实际新增了三个
 
 设计 §6 写着「新增仓数量 = 0 —— G1 复用 libglvnd,G3 做 wayland fork 的第五个成员」。
-**G3 那半是错的。**
+**G3 那半是错的,而且做到输入链之后错得更多。**
 
 `mcpplibs/wayland` 的 `upstream/` 是 wayland **1.26.0** 且 CI 逐字节 diff;
 wayland-protocols 是**另一个上游项目、另一个版本(1.49)**。一个仓一个上游一个版本,
-所以它必须是独立 fork。**新增仓数量 = 1。**
+所以它必须是独立 fork。
+
+同一条规则在输入链上又触发了两次:`libevdev` 的 `event-names.h` 和 `libxkbcommon` 的
+bison parser 各自是必须先跑的生成器,而两者都是独立上游、独立版本。
+
+**新增仓数量 = 3**:`mcpplibs/wayland-protocols`、`mcpplibs/libevdev`、
+`mcpplibs/libxkbcommon`。判据本身没错 —— 错的是「已有的 fork 装得下」这个假设,而它
+装不下的原因很具体:**一个仓一个上游一个版本**,因为 CI 要对着一份 release tarball
+逐字节 diff `upstream/`。
 
 ### 10.3 被推翻的:G3 的「一个包装全部 65 个协议」
 
