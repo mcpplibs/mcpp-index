@@ -79,6 +79,37 @@ package = {
         linux = {
             -- wayland-protocols' own release number. Upstream tags without a
             -- leading v, and so does the fork.
+            -- 1.49.1 — the third component is THIS FORK's revision, not
+            -- upstream's: wayland-protocols releases two-component versions and
+            -- 1.49 is the newest. 1.49.1 is 1.49's XML plus the
+            -- `wayland-protocols/<name>-enum.h` headers that upstream's own
+            -- meson installs (include/wayland-protocols/meson.build runs
+            -- `wayland-scanner enum-header` over every XML) and that this fork
+            -- did not previously generate.
+            --
+            -- wlroots 0.20 includes them from TEN of its public headers, so a
+            -- consumer of wlroots writing a plain `#include <wlr/...>` needs
+            -- them on the include path.
+            --
+            -- ⭐ They are checked into the fork rather than produced by a
+            -- `build.mcpp`, which the fork spec otherwise prescribes, because
+            -- a package cannot export a generated header. Measured
+            -- 2026-08-31 with a two-package probe:
+            --
+            --     mcpp::include_dir() from a build program → PACKAGE-PRIVATE
+            --     [build] include_dirs in the manifest     → propagates
+            --
+            -- Additive, not a re-cut of 1.49: the store is keyed by
+            -- (name, version) and would not re-extract a version it already
+            -- holds, so a re-cut tag reaches nobody who already built against
+            -- it. 1.49 stays exactly as published.
+            ["1.49.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/wayland-protocols/archive/refs/tags/1.49.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/wayland-protocols/releases/download/1.49.1/wayland-protocols-1.49.1.tar.gz",
+                },
+                sha256 = "52b219f5e307c1d0d49fe9429a877aef8d4b65e69224c97053cbf8434fb79237",
+            },
             ["1.49"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/wayland-protocols/archive/refs/tags/1.49.tar.gz",
