@@ -1,0 +1,11 @@
+# WAMR feature test project: both optional guest-libc layers turned on.
+#
+# Split from tests/examples/wamr because the base member asserts the opposite —
+# that `env.putchar` does NOT resolve without the feature. The two members
+# together are the feature gate's positive and negative evidence.
+[package]
+name = "wamr-features-tests"
+version = "0.1.0"
+
+[target.'cfg(linux)'.dependencies.compat]
+wamr = { version = "2.4.5", features = ["libc-builtin", "libc-wasi"] }

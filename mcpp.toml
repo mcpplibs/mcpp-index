@@ -135,6 +135,8 @@ members = [
     "tests/examples/plf-hive",
     "tests/examples/spirv-reflect",
     "tests/examples/vulkan-memory-allocator",
+    "tests/examples/wamr",
+    "tests/examples/wamr-features",
 ]
 
 # ── The index redirect, hoisted to the workspace root ───────────────────

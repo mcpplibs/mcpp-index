@@ -20,6 +20,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.4.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-opensbi/archive/refs/tags/0.4.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-opensbi/releases/download/0.4.0/openkal-opensbi-0.4.0.tar.gz",
+                },
+                sha256 = "33df37a734340d6b17660f69e4e07d0c9c23b1175e08031b4a840f3702ec371f",
+            },
             ["0.3.0"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-opensbi/archive/refs/tags/0.3.0.tar.gz",
@@ -71,6 +78,13 @@ package = {
             },
         },
         macosx = {
+            ["0.4.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-opensbi/archive/refs/tags/0.4.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-opensbi/releases/download/0.4.0/openkal-opensbi-0.4.0.tar.gz",
+                },
+                sha256 = "33df37a734340d6b17660f69e4e07d0c9c23b1175e08031b4a840f3702ec371f",
+            },
             ["0.3.0"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-opensbi/archive/refs/tags/0.3.0.tar.gz",
@@ -122,6 +136,13 @@ package = {
             },
         },
         windows = {
+            ["0.4.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-opensbi/archive/refs/tags/0.4.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-opensbi/releases/download/0.4.0/openkal-opensbi-0.4.0.tar.gz",
+                },
+                sha256 = "33df37a734340d6b17660f69e4e07d0c9c23b1175e08031b4a840f3702ec371f",
+            },
             ["0.3.0"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-opensbi/archive/refs/tags/0.3.0.tar.gz",
