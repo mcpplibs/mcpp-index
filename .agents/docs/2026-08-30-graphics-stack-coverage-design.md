@@ -1,6 +1,6 @@
 # mcpp 图形栈:从「能跑通」到「能开发」的覆盖面设计
 
-Date: 2026-08-30 · 前置:[`2026-08-30-gbm-cross-repo-closed-loop-plan.md`](2026-08-30-gbm-cross-repo-closed-loop-plan.md) §19/§20 · **状态:已实现并闭环验证(v1.3,§11 总账 / §12 客户端侧 / §13 仍缺 / §14 fork 规范 / §15 fontconfig / §16 沙箱盲点)**
+Date: 2026-08-30 · 前置:[`2026-08-30-gbm-cross-repo-closed-loop-plan.md`](2026-08-30-gbm-cross-repo-closed-loop-plan.md) §19/§20 · **状态:已实现并闭环验证(v1.4,§11 总账 / §12 客户端侧 / §14 fork 规范 / §17 桌面栈补齐与判据修正)**
 
 ## 0. 这份文档解决什么
 
@@ -1273,3 +1273,159 @@ index: local index af79fd2 (never refreshed)
 **所以任何在 `--sandbox` 里做的验证,第一步必须是 `mcpp index update`** ——
 否则测的是镜像打包那天的生态,而不是今天的。这与
 「本地旧索引快照掩盖描述符错误」那条 是同一类,只是发生在沙箱侧。
+
+---
+
+## 17. 桌面栈补齐:fontconfig、cairo,以及被推翻的两条判据
+
+§15 停在「fontconfig 还差 fc-case 和 fc-lang」。两个都做完了,cairo 也做完了,而
+过程中有两条判据被实测推翻——都是本文档自己先前写下的。
+
+### 17.1 判据修正一:决定 fork 难度的是**生成器**,不是行数
+
+| | 源码 | 生成器 | 实际难度 |
+|---|---|---|---|
+| fontconfig | 26k 行 | **7 个**(python + gperf) | 大 |
+| cairo | **104k 行** | **0 个** | 小 |
+
+§13.2 按行数把 cairo 标成「中」、把 fontconfig 标成「中」,并据此排了优先级——排反了。
+cairo 的 meson 只出两个产物,`config.h` 和 `cairo-features.h`,两个都是
+`configure_file`:那是探测**答案**,属于手写的适配文件,不是生成物。
+
+**新判据**:看 `grep -c 'custom_target\|configure_file'`,并区分「生成代码」与
+「记录探测结果」。后者永远是手写,而且应该手写——决定属于可读可争的文件,不属于
+生成器。
+
+### 17.2 判据修正二:`build.mcpp` 是 C++ 程序,不是配置
+
+§14.1 已记。这里补一条后果:因为它是完整 C++,**生成器可以比上游更正确**。
+
+- libdisplay-info:上游 python 把 U+00A0 按码点转义成 `\240`(单字节,不是
+  UTF-8),`build.mcpp` 按字节转义成 `\302\240`
+- fontconfig:上游用 gperf 对 72 个条目做完美哈希,而唯一消费者只读一个字段;
+  排序表 + 二分查找语义相同,少一个工具和一遍 C 预处理
+
+### 17.3 fontconfig(mcpp-index#310)
+
+七个生成物全部由 `build.mcpp` 产出,零 python / 零 sh / 零 gperf。两个大的**与
+上游逐字节一致**,fork CI 每次重跑上游脚本再 diff:
+
+```
+fclang.h  4897 行   281 个 .orth -> charset 位图
+fccase.h   368 行   Unicode 大小写折叠
+```
+
+**`fclang.h` 第一次 diff 有 2/4897 行不同,原因是 locale collation** ——参考输出
+用 `ls *.orth` 生成,UTF-8 locale 下 `ayc.orth` 排在 `ay.orth` 前(比较忽略点号)。
+`LC_ALL=C` 后一致。这是 libglvnd `genglmod.sh` 那个坑的第二次撞见,而
+`build.mcpp` 用 `std::sort` over `std::string` 即**字节序**,结构性免疫。
+
+### 17.4 cairo(mcpp-index#312)
+
+后端做成 **feature**,`default = ["ft", "fc", "png"]`,**X11 默认关**。上游把每个
+后端做成 `get_option()`,等于让发行版替所有人决定一次;索引不能这样,因为合成器
+和 X11 应用要的是同一个包的不同构建。
+
+两条实现细节值得记:
+
+- **feature 的 `sources` 必须逐个文件列**。选通按字面条目匹配,glob 不受 feature
+  控制——`"*/src/cairo-xlib-*.c"` 会把 X11 后端编进**每一个**消费者。上游自己的
+  `cairo_feature_sources` 字典正好是逐条的,照抄即可。
+- **验证要看产物,不是 manifest**。fork CI 查 `.o` 里有没有 `XOpenDisplay` /
+  `xcb_connect`,有没有 `cairo-xlib-*.o` 被编出来。manifest 写的是意图。
+
+**归档从 47.8 MB 降到 1.8 MB**:cairo 发布物带 61 MB 参考图(`test/`),这个包一个
+都不编。裁掉 `test/` 和 `perf/`,同时把「upstream 与发布物一致」检查改为比对**剩下
+的树**而不是关掉——那条检查此前已经拦住过一次真实缺口(见 §17.6)。
+
+### 17.5 最贵的一个 bug 是一个 `0`
+
+```c
+#define WORDS_BIGENDIAN 0          // 我写的
+#ifdef FLOAT_WORDS_BIGENDIAN       // cairo 怎么测(cairoint.h:196)
+```
+
+`#ifdef` 对 `0` 一样成立,所以这是在说**大端**。x86-64 上的后果是最坏的那种静默:
+
+- 编过、链过、`cairo_status` 全程 SUCCESS、`cairo_paint` **正常工作**
+- 每一条**路径**拿到垃圾定点坐标:`cairo_rectangle(4,4,16,16)` 的
+  `path_extents` = `-8.03e+06 … 4.37e+06`,`cairo_in_fill(40,40)` 对界外点返回 1
+- `cairo_fill` / `cairo_stroke` 改动 **0 个像素**,一声不吭
+
+查了一小时「是不是缺了扫描转换器 / spans 合成器」。**判据**:上游用 `#ifdef` 测的
+宏,只能「定义」或「不定义」,不能定义成 0。
+
+**由此改了测试写法**:除了断言结果,再断言**中间量**。像素断言只会说「描边没画」,
+把人引向缺文件;`cairo_path_extents` 直接指出算术错在哪。同类中间量:
+`di_edid_get_version` 之于 EDID、`FcLangGetCharSet` 之于 fclang。
+
+### 17.6 一个 compat 包的源码列表就是它的 ABI 承诺
+
+两次撞见,方向相反:
+
+- fontconfig 按上游默认声明 `HAVE_FT_GET_BDF_PROPERTY` → 链接期**八个**未定义引用,
+  因为 `compat.freetype` 不编 BDF/Type1 模块 → 关掉这两个探测项
+- cairo **无条件**调 `FT_GlyphSlot_Embolden`(无 `HAVE_` 守卫)→ **两个**未定义
+  引用,因为 `compat.freetype` 漏了 `ftsynth.c` → 补进 compat.freetype(#311)
+
+**承诺是被消费者发现的,不是被自己的测试发现的**——freetype 的测试成员一直是绿的。
+
+同一轮里,cairo 的 fork CI 抓到另一个完整性缺口:cairo 自带 **14 个 `.gitignore`**,
+fork 提交时生效,吞掉了 5 个**在发布 tarball 里存在**的文件。抓到它的正是那条
+「upstream 与发布物逐字节一致」——我写它时当成防手改的形式检查。
+
+### 17.7 「干净环境的索引是那天的,不是今天的」——第三次
+
+| 场景 | 症状 | 真因 |
+|---|---|---|
+| 沙箱验证 | 「包找不到」 | 合成 home 的索引快照早于被测包 |
+| 索引测试成员 | 「glob 没匹配到文件」 | store 缓存了旧 tarball |
+| **cairo fork CI** | **两个 `FT_GlyphSlot_*` 未定义引用** | **runner 的索引快照早于同日的 freetype 修复** |
+
+三次报错都指向别处,最后一次读起来像 cairo 有 bug。**凡是从零开始的验证——沙箱、
+CI、新 subos——第一步必须 `mcpp index update`。** 已加进 cairo 的 fork CI。
+
+这也解释了为什么本地一直绿:开发环境的索引是新的。**本地绿 ≠ 干净环境绿**,差别
+恰好是「索引有多旧」。
+
+### 17.8 最终沙箱验证(五个包,已发布索引)
+
+```
+===== 5. did anything come from the host? =====
+  PASS: the host's copies were present and reachable, and none of them won
+===== 5b. libdisplay-info is kind=lib, so it must NOT be a DT_NEEDED =====
+  PASS: libdisplay-info's objects were merged in
+
+===== 6. run it =====
+  wl_egl_window_create      0x1e3b28c0          客户端 GPU 入口
+  wl_cursor_frame           0                   客户端指针
+  di_info_get_make          Acer Technologies   EDID + 生成的 PNP 表
+  fclang zh-cn              6765 codepoints     语言表完整
+  cairo inside=255,255,255 outside=191,128,64   矩形填充内外像素精确
+  cairo xlib                off                 feature 默认集生效
+  0 failure(s)
+RESULT: PASS
+```
+
+后两条断言是**专为本轮踩过的坑设的**:`zh-cn` 的码点数会让截断的语言表当场露馅,
+而不是很久之后表现为「匹配不到字体」;cairo 的内外两个像素会让字节序 bug 露馅,
+而 `cairo_status` 全程 SUCCESS。
+
+### 17.9 桌面栈的当前状态
+
+| 层 | 状态 |
+|---|---|
+| 渲染链 DRM→GBM→EGL→GLES | ✅ 沙箱像素级 |
+| 输入链 udev→evdev/mtdev→libinput→xkb | ✅ 沙箱 |
+| 客户端 GPU 路径 / 指针 | ✅ |
+| 显示器识别(EDID) | ✅ |
+| 字体发现(fontconfig) | ✅ |
+| 2D 矢量绘制(cairo) | ✅ |
+| **段落排版(pango)** | ⬜ **卡在 glib** |
+
+**wlroots 的闸门已开**:它需要的东西索引里现在全有,做与不做是「要不要」而非
+「能不能」。
+
+**pango 是唯一量准后仍需决策的**:57k 行本身不大,但硬依赖 glib,而 glib 是
+`glib/` + `gobject/` + `gio/` 三大块 300k+ 行,自己还缺 `pcre2` 和 `libmount`。
+按 §17.1 的新判据,它的难点也不在行数——需要先数它的生成器再定。
