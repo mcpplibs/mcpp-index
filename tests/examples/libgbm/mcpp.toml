@@ -36,4 +36,4 @@ name = "libgbm-tests"
 version = "0.1.0"
 
 [target.'cfg(linux)'.dependencies.compat]
-libgbm = "2026.08.29"
+libgbm = "25.0.7"

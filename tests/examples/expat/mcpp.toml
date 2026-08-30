@@ -1,0 +1,12 @@
+# compat.expat test project.
+#
+# Expat is built from source here while the ecosystem also carries
+# `xim:expat` 2.6.2 as a transitive of `xim:mesa`. They share the soname
+# `libexpat.so.1`, so exactly one is mapped and nothing warns — the dladdr
+# assertion pins which.
+[package]
+name = "expat-tests"
+version = "0.1.0"
+
+[target.'cfg(linux)'.dependencies.compat]
+expat = "2.7.1"

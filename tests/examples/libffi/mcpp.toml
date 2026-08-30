@@ -1,0 +1,12 @@
+# compat.libffi test project.
+#
+# libffi is built from source here, and the ecosystem also carries
+# `xim:libffi` at 3.4.4 as a transitive of `xim:mesa`. They share the soname
+# `libffi.so.8`, so only one is ever mapped and nothing warns about the other —
+# the dladdr assertion in the test pins which one won.
+[package]
+name = "libffi-tests"
+version = "0.1.0"
+
+[target.'cfg(linux)'.dependencies.compat]
+libffi = "3.4.8"

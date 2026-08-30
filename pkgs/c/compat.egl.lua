@@ -68,13 +68,22 @@ package = {
 
     xpm = {
         linux = {
-            deps = { runtime = { "xim:libglvnd" } },
-            ["2026.08.30"] = {
+            -- Pinned so the version below stays true: this package's version
+            -- means "the EGL dispatch libglvnd 1.7.0 ships", and a floating
+            -- payload would silently invalidate that.
+            deps = { runtime = { "xim:libglvnd@1.7.0.1" } },
+            -- libglvnd's version, not EGL's. The spec level is 1.5 and is a
+            -- property of the dispatch, not of this package; what a consumer
+            -- pins here is which libglvnd it links. `compat.glx-headers` uses
+            -- the same number for the same reason. No binding-revision suffix:
+            -- `egl` != `libglvnd`, so there is no store collision to dodge —
+            -- see compat.libdrm for the case where there is.
+            ["1.7.0"] = {
                 -- Inert anchor; nothing downloaded is read. See
                 -- compat.libgbm for why this is a README and not a header.
                 url = {
                     GLOBAL = "https://raw.githubusercontent.com/NVIDIA/libglvnd/v1.7.0/README.md",
-                    CN     = "https://gitcode.com/mcpp-res/egl/releases/download/2026.08.30/egl-2026.08.30.md",
+                    CN     = "https://gitcode.com/mcpp-res/egl/releases/download/1.7.0/egl-1.7.0.md",
                 },
                 sha256 = "f84a3eca98cc5bdf5318741124c38c5e877f856df8c7e229ee5065e5c61038c2",
             },

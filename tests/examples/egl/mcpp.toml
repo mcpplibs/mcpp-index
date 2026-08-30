@@ -14,4 +14,4 @@ name = "egl-tests"
 version = "0.1.0"
 
 [target.'cfg(linux)'.dependencies.compat]
-egl = "2026.08.30"
+egl = "1.7.0"

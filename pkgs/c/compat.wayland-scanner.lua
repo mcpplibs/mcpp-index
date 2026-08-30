@@ -1,4 +1,4 @@
--- compat.wayland — libwayland-client, the client side of the protocol.
+-- compat.wayland-scanner — the Wayland protocol code generator, built from source.
 --
 -- Form A: the manifest lives in mcpplibs/wayland-m, a fork of freedesktop's
 -- wayland 1.23.1 that adds mcpp build support and patches nothing.
@@ -19,23 +19,23 @@
 package = {
     spec        = "1",
     namespace   = "compat",
-    name        = "wayland",
-    description = "libwayland-client — the client side of the Wayland protocol, built from source",
+    name        = "wayland-scanner",
+    description = "wayland-scanner — the Wayland protocol code generator, built from source",
     licenses    = {"MIT"},
     repo        = "https://github.com/mcpplibs/wayland-m",
     type        = "package",
 
     xpm = {
         linux = {
-            ["1.23.1.1"] = {
+            ["1.23.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/wayland-m/archive/refs/tags/v1.23.1-1.tar.gz",
-                    CN     = "https://gitcode.com/mcpp-res/wayland/releases/download/1.23.1.1/wayland-m-1.23.1-1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/wayland/releases/download/1.23.1/wayland-m-1.23.1-1.tar.gz",
                 },
                 sha256 = "16ac3d6d22eb1973d2c83b47cc0d4518160837a5597298e3799228d155c43c86",
             },
         },
     },
 
-    mcpp = "*/mcpp/client/mcpp.toml",
+    mcpp = "*/mcpp/scanner/mcpp.toml",
 }

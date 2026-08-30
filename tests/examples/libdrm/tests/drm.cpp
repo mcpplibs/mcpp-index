@@ -10,8 +10,16 @@
 //      COMPILES is the first assertion, and it is not a trivial one.
 //
 //   2. THE LIBRARY COULD BE ABSENT while the headers are present. The dlsym
-//      checks below pin that: the farm resolves `-ldrm` out of the subos view,
-//      and a header-only package would sail past compilation and fail here.
+//      checks below pin that: a header-only package would sail past
+//      compilation and fail here.
+//
+//   2b. THE WRONG libdrm COULD BE LOADED. This package builds libdrm from
+//      source, and the ecosystem's Mesa payload carries its own
+//      `libdrm.so.2` under `xim-x-libdrm/`. Both can be reachable at once, and
+//      because they share a soname only ONE is ever mapped — silently. The
+//      dladdr check pins which one won: it must be this package's build, or
+//      the source build is decorative and the consumer is really running the
+//      payload's copy.
 //
 //   3. THE UAPI CONSTANTS COULD DISAGREE with the library's. drm_fourcc.h is
 //      the kernel's, and DRM_FORMAT_XRGB8888 must be the same fourcc GBM calls
@@ -78,6 +86,25 @@ int main()
                             "drmModeAddFB2", "drmModeSetCrtc", "drmPrimeHandleToFD"}) {
         check(::dlsym(RTLD_DEFAULT, sym) != nullptr,
               (std::string("libdrm exports ") + sym).c_str());
+    }
+
+    // ── 3b. …and it is THIS package's build, not the payload's ───────────
+    // Same soname, so only one libdrm.so.2 is mapped and nothing warns about
+    // the other. dladdr reports the object a symbol actually came from; if the
+    // path names the ecosystem payload, this package built a library that no
+    // one loads.
+    {
+        Dl_info info{};
+        const bool located =
+            ::dladdr(reinterpret_cast<void *>(&drmGetVersion), &info) != 0
+            && info.dli_fname != nullptr;
+        check(located, "dladdr locates the loaded libdrm");
+        if (located) {
+            const std::string from = info.dli_fname;
+            std::printf("   loaded from: %s\n", from.c_str());
+            check(from.find("xim-x-libdrm") == std::string::npos,
+                  "the loaded libdrm is not the ecosystem payload's copy");
+        }
     }
 
     // ── 4. An invalid fd is rejected, not crashed on ─────────────────────

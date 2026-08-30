@@ -110,8 +110,18 @@ package = {
             --
             -- `xim:mesa` and not `xim:graphics`: this package needs Mesa, not
             -- the GL dispatch and X11 halves of the twenty-two-package stack.
-            deps = { runtime = { "xim:mesa" } },
-            ["2026.08.29"] = {
+            --
+            -- PINNED, and the pin is what makes the version below honest: GBM
+            -- has no release of its own, so this package's version can only
+            -- mean "the GBM in Mesa 25.0.7". With a floating `xim:mesa` that
+            -- claim would quietly stop being true the day the payload moved.
+            deps = { runtime = { "xim:mesa@25.0.7.2" } },
+            -- Mesa's version, verbatim — no binding-revision suffix is needed
+            -- here. compat.libdrm and compat.wayland carry one because their
+            -- short name equals their payload's and the store's installed-check
+            -- ignores namespaces; `libgbm` != `mesa`, so there is nothing to
+            -- collide with. See compat.libdrm for the measured failure.
+            ["25.0.7"] = {
                 -- NOTHING DOWNLOADED HERE IS EVER READ, and the file is chosen
                 -- so that cannot be misread.
                 --
@@ -134,7 +144,7 @@ package = {
                 -- and compared byte-for-byte against GLOBAL.
                 url = {
                     GLOBAL = "https://gitlab.freedesktop.org/mesa/mesa/-/raw/mesa-25.0.7/README.rst",
-                    CN     = "https://gitcode.com/mcpp-res/libgbm/releases/download/2026.08.29/libgbm-2026.08.29.rst",
+                    CN     = "https://gitcode.com/mcpp-res/libgbm/releases/download/25.0.7/libgbm-25.0.7.rst",
                 },
                 sha256 = "03f0fd62094179bb70fb885042baa4254d392f5f7bb64e4d8856bec8a5ff8386",
             },

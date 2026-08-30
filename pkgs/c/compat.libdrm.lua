@@ -1,241 +1,249 @@
--- compat.libdrm — libdrm, the userspace wrapper over the kernel's DRM ioctls:
--- `drmOpen`/`drmGetVersion`, the whole `drmMode*` KMS family (connectors, CRTCs,
--- framebuffers, page flips), PRIME import/export, and the `drm.h` /
--- `drm_mode.h` / `drm_fourcc.h` uapi headers.
+-- compat.libdrm — libdrm, built from source.
 --
--- It is the layer directly under compat.libgbm: GBM allocates a buffer, and
--- libdrm is what turns that buffer into something a display controller
--- scans out (`drmModeAddFB2` + `drmModeSetCrtc`). Without it a consumer can
--- allocate and never present.
+-- The userspace side of the kernel DRM/KMS interface: `drmModeGetResources`,
+-- `drmModeAddFB2`, `drmModeSetCrtc`, `drmPrimeHandleToFD`. It is the layer
+-- under compat.libgbm — GBM allocates the buffer, this turns it into a scanout.
 --
 -- ─────────────────────────────────────────────────────────────────────────
--- SHAPE: the compat.libgbm binding, and the criterion is the same
+-- SHAPE: A SOURCE BUILD, BECAUSE THE PROJECT IS SEPARABLE
 --
--- The index's rule is "build it from source", and the question is always
--- whether upstream ships the thing as a separable unit. libdrm PASSES that
--- test — it is an independent freedesktop project with its own releases, and
--- Conan carries it as a real recipe rather than a `system` virtual package.
--- So a source build would be legitimate here, unlike compat.libgbm where the
--- library is a target inside Mesa.
+-- The index's rule is "build it from source", and the test is whether upstream
+-- ships the thing as a separable unit. libdrm PASSES: it is an independent
+-- freedesktop project with its own release tarballs, and Conan carries it as a
+-- real recipe rather than a `system` virtual package. So it is built here,
+-- like the X11 family (compat.x11, compat.xcb, compat.xext, …) that this
+-- index already builds beside the same ecosystem payloads.
 --
--- It is nevertheless a BINDING, for the second criterion rather than the
--- first: `xim:libdrm` already exists, mesa depends on it, and it is already
--- installed in any subos that has a graphics stack. Building a second copy
--- would put two `libdrm.so.2` in reach of one process — and this is the one
--- library where that matters most, because Mesa's own payload
--- (`libgbm.so.1`, `libgallium`, the Vulkan ICDs) has DT_NEEDED on the
--- ecosystem's copy. A consumer linking ours while Mesa loads the ecosystem's
--- would get two DRM handle tables in one address space.
+-- Contrast compat.libgbm, which is NOT separable: GBM is a build target inside
+-- Mesa (`src/gbm/meson.build` is `link_with: [libloader]`, and `libloader`
+-- pulls `idep_mesautil`), and it is a loader whose backends are Mesa's own.
 --
--- Measured surface, the same four axes compat.libgbm reports:
+-- Measured surface:
 --
 --     host          0   no /usr/lib* path, no escape-hatch variable
---     ecosystem     1   `xim:libdrm` — not `xim:mesa`, which would drag the
---                       whole GL stack in for a consumer that only wants ioctls
+--     ecosystem     0   nothing — no `xim:*` dependency at all
 --     index         0   `deps = {}`
---     transitive    0   libdrm.so.2 needs only libc/libm, both from the payload
+--     transitive    0   the five TUs need only libc; `dep_rt` folds into
+--                       glibc and valgrind/udev are compiled out below
+--
+-- ─────────────────────────────────────────────────────────────────────────
+-- WHY `kind = "shared"` WITH A SONAME IS LOAD-BEARING
+--
+-- Mesa is normally in the same process — `xim:mesa` declares `xim:libdrm`, and
+-- seven libraries in its payload carry DT_NEEDED on `libdrm.so.2`, including
+-- the `libgbm.so.1` that compat.libgbm delivers. Those Mesa libraries also
+-- carry an ABSOLUTE RUNPATH naming `xim-x-libdrm/<ver>/lib`.
+--
+-- That RUNPATH does NOT decide the outcome, and the distinction is the whole
+-- reason a source build is safe here. A DT_NEEDED soname already present in
+-- the link map is REUSED — ld.so never searches for it again, so it never
+-- consults Mesa's RUNPATH. The consumer links this library directly, so it is
+-- mapped first, and Mesa's libgbm then binds to it. Measured: in a real
+-- consumer process `libdrm.so.2` resolves to the consumer's path, while the
+-- same libgbm.so.1 examined ALONE resolves to the payload's.
+--
+-- This only holds if the soname matches. Built `kind = "lib"` — this index's
+-- default, objects merged into the consumer — there is no `libdrm.so.2` to
+-- reuse: Mesa loads the payload copy and the consumer keeps its own merged
+-- one, so libdrm's file-static state (`drmHashTable`, `nr_fds`, `connection`,
+-- `drm_server_info` are all OBJECTs in its .bss) exists twice over one set of
+-- fds. Shared, with the canonical soname, there is exactly one.
+--
+-- Same shape and same reason as compat.vulkan's loader and the X11 family.
 --
 -- ─────────────────────────────────────────────────────────────────────────
 -- TWO INCLUDE ROOTS, AND THIS IS THE ONE THING THAT BITES
 --
--- libdrm installs its public headers at the include ROOT (`xf86drm.h`,
--- `xf86drmMode.h`, `libsync.h`) but the uapi headers they include in a
--- `libdrm/` SUBDIRECTORY (`drm.h`, `drm_mode.h`, `drm_fourcc.h`, …). And
--- `xf86drm.h` line 40 is a bare `#include <drm.h>`.
+-- libdrm keeps its public headers at the source ROOT (`xf86drm.h`,
+-- `xf86drmMode.h`, `libsync.h`) and the uapi headers those include in
+-- `include/drm/` (`drm.h`, `drm_mode.h`, `drm_fourcc.h`, …) — upstream installs
+-- the second set into `<prefix>/include/libdrm/` and puts BOTH on the pkg-config
+-- include path. `xf86drm.h` line 40 is a bare `#include <drm.h>`, so a consumer
+-- given only the root cannot compile a single translation unit.
 --
--- So one include root is not enough. Measured while writing compat.libgbm's
--- test, which tried exactly that:
+-- ─────────────────────────────────────────────────────────────────────────
+-- THE BUILD, TRANSCRIBED FROM meson.build
 --
---     xf86drm.h:40:10: fatal error: drm.h: No such file or directory
+-- Upstream force-includes a generated `config.h` (`add_project_arguments(
+-- '-include', … / 'config.h')`). The five core TUs read exactly five entries
+-- from it, so they are passed as `-D` instead of shipping a header — with one
+-- trap: `MAJOR_IN_MKDEV` and `MAJOR_IN_SYSMACROS` are tested with `#ifdef`,
+-- not `#if`, so the MKDEV one must be ABSENT rather than defined to 0.
+-- `HAVE_SYS_SYSCTL_H` and `UDEV` are `#if`, so they must be present and zero.
 --
--- Upstream's own `libdrm.pc` says `Cflags: -I${includedir}/libdrm`, and the
--- root is on the path by default, so a pkg-config consumer gets both. This
--- package therefore exposes BOTH directories — the root for `<xf86drm.h>`
--- and `libdrm/` for the `<drm.h>` it pulls in.
---
--- The vendor libraries (`libdrm_amdgpu`, `libdrm_intel`, `libdrm_nouveau`,
--- `libdrm_radeon`) are deliberately NOT harvested. They are separate `-l`
--- names with their own headers, only meaningful to code targeting one GPU
--- family, and nothing in the generic KMS path touches them. Adding them would
--- put four more sonames on every consumer's link line for no one's benefit.
+-- The one genuinely generated file is `generated_static_table_fourcc.h`, from
+-- `gen_table_fourcc.py` from `include/drm/drm_fourcc.h`. It is not in the
+-- release tarball, it is 58 lines of table, and `xf86drm.c` includes it in
+-- QUOTE form — so it is inlined below into the source root, where the quoted
+-- lookup finds it without adding any include path.
 package = {
     spec        = "1",
     namespace   = "compat",
     name        = "libdrm",
-    description = "libdrm — userspace DRM/KMS ioctl wrapper, bound to the ecosystem's xim:libdrm",
+    description = "libdrm — userspace DRM/KMS interface, built from the upstream release",
     licenses    = {"MIT"},
     repo        = "https://gitlab.freedesktop.org/mesa/drm",
     type        = "package",
 
     xpm = {
         linux = {
-            -- PLATFORM level, beside the version entries rather than inside
-            -- one: compat.glx-runtime established that a per-version `deps`
-            -- parses fine and never installs.
-            deps = { runtime = { "xim:libdrm" } },
-            ["2026.08.30"] = {
-                -- Inert anchor. Nothing downloaded here is read — the payload
-                -- is what install() links out of the subos view. The xpm schema
-                -- wants a url + sha256 per version, and a README cannot be
-                -- mistaken for a shipped header (compat.libgbm learned that one
-                -- the hard way by anchoring on a `.h`).
+            ["2.4.123.1"] = {
                 url = {
-                    GLOBAL = "https://gitlab.freedesktop.org/mesa/drm/-/raw/libdrm-2.4.123/README.rst",
-                    CN     = "https://gitcode.com/mcpp-res/libdrm/releases/download/2026.08.30/libdrm-2026.08.30.rst",
+                    GLOBAL = "https://dri.freedesktop.org/libdrm/libdrm-2.4.123.tar.xz",
+                    CN     = "https://gitcode.com/mcpp-res/libdrm/releases/download/2.4.123.1/libdrm-2.4.123.tar.xz",
                 },
-                sha256 = "46183785b2f012d0773646d1974374cbfc754f043d1a423afb0ffea0af2569c1",
+                sha256 = "a2b98567a149a74b0f50e91e825f9c0315d86e7be9b74394dae8b298caadb79e",
             },
         },
     },
 
     mcpp = {
-        language     = "c++23",
-        import_std   = false,
-        c_standard   = "c11",
+        language   = "c++23",
+        import_std = false,
+        c_standard = "c11",
 
-        -- Both roots, for the reason in the header comment: `<xf86drm.h>` from
-        -- the first, the `<drm.h>` it includes from the second.
+        -- `c_standard = "gnu11"` is accepted and silently emits -std=c11, so
+        -- _GNU_SOURCE has to be spelled out. Without it O_CLOEXEC, `asprintf`
+        -- and `major`/`minor` are hidden and xf86drm.c does not compile.
+        -- -fPIC because this becomes a .so; -fvisibility=hidden to match
+        -- upstream's `gnu_symbol_visibility : 'hidden'`, so only the symbols
+        -- libdrm_macros.h marks drm_public are exported.
+        cflags = {
+            "-D_GNU_SOURCE",
+            "-DHAVE_VISIBILITY=1",
+            "-DHAVE_SYS_SYSCTL_H=0",
+            "-DMAJOR_IN_SYSMACROS=1",
+            "-DUDEV=0",
+            "-fPIC",
+            "-fvisibility=hidden",
+        },
+
+        -- Both roots; see the header comment. `mcpp/include` is the copy
+        -- install() makes of the three root headers, mirroring what upstream
+        -- puts in `<prefix>/include`; `include/drm` is upstream's
+        -- `<prefix>/include/libdrm` and is needed by the BUILD too, because
+        -- xf86drm.c includes "drm_fourcc.h" in quote form from the root.
         include_dirs = {
-            "mcpp_generated/libdrm/include",
-            "mcpp_generated/libdrm/include/libdrm",
+            "mcpp/include",
+            "include/drm",
         },
 
-        generated_files = {
-            ["mcpp_generated/libdrm_anchor.c"] =
-                "int mcpp_compat_libdrm_anchor(void) { return 0; }\n",
+        -- meson.build's `libdrm_files`, verbatim.
+        sources = {
+            "xf86drm.c",
+            "xf86drmHash.c",
+            "xf86drmRandom.c",
+            "xf86drmSL.c",
+            "xf86drmMode.c",
         },
-        sources = { "mcpp_generated/libdrm_anchor.c" },
 
-        -- NOT named `drm`: a target called `drm` would put a `libdrm.a` on the
-        -- link line beside the real `libdrm.so`, and which one `-ldrm` picks
-        -- would come down to search order. Same rule as compat.libgbm's
-        -- `gbm_binding`.
-        targets = { ["drm_binding"] = { kind = "lib" } },
-
-        ldflags = { "-ldrm" },
+        targets = { ["drm"] = { kind = "shared", soname = "libdrm.so.2" } },
         deps    = {},
 
-        runtime = {
-            -- Two keys, two flags, not interchangeable: `library_dirs` renders
-            -- as `-Wl,-rpath` and `link_library_dirs` as `-L`. A package that
-            -- is LINKED against needs both — with only the first, the farm is
-            -- complete, the rpath correct, and the build dies at
-            -- `ld: cannot find -ldrm`. (compat.glx-runtime and
-            -- compat.vulkan-runtime declare only `library_dirs` because
-            -- nothing links against their farms.)
-            library_dirs      = { "mcpp_generated/libdrm/lib" },
-            link_library_dirs = { "mcpp_generated/libdrm/lib" },
-            provides          = { "drm.libdrm" },
+        generated_files = {
+            ["generated_static_table_fourcc.h"] =
+[[
+/* AUTOMATICALLY GENERATED by gen_table_fourcc.py. You should modify
+   that script instead of adding here entries manually! */
+static const struct drmFormatModifierInfo drm_format_modifier_table[] = {
+    { DRM_MODIFIER_INVALID(NONE, INVALID) },
+    { DRM_MODIFIER_LINEAR(NONE, LINEAR) },
+    { DRM_MODIFIER_INTEL(X_TILED, X_TILED) },
+    { DRM_MODIFIER_INTEL(Y_TILED, Y_TILED) },
+    { DRM_MODIFIER_INTEL(Yf_TILED, Yf_TILED) },
+    { DRM_MODIFIER_INTEL(Y_TILED_CCS, Y_TILED_CCS) },
+    { DRM_MODIFIER_INTEL(Yf_TILED_CCS, Yf_TILED_CCS) },
+    { DRM_MODIFIER_INTEL(Y_TILED_GEN12_RC_CCS, Y_TILED_GEN12_RC_CCS) },
+    { DRM_MODIFIER_INTEL(Y_TILED_GEN12_MC_CCS, Y_TILED_GEN12_MC_CCS) },
+    { DRM_MODIFIER_INTEL(Y_TILED_GEN12_RC_CCS_CC, Y_TILED_GEN12_RC_CCS_CC) },
+    { DRM_MODIFIER_INTEL(4_TILED, 4_TILED) },
+    { DRM_MODIFIER_INTEL(4_TILED_DG2_RC_CCS, 4_TILED_DG2_RC_CCS) },
+    { DRM_MODIFIER_INTEL(4_TILED_DG2_MC_CCS, 4_TILED_DG2_MC_CCS) },
+    { DRM_MODIFIER_INTEL(4_TILED_DG2_RC_CCS_CC, 4_TILED_DG2_RC_CCS_CC) },
+    { DRM_MODIFIER_INTEL(4_TILED_MTL_RC_CCS, 4_TILED_MTL_RC_CCS) },
+    { DRM_MODIFIER_INTEL(4_TILED_MTL_MC_CCS, 4_TILED_MTL_MC_CCS) },
+    { DRM_MODIFIER_INTEL(4_TILED_MTL_RC_CCS_CC, 4_TILED_MTL_RC_CCS_CC) },
+    { DRM_MODIFIER(SAMSUNG, 64_32_TILE, 64_32_TILE) },
+    { DRM_MODIFIER(SAMSUNG, 16_16_TILE, 16_16_TILE) },
+    { DRM_MODIFIER(QCOM, COMPRESSED, COMPRESSED) },
+    { DRM_MODIFIER(QCOM, TILED3, TILED3) },
+    { DRM_MODIFIER(QCOM, TILED2, TILED2) },
+    { DRM_MODIFIER(VIVANTE, TILED, TILED) },
+    { DRM_MODIFIER(VIVANTE, SUPER_TILED, SUPER_TILED) },
+    { DRM_MODIFIER(VIVANTE, SPLIT_TILED, SPLIT_TILED) },
+    { DRM_MODIFIER(VIVANTE, SPLIT_SUPER_TILED, SPLIT_SUPER_TILED) },
+    { DRM_MODIFIER(NVIDIA, TEGRA_TILED, TEGRA_TILED) },
+    { DRM_MODIFIER(NVIDIA, 16BX2_BLOCK_ONE_GOB, 16BX2_BLOCK_ONE_GOB) },
+    { DRM_MODIFIER(NVIDIA, 16BX2_BLOCK_TWO_GOB, 16BX2_BLOCK_TWO_GOB) },
+    { DRM_MODIFIER(NVIDIA, 16BX2_BLOCK_FOUR_GOB, 16BX2_BLOCK_FOUR_GOB) },
+    { DRM_MODIFIER(NVIDIA, 16BX2_BLOCK_EIGHT_GOB, 16BX2_BLOCK_EIGHT_GOB) },
+    { DRM_MODIFIER(NVIDIA, 16BX2_BLOCK_SIXTEEN_GOB, 16BX2_BLOCK_SIXTEEN_GOB) },
+    { DRM_MODIFIER(NVIDIA, 16BX2_BLOCK_THIRTYTWO_GOB, 16BX2_BLOCK_THIRTYTWO_GOB) },
+    { DRM_MODIFIER(BROADCOM, VC4_T_TILED, VC4_T_TILED) },
+    { DRM_MODIFIER(BROADCOM, SAND32, SAND32) },
+    { DRM_MODIFIER(BROADCOM, SAND64, SAND64) },
+    { DRM_MODIFIER(BROADCOM, SAND128, SAND128) },
+    { DRM_MODIFIER(BROADCOM, SAND256, SAND256) },
+    { DRM_MODIFIER(BROADCOM, UIF, UIF) },
+    { DRM_MODIFIER(ARM, 16X16_BLOCK_U_INTERLEAVED, 16X16_BLOCK_U_INTERLEAVED) },
+    { DRM_MODIFIER(ALLWINNER, TILED, TILED) },
+};
+static const struct drmFormatModifierVendorInfo drm_format_modifier_vendor_table[] = {
+    { DRM_FORMAT_MOD_VENDOR_NONE, "NONE" },
+    { DRM_FORMAT_MOD_VENDOR_INTEL, "INTEL" },
+    { DRM_FORMAT_MOD_VENDOR_AMD, "AMD" },
+    { DRM_FORMAT_MOD_VENDOR_NVIDIA, "NVIDIA" },
+    { DRM_FORMAT_MOD_VENDOR_SAMSUNG, "SAMSUNG" },
+    { DRM_FORMAT_MOD_VENDOR_QCOM, "QCOM" },
+    { DRM_FORMAT_MOD_VENDOR_VIVANTE, "VIVANTE" },
+    { DRM_FORMAT_MOD_VENDOR_BROADCOM, "BROADCOM" },
+    { DRM_FORMAT_MOD_VENDOR_ARM, "ARM" },
+    { DRM_FORMAT_MOD_VENDOR_ALLWINNER, "ALLWINNER" },
+    { DRM_FORMAT_MOD_VENDOR_AMLOGIC, "AMLOGIC" },
+};
+]],
         },
     },
 }
 
 import("xim.libxpkg.pkginfo")
-import("xim.libxpkg.system")
 import("xim.libxpkg.log")
 
--- install() is a blind spot by default: log.error does not reach the CI log
--- and a call outside the sandbox's xmake-API subset kills the hook silently.
--- So the log comes first and every step announces itself. validate.yml's
--- failure step collects `mcpp_*_build.log`, which is what this name matches.
-local log_path = nil
-
-local function say(msg)
-    if log_path == nil then return end
-    local prev = io.readfile(log_path) or ""
-    io.writefile(log_path, prev .. msg .. "\n")
-end
-
-local function fail(msg)
-    say("FAILED: " .. msg)
-    log.error("[libdrm] %s", msg)
-    return false
-end
-
-local function sh_quote(value)
-    return "'" .. tostring(value):gsub("'", "'\\''") .. "'"
-end
-
-local function link_matching(srcdir, pattern, outdir)
-    os.exec(
-        "for f in " .. sh_quote(srcdir) .. "/" .. pattern ..
-        "; do [ -e \"$f\" ] || continue; " ..
-        "ln -sf \"$f\" " .. sh_quote(outdir) .. "/\"$(basename \"$f\")\"; " ..
-        "done"
-    )
-end
-
+-- A `.tar.xz` is extracted to a sibling of the install dir rather than into
+-- it, so the descriptor has to move it into place — the same three lines
+-- compat.xcb, compat.xtrans and compat.xcb-proto open with. Without this the
+-- package installs EMPTY: `sources` match nothing, mcpp emits a `c_shared`
+-- edge with zero inputs, and the failure surfaces as `/bin/sh: -shared: not
+-- found` because the unused `$cc` was never defined.
 function install()
-    local prefix = pkginfo.install_dir()
-    os.mkdir(prefix)
+    local srcroot = pkginfo.install_file():replace(".tar.xz", "")
+    if not os.isdir(srcroot) then
+        srcroot = "libdrm-" .. pkginfo.version()
+    end
+    if not os.isdir(srcroot) then
+        log.error("[libdrm] extracted source tree not found (looked for %s)", srcroot)
+        return false
+    end
 
-    log_path = path.join(prefix, "mcpp_libdrm_build.log")
-    io.writefile(log_path, "compat.libdrm install()\n")
+    os.tryrm(pkginfo.install_dir())
+    os.mv(srcroot, pkginfo.install_dir())
 
-    local view = system.subos_sysrootdir()
-    say("subos view: " .. tostring(view))
-
-    local view_lib = path.join(view, "lib")
-    local view_inc = path.join(view, "usr", "include")
-
-    local root     = path.join(prefix, "mcpp_generated", "libdrm")
-    local out_lib  = path.join(root, "lib")
-    local out_inc  = path.join(root, "include")
-    local out_uapi = path.join(out_inc, "libdrm")
-
-    os.mkdir(out_lib)
-    os.mkdir(out_inc)
-    os.mkdir(out_uapi)
-
-    -- 1. The library. From the subos view and nowhere else. `libdrm.so*` only:
-    --    the vendor variants are separate sonames nobody on the generic KMS
-    --    path links, and the glob is anchored so `libdrm_amdgpu.so` cannot
-    --    match it.
-    say("linking libdrm.so* from " .. view_lib)
-    link_matching(view_lib, "libdrm.so*", out_lib)
-
-    for _, required in ipairs({"libdrm.so", "libdrm.so.2"}) do
-        if not os.isfile(path.join(out_lib, required)) then
-            return fail(required .. " is not in this subos. libdrm comes from "
-                        .. "`xim:libdrm`, which this package declares as a "
-                        .. "runtime dependency; if it is declared and this "
-                        .. "still fires, that install did not finish")
+    -- Upstream installs xf86drm.h/xf86drmMode.h/libsync.h into
+    -- `<prefix>/include` and include/drm/*.h into `<prefix>/include/libdrm`,
+    -- and puts both on the pkg-config include path. The uapi half is already
+    -- at `include/drm`; this reproduces the other half so a consumer's
+    -- `#include <xf86drm.h>` works without putting the whole source root —
+    -- private headers and all — on every consumer's include path.
+    local inc = path.join(pkginfo.install_dir(), "mcpp", "include")
+    os.mkdir(inc)
+    for _, header in ipairs({"xf86drm.h", "xf86drmMode.h", "libsync.h"}) do
+        local from = path.join(pkginfo.install_dir(), header)
+        if not os.isfile(from) then
+            log.error("[libdrm] %s missing from the release tarball", header)
+            return false
         end
-    end
-    say("libdrm.so and libdrm.so.2 present")
-
-    -- The glob cannot match a C runtime, but compat.glx-runtime's rule is to
-    -- ASSERT rather than trust: a stray libc here faults inside the dynamic
-    -- linker before main with no output at all.
-    for _, bad in ipairs({"libc.so.6", "libm.so.6", "ld-linux-x86-64.so.2"}) do
-        if os.isfile(path.join(out_lib, bad)) then
-            return fail(bad .. " was linked into the libdrm farm; it would "
-                        .. "reach every consumer's RUNPATH and pair a second "
-                        .. "libc with mcpp's loader")
-        end
+        os.cp(from, path.join(inc, header))
     end
 
-    -- 2. The public headers, at the root where upstream installs them.
-    say("linking public headers from " .. view_inc)
-    for _, h in ipairs({"xf86drm.h", "xf86drmMode.h", "libsync.h"}) do
-        link_matching(view_inc, h, out_inc)
-    end
-    if not os.isfile(path.join(out_inc, "xf86drm.h")) then
-        return fail("xf86drm.h is not in this subos (expected "
-                    .. path.join(view_inc, "xf86drm.h") .. ")")
-    end
-
-    -- 3. The uapi headers, in the `libdrm/` subdirectory the public ones
-    --    include from. Without this, `<xf86drm.h>` parses down to line 40 and
-    --    fails on `#include <drm.h>`.
-    say("linking uapi headers from " .. path.join(view_inc, "libdrm"))
-    link_matching(path.join(view_inc, "libdrm"), "*.h", out_uapi)
-    if not os.isfile(path.join(out_uapi, "drm.h")) then
-        return fail("libdrm/drm.h is not in this subos; <xf86drm.h> would fail "
-                    .. "to parse at its own `#include <drm.h>`")
-    end
-    say("headers present")
-
-    say("done")
     return true
 end

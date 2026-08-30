@@ -14,4 +14,4 @@ name = "libdrm-tests"
 version = "0.1.0"
 
 [target.'cfg(linux)'.dependencies.compat]
-libdrm = "2026.08.30"
+libdrm = "2.4.123.1"
