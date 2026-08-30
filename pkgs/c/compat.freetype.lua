@@ -51,6 +51,17 @@ package = {
             "*/src/base/ftbbox.c",
             -- Base extra (individual)
             "*/src/base/ftmm.c",
+            -- Synthetic bold and oblique. Upstream builds it in `base` and
+            -- every distribution ships it; it was missing here and the gap is
+            -- invisible until a consumer calls it, because nothing in freetype
+            -- itself does.
+            --
+            -- cairo does, unconditionally: `cairo-ft-font.c:2443` calls
+            -- `FT_GlyphSlot_Embolden` when a font is asked for a weight it does
+            -- not have, with no HAVE_ guard to turn off. So a cairo built
+            -- against this freetype failed to LINK with two undefined
+            -- references — measured while adding freedesktop.cairo.
+            "*/src/base/ftsynth.c",
             -- Modules (aggregates)
             "*/src/autofit/autofit.c",
             "*/src/bdf/bdf.c",
