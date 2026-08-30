@@ -24,18 +24,35 @@
 -- tables generated from them by 15 (2568 vs 2583) — so an unpinned build makes
 -- `di_info_get_make` answer differently depending on where it was compiled.
 --
--- The fork pins hwdata v0.410, checks the input in beside the output, and its
--- CI regenerates and diffs. Same arrangement as freedesktop.libevdev with
--- upstream's bundled kernel headers.
+-- The fork pins hwdata v0.410 and checks it in as an INPUT. There is no
+-- checked-in output and no regenerate-and-diff CI step, because there is
+-- nothing to keep honest: `build.mcpp` PRODUCES the table during the build.
 --
--- NO MODULE WRAPPER, deliberately: this library's consumer is wlroots, which is
--- C, and the surface is 74 functions over ~360 structs. The design doc's rule
--- applies — the module layer is a RESULT of forking, not a reason to fork.
+-- NOTHING IN THIS PACKAGE NEEDS python3, sh OR ANY OTHER TOOL. `build.mcpp` is
+-- C++ that mcpp compiles and runs, and it does every generated artifact:
 --
--- ⚠ C++ CONSUMERS MUST WRAP THE INCLUDES. Not one of the seven public headers
--- has an `extern "C"` block, so a C++ TU mangles every declaration and the link
--- fails with `undefined reference to di_info_get_make(di_info const*)` — naming
--- a symbol that is right there. Same as compat.libseat.
+--     pnp-id-table.c            2,583 lines, into the out dir
+--     src/libdisplay-info.cppm  the module wrapper, 206 names
+--
+-- IT IS ALSO MORE CORRECT THAN UPSTREAM'S GENERATOR. pnp.ids stores
+-- `DemoPad<U+00A0>Software<U+00A0>Ltd`, and U+00A0 is the two bytes c2 a0.
+-- Upstream reads the file as TEXT and escapes the codepoint by ordinal —
+-- `\240`, a single byte that is not its UTF-8 encoding, so the string a
+-- consumer prints is invalid UTF-8. build.mcpp escapes BYTES. Diffed over the
+-- whole file: 2,583 lines, identical except for the handful of non-ASCII names,
+-- where this one is right.
+--
+-- THE MODULE IS GENERATED, not hand-written: 206 names read out of the public
+-- headers, so a version bump cannot silently drop one.
+--
+--     import freedesktop.displayinfo;
+--
+-- and that also removes a real burden — not one of the seven public headers has
+-- an `extern "C"` block, so a C++ TU that #includes them mangles every
+-- declaration and fails to link with `undefined reference to
+-- di_info_get_make(di_info const*)`. The module does that wrapping once, inside
+-- the module purview, so a consumer does not. (compat.libseat has the same
+-- upstream problem and no module, so there the consumer still wraps.)
 package = {
     spec        = "1",
     namespace   = "freedesktop",
@@ -49,10 +66,10 @@ package = {
         linux = {
             ["0.2.0"] = {
                 url = {
-                    GLOBAL = "https://github.com/mcpplibs/libdisplay-info/releases/download/v0.2.0/libdisplay-info-0.2.0-mcpp.tar.gz",
-                    CN     = "https://gitcode.com/mcpp-res/libdisplay-info/releases/download/0.2.0/libdisplay-info-0.2.0-mcpp.tar.gz",
+                    GLOBAL = "https://github.com/mcpplibs/libdisplay-info/releases/download/v0.2.0/libdisplay-info-0.2.0-mcpp2.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/libdisplay-info/releases/download/0.2.0/libdisplay-info-0.2.0-mcpp2.tar.gz",
                 },
-                sha256 = "df065a6e040799536a6c93a0202f2766b8c3388b546d0ba4a43290a89aa33ccc",
+                sha256 = "8df9a8064146b2b38378bd8b146894d084ffda43b88b43c485b954da073a7617",
             },
         },
     },
