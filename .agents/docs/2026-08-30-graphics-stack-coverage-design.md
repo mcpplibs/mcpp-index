@@ -1,6 +1,6 @@
 # mcpp 图形栈:从「能跑通」到「能开发」的覆盖面设计
 
-Date: 2026-08-30 · 前置:[`2026-08-30-gbm-cross-repo-closed-loop-plan.md`](2026-08-30-gbm-cross-repo-closed-loop-plan.md) §19/§20 · **状态:已实现并闭环验证(v1.2,见 §11 交付总账 / §12 客户端侧 / §13 仍缺的部分)**
+Date: 2026-08-30 · 前置:[`2026-08-30-gbm-cross-repo-closed-loop-plan.md`](2026-08-30-gbm-cross-repo-closed-loop-plan.md) §19/§20 · **状态:已实现并闭环验证(v1.3,§11 总账 / §12 客户端侧 / §13 仍缺 / §14 fork 规范 / §15 fontconfig / §16 沙箱盲点)**
 
 ## 0. 这份文档解决什么
 
@@ -1164,3 +1164,112 @@ Wayland **没有服务端光标**:客户端要指针,就得自己加载主题、
 
 第 3 条只有 llvm 那条腿抓得到 —— 它没有 sysroot 且用 lld,而这正是
 `validate.yml` 注释里说的「gcc 腿结构上看不见这一类 bug」。
+
+---
+
+## 14. fork 的规范形态(2026-08-30 修订)
+
+本轮前半段的 fork 用了 `sh` + `python` 预生成、把产物签进仓。**那是错的**,正确
+形态是:
+
+> **上游目录与适配目录分开;能支持模块的直接支持模块;生成走
+> `mcpp` + `build.mcpp` + `feature`;尽量不依赖其他工具、sh 或 python。**
+
+### 14.1 `build.mcpp` 是 C++ 程序,不是配置
+
+这是我一开始判断错的地方,而它决定一切:`build.mcpp` 由 mcpp **编译并运行**,
+`import mcpp;` 提供指令 API(`generated` / `include_dir` / `define` / `action` /
+`dep_dir` / `dep_bin` / `out_dir` / `manifest_dir` / `rerun_if_changed` /
+`target_os`)。所以任何"读文件、变换文本、写文件"的生成器都能在里面做,不需要
+外部解释器。
+
+`freedesktop.libdisplay-info` 是按这个形态重做的样板(#308):
+
+| 产物 | 由谁产 |
+|---|---|
+| `pnp-id-table.c`(2583 行) | `build.mcpp` → out dir |
+| `src/libdisplay-info.cppm`(206 个名字) | `build.mcpp` → src/ |
+
+**没有签进仓的生成物,所以也没有「重生成再 diff」的 CI 步骤** —— "数据与代码
+不一致"这个状态不存在。这是构建期生成与签生成物的本质区别。
+
+模块写进 `src/` 而非 out dir,因为 `[lib] path` 是**静态**声明的;`build.mcpp`
+在编译前跑,所以到用的时候文件已经在。
+
+### 14.2 模块能顺手消掉一类上游缺陷
+
+libdisplay-info 的七个公共头**一个 `extern "C"` 都没有**,C++ 消费者 `#include`
+会 mangle 到链接失败(`undefined reference to di_info_get_make(di_info const*)`)。
+原来的处理是"让消费者自己包,并写进文档";有了模块,包装做在模块 purview 里:
+
+```cpp
+import freedesktop.displayinfo;   // 消费者不用管
+```
+
+`compat.libseat` 有同样的上游问题而没有模块,所以那里消费者仍要自己包 —— 两者
+对照说明模块层不只是风格。
+
+### 14.3 生成器可以比上游更正确
+
+`build.mcpp` 的 PNP 表与上游 python 生成器**逐行 diff 过**:2583 行,除几个
+非 ASCII 名字外完全一致,而那几个**这边是对的**。
+
+`pnp.ids` 里 `DemoPad<U+00A0>Software<U+00A0>Ltd`,U+00A0 编码是 `c2 a0` 两字节。
+上游按**文本**读、按码点转义成 `\240` —— 单字节,不是 UTF-8,消费者打印会得到
+替换字符。`build.mcpp` 按**字节**转义成 `\302\240`。
+
+---
+
+## 15. fontconfig:我的估算错了,以及它真正的形态
+
+### 15.1 更正
+
+| | 我先前说的 | 实测 |
+|---|---|---|
+| 规模 | 「中,和 libinput 同量级」 | 26k 行源码,**7 个生成物** |
+| 生成器 | 「一个 python 脚本读一个文本文件」 | `makealias.py` 71 行 + `cutout.py` + gperf + `fc-case.py` **240 行** + `fc-lang.py` **387 行,吃 281 个 `.orth` 数据文件** |
+
+`fc-lang` 把 281 个正字法文件编译成 FcCharSet 的 leaf/number 位图 —— 复刻它
+约等于重写一个小编译器。**这不是「工作量不大」**,而我基于错误估算说过它是。
+
+### 15.2 已经做通的部分(全部在 `build.mcpp` 里,零外部工具)
+
+- `fcstdint.h`
+- `fcalias.h` / `fcaliastail.h` —— 复刻 `makealias.py`,**含它的分组顺序**:
+  tail 按"哪个 `.c` 定义了这个符号"分组,`#ifdef` 块必须按首见顺序嵌套
+- `fcftalias.h` / `fcftaliastail.h`
+- **`fcobjshash.h` —— 用二分查找替掉 gperf 的完美哈希**。这是一处**判断**而非
+  转写:唯一消费者是 `fcobjs.c`,它调 `FcObjectTypeLookup(str, strlen(str))` 并
+  只读 `->id`,72 个条目。语义等价,而少一个工具和一遍 C 预处理。条目来自
+  `fcobjs.h` 的 `FC_OBJECT(...)` 列表 + `fontconfig.h` 的 `#define FC_<NAME>`,
+  两个文本扫描,不需要 cpp
+- 模块包装
+- `config.h` —— **不是**生成物:它是探测**答案**,属于适配目录里可读可争的文件,
+  不属于生成器。四条运行期路径按既定立场留空
+  (`FONTCONFIG_FILE` / `FONTCONFIG_PATH` / `FONTCONFIG_SYSROOT` 是出口)
+
+### 15.3 仍缺的两个,以及形态建议
+
+`fc-case`(240 行,吃 `CaseFolding.txt`)和 `fc-lang`(387 行,吃 281 个
+`.orth`)。前者可复刻;后者是本轮单个最大的一块。
+
+**建议的混合形态**:能 `build.mcpp` 的全做,`fclang.h` 作为**唯一例外**签进适配
+目录并在文件头写明理由。这违反"不签生成物",但避开重写位图编译器 —— 而把例外
+写在文件里、只此一处,比为了纯粹性再花一天更划算。
+
+---
+
+## 16. 沙箱验证的一个盲点(2026-08-30)
+
+补跑新增三个包的沙箱验证时,脚本把一个**已发布一小时**的包报成「找不到」。原因:
+
+```
+index: local index af79fd2 (never refreshed)
+```
+
+沙箱的 home 是合成的,mcpp 带的是镜像里那份索引快照,**早于被测的包**。而
+"刷新索引"正是新用户会做的第一件事。
+
+**所以任何在 `--sandbox` 里做的验证,第一步必须是 `mcpp index update`** ——
+否则测的是镜像打包那天的生态,而不是今天的。这与
+「本地旧索引快照掩盖描述符错误」那条 是同一类,只是发生在沙箱侧。
