@@ -600,17 +600,115 @@ share/{bash-completion,man}` —— **不带 xkb 数据**。所以 `XKB_CONFIG_R
 ⚠ 顺带一提:一个**只需要 `xkb_keymap_new_from_string`** 的合成器不需要这份数据 ——
 那正是它从客户端收到 keymap 的路径,也是本索引测试跑通 parser 的方式。
 
+#### 10.9.1 已落地(openxlings/xim-pkgindex#732)
+
+上面的结论已实现,并在实现过程中改了 discovery 层的两处形状:
+
+**`XKB_CONFIG_ROOT` 是表里第一个非列表项。** DISCOVERY 的另外四行都是冒号分隔的搜索
+路径,`prepend` 在那里既正确又无损(而且必须是 prepend:一个提供方 `set` 会盖掉另一
+个,NVIDIA vendor 目录消失就是这么来的)。`XKB_CONFIG_ROOT` 是**标量** —— libxkbcommon
+读一次当一个目录用,`prepend` 上第二个提供方就变成 `dirA:dirB`,一个不存在的路径,而
+报错只会说「keymap 编译失败」。所以给 DISCOVERY 行加了可选的 `op`,默认仍是 `prepend`,
+这一行写 `set`。
+
+> 这与记忆里那条 `xvm envs 是 PATH 式合并`(标量 env 会被冒号拼接)是同一件事的第二次
+> 撞见。第一次的答案是「生成 launcher」;这次因为发现点在 discovery 层内部,所以修在
+> 了机制里。
+
+**声明变量 ≠ 放置内容。** 第一版只加了 DISCOVERY 行和 `declare_subos_env` 调用,装完之后:
+
+```
+XKB_CONFIG_ROOT=[.../subos/eco-2026-8-30-1/share/X11/xkb]
+ls: cannot access '.../share/X11/xkb': No such file or directory
+```
+
+变量在 shell 里读得好好的,指向不存在的目录。补 `graphics.declare_xkb`,与
+`declare_dri` / `declare_gbm` 同形(`xvm.files` 把树放进 subos)。
+
+**跨索引闭环已实测** —— mcpp 侧的 `freedesktop.libxkbcommon` 消费 xim 侧的数据集:
+
+```
+XKB_CONFIG_ROOT = .../subos/eco-2026-8-30-1/share/X11/xkb
+xkb_keymap_new_from_names(evdev/pc105/us) against that root ok
+   real layout: keycode 24 -> "q"
+…and the real us layout maps keycode 24 to "q"           ok
+0 check(s) failed
+```
+
+消费侧断言写在 `tests/examples/libxkbcommon`,且是**条件式**的:`XKB_CONFIG_ROOT` 未
+设置时只报告,设置了才要求编得出来。没有数据集的机器不是这个包的缺陷。
+
+#### 10.9.2 同一形状的第三处:libinput quirks
+
+写 `compat.libinput` 时把 `LIBINPUT_QUIRKS_DIR` 也编译成空,注释里当时写的是「编译期
+路径,空即用内置默认」。**这句话不准确**:`libinput.c:1911` 是
+`getenv("LIBINPUT_QUIRKS_DIR")` 优先、编译期值兜底 —— 和 `GBM_BACKENDS_PATH`
+一模一样的形状。
+
+所以这不是死路,是**缺提供方**:`.quirks` 文件就在 libinput 自己的 tarball 里,但
+mcpp-index 没有发布数据目录的机制(与 §10.9 同因)。在有东西填上之前,libinput 打印
+
+```
+failed to find data files ... will negatively affect device behavior
+```
+
+并跑在内置默认上。这是**优雅降级**:枚举、事件、手势都正常,丢的是逐机型调校(比如
+某块触摸板的压力区间)。`tests/examples/libinput` 就是在这条消息存在的情况下全绿的。
+
+补法与 xkeyboard-config 完全对称(xim 数据包 + 一行 DISCOVERY),优先级低于布局数据:
+布局缺了是**硬失败**,quirks 缺了只是不够贴合。
+
 ### 10.10 仍未做
 
 - ~~G4b `libxkbcommon`~~ **已做**(fork,bison parser 预生成)。它需要的数据集见 §10.9:
   属于生态,不属于这里。
-- ~~G5 `libinput`~~ **描述符已做**;测试成员待本 PR 合并、`freedesktop.libevdev` 发布
-  后接上 —— 它同时需要 `compat.*` 和 `freedesktop.*` 两个 namespace 指向同一个
-  checkout,而成员级 `[indices]` 是替换而非合并。
+- ~~G5 `libinput`~~ **已做,并且测试成员一接上就抓出了四个 bug**(#298)。
+  形态问题解决得很朴素:这个成员**不声明 `[indices]`**,继承根的
+  `compat = { path = "." }` —— compat 来自 checkout,`freedesktop.libevdev` 来自已发布
+  索引(它确实已发布)。声明 `freedesktop` 反而会让 `compat.libinput` 去查已发布索引。
+
+  四个 bug 值得单列,因为它们**全都是"包进了索引但从没被编译过"造成的** ——
+  没有测试成员消费它,而没人编译的包不会编译失败(记忆里那条「绿 CI 不等于包被编译」
+  的教科书案例):
+
+  | 问题 | 症状落点 |
+  |------|---------|
+  | 缺 `libinput-version.h`(meson 从 `.h.in` 生成) | `libinput-private.h:45` 无条件 include,40 个源文件全挂 |
+  | `config.h` 只写了一半 | `HTTP_DOC_LINK` / `LIBINPUT_QUIRKS_OVERRIDE_FILE` / `LIBINPUT_PLUGIN_{LIB,ETC}DIR` / `HAVE_VERSIONSORT` / `HAVE_MTDEV` |
+  | `include_dirs` 少了包根 | 全树只有一个文件写 `#include "src/evdev-frame.h"` |
+  | `typeof` 是 GNU 关键字 | `-std=c11` 下 cast 塌成 `int`,错误落在十几个没提 typeof 的文件里 |
+
+  其中两条有普遍意义:
+
+  **`HAVE_VERSIONSORT`** —— 不定义它,`libinput-versionsort.h` 会给出自己的
+  `static strverscmp`,而 glibc 已经 `extern` 声明过。这是硬错误,不是遮蔽。
+  「少定义一个 HAVE_ 宏最多退化」的直觉在这里是错的。
+
+  **`c_standard = "gnu11"` 不生效,这次是实测的** —— mcpp 收下这个字符串,仍然发
+  `-std=c11`,那些 typeof 错误原样还在。所以走 `-Dtypeof=__typeof__`。这与记忆里
+  「c_standard 的 gnu 模式被静默忽略」一致,但那条记的是 `_GNU_SOURCE` 类的**库特性
+  宏**;`typeof` 是**语言方言**,`-D_GNU_SOURCE` 对它无效。两者要分开记。
 - ~~G6 `libudev` / `libseat`~~ **已做**,而且没有碰 systemd:libudev 用
   **libudev-zero**(三个实现里唯一既活着又可独立分发的),libseat 只开 seatd 与
   builtin 后端。两者的代价都在描述符里点名了。
-- **xkeyboard-config**:见 §10.9,应进 xim-pkgindex。
+- ~~**xkeyboard-config**~~ **已做**(xim-pkgindex#732),见 §10.9.1。跨索引闭环已实测。
+- **libinput quirks 数据**:见 §10.9.2。形状与 xkeyboard-config 对称,优先级更低 ——
+  布局缺了是硬失败,quirks 缺了只是不够贴合。**未做**。
 
-前两条是普通工作量;G6 是需要决策的。合成器可以在「已有 DRM master」的前提下开发
-(从 TTY 直接启动、或 `SEATD_SOCK`),把 session 管理留到最后。
+至此渲染链与输入链都不再有「静默落到宿主」的边:
+
+| 子系统 | 发现变量 | 提供方 | 状态 |
+|--------|---------|--------|------|
+| DRI 驱动 | `LIBGL_DRIVERS_PATH` | `xim:mesa` | ✅ |
+| EGL vendor | `__EGL_VENDOR_LIBRARY_DIRS` | `xim:mesa` + host-link 哨兵 | ✅ |
+| Vulkan ICD | `XDG_DATA_DIRS` / 共享 vendor 目录 | 同上 | ✅ #731 待合 |
+| GBM 后端 | `GBM_BACKENDS_PATH` | `xim:mesa` | ✅ |
+| 键盘布局 | `XKB_CONFIG_ROOT` | `xim:xkeyboard-config` | ✅ #732 待合 |
+| 输入 quirks | `LIBINPUT_QUIRKS_DIR` | *(无)* | ⬜ 优雅降级中 |
+| USB 名字库 | `USB_IDS_PATH` | *(无)* | ⬜ 优雅降级中 |
+
+最后两行是同一类:机制在、提供方缺、缺了只丢锦上添花的东西。**它们缺失时会说出来**
+—— 这正是当初把编译期默认值一律留空要换的东西。
+
+G6 仍是需要决策的:合成器可以在「已有 DRM master」的前提下开发(从 TTY 直接启动、或
+`SEATD_SOCK`),把 session 管理留到最后。
