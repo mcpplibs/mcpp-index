@@ -1427,18 +1427,25 @@ issue #527 问的是「在系统级开发(Wayland 合成器、Mesa/Vulkan 扩展
 
 ### 20.2 Wayland 合成器缺什么(逐个点名)
 
-一个真实合成器(wlroots / weston 量级)需要的,索引里的实际情况:
+一个真实合成器(wlroots / weston 量级)需要的,索引里的实际情况。
 
-| 需要 | 索引里 | 性质 |
+> ⚠ **这张表是 2026-08-30 上午盘点时的状态,当天下午被自己的后续工作改写了一半。**
+> 右列是现状;实现记录与踩到的坑见
+> [`2026-08-30-graphics-stack-coverage-design.md`](2026-08-30-graphics-stack-coverage-design.md) §10。
+> 保留左列不是懒,是因为「当时缺什么」这个判断本身准确,而它决定了后来做什么。
+
+| 需要 | 盘点时 | 现在 |
 |---|---|---|
-| `libwayland-server` / `-client` / `-scanner` | ✅ 有,源码构建 | 已完成 |
-| EGL、GBM、libdrm | ✅ 有 | 已完成 |
-| **`libGLESv2`** | ❌ **没有** | ⚠ **最要命的一个** |
-| `wayland-protocols`(xdg-shell 等 XML) | ❌ 没有 | 没有它连基本桌面 shell 都实现不了 |
-| `libxkbcommon` | ❌ 没有 | 键盘 |
-| `libinput` | ❌ 没有 | 输入 |
-| `libudev` / `libseat` | ❌ 没有 | 设备枚举、session / DRM master |
-| `pixman` | ❌ 没有 | 软件合成路径 |
+| `libwayland-server` / `-client` / `-scanner` | ✅ 有,源码构建 | ✅ |
+| EGL、GBM、libdrm | ✅ 有 | ✅ |
+| **`libGLESv2`** | ❌ **没有**(最要命的一个) | ✅ `freedesktop.glesv2`,连同 glesv1 / opengl |
+| `wayland-protocols`(xdg-shell 等 XML) | ❌ 没有 | ✅ 三个 tier 包 stable / staging / unstable |
+| `pixman` | ❌ 没有 | ✅ `compat.pixman` |
+| `libxkbcommon` | ❌ 没有 | ❌ **仍缺**(键盘;还需 xkeyboard-config 数据包) |
+| `libinput` | ❌ 没有 | ❌ **仍缺**(输入;拖 libevdev / mtdev / libudev) |
+| `libudev` / `libseat` | ❌ 没有 | ❌ **仍缺**,需单独决策 |
+
+**所以现在缺的是输入链,不再是渲染链。**
 
 **`libGLESv2` 为什么最要命**:合成器是通过 EGL 拿 context、然后用 **GLES2** 画的。
 这一轮建出了 `libEGL.so.1`,但 libglvnd 的 GL/GLES 系列(`libGL`、`libGLX`、`libOpenGL`、
