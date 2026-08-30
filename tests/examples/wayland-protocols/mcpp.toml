@@ -1,0 +1,34 @@
+# wayland-protocols test project.
+#
+# THIS MEMBER DECLARES ITS OWN [indices]: an index is looked up BY NAMESPACE,
+# and the workspace root maps `compat`, so `freedesktop.*` would resolve
+# against the published index rather than the packages under test.
+[indices]
+freedesktop = { path = "../../.." }
+
+[package]
+name     = "wayland-protocols-tests"
+version  = "0.1.0"
+standard = "c++23"
+
+# ONLY staging is named, and stable arrives with it.
+#
+# staging depends on stable INSIDE the fork, as a path dependency — measured
+# necessity, not convention: staging references `xdg_toplevel_interface` and
+# `zwp_tablet_tool_v2_interface`, which stable defines. So naming both here is
+# an error rather than a redundancy:
+#
+#     dependency freedesktop.wayland-protocols-stable is requested as both a
+#     version dep (by wayland-protocols-tests) and a path dep (by
+#     freedesktop.wayland-protocols-staging.49). Pick one.
+#
+# The rule that falls out: a project that wants staging names staging; one that
+# wants only stable names stable. Never both. This member takes the first form,
+# and the test then proves that protocols from BOTH tiers link into one
+# program — which is the property the three-package split exists to preserve.
+#
+# stable + unstable is the pair that CANNOT coexist (13 shared symbols). That
+# is upstream's semantics rather than a defect, and testing it would mean
+# asserting a link failure.
+[target.'cfg(linux)'.dependencies.freedesktop]
+wayland-protocols-staging = "1.49"
