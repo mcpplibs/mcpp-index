@@ -89,6 +89,7 @@ members = [
     "tests/examples/egl",
     "tests/examples/gl",
     "tests/examples/libevdev",
+    "tests/examples/libinput",
     "tests/examples/libseat",
     "tests/examples/libudev",
     "tests/examples/libxkbcommon",

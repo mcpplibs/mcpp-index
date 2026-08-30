@@ -16,6 +16,7 @@
 
 #include <cstdio>
 #include <cstring>
+#include <cstdlib>
 
 namespace {
 
@@ -102,6 +103,48 @@ int main()
     // ── 5. The keysym tables, which are their own generated data ─────────
     check(xkb_keysym_from_name("Escape", XKB_KEYSYM_NO_FLAGS) == XKB_KEY_Escape,
           "xkb_keysym_from_name resolves a name to its keysym");
+
+    // ── 6. RMLVO, if a dataset is reachable ──────────────────────────────
+    //
+    // This is the OTHER half of libxkbcommon, and the half this package
+    // deliberately cannot satisfy on its own: `xkb_keymap_new_from_names`
+    // takes rules/model/layout/variant/options and reads them out of
+    // xkeyboard-config's data tree. DFLT_XKB_CONFIG_ROOT is compiled in EMPTY
+    // here on purpose, so the path has to come from the environment —
+    // XKB_CONFIG_ROOT, which is what an ecosystem package declares.
+    //
+    // Reported rather than asserted when unset: a machine with no dataset is
+    // not a defect in this package. When it IS set, the compile must succeed,
+    // because then the dataset is the thing under test.
+    {
+        const char *root = std::getenv("XKB_CONFIG_ROOT");
+        std::printf("\n   XKB_CONFIG_ROOT = %s\n",
+                    root ? root : "(unset — the ecosystem declares it)");
+        if (root != nullptr) {
+            xkb_context *c2 = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
+            xkb_rule_names names{};
+            names.rules  = "evdev";
+            names.model  = "pc105";
+            names.layout = "us";
+            xkb_keymap *k2 = c2 ? xkb_keymap_new_from_names(
+                c2, &names, XKB_KEYMAP_COMPILE_NO_FLAGS) : nullptr;
+            check(k2 != nullptr,
+                  "xkb_keymap_new_from_names(evdev/pc105/us) against that root");
+            if (k2 != nullptr) {
+                xkb_state *s2 = xkb_state_new(k2);
+                if (s2 != nullptr) {
+                    char b[16] = {0};
+                    xkb_state_key_get_utf8(s2, 24, b, sizeof b);
+                    std::printf("   real layout: keycode 24 -> \"%s\"\n", b);
+                    check(b[0] == 'q',
+                          "…and the real us layout maps keycode 24 to \"q\"");
+                    xkb_state_unref(s2);
+                }
+                xkb_keymap_unref(k2);
+            }
+            if (c2) xkb_context_unref(c2);
+        }
+    }
 
     xkb_keymap_unref(km);
     xkb_context_unref(ctx);

@@ -1,0 +1,22 @@
+# libinput test project — the top of the input chain.
+#
+# NO `[indices]` OF ITS OWN, and that is the interesting part.
+#
+# This member needs packages from TWO namespaces: `compat.libinput` (and the
+# `compat.libudev` / `compat.mtdev` it depends on) from this checkout, and
+# `freedesktop.libevdev` which libinput also links. A member-level `[indices]`
+# REPLACES the root's rather than merging, and one path can only be registered
+# under one namespace — so declaring `freedesktop = { path = "../../.." }` here
+# would make `compat.libinput` resolve against the published index instead.
+#
+# Inheriting the root's `compat = { path = "." }` is what works: the compat
+# packages come from the checkout, and `freedesktop.libevdev` resolves from the
+# PUBLISHED index — which is correct, because it is published. Same arrangement
+# tests/examples/asio-ssl relies on for the opposite reason.
+[package]
+name     = "libinput-tests"
+version  = "0.1.0"
+standard = "c++23"
+
+[target.'cfg(linux)'.dependencies.compat]
+libinput = "1.31.3"

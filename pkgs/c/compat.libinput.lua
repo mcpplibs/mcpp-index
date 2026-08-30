@@ -31,13 +31,25 @@
 -- way. Nothing in this index provides it, and without it libinput falls back
 -- to generic tablet handling rather than failing.
 --
--- The quirks database (`quirks.c`) reads `.quirks` files at runtime from a
--- directory compiled in as `LIBINPUT_QUIRKS_DIR`. That path is EMPTY here for
--- the same reason libgbm's backend path and libxkbcommon's config root are:
--- upstream's default points into the build prefix, which after relocation is
--- the HOST's dataset. Empty means devices get libinput's built-in defaults
--- rather than a host machine's model quirks — correct behaviour, one fewer
--- silent host edge.
+-- The quirks database (`quirks.c`) reads `.quirks` files at runtime — model
+-- specific tuning like a touchpad's pressure range. `libinput.c:1911` takes the
+-- directory from `getenv("LIBINPUT_QUIRKS_DIR")` and falls back to a
+-- compiled-in path, and the compiled-in path is EMPTY here for the same reason
+-- libgbm's backend path and libxkbcommon's config root are: upstream's default
+-- points into the build prefix, which after relocation is the HOST's dataset.
+--
+-- So this is a WIRING question, not a dead end — the same shape as
+-- GBM_BACKENDS_PATH, down to the environment variable. What is missing is a
+-- provider: the `.quirks` files ship inside libinput's own tarball, but
+-- mcpp-index has no way for a package to publish a data DIRECTORY, so nothing
+-- currently fills the variable. Until something does, libinput logs
+--
+--     failed to find data files ... will negatively affect device behavior
+--
+-- and runs on its built-in defaults. That is a real degradation and it is
+-- graceful: enumeration, events and gestures all work — what is lost is
+-- per-model tuning. Verified in tests/examples/libinput, which passes with the
+-- message present.
 package = {
     spec        = "1",
     namespace   = "compat",
@@ -62,9 +74,20 @@ package = {
     mcpp = {
         language   = "c++23",
         import_std = false,
+        -- Upstream asks for `c_std=gnu99` and means it — see the `typeof`
+        -- note in cflags. `c_standard = "gnu11"` was tried here first and is
+        -- NOT the fix: mcpp accepts the string and still emits `-std=c11`, so
+        -- the descriptor would claim a dialect the compiler never sees.
         c_standard = "c11",
 
-        include_dirs = { "*/src", "*/include", "mcpp_generated" },
+        -- `"*"` is the package ROOT, and it is here for exactly one file:
+        -- `libinput-plugin-mouse-wheel-lowres.c:31` writes
+        -- `#include "src/evdev-frame.h"` while every other source in the tree
+        -- writes `#include "evdev-frame.h"`. Upstream gets both spellings for
+        -- free because meson compiles from the project root; a package that
+        -- only puts `*/src` on the search path resolves 39 files and fails the
+        -- fortieth.
+        include_dirs = { "*", "*/src", "*/include", "mcpp_generated" },
 
         generated_files = {
             ["mcpp_generated/config.h"] = [==[
@@ -82,10 +105,70 @@ package = {
    would add a dependency this package does not need to do its job. */
 #define LIBINPUT_QUIRKS_DIR ""
 #define LIBINPUT_QUIRKS_SRCDIR ""
+/* The user's quirks override, `<sysconfdir>/libinput/local-overrides.quirks`
+   upstream. Empty for the reason above: relocated, it names the HOST's file. */
+#define LIBINPUT_QUIRKS_OVERRIDE_FILE ""
+
+/* Plugin search paths, both EMPTY and both required to exist:
+   `libinput_plugin_system_append_default_paths` (libinput-plugin.c:387) names
+   them unconditionally, outside any HAVE_PLUGINS guard. Empty paths append
+   nothing, which is the behaviour this package wants — see the header comment
+   on why the Lua plugin system is off. */
+#define LIBINPUT_PLUGIN_LIBDIR ""
+#define LIBINPUT_PLUGIN_ETCDIR ""
+
+/* Printed into log messages that point a user at the documentation for the
+   behaviour being reported. meson builds it from the version: micro < 90 means
+   a release, so the URL names this release rather than `latest`. */
+#define HTTP_DOC_LINK "https://wayland.freedesktop.org/libinput/doc/1.31.3"
+
 #define HAVE_LIBEVDEV_DISABLE_PROPERTY 1
 #define HAVE_MEMFD_CREATE 1
 #define HAVE_LOCALE_H 1
 #define HAVE_STRERRORNAME_NP 1
+#define HAVE_SIGABBREV_NP 1
+#define HAVE_PIDFD_OPEN 1
+
+/* glibc has versionsort(3), and saying so is load-bearing rather than
+   cosmetic: `libinput-versionsort.h` provides its OWN static fallback when
+   this is unset, and a static definition of a name glibc already declared
+   extern is a hard error, not a shadow. */
+#define HAVE_VERSIONSORT 1
+
+/* mtdev is a declared dependency of this package, so the plugin that uses it
+   is compiled unconditionally (see `libinput-plugin-mtdev.c` in sources). */
+#define HAVE_MTDEV 1
+
+/* HAVE_C23_AUTO is deliberately ABSENT. meson probes for it by compiling
+   `auto foo = gmtime(NULL);`, which needs C23; this package builds as gnu11,
+   so the probe would fail there too and upstream's non-auto path is correct. */
+#endif
+]==],
+
+            -- meson's `src/libinput-version.h.in`, substituted for 1.31.3.
+            --
+            -- `libinput-private.h:45` includes it unconditionally, so every one
+            -- of the 40 sources below needs it — this is not an optional
+            -- convenience header. It went missing in the first version of this
+            -- descriptor and NOTHING CAUGHT IT: the package validated, entered
+            -- the index and shipped, because no test member consumed it and a
+            -- package nobody compiles cannot fail to compile. The
+            -- `tests/examples/libinput` member exists so that stays true only
+            -- until someone builds it — which is what found this.
+            --
+            -- The three numbers are the version in `xpm` above, split. They are
+            -- the package's public version macros, so a consumer doing
+            -- `#if LIBINPUT_VERSION_MAJOR >= 1` gets a real answer; leaving
+            -- them at 0 would compile just as well and lie.
+            ["mcpp_generated/libinput-version.h"] = [==[
+#ifndef LIBINPUT_VERSION_H
+#define LIBINPUT_VERSION_H
+
+#define LIBINPUT_VERSION_MAJOR 1
+#define LIBINPUT_VERSION_MINOR 31
+#define LIBINPUT_VERSION_MICRO 3
+#define LIBINPUT_VERSION "1.31.3"
+
 #endif
 ]==],
         },
@@ -144,6 +227,27 @@ package = {
         cflags = {
             "-D_GNU_SOURCE",
             "-DHAVE_CONFIG_H",
+
+            -- The GNU `typeof` keyword, supplied by hand.
+            --
+            -- `util-mem.h:180` is `(typeof(*ptr_))_steal(ptr_)` — the cast that
+            -- makes every `steal()` in the tree type-safe. Bare `typeof` is a
+            -- GNU extension (and C23's spelling); ISO C11 has only
+            -- `__typeof__`. Under `-std=c11` GCC parses `typeof(...)` as a call
+            -- to an undeclared function, the cast collapses to `int`, and the
+            -- damage lands as `-Wint-conversion` errors in a dozen unrelated
+            -- files that never mention typeof.
+            --
+            -- This is a `-D` rather than `c_standard = "gnu11"` because the
+            -- gnu dialects do not reach the compiler: mcpp accepts the string
+            -- and still emits `-std=c11`. Measured, not assumed — gnu11 was
+            -- set here and these exact errors survived it.
+            --
+            -- Safe because `__typeof__` IS `typeof`, always available in any
+            -- dialect, and nothing can be named `typeof` in code that expects
+            -- gnu99 anyway.
+            "-Dtypeof=__typeof__",
+
             "-fPIC",
         },
 
