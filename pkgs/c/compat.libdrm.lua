@@ -27,6 +27,14 @@
 --                       glibc and valgrind/udev are compiled out below
 --
 -- ─────────────────────────────────────────────────────────────────────────
+-- 2.4.134 — THE CURRENT UPSTREAM RELEASE, AND NEWER THAN THE PAYLOAD'S
+--
+-- `xim:mesa` pulls `xim:libdrm` at 2.4.123. Being ahead of it is fine and is
+-- what the soname is for: libdrm has kept `libdrm.so.2` since 2012 and is
+-- backward compatible within it, so Mesa — built against 2.4.123 — binds to
+-- this one and works. That is the direction a distribution upgrade moves too.
+--
+-- ─────────────────────────────────────────────────────────────────────────
 -- WHY `kind = "shared"` WITH A SONAME IS LOAD-BEARING
 --
 -- Mesa is normally in the same process — `xim:mesa` declares `xim:libdrm`, and
@@ -87,12 +95,12 @@ package = {
 
     xpm = {
         linux = {
-            ["2.4.123.1"] = {
+            ["2.4.134"] = {
                 url = {
-                    GLOBAL = "https://dri.freedesktop.org/libdrm/libdrm-2.4.123.tar.xz",
-                    CN     = "https://gitcode.com/mcpp-res/libdrm/releases/download/2.4.123.1/libdrm-2.4.123.tar.xz",
+                    GLOBAL = "https://dri.freedesktop.org/libdrm/libdrm-2.4.134.tar.xz",
+                    CN     = "https://gitcode.com/mcpp-res/libdrm/releases/download/2.4.134/libdrm-2.4.134.tar.xz",
                 },
-                sha256 = "a2b98567a149a74b0f50e91e825f9c0315d86e7be9b74394dae8b298caadb79e",
+                sha256 = "ac5e74d157830eb8bee44c6a6bf3ad49774ef0dd2a72bdad74a8f20308b52a95",
             },
         },
     },
@@ -163,6 +171,8 @@ static const struct drmFormatModifierInfo drm_format_modifier_table[] = {
     { DRM_MODIFIER_INTEL(4_TILED_MTL_RC_CCS, 4_TILED_MTL_RC_CCS) },
     { DRM_MODIFIER_INTEL(4_TILED_MTL_MC_CCS, 4_TILED_MTL_MC_CCS) },
     { DRM_MODIFIER_INTEL(4_TILED_MTL_RC_CCS_CC, 4_TILED_MTL_RC_CCS_CC) },
+    { DRM_MODIFIER_INTEL(4_TILED_LNL_CCS, 4_TILED_LNL_CCS) },
+    { DRM_MODIFIER_INTEL(4_TILED_BMG_CCS, 4_TILED_BMG_CCS) },
     { DRM_MODIFIER(SAMSUNG, 64_32_TILE, 64_32_TILE) },
     { DRM_MODIFIER(SAMSUNG, 16_16_TILE, 16_16_TILE) },
     { DRM_MODIFIER(QCOM, COMPRESSED, COMPRESSED) },
@@ -186,7 +196,10 @@ static const struct drmFormatModifierInfo drm_format_modifier_table[] = {
     { DRM_MODIFIER(BROADCOM, SAND256, SAND256) },
     { DRM_MODIFIER(BROADCOM, UIF, UIF) },
     { DRM_MODIFIER(ARM, 16X16_BLOCK_U_INTERLEAVED, 16X16_BLOCK_U_INTERLEAVED) },
+    { DRM_MODIFIER(ARM, INTERLEAVED_64K, INTERLEAVED_64K) },
     { DRM_MODIFIER(ALLWINNER, TILED, TILED) },
+    { DRM_MODIFIER(APPLE, GPU_TILED, GPU_TILED) },
+    { DRM_MODIFIER(APPLE, GPU_TILED_COMPRESSED, GPU_TILED_COMPRESSED) },
 };
 static const struct drmFormatModifierVendorInfo drm_format_modifier_vendor_table[] = {
     { DRM_FORMAT_MOD_VENDOR_NONE, "NONE" },
@@ -200,6 +213,8 @@ static const struct drmFormatModifierVendorInfo drm_format_modifier_vendor_table
     { DRM_FORMAT_MOD_VENDOR_ARM, "ARM" },
     { DRM_FORMAT_MOD_VENDOR_ALLWINNER, "ALLWINNER" },
     { DRM_FORMAT_MOD_VENDOR_AMLOGIC, "AMLOGIC" },
+    { DRM_FORMAT_MOD_VENDOR_MTK, "MTK" },
+    { DRM_FORMAT_MOD_VENDOR_APPLE, "APPLE" },
 };
 ]],
         },
