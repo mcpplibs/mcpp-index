@@ -1,0 +1,31 @@
+# wayland-egl test member — the client-side GPU path.
+#
+# Its own `[indices]`, for the reason the sibling wayland member documents: the
+# workspace root maps `compat` to this checkout and lookup is BY NAMESPACE, so
+# `freedesktop.*` would otherwise resolve against the published index instead of
+# the packages under test.
+[indices]
+freedesktop = { path = "../../.." }
+
+[package]
+name     = "wayland-egl-tests"
+version  = "0.1.0"
+standard = "c++23"
+
+# ONE package named, and libwayland-client arrives with it.
+#
+# `freedesktop.wayland-egl`'s own manifest declares `freedesktop.wayland` as a
+# PATH dependency — the two are workspace members of the same fork — and naming
+# it here as a version dependency as well is rejected outright:
+#
+#     error: dependency 'freedesktop.wayland' is requested as both a version
+#            dep (by 'wayland-egl-tests') and a path dep (by
+#            'freedesktop.wayland-egl@1.26.0'). Pick one.
+#
+# That is the right diagnostic: two spellings of one dependency could resolve
+# to two different trees. So the client comes in transitively, which is also
+# what a real consumer gets — `wl_egl_window_create` takes a `wl_surface *`
+# that only libwayland-client can produce, so the edge exists whether or not
+# the consumer names it.
+[target.'cfg(linux)'.dependencies.freedesktop]
+wayland-egl = "1.26.0"
