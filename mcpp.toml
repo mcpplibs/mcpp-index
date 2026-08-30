@@ -86,6 +86,7 @@ members = [
     "tests/examples/expat",
     "tests/examples/wayland",
     "tests/examples/egl",
+    "tests/examples/gl",
     "tests/examples/libgbm",
     "tests/examples/libpng",
     "tests/examples/libwebp",

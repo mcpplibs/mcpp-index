@@ -128,7 +128,7 @@ package = {
                     GLOBAL = "https://github.com/mcpplibs/libglvnd/archive/refs/tags/v1.7.0.tar.gz",
                     CN     = "https://gitcode.com/mcpp-res/libglvnd/releases/download/1.7.0/libglvnd-1.7.0.tar.gz",
                 },
-                sha256 = "d50579071c5e0b883cddae82fac3f8d7c575b6523c9ea64b855a3d6f50951d47",
+                sha256 = "11347b0ffffbcb9ca51cd3941dff9ef923b21bb1e9469f3e5cff42ed487bf77d",
             },
         },
     },

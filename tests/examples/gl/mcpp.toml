@@ -1,0 +1,36 @@
+# GL test project — the render half of the graphics stack.
+#
+# THIS MEMBER DECLARES ITS OWN [indices], and has to. The workspace root maps
+# `compat` to this checkout, and an index is looked up BY NAMESPACE, so
+# `freedesktop.*` would resolve against the published index rather than the
+# packages under test. A member-level table REPLACES the root's.
+[indices]
+freedesktop = { path = "../../.." }
+
+[package]
+name     = "gl-tests"
+version  = "0.1.0"
+standard = "c++23"
+
+# EGL plus ONE GL flavour, which is the only correct shape — and this member
+# used to name all three, which is how the reason was found.
+#
+# libGLESv2, libGLESv1_CM and libOpenGL are three FRONT ENDS onto the same
+# libGLdispatch, and their symbol sets overlap: `glClear` is exported by all
+# three. Link two of them and the name binds to whichever the loader mapped
+# first — measured here, `glClear` resolved to libGLESv1_CM.so.1 in a program
+# that meant GLESv2, silently and with nothing to warn about it. That is the
+# same class of ambiguity soname reuse creates, and it is avoided the same way:
+# pick one.
+#
+# A project picks the flavour it writes against. A Wayland compositor is GLESv2
+# (it takes a context through EGL and draws with shaders), so that is what this
+# member is. libGLESv1_CM and libOpenGL have their own tests in the fork, where
+# each is the only GL library in the process.
+[target.'cfg(linux)'.dependencies.freedesktop]
+egl    = "1.7.0"
+glesv2 = "1.7.0"
+
+# GBM is how a headless test gets a real context without a display server.
+[target.'cfg(linux)'.dependencies.compat]
+libgbm = "25.0.7"
