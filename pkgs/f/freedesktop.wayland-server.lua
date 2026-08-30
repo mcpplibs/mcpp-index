@@ -36,7 +36,7 @@ package = {
                     GLOBAL = "https://github.com/mcpplibs/wayland/archive/refs/tags/v1.26.0.tar.gz",
                     CN     = "https://gitcode.com/mcpp-res/wayland/releases/download/1.26.0/wayland-1.26.0.tar.gz",
                 },
-                sha256 = "0a5dd54ab01e675c9a150774ade0c1262a7ad4285e0362327f26e5612d0a2f47",
+                sha256 = "961a900dafe76e713c2e46d9a064ff3a6375622f4057013472a04c44d8bcb6e8",
             },
         },
     },

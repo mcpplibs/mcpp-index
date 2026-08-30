@@ -1,6 +1,6 @@
 // freedesktop.egl — behavioral test, runnable with no GPU and no display.
 //
-// Every FUNCTION and TYPE below comes from `import egl;`. <EGL/egl.h> is
+// Every FUNCTION and TYPE below comes from `import khronos.egl;`. <EGL/egl.h> is
 // included for the EGL_* CONSTANTS only: they are macros, and no module can
 // export a macro. So the file compiling is itself the first assertion — the
 // module's export list has to cover everything used here — and the file
@@ -39,7 +39,7 @@
 #include <cstring>
 #include <string>
 
-import egl;
+import khronos.egl;
 
 namespace {
 

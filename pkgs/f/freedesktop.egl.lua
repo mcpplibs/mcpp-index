@@ -1,4 +1,4 @@
--- freedesktop.egl — libEGL.so.1, plus `import egl;`.
+-- freedesktop.egl — libEGL.so.1, plus `import khronos.egl;`.
 --
 -- EGL is the window-system binding: `eglGetPlatformDisplay`,
 -- `eglCreateContext`, `eglCreateWindowSurface`, `eglMakeCurrent`, and the
@@ -42,13 +42,33 @@
 -- other than libEGL needs it — `libGL` and `libGLX` would.
 --
 -- ─────────────────────────────────────────────────────────────────────────
--- THE MODULE ADDS NO API
+-- THE MODULE ADDS NO API, AND IS NAMED FOR THE SPECIFICATION
 --
--- `import egl;` replaces `#include <EGL/egl.h>` and changes nothing else:
--- every exported name is upstream's, spelled upstream's way. Unlike wayland's
--- module this one needed no forwarders — EGL's entry points are declared
--- `EGLAPI … EGLAPIENTRY` with external linkage rather than `static inline`, so
--- `using ::name;` reaches all of them.
+-- `import khronos.egl;` replaces `#include <EGL/egl.h>` and changes nothing
+-- else: every exported name is upstream's, spelled upstream's way. Unlike
+-- wayland's module this one needed no forwarders — EGL's entry points are
+-- declared `EGLAPI … EGLAPIENTRY` with external linkage rather than
+-- `static inline`, so `using ::name;` reaches all of them.
+--
+-- `khronos.` AND NOT `freedesktop.`, even though the package is
+-- `freedesktop.egl`. EGL is a Khronos SPECIFICATION with several
+-- implementations; libglvnd is one, and freedesktop is only where it is
+-- hosted. A module name is global and permanent in a way a package name is
+-- not, so it should name the INTERFACE's owner rather than whoever supplies
+-- the definitions — otherwise swapping implementations forces every consumer
+-- to edit its imports, which defeats a wrapper whose whole promise is that it
+-- changes nothing but the include line.
+--
+-- `mcpplibs.openkal` paid for this lesson already: its 0.1.0 was withdrawn
+-- rather than kept because it "placed the module a consumer imports under the
+-- control of the implementation, which contradicts what the specification is
+-- for". `freedesktop.wayland` resolves the other way for the same reason —
+-- freedesktop DOES own the wayland protocol, so those modules are
+-- `freedesktop.wayland.{client,server,util}`.
+--
+-- A side effect worth having: two EGL providers in one build now collide on
+-- the module name instead of coexisting silently, which is what GLVND's
+-- one-dispatch-point design wants anyway.
 --
 -- ONE CONSEQUENCE WORTH KNOWING: the module interface unit is compiled INTO
 -- `libEGL.so.1`, because mcpp links every library target against all of a
@@ -108,7 +128,7 @@ package = {
                     GLOBAL = "https://github.com/mcpplibs/libglvnd/archive/refs/tags/v1.7.0.tar.gz",
                     CN     = "https://gitcode.com/mcpp-res/libglvnd/releases/download/1.7.0/libglvnd-1.7.0.tar.gz",
                 },
-                sha256 = "2bc59cb214ac2750cf09764f9b5822132be96f1c4f6fe40a2553dae8efb36663",
+                sha256 = "d50579071c5e0b883cddae82fac3f8d7c575b6523c9ea64b855a3d6f50951d47",
             },
         },
     },

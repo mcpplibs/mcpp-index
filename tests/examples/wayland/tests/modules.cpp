@@ -1,6 +1,6 @@
 // The module wrappers, used the way a consumer would.
 //
-// The claim they make is narrow and testable: `import wayland.client;` gives
+// The claim they make is narrow and testable: `import freedesktop.wayland.client;` gives
 // you the same entities `#include <wayland-client.h>` does, spelled the same
 // way. So this file includes NOTHING from wayland — no header — and still
 // calls the stock API. If an export were missing, this would not compile; if a
@@ -15,9 +15,9 @@
 #include <string>
 #include <vector>
 
-import wayland.client;
-import wayland.server;
-import wayland.util;
+import freedesktop.wayland.client;
+import freedesktop.wayland.server;
+import freedesktop.wayland.util;
 
 namespace {
 
@@ -46,7 +46,7 @@ int main()
 
         // A protocol interface object: generated code, exported by the module.
         check(std::string(wl_registry_interface.name) == "wl_registry",
-              "wl_registry_interface arrives through wayland.client");
+              "wl_registry_interface arrives through freedesktop.wayland.client");
         check(std::string(wl_compositor_interface.name) == "wl_compositor",
               "so does wl_compositor_interface");
     }
@@ -54,7 +54,7 @@ int main()
     // ── 2. Server entities ───────────────────────────────────────────────
     {
         wl_display *s = wl_display_create();
-        check(s != nullptr, "wl_display_create through wayland.server");
+        check(s != nullptr, "wl_display_create through freedesktop.wayland.server");
         if (s != nullptr) {
             wl_event_loop *loop = wl_display_get_event_loop(s);
             check(loop != nullptr, "wl_display_get_event_loop returns a loop");
@@ -63,7 +63,7 @@ int main()
     }
 
     // ── 3. The macros, as entities ───────────────────────────────────────
-    // These are the names a module cannot export as macros; wayland.util
+    // These are the names a module cannot export as macros; freedesktop.wayland.util
     // carries them as a constant, a template and ranges. Exercised here in a
     // consumer rather than only in the package's own test.
     {
