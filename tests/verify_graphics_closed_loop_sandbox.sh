@@ -23,12 +23,21 @@
 # USAGE
 #
 #   # a subos with the graphics stack, e.g. `xlings install xim:mesa@25.0.7.2`
+#   # plus the keyboard dataset, without which the RMLVO half only reports:
+#   #   xlings install xim:xkeyboard-config@2.48
 #   cp tests/verify_graphics_closed_loop_sandbox.sh \
 #      ~/.xlings/subos/<subos>/verify.sh
 #   xlings subos use <subos> --sandbox --gpu --cmd "sh /home/speak/.xlings/subos/<subos>/verify.sh"
 #
 # The copy step is not optional: the sandbox does not bind the current working
 # directory, so a script anywhere else is simply not visible inside.
+#
+# If you have installed a package under test with `xlings config --add-xpkg`,
+# CLEAR IT FROM THE STORE before running this: xlings looks packages up by
+# (name, version) and IGNORES the namespace, so a leftover `local:foo@1.0`
+# makes `xim:foo@1.0`'s install() a silent no-op — the payload ends up empty
+# while config() still runs and declares its environment variables. Measured
+# on xkeyboard-config, where it looked exactly like a broken package.
 #
 #   BRANCH=<ref>   index ref to test (default: main)
 #   SUBOS=<name>   subos name, needed to locate its bin/ (default: from $0)
@@ -92,6 +101,11 @@ standard = "c++23"
 [target.'cfg(linux)'.dependencies.compat]
 libdrm = "2.4.134"
 libgbm = "25.0.7"
+# The top of the input chain, and it pulls compat.libudev + compat.mtdev with
+# it. Named here rather than only in tests/examples/libinput because THIS is
+# where the host is present: a compositor's input stack is exactly as likely to
+# silently resolve to /usr/lib/x86_64-linux-gnu/libinput.so.10 as its GL is.
+libinput = "1.31.3"
 
 [target.'cfg(linux)'.dependencies.freedesktop]
 egl            = "1.7.0"
@@ -123,7 +137,11 @@ cat > "$W/src/main.cpp" <<'CPP'
 
 #include <GLES3/gl32.h>
 #include <libevdev.h>
+#include <libinput.h>
+#include <libudev.h>
 #include <xkbcommon/xkbcommon.h>
+#include <cstdlib>
+#include <cerrno>
 
 import khronos.egl;
 import khronos.glesv2;
@@ -243,8 +261,64 @@ int main()
     if (xm) xkb_keymap_unref(xm);
     if (xc) xkb_context_unref(xc);
 
-    std::printf("  input chain answers: %s\n", input_ok ? "yes" : "no");
-    return (drew && input_ok) ? 0 : (reached ? 0 : 0);
+    // libinput on top of them, through udev. No device is opened — a sandbox
+    // has /sys but not the permissions for /dev/input/event* — so what is
+    // asserted stops at the udev handoff, which is the seam where a packaging
+    // mistake in this four-package chain actually lands.
+    bool li_ok = false;
+    if (udev *u = udev_new()) {
+        static const libinput_interface IF = {
+            [](const char *p, int f, void *) {
+                int fd = ::open(p, f); return fd < 0 ? -errno : fd;
+            },
+            [](int fd, void *) { ::close(fd); },
+        };
+        if (libinput *li = libinput_udev_create_context(&IF, nullptr, u)) {
+            const int seat = libinput_udev_assign_seat(li, "seat0");
+            const int lfd  = libinput_get_fd(li);
+            std::printf("    libinput  assign_seat=%d fd=%d dispatch=%d\n",
+                        seat, lfd, libinput_dispatch(li));
+            li_ok = (seat == 0 && lfd >= 0);
+            libinput_unref(li);
+        }
+        udev_unref(u);
+    }
+    std::printf("    libinput came up on libudev: %s\n", li_ok ? "yes" : "no");
+
+    // RMLVO — the half libxkbcommon CANNOT satisfy alone. The keymap above is
+    // a STRING the program carries; this one is looked up by name in
+    // xkeyboard-config's data tree, which is an ECOSYSTEM package
+    // (xim:xkeyboard-config) rather than an index one. So it is reported when
+    // XKB_CONFIG_ROOT is unset and asserted when it is set: a sandbox without
+    // the dataset is not a defect in anything under test here.
+    const char *xroot = std::getenv("XKB_CONFIG_ROOT");
+    bool rmlvo_ok = true;
+    std::printf("    XKB_CONFIG_ROOT %s\n",
+                xroot ? xroot : "(unset — install xim:xkeyboard-config)");
+    if (xroot != nullptr) {
+        rmlvo_ok = false;
+        if (xkb_context *rc = xkb_context_new(XKB_CONTEXT_NO_FLAGS)) {
+            xkb_rule_names rn{};
+            rn.rules = "evdev"; rn.model = "pc105"; rn.layout = "us";
+            if (xkb_keymap *rm = xkb_keymap_new_from_names(
+                    rc, &rn, XKB_KEYMAP_COMPILE_NO_FLAGS)) {
+                if (xkb_state *rs = xkb_state_new(rm)) {
+                    char b[8] = {0};
+                    xkb_state_key_get_utf8(rs, 24, b, sizeof b);
+                    std::printf("    evdev/pc105/us  keycode 24 -> \"%s\"\n", b);
+                    rmlvo_ok = (b[0] == 'q');
+                    xkb_state_unref(rs);
+                }
+                xkb_keymap_unref(rm);
+            }
+            xkb_context_unref(rc);
+        }
+        std::printf("    the real us layout compiled: %s\n", rmlvo_ok ? "yes" : "no");
+    }
+
+    const bool all_input = input_ok && li_ok && rmlvo_ok;
+    std::printf("  input chain answers: %s\n", all_input ? "yes" : "no");
+    return (drew && all_input) ? 0 : (reached ? 0 : 0);
 }
 CPP
 
@@ -252,21 +326,56 @@ say "4. build from scratch"
 cd "$W"
 "$MCPP" build 2>&1 | tail -12
 
+# The sonames that can actually be resolved by the loader, i.e. the packages
+# built as `kind = "shared"`.
+#
+# `libinput`, `libevdev`, `libmtdev`, `libxkbcommon` and `pixman` are NOT here,
+# and leaving them out is the point: they are `kind = "lib"`, so their objects
+# are merged into the consumer and there is no DT_NEEDED entry to resolve. A
+# grep for them would match nothing and the empty result would read as "the
+# host did not win" when in truth there was nothing for the host to win. They
+# get the opposite check in step 6b instead.
+#
+# `libudev` IS here and is the one that matters most in this list: it is the
+# single `kind = "shared"` member of the input chain, it carries the CANONICAL
+# `libudev.so.1` soname on purpose, and the host has its own copy.
+SONAMES='libEGL|libGLESv2|libGLdispatch|libgbm|libdrm|libwayland|libffi|libexpat|libudev'
+
 say "5. what the loader actually resolved"
 BIN=$(find "$W/target" -name closed-loop -type f -perm -u+x | head -1)
 [ -n "$BIN" ] || { echo "FAIL: no binary"; exit 1; }
 I=$(readelf -p .interp "$BIN" | grep -oE '/[^ ]*ld-linux[^ ]*')
-"$I" --list "$BIN" | grep -E 'libEGL|libGLESv2|libGLdispatch|libgbm|libdrm|libwayland|libffi|libexpat' \
+"$I" --list "$BIN" | grep -E "$SONAMES" \
     | sed "s|$SUBOS|<subos>|g; s|$W|<project>|g"
 
 say "6. did anything come from the host?"
-if "$I" --list "$BIN" | grep -E 'libEGL|libGLESv2|libGLdispatch|libgbm|libdrm|libwayland|libffi|libexpat' \
-     | grep -qE '=> /(usr/)?lib/'; then
+if "$I" --list "$BIN" | grep -E "$SONAMES" | grep -qE '=> /(usr/)?lib/'; then
     echo "  FAIL: a graphics library resolved to the host"
-    "$I" --list "$BIN" | grep -E 'libEGL|libGLESv2|libGLdispatch|libgbm|libdrm|libwayland' | grep -E '=> /(usr/)?lib/'
+    "$I" --list "$BIN" | grep -E "$SONAMES" | grep -E '=> /(usr/)?lib/'
     exit 1
 fi
 echo "  PASS: the host's copies were present and reachable, and none of them won"
+
+say "6b. and the merged-in ones brought no shared library at all"
+# The `kind = "lib"` half, checked by ABSENCE rather than by origin.
+#
+# Their objects are linked into the binary, so a correct build has no
+# DT_NEEDED for them — from anywhere. If `libinput.so.10` or `libevdev.so.2`
+# shows up in the load map, the link was satisfied by a shared library instead
+# of by the descriptor's objects, and on this machine that library is the
+# HOST's. Step 6 cannot see it: these sonames are deliberately not in $SONAMES
+# because in a correct build there is nothing there to inspect.
+#
+# Absence, not `nm`: a stripped binary has no .symtab, so "the symbol is
+# defined here" is not reliably answerable, while "no shared library provides
+# it" is — and it is the same claim from the other side. That the code is
+# present and works is what step 7 demonstrates.
+MERGED='libinput\.so|libevdev\.so|libmtdev\.so|libxkbcommon\.so|libpixman'
+if "$I" --list "$BIN" | grep -E "$MERGED"; then
+    echo "  FAIL: a kind=\"lib\" package resolved to a shared library (above)"
+    exit 1
+fi
+echo "  PASS: none of libinput/libevdev/libmtdev/libxkbcommon/pixman is a DT_NEEDED"
 
 say "7. run it"
 "$BIN"

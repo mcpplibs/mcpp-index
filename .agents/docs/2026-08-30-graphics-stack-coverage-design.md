@@ -575,6 +575,53 @@ RESULT: PASS
 现在闭环从「打开 DRM 节点」一路走到「读回自己画的像素」,而且是在宿主图形库在场且可达
 的沙箱里。
 
+#### 10.8.1 第三次扩:整条输入链 + RMLVO(#298 / xim#732 之后)
+
+`compat.libinput` 发布后补进依赖表(它把 `compat.libudev` + `compat.mtdev` 一起拉进来),
+运行期加两段:libinput 经 libudev 起 context 并枚举 seat,以及 RMLVO 按名字编译真布局。
+`eco-2026-8-30-3`,`--sandbox --gpu`,BRANCH=main:
+
+```
+===== 6. did anything come from the host? =====
+  libudev.so.1 => <project>/target/.../bin/libudev.so.1        ← 不是宿主那份
+  PASS: the host's copies were present and reachable, and none of them won
+
+===== 6b. and the merged-in ones brought no shared library at all =====
+  PASS: none of libinput/libevdev/libmtdev/libxkbcommon/pixman is a DT_NEEDED
+
+  -- input --
+    libevdev  KEY_A -> KEY_A
+    xkbcommon keycode 24 -> "q"
+    libinput  assign_seat=0 fd=3 dispatch=0
+    libinput came up on libudev: yes
+    XKB_CONFIG_ROOT /home/speak/.xlings/subos/eco-2026-8-30-3/share/X11/xkb
+    evdev/pc105/us  keycode 24 -> "q"
+    the real us layout compiled: yes
+  input chain answers: yes
+RESULT: PASS
+```
+
+**断言拆成两种,因为两半根本不是同一个问题**,而第一版把它们混在了一起:
+
+| | 形态 | 判据 | 为什么 |
+|---|---|---|---|
+| `libudev` | `kind = "shared"` | 查**来源** | 宿主有自己的 `libudev.so.1`,而 compat.libudev 故意用同一个 soname |
+| libinput / libevdev / libmtdev / libxkbcommon / pixman | `kind = "lib"` | 查**缺席** | 对象并进消费者,正确构建下根本不该有 DT_NEEDED |
+
+把 `kind = "lib"` 的名字塞进原来那条「有没有解析到宿主」的 grep 是**误导**:它们永远
+匹配不到,而「没匹配到」会被读成「宿主没赢」,实际上是压根没东西可赢。
+
+没用 `nm` 查符号定义:strip 过的二进制没有 `.symtab`,会误报 FAIL;「没有共享库提供它」
+是同一主张的另一面,且不受 strip 影响。代码真在且能跑,由第 7 步证明。
+
+`libudev.so.1` 那一行是这次新增里最有分量的。`compat.libudev` 是**故意**用
+`libudev.so.1` 这个规范 soname 的(见其描述符),理由是 soname 复用能让源码构建与
+生态 payload 共存;这是那条判断第一次被放进「宿主有同名库、可达、就在 `/usr/lib`」的
+环境里正面检验 —— 而它赢了。
+
+> 运行期那两条 `libinput error: failed to find data files` 是**预期的**,见 §10.9.2:
+> quirks 数据集还没有提供方。枚举、事件、dispatch 全部正常,丢的是逐机型调校。
+
 ### 10.9 xkeyboard-config 属于生态,不属于 mcpp-index
 
 输入链做到最后一环时,这一条自己浮出来了,而且它与 §3 的 Vulkan ICD **是同一个形状**。
@@ -727,14 +774,36 @@ failed to find data files ... will negatively affect device behavior
 |--------|---------|--------|------|
 | DRI 驱动 | `LIBGL_DRIVERS_PATH` | `xim:mesa` | ✅ |
 | EGL vendor | `__EGL_VENDOR_LIBRARY_DIRS` | `xim:mesa` + host-link 哨兵 | ✅ |
-| Vulkan ICD | `XDG_DATA_DIRS` / 共享 vendor 目录 | 同上 | ✅ #731 待合 |
+| Vulkan ICD | `XDG_DATA_DIRS` / 共享 vendor 目录 | 同上 | ✅ xim#731 |
 | GBM 后端 | `GBM_BACKENDS_PATH` | `xim:mesa` | ✅ |
-| 键盘布局 | `XKB_CONFIG_ROOT` | `xim:xkeyboard-config` | ✅ #732 待合 |
+| 键盘布局 | `XKB_CONFIG_ROOT` | `xim:xkeyboard-config` | ✅ xim#732 |
 | 输入 quirks | `LIBINPUT_QUIRKS_DIR` | *(无)* | ⬜ 优雅降级中 |
 | USB 名字库 | `USB_IDS_PATH` | *(无)* | ⬜ 优雅降级中 |
 
 最后两行是同一类:机制在、提供方缺、缺了只丢锦上添花的东西。**它们缺失时会说出来**
 —— 这正是当初把编译期默认值一律留空要换的东西。
+
+#### 10.10.1 加一行进这张表,同时是一次对**现有提供方**的改动
+
+xim#732 加 `XKB_CONFIG_ROOT` 那天就出了回归(xim#733 修):`mesa` 一直写
+`declare_subos_env(tag)`,而**不传 `only` 的含义是「声明每一行」**。表一变长,mesa 就
+替键盘布局声明了路径,而它的 payload 是 `share/{drirc.d,glvnd,vulkan}`,没有 `share/X11`。
+
+今天这个值碰巧无害(xkeyboard-config 声明同一条相对路径、而且是它真正放的树),但在
+**没装** xkeyboard-config 的 subos 上,mesa 会把变量指向不存在的目录 —— 正是 §10.9.1
+刚记下的失败形态,只是由错误的提供方造成。
+
+修的是规则不是 mesa:新增 `graphics.RENDER_PATHS`,三个调用点(`mesa` /
+`nvidia-gl-host-link` / `xkeyboard-config`)现在都传显式集合。**省略 `only` 读起来像
+便利写法,行为上是一个会在调用方背后增长的声明。**
+
+所以往这张表加行的检查清单是两项,不是一项:
+
+1. 新提供方 `config()` 里要有**两个**调用(`declare_*` 放置 + `declare_subos_env` 声明);
+2. **回头检查每个现有调用点传没传集合** —— 没传的那个会自动继承你的新行。
+
+顺带一条环境事实:环境变量声明是**持久化**的,改 recipe 不回溯更新已装的包。验证必须
+开新 subos —— 在已装的那个上看到的是旧值,第一次就被这个骗了一轮。
 
 G6 仍是需要决策的:合成器可以在「已有 DRM master」的前提下开发(从 TTY 直接启动、或
 `SEATD_SOCK`),把 session 管理留到最后。
