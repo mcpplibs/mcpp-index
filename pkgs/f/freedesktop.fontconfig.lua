@@ -66,10 +66,10 @@ package = {
         linux = {
             ["2.15.0"] = {
                 url = {
-                    GLOBAL = "https://github.com/mcpplibs/fontconfig/releases/download/v2.15.0/fontconfig-2.15.0-mcpp2.tar.gz",
-                    CN     = "https://gitcode.com/mcpp-res/fontconfig/releases/download/2.15.0/fontconfig-2.15.0-mcpp2.tar.gz",
+                    GLOBAL = "https://github.com/mcpplibs/fontconfig/releases/download/v2.15.0/fontconfig-2.15.0-mcpp3.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/fontconfig/releases/download/2.15.0/fontconfig-2.15.0-mcpp3.tar.gz",
                 },
-                sha256 = "a7ac9d403f0035d2c6065237ebed8c6b0b68aab98be948ea2cc907b886be9dc2",
+                sha256 = "505938aeeafe92257ea2c08d0af0e091d25af3e8d872b0dc82478605cbf99233",
             },
         },
     },
