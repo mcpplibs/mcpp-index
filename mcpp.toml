@@ -88,6 +88,7 @@ members = [
     "tests/examples/egl",
     "tests/examples/gl",
     "tests/examples/libevdev",
+    "tests/examples/libseat",
     "tests/examples/libudev",
     "tests/examples/mtdev",
     "tests/examples/pixman",

@@ -1,0 +1,7 @@
+[package]
+name = "libseat-tests"
+version = "0.1.0"
+standard = "c++23"
+
+[target.'cfg(linux)'.dependencies.compat]
+libseat = "0.9.3"
