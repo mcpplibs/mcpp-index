@@ -550,12 +550,42 @@ RESULT: PASS
 现在闭环从「打开 DRM 节点」一路走到「读回自己画的像素」,而且是在宿主图形库在场且可达
 的沙箱里。
 
-### 10.9 仍未做
+### 10.9 xkeyboard-config 属于生态,不属于 mcpp-index
 
-- **G4b `libxkbcommon`**:独立项目,内联描述符可行,但运行期还需要 `xkeyboard-config`
-  的**数据文件**,那是第二个包(纯数据)。
-- **G5 `libinput`**:拖 `libevdev` / `mtdev` / `libudev`。
-- **G6 `libudev` / `libseat`**:systemd 邻域,设计里就写明「先不做,单独评估」。
+输入链做到最后一环时,这一条自己浮出来了,而且它与 §3 的 Vulkan ICD **是同一个形状**。
+
+libxkbcommon 只编译 keymap、自身不含布局。布局在 xkeyboard-config 里。问题是:一个
+**没有源码的纯数据包**,怎么让消费者知道路径?
+
+**mcpp-index 没有这个机制,而且不该有。** 图形栈里所有这类运行期发现路径 ——
+`GBM_BACKENDS_PATH`、`__EGL_VENDOR_LIBRARY_DIRS`、Vulkan 的 ICD 目录 —— 一律由
+**环境**声明,由 `xim:mesa` 通过 graphics discovery 层给出。`XKB_CONFIG_ROOT` 是同一
+类东西:它是运行期数据发现,不是构建期依赖。
+
+**实测缺口**:生态里已经有 `xim:libxkbcommon`,但它的 payload 只有 `bin include lib
+share/{bash-completion,man}` —— **不带 xkb 数据**。所以 `XKB_CONFIG_ROOT` 无处可指,
+按名字查 keymap(`xkb_keymap_new_from_names`)只能落到宿主的
+`/usr/share/X11/xkb` —— 与 Vulkan 静默落到宿主 llvmpipe 完全同构。
+
+**结论**:xkeyboard-config 应当作为 payload 进 **xim-pkgindex**,并通过 discovery 层
+声明 `XKB_CONFIG_ROOT`,而不是作为源码包进 mcpp-index。索引侧已经做对了自己那一半:
+`freedesktop.libxkbcommon` 的 `DFLT_XKB_CONFIG_ROOT` 是空的,所以数据集缺失会说
+「找不到 keymap」而不是悄悄用宿主的。
+
+⚠ 顺带一提:一个**只需要 `xkb_keymap_new_from_string`** 的合成器不需要这份数据 ——
+那正是它从客户端收到 keymap 的路径,也是本索引测试跑通 parser 的方式。
+
+### 10.10 仍未做
+
+- ~~G4b `libxkbcommon`~~ **已做**(fork,bison parser 预生成)。它需要的数据集见 §10.9:
+  属于生态,不属于这里。
+- ~~G5 `libinput`~~ **描述符已做**;测试成员待本 PR 合并、`freedesktop.libevdev` 发布
+  后接上 —— 它同时需要 `compat.*` 和 `freedesktop.*` 两个 namespace 指向同一个
+  checkout,而成员级 `[indices]` 是替换而非合并。
+- ~~G6 `libudev` / `libseat`~~ **已做**,而且没有碰 systemd:libudev 用
+  **libudev-zero**(三个实现里唯一既活着又可独立分发的),libseat 只开 seatd 与
+  builtin 后端。两者的代价都在描述符里点名了。
+- **xkeyboard-config**:见 §10.9,应进 xim-pkgindex。
 
 前两条是普通工作量;G6 是需要决策的。合成器可以在「已有 DRM master」的前提下开发
 (从 TTY 直接启动、或 `SEATD_SOCK`),把 session 管理留到最后。
