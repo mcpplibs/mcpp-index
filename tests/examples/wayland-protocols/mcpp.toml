@@ -31,4 +31,4 @@ standard = "c++23"
 # is upstream's semantics rather than a defect, and testing it would mean
 # asserting a link failure.
 [target.'cfg(linux)'.dependencies.freedesktop]
-wayland-protocols-staging = "1.49"
+wayland-protocols-staging = "1.49.1"

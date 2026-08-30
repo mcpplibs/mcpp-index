@@ -1,0 +1,11 @@
+# compat.fribidi — the bidi algorithm pango needs for right-to-left text.
+[indices]
+compat = { path = "../../.." }
+
+[package]
+name     = "fribidi-tests"
+version  = "0.1.0"
+standard = "c++23"
+
+[target.'cfg(linux)'.dependencies.compat]
+fribidi = "1.0.16"

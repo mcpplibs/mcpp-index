@@ -1,0 +1,11 @@
+# compat.pcre2 — glib's regex engine, exercised the way glib uses it.
+[indices]
+compat = { path = "../../.." }
+
+[package]
+name     = "pcre2-tests"
+version  = "0.1.0"
+standard = "c++23"
+
+[target.'cfg(linux)'.dependencies.compat]
+pcre2 = "10.44"

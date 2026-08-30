@@ -98,3 +98,22 @@ int main()
 int main() { return 0; }
 
 #endif
+
+// ── 1.49.1: the enum headers upstream installs ───────────────────────────────
+//
+// `wayland-scanner enum-header` output, which this fork did not generate before
+// 1.49.1. wlroots 0.20 includes these from TEN of its PUBLIC headers, so a
+// consumer of wlroots writing the ordinary `#include <wlr/...>` needs them on
+// the include path — which is why they belong to THIS package rather than to
+// wlroots.
+//
+// The enum header carries only the protocol's enums: no interface symbols and
+// no libwayland dependency. Including it in a translation unit that links
+// nothing proves exactly that.
+#include <wayland-protocols/xdg-shell-enum.h>
+#include <wayland-protocols/tablet-v2-enum.h>
+
+static_assert(XDG_TOPLEVEL_STATE_MAXIMIZED == 1,
+              "xdg-shell-enum.h did not come from the scanner");
+static_assert(ZWP_TABLET_TOOL_V2_TYPE_PEN == 0x140,
+              "tablet-v2-enum.h did not come from the scanner");

@@ -1,0 +1,18 @@
+# wlroots — the compositor library, consumed the way a compositor would.
+#
+# ⚠️ The `wlroots` index redirect is what makes this test the INDEX's rather
+# than the published package's. It has to be keyed on the namespace the
+# dependency below requests: a redirect declared under a name nothing asks for
+# is silently not registered, and the resolution falls back to the remote
+# index — at which point this checks a package that is already published
+# rather than the descriptor in this PR.
+[indices]
+wlroots = { path = "../../.." }
+
+[package]
+name     = "wlroots-tests"
+version  = "0.1.0"
+standard = "c++23"
+
+[target.'cfg(linux)'.dependencies.wlroots]
+wlroots = "0.20.2"
