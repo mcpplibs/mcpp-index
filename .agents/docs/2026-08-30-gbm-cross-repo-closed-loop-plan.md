@@ -1419,7 +1419,7 @@ issue #527 问的是「在系统级开发(Wayland 合成器、Mesa/Vulkan 扩展
 | 场景 | 结论 | 依据 |
 |---|---|---|
 | **GBM 显存管理** | ✅ **完全覆盖** | §19.4 实测:`gbm_create_device` + `gbm_bo_create` 真分配 256x256,拿到驱动自己的 stride;宿主 `libgbm.so.1` 在场可达却没被选中 |
-| **Wayland 合成器** | ⚠️ **只覆盖了协议库那一层** | 协议库(client/server/scanner/util)+ EGL + GBM + DRM 都有;但**渲染链和输入链整条缺**,见 20.2 |
+| **Wayland 合成器** | ⚠️ 盘点时只覆盖协议库那一层;**当天下午补齐了渲染链**(GLESv2 + wayland-protocols + pixman),**输入链仍缺**(libxkbcommon / libinput / libseat) | 见 20.2 与覆盖面设计 §10 |
 | **Mesa/Vulkan 扩展** | ❌ **Vulkan 侧仍伸手够宿主** | `compat.vulkan-runtime` 明写着它把宿主 `/usr/lib` 的 ICD 做成符号链接农场,是这个栈里最后一处 host 边 |
 
 **所以对 #527 的诚实回答是**:`-lgbm` 那个具体诉求,推荐方式**完全能覆盖且已证明**;
