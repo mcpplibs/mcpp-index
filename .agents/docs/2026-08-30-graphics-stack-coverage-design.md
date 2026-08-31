@@ -2235,7 +2235,33 @@ typedef struct _cairo cairo_t;      /* cairo.h:135 */
 新资产** —— 本次验证时就撞上了(`failed to read compiled module`),清掉 store
 条目才对。这是「包版本与上游对齐」这条约定的固定代价,值得写在这里。
 
-### 23.5 结果
+### 23.5 ⭐ 改名的次序是被**索引机制**逼出来的,不是偏好
+
+`gnome.pangocairo` 转出 cairo 的模块。所以改名要么两个包同时到达消费者,要么
+中间有一段是坏的 —— 而**一个 PR 做不到**,原因是硬的:
+
+```
+error: xlings install_packages failed … with 2 index repos configured
+       [freedesktop -> …, gnome -> …]; ≥2 project-level index repos is a known
+       xlings resolution gap
+```
+
+**一个成员只能声明一个项目级 index repo**(xlings#374 / mcpp#238,今天仍是硬
+错误)。于是 `tests/examples/pangocairo` 不可能同时用**本 PR 的 `gnome.pango*`
+描述符**和**本 PR 的 `freedesktop.cairo` 描述符** —— 它只能重定向一个 namespace,
+另一个必然来自**已发布的**索引。
+
+所以次序只能是:
+
+1. **本 PR**:cairo / libdisplay-info 改名 + 补齐。pango **不动**,继续
+   `import freedesktop.cairo;`,`cairo.h` 变通**保留**。
+2. **合并之后**:pango 改成 `import cairo;` 并删掉变通 —— 那时新 cairo 已在
+   已发布索引里,示例才有得测。
+
+⚠️ 我一度反过来做了(先把 pango 的变通删掉),两边都红。**代码是对的,次序是
+错的**;已经回滚并把这段理由写进了 `gnome.pangocairo` 的描述符,免得下次再犯。
+
+### 23.6 结果
 
 | | |
 |---|---|

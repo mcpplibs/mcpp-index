@@ -22,7 +22,7 @@
 -- then segfaulted. The fork's test now reads the font map's FONT TYPE and
 -- requires `CAIRO_FONT_TYPE_FT`, which catches it immediately.
 --
--- ✅ AND THIS PACKAGE IS WHERE cairo's MODULE GAP WAS FOUND. On the
+-- ⭐ AND THIS PACKAGE IS WHERE cairo's MODULE GAP WAS FOUND. On the
 -- `1.18.2-mcpp2` asset `freedesktop.cairo` exported 470 names, ZERO
 -- enumerators and no `cairo_t`. The index's own cairo example did not notice,
 -- because it wrote BOTH `#include <cairo.h>` and `import freedesktop.cairo;`
@@ -31,11 +31,19 @@
 --
 -- It surfaced here because pangocairo CANNOT mix the two routes
 -- (`pangocairo.h` reaches glib and therefore <stdio.h>), so it had to ask the
--- module for `cairo_t` and got nothing. This package carried a workaround for
--- one release — scanning cairo.h itself — and that workaround is GONE:
--- `1.18.2-mcpp3` exports 697 names and the plain re-export is enough.
+-- module for `cairo_t` and got nothing. This package therefore scans cairo.h
+-- itself.
 --
--- The module it re-exports is now `cairo`, not `freedesktop.cairo`.--
+-- ⚠️ THAT WORKAROUND STAYS UNTIL cairo's FIX IS PUBLISHED, not merely written.
+-- It is fixed in `1.18.2-mcpp3` (697 names), but this package resolves cairo
+-- from the PUBLISHED index — and the change cannot even be TESTED in one index
+-- PR, because a member may declare only ONE project-level index repo:
+--
+--     error: ≥2 project-level index repos is a known xlings resolution gap
+--
+-- so an example cannot use a local `gnome.*` descriptor and a local
+-- `freedesktop.*` descriptor at the same time. cairo lands first; this
+-- follows.--
 -- ─────────────────────────────────────────────────────────────────────────
 -- ⭐ TWO WAYS TO CONSUME IT, AND YOU PICK ONE
 --
@@ -98,14 +106,14 @@ package = {
             ["1.56.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/pango/archive/refs/tags/1.56.1.tar.gz",
-                    -- ⚠️ The container tag is `1.56.1-5`, not `1.56.1`. gitcode
+                    -- ⚠️ The container tag is `1.56.1-6`, not `1.56.1`. gitcode
                     -- refuses to REPLACE an asset of the same name in an
                     -- existing release, so each corrected tarball needs a new
                     -- container tag while the PACKAGE version stays upstream's.
                     -- Verified byte-identical to the GLOBAL tag archive.
-                    CN     = "https://gitcode.com/mcpp-res/pango/releases/download/1.56.1-5/pango-1.56.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/pango/releases/download/1.56.1-6/pango-1.56.1.tar.gz",
                 },
-                sha256 = "0882a260346cbdb6b553177269a8acc083a2985bbe929b458406af98e90a03ad",
+                sha256 = "19507c6712304750a0e9cc282135dda1919a1b89c0c4ce61e22411df0532a980",
             },
         },
     },
