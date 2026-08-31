@@ -48,22 +48,22 @@
 -- not a house style.
 --
 -- ─────────────────────────────────────────────────────────────────────────
--- ⚠️ gio IS NOT IN THIS INDEX, AND THAT BLOCKS pango
+-- ❌ THE "gio IS NOT IN THIS INDEX" SECTION THAT USED TO BE HERE WAS WRONG.
 --
--- Two of gio's six generators are `gdbus-codegen`, an 8,351-line Python
--- program that turns D-Bus interface XML into GObject skeletons. Seven gio
--- sources include its output and two more reference those, so it cannot be
--- dropped without changing what gio is, and reimplementing it in
--- `build.mcpp` is not proportionate.
+-- It argued that reimplementing `gdbus-codegen` in `build.mcpp` was not
+-- proportionate, and concluded that gio must be absent. The premise held; the
+-- conclusion did not follow, because the build never needed the GENERATOR —
+-- only its OUTPUT, which is a pure function of five XML files. That output is
+-- now checked in and CI regenerates and diffs it.
 --
--- pango uses `GListModel`, which lives in gio, so the text-layout line stops
--- here. Measured and recorded rather than left as an unexplained gap.
+-- `gnome.gio` is in this index. See gnome.glib for the full note.
 --
 -- ─────────────────────────────────────────────────────────────────────────
--- ⚠️ NAME gobject AND gmodule; DO NOT NAME glib
+-- ⚠️ NAME WHAT YOU USE; DO NOT NAME glib
 --
 --     [dependencies]
 --     gnome.gobject = "2.82.5"
+--     gnome.gio     = "2.82.5"
 --     gnome.gmodule = "2.82.5"
 --     # gnome.glib arrives transitively
 --
@@ -109,15 +109,14 @@ package = {
             ["2.82.5"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/glib/archive/refs/tags/2.82.5.tar.gz",
-                    -- ⚠️ The container tag is `2.82.5-1`, not `2.82.5`. The fork's
-                    -- tag was re-cut once while this descriptor was still
-                    -- unpublished — safe only because nothing had extracted it
-                    -- yet — and gitcode refuses to REPLACE an asset of the same
-                    -- name in an existing release. Verified: this URL's sha256
-                    -- equals the GLOBAL tarball's.
-                    CN     = "https://gitcode.com/mcpp-res/glib/releases/download/2.82.5-2/glib-2.82.5.tar.gz",
+                    -- ⚠️ The container tag is `2.82.5-3`, not `2.82.5`. gitcode
+                    -- refuses to REPLACE an asset of the same name in an
+                    -- existing release, so each corrected tarball needs a new
+                    -- container tag while the PACKAGE version stays upstream's.
+                    -- Verified byte-identical to the GLOBAL tag archive.
+                    CN     = "https://gitcode.com/mcpp-res/glib/releases/download/2.82.5-3/glib-2.82.5.tar.gz",
                 },
-                sha256 = "fb65671207e5ec409a1fdb2156dafb49bf8c772ada252a17844991a14de99ea8",
+                sha256 = "628b8f98a51238563704bf50817d575a46421acc32d987ca93edc941a1749d62",
             },
         },
     },

@@ -2,42 +2,56 @@
 --
 -- Upstream ships glib as one source tree producing FOUR separate shared
 -- libraries, and this index follows that split: `gnome.glib`,
--- `gnome.gobject` and `gnome.gmodule` are three packages from one fork,
--- because that is what a consumer links. (The fourth, gio, is absent — see
--- below.)
+-- `gnome.gobject`, `gnome.gmodule` and `gnome.gio` are four packages from one
+-- fork, because that is what a consumer links.
+--
+-- ─────────────────────────────────────────────────────────────────────────
+-- ⭐ FOUR WRONG MACRO NAMES, AND WHY NOTHING CAUGHT THEM
+--
+-- The FIRST 2.82.5 tarball — cut before `gnome.gio` existed, superseded by the
+-- one this descriptor names — defined:
+--
+--     what it defined                what upstream defines
+--     G_UNICODE_TYPE_TYPE            G_TYPE_UNICODE_TYPE
+--     G_UNICODE_BREAK_TYPE_TYPE      G_TYPE_UNICODE_BREAK_TYPE
+--     G_UNICODE_SCRIPT_TYPE_...      G_TYPE_UNICODE_SCRIPT
+--     G_NORMALIZE_TYPE_MODE          G_TYPE_NORMALIZE_MODE
+--
+-- ⭐ HOW IT GOT THROUGH IS THE PART WORTH KEEPING. `glib-mkenums` has TWO
+-- prefixes and they come from different places:
+--
+--     enum_prefix    from the ENUMERATORS  (G_UNICODE_)   → drives the nicks
+--     @ENUMPREFIX@   from the TYPE NAME    (G)            → drives the macro
+--
+-- The reimplementation used the first for both. Every FUNCTION name was still
+-- right — `g_unicode_type_get_type` — so the library compiled, linked, and
+-- passed a test that checked the function and the nick. Only the macro was
+-- wrong, and nothing in the fork named the macro.
+--
+-- ⚠️ The version did NOT move, because the package version is upstream's: the
+-- tag was re-cut and the sha256 below is the new one. The store keys on
+-- (name, version), so a machine that extracted the first 2.82.5 keeps it —
+-- clear that entry if `G_TYPE_UNICODE_TYPE` is still undefined.
+--
+-- The lesson generalised: one generator has several independent outputs, and
+-- a test that exercises one of them is not evidence about the others. CI now
+-- checks the macro, the nick, and enum-vs-flags separately.
 --
 -- ─────────────────────────────────────────────────────────────────────────
 -- WHY A FORK
 --
--- Generators, not line count. GLib has six, and `build.mcpp` reimplements all
--- of them, so the tree carries no `sh` and no `python`:
+-- Generators, not line count. GLib has seven; `build.mcpp` reimplements six
+-- and the seventh's output is checked in and diffed. See `gnome.glib` for the
+-- table and `gnome.gio` for the seventh.
 --
---     gen-visibility-macros.py versions-macros    glib/gversionmacros.h
---     gen-visibility-macros.py visibility-macros  three *-visibility.h
---     configure_file                              glibconfig.h
---     configure_file                              gmodule/gmoduleconf.h
---     gobject/glib-mkenums (816 lines of Python)  glib-enumtypes.{h,c}
---     configure_file                              config.h
---
--- glib-mkenums is reproduced FOR THE ONE INPUT this build points it at —
--- `glib/gunicode.h`, four enums — rather than wholesale. It reads upstream's
+-- glib-mkenums is reproduced for the inputs this build points it at — for
+-- gobject that is `glib/gunicode.h`, four enums. It reads upstream's
 -- `.template` files from the tree so a template change is picked up, and
 -- exits non-zero if that header stops yielding four enums: a silent drop
 -- would produce a library missing `g_unicode_script_get_type` and the failure
 -- would land in a consumer.
 --
 -- https://github.com/mcpplibs/glib
---
--- ─────────────────────────────────────────────────────────────────────────
--- ⚠️ C++ CONSUMERS MUST WRAP THE INCLUDES
---
--- glib's headers carry their own `G_BEGIN_DECLS`, so this is usually fine —
--- but the generated `glib-enumtypes.h` comes from a template, and wrapping
--- costs nothing:
---
---     extern "C" {
---     #include <glib-object.h>
---     }
 --
 -- There is no module. glib's API is macro-heavy — `G_DEFINE_TYPE`,
 -- `G_OBJECT`, `g_signal_connect` are all macros — and macros do not cross a
@@ -48,22 +62,22 @@
 -- not a house style.
 --
 -- ─────────────────────────────────────────────────────────────────────────
--- ⚠️ gio IS NOT IN THIS INDEX, AND THAT BLOCKS pango
+-- ❌ THE "gio IS NOT IN THIS INDEX" SECTION THAT USED TO BE HERE WAS WRONG.
 --
--- Two of gio's six generators are `gdbus-codegen`, an 8,351-line Python
--- program that turns D-Bus interface XML into GObject skeletons. Seven gio
--- sources include its output and two more reference those, so it cannot be
--- dropped without changing what gio is, and reimplementing it in
--- `build.mcpp` is not proportionate.
+-- It argued that reimplementing `gdbus-codegen` in `build.mcpp` was not
+-- proportionate, and concluded that gio must be absent. The premise held; the
+-- conclusion did not follow, because the build never needed the GENERATOR —
+-- only its OUTPUT, which is a pure function of five XML files. That output is
+-- now checked in and CI regenerates and diffs it.
 --
--- pango uses `GListModel`, which lives in gio, so the text-layout line stops
--- here. Measured and recorded rather than left as an unexplained gap.
+-- `gnome.gio` is in this index. See gnome.glib for the full note.
 --
 -- ─────────────────────────────────────────────────────────────────────────
--- ⚠️ NAME gobject AND gmodule; DO NOT NAME glib
+-- ⚠️ NAME WHAT YOU USE; DO NOT NAME glib
 --
 --     [dependencies]
 --     gnome.gobject = "2.82.5"
+--     gnome.gio     = "2.82.5"
 --     gnome.gmodule = "2.82.5"
 --     # gnome.glib arrives transitively
 --
@@ -109,15 +123,14 @@ package = {
             ["2.82.5"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/glib/archive/refs/tags/2.82.5.tar.gz",
-                    -- ⚠️ The container tag is `2.82.5-1`, not `2.82.5`. The fork's
-                    -- tag was re-cut once while this descriptor was still
-                    -- unpublished — safe only because nothing had extracted it
-                    -- yet — and gitcode refuses to REPLACE an asset of the same
-                    -- name in an existing release. Verified: this URL's sha256
-                    -- equals the GLOBAL tarball's.
-                    CN     = "https://gitcode.com/mcpp-res/glib/releases/download/2.82.5-2/glib-2.82.5.tar.gz",
+                    -- ⚠️ The container tag is `2.82.5-3`, not `2.82.5`. gitcode
+                    -- refuses to REPLACE an asset of the same name in an
+                    -- existing release, so each corrected tarball needs a new
+                    -- container tag while the PACKAGE version stays upstream's.
+                    -- Verified byte-identical to the GLOBAL tag archive.
+                    CN     = "https://gitcode.com/mcpp-res/glib/releases/download/2.82.5-3/glib-2.82.5.tar.gz",
                 },
-                sha256 = "fb65671207e5ec409a1fdb2156dafb49bf8c772ada252a17844991a14de99ea8",
+                sha256 = "628b8f98a51238563704bf50817d575a46421acc32d987ca93edc941a1749d62",
             },
         },
     },

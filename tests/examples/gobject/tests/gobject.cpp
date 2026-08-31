@@ -150,6 +150,23 @@ int main()
               && g_normalize_mode_get_type() != 0,
           "all four generated enum types register");
 
+    // ⭐ THE MACRO NAMES, WHICH ARE A DIFFERENT OUTPUT OF THE SAME GENERATOR.
+    //
+    // Everything above reads the FUNCTION and the NICK, and an earlier 2.82.5
+    // tarball got both of those right while defining `G_UNICODE_TYPE_TYPE`
+    // where upstream defines `G_TYPE_UNICODE_TYPE`. glib-mkenums has two
+    // prefixes — one from the ENUMERATORS (drives nicks), one from the TYPE
+    // NAME (drives this macro) — and conflating them changes only the macro.
+    //
+    // So it compiled, linked, and passed this very test. The four lines below
+    // are what it would NOT have passed: naming the macro is a compile error
+    // if it is spelled wrong, and it is the only spelling upstream has.
+    check(G_TYPE_UNICODE_TYPE == g_unicode_type_get_type()
+              && G_TYPE_UNICODE_SCRIPT == g_unicode_script_get_type()
+              && G_TYPE_UNICODE_BREAK_TYPE == g_unicode_break_type_get_type()
+              && G_TYPE_NORMALIZE_MODE == g_normalize_mode_get_type(),
+          "the G_TYPE_* macros are upstream's, not the enumerator prefix");
+
     // ── 3. a derived type, its property, its signal ──────────────────────
     const GType thing = test_thing_get_type();
     check(thing != 0 && g_type_is_a(thing, G_TYPE_OBJECT),

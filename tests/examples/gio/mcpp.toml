@@ -1,0 +1,14 @@
+# gnome.gio — files, streams, D-Bus, and the GListModel pango needs.
+#
+# ⚠️ NAMES gio ALONE. glib, gobject and gmodule arrive transitively, and naming
+# any of them here would be `requested as both a version dep and a path dep`.
+[indices]
+gnome = { path = "../../.." }
+
+[package]
+name     = "gio-tests"
+version  = "0.1.0"
+standard = "c++23"
+
+[target.'cfg(linux)'.dependencies.gnome]
+gio = "2.82.5"

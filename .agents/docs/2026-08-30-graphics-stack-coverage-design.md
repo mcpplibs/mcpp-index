@@ -1,6 +1,6 @@
 # mcpp 图形栈:从「能跑通」到「能开发」的覆盖面设计
 
-Date: 2026-08-30 · 前置:[`2026-08-30-gbm-cross-repo-closed-loop-plan.md`](2026-08-30-gbm-cross-repo-closed-loop-plan.md) §19/§20 · **状态:已实现并闭环验证(v1.6,§11 总账 / §14 fork 规范 / §18 八角度复核 / §19 合成器闸门与 GObject 栈,含沙箱实测)**
+Date: 2026-08-30 · 前置:[`2026-08-30-gbm-cross-repo-closed-loop-plan.md`](2026-08-30-gbm-cross-repo-closed-loop-plan.md) §19/§20 · **状态:已实现并闭环验证(v1.7,§11 总账 / §14 fork 规范 / §18 八角度复核 / §19 合成器闸门与 GObject 栈,含沙箱实测 · §20 gio 与一次被推翻的判断)**
 
 ## 0. 这份文档解决什么
 
@@ -1676,22 +1676,27 @@ g++ 报 `expected primary-expression before 'static'`,而且解析再也没恢�
 1.49.1 就是按这条补的:上游的 meson 会装 `wayland-protocols/<name>-enum.h`,
 fork 之前只生成 client/server 两种,而 wlroots 0.20 的**十个公共头**要它们。
 
-### 19.7 仍然缺的:gio,以及被它挡住的 pango
+### 19.7 ❌ 本节的结论是错的 —— 见 §20
 
-这不是「还没做」,是量过的边界:
+原文写的是「仍然缺的:gio,以及被它挡住的 pango」,理由是:
 
-- gio 的六个生成器里有两个是 **`gdbus-codegen`,8,351 行 Python**,把 D-Bus
-  接口 XML 变成 GObject skeleton。
-- **七个** gio 源码 include 它的产物,另有**两个**引用那七个。
-- 所以不能绕过它而仍然是 gio;在 `build.mcpp` 里复刻一个 8.3k 行的代码生成器
-  与消费者的需要不成比例。
+- gio 的六个生成器里有两个是 **`gdbus-codegen`,8,351 行 Python**;
+- **七个** gio 源码 include 它的产物,另有**两个**引用那七个;
+- 所以「在 `build.mcpp` 里复刻一个 8.3k 行的代码生成器与消费者的需要不成比例」。
 
-**pango 用 `GListModel`,它在 gio 里。** 所以文本排版那条线停在这里 —— 其余
-四个依赖(harfbuzz、fribidi、fontconfig、cairo)都已在索引中,只差这一环。
+**前两条测量是对的,第三条推不出结论。** 它把两件不同的事混成了一件:
+
+```
+复刻这个生成器          ≠          拿到它的输出
+```
+
+构建从来不需要那个生成器,只需要 **15,392 行 C**,而那是五个 XML 文件与
+codegen 版本的**纯函数**。`gnome.gio` 2.82.5 已经在索引里,pango 没有被挡住。
+完整记录见 **§20**。
 
 `vulkan-renderer`(要 glslang)、`x11-backend` / `xwayland`(要 xcb)、
-`color-management`(要 lcms2)同理:每一个都在包里写明「为什么缺席」而不是
-默默不提。
+`color-management`(要 lcms2)仍然缺席,但那三条的理由是「依赖不在索引里」,
+和本节原来的理由不是一回事 —— 不要把它们和这一条一起引用。
 
 ### 19.8 「引用别的包生成的文件」是静默的
 
@@ -1782,3 +1787,160 @@ GRegex 当然不匹配汉字 —— 断言**正确地失败了**。
 
 两条合起来是同一句:**判据本身也要能被证伪一次**,否则分不清「它在检查」和
 「它在点头」。
+
+---
+
+## 20. gio:一次被推翻的「不成比例」判断(2026-08-31)
+
+§19.7 说 gio 缺席,理由是 `gdbus-codegen` 太大不值得复刻。**这条判断是错的**,
+本节记录它错在哪、改完之后学到了什么。原节已就地标注 ❌ 并指向这里。
+
+### 20.1 错在把「复刻生成器」当成了「拿到输出」
+
+```
+复刻这个生成器          ≠          拿到它的输出
+```
+
+构建需要的是 **15,392 行 C**,而它是**五个 XML 文件与 codegen 版本的纯函数**
+—— 没有 target、没有 host、没有 locale 进入其中。所以:
+
+1. `mcpp/tools/gengdbus.sh` 用上游 `gio/meson.build:238` 与 `:254` 的**原参数**
+   生成一次;
+2. 产物提交进 `mcpp/generated/`;
+3. **CI 在另一台机器、另一个 Python 版本上重新生成并 `git diff --exit-code`**。
+
+第 3 步是全部论证所在。**提交进仓库的生成物有一个构建永远看不见的失败模式:
+它可以停止匹配自己的输入,而且照样能编译。** 有 diff,「checked in」才不等于
+「stale」。
+
+这正是 `freedesktop.wayland-protocols-*` 已经在用的形态(195 个生成文件),
+而且在那里是**被迫的** —— 产物本身就是头文件,包无法在构建期导出头(§19.6)。
+在 gio 这里并不被迫,它只是拿到那些代码最便宜的办法。
+
+> 索引里已有先例,却因为「生成器太大」就否掉了整个包 —— 判据用错了对象:
+> **要衡量的是产物能不能预先算出来,不是生成器有多大。**
+
+### 20.2 脚本必须在树外运行(不是整洁,是硬约束)
+
+`gengdbus.sh` 把 codegen 包**复制到临时目录**再跑。两样东西会写进 `upstream/`:
+
+| | |
+|---|---|
+| `codegen/config.py` | 它本身就是一个 `configure_file`,tarball 里只有 `.in` |
+| `codegen/__pycache__/` | CPython import 时无条件写 |
+
+而 `upstream/ is the release tarball, unmodified` 是一个 CI job。原地跑就会踩它。
+CI 里因此有第二步断言:跑完 `git diff --exit-code -- upstream` 且 `find` 不到
+这两样东西。
+
+### 20.3 ⭐ 同一个生成器的几个输出是**独立失败**的 —— 已发货的缺陷
+
+把 `glib-mkenums` 从 gobject 的 4 个 enum 扩到 gio 的 82 个,逼着我去读真正的
+算法。读完发现:**mkenums 有两个前缀,来源不同。**
+
+| | 取自 | 决定 |
+|---|---|---|
+| `enum_prefix` | **枚举成员**(`G_UNICODE_`) | nick |
+| `@ENUMPREFIX@` | **类型名**(`GUnicodeType` → `G`) | 宏名 |
+
+原来的实现用第一个当了两个用。结果 `gnome.gobject 2.82.5` 发出去的是:
+
+```
+G_UNICODE_TYPE_TYPE          上游是  G_TYPE_UNICODE_TYPE
+G_UNICODE_BREAK_TYPE_TYPE            G_TYPE_UNICODE_BREAK_TYPE
+G_UNICODE_SCRIPT_TYPE_...            G_TYPE_UNICODE_SCRIPT
+G_NORMALIZE_TYPE_MODE                G_TYPE_NORMALIZE_MODE
+```
+
+**每一个函数名都是对的**(`g_unicode_type_get_type`),所以它编译通过、链接通过、
+并且通过了我自己写的测试 —— 那个测试检查了**函数**和**nick**,从没检查过**宏**。
+
+推广出来的一条:
+
+> **一个生成器有多个互相独立的输出;测了其中一个,不构成对其余的证据。**
+
+修法是让判据能分辨:CI 现在**分开**检查宏名、nick、以及 enum/flags 的归类;
+索引里的 gobject 示例加了一条 `G_TYPE_UNICODE_TYPE == g_unicode_type_get_type()`
+—— 宏拼错就是编译错误,这是唯一能识破旧 tarball 的探针。
+
+顺带印证了 memory 里那条:**「绿 CI ≠ 被验证」**,以及**判据本身要被证伪一次**。
+
+### 20.4 annotation 是唯一判据,两个方向都会错
+
+gio 用 `/*< flags >*/` 7 次、`/*< nick=… >*/` 17 次、`/*< prefix=… >*/` 1 次 ——
+但也用 `/*< private >*/`、`/*< public >*/`、`/*< protected >*/` **144 次**,
+那些是给 **struct 成员**看的 GTK-DOC 注解,对 mkenums 没有意义。
+
+- 往一个方向错:**读所有 `/*< … >*/`** → 静默丢掉枚举成员。
+- 往另一个方向错:**按类型名猜** → `GConverterFlags` 没有 `/*< flags >*/`,
+  上游用 `g_enum_register_static` 注册它。按名字猜就和上游 ABI 不一致。
+
+nick 是公开 API(`g_flags_get_value_by_nick` 读它):`G_CONVERTER_NO_FLAGS`
+推导出来是 `"no-flags"`,上游写的是 `"none"`。
+
+另一个扫描器坑:`} GTlsRehandshakeMode GIO_DEPRECATED_TYPE_IN_2_60;` ——
+取 `}` 之后**整段**当类型名,会生成
+`_g_i_o__d_e_p_r_e_c_a_t_e_d__t_y_p_e__i_n_2_60_get_type`。只取第一个标识符。
+
+**验证方式**:生成的 `gioenumtypes.h` 的 82 个 `#define G_TYPE_*` 与系统
+`/usr/include/glib-2.0/gio/gioenumtypes.h` 逐名相同;82 个 getter 全部存在于
+发行版 `libgio-2.0.so.0` 的 ABI 里。
+
+### 20.5 gio 有四类输入,其中三类缺了会**静默降级**
+
+| 输入 | 缺了会怎样 |
+|---|---|
+| `gio/*.c` | undefined reference —— 链接器会抓。最便宜的一类 |
+| `gio/xdgmime/` | `g_content_type_guess` 对一切回答 `application/octet-stream` |
+| `gio/inotify/` | 文件监视**静默**退回轮询实现 |
+| `subprojects/gvdb/` | GResource 与 GSettings 的 schema 读取根本走不到 |
+| `mcpp/generated/` | 照样编译;portal 调用只在 Flatpak 沙箱里才失败 |
+
+所以测试按名字断言每一类,而不是「它构建了」:
+
+- inotify:读回 `GFileMonitor` 的**类型名**是不是 `GInotifyFileMonitor` ——
+  这是轮询实现和它唯一能区分的地方;
+- gvdb:拿一段**肯定不是 gvdb** 的字节给 `g_resource_new_from_data`,要求它
+  **干净地拒绝**(返回 NULL 且 GError 有值)—— 那个答案只可能来自
+  `gvdb_table_new_from_bytes`;
+- xdgmime:只断言「答得出来」和两个转换互为逆 —— **不断言具体 MIME**,那取决
+  于 runner 有没有 `/usr/share/mime`,断言它就是在检查 runner 而不是这个构建。
+
+`-DXDG_PREFIX=_gio_xdg` 是**必须**的:xdgmime 的头把每个 `xdg_mime_*` 宏改名成
+`_gio_xdg_mime_*`,而 `gcontenttype.c` 调的是不带前缀的写法 —— 两边看到的值必须
+一致,否则调用和定义是两个不同的符号。
+
+### 20.6 排除模式「看起来完整」的两种方式
+
+```toml
+"!../../upstream/gio/gwin32*.c",      # 漏了 giowin32-private.c、gmemorymonitorwin32.c
+"!../../upstream/gio/gosxappinfo.c",  # 上游是 .m,这条什么都没匹配到
+```
+
+第一种**编译期报错**(`unknown type name 'gchar'`),第二种**完全静默** ——
+和 §19.8 是同一类:**匹配不到任何文件的条目不会报错**。现在两类都在注释里写明。
+
+### 20.7 版本形态:包版本就是上游版本,不加后缀
+
+一度把它写成 `2.82.5.1`(「上游 2.82.5,fork 修订 1」)。**这是错的**,索引的
+约定是**包版本与上游版本对齐**:
+
+- fork 变了而上游没变时,**原地重切 tag**,描述符换新的 `sha256`;
+- CN 镜像那边 gitcode **不允许替换同名 asset**,所以每份更正过的 tarball 需要
+  一个新的**容器 tag**(`2.82.5-3`),而**包版本不动**。
+
+代价要写明白:**store 按 `(name, version)` 索引**,已经解开过 `2.82.5` 的机器
+会留着旧的那份。这次的探针(§20.3 那条宏断言)正是用来识破它的 ——
+旧 tarball 上那行是编译错误。
+
+### 20.8 结果
+
+| | |
+|---|---|
+| `gnome.gio` 2.82.5 | 815 个对象,35 项断言,gcc 16.1 + llvm 22.1 双绿 |
+| `gnome.gobject` 2.82.5 | 四个宏名更正,并加了识破旧 tarball 的探针 |
+| fork CI | 四个 job:两条工具链 + `mcpp/generated/` 重新生成并 diff + `upstream/` 未改 |
+| 消费者形态 | 一个同时点名 gobject、gmodule、gio 的程序,`G_TYPE_LIST_MODEL` 是活的接口 |
+
+**pango 的闸门开了**:它的五个依赖(gio、gobject、harfbuzz、fribidi、
+fontconfig、cairo)全部在索引里。
