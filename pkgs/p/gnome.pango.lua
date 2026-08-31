@@ -84,14 +84,14 @@ package = {
             ["1.56.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/pango/archive/refs/tags/1.56.1.tar.gz",
-                    -- ⚠️ The container tag is `1.56.1-2`, not `1.56.1`. gitcode
+                    -- ⚠️ The container tag is `1.56.1-3`, not `1.56.1`. gitcode
                     -- refuses to REPLACE an asset of the same name in an
                     -- existing release, so each corrected tarball needs a new
                     -- container tag while the PACKAGE version stays upstream's.
                     -- Verified byte-identical to the GLOBAL tag archive.
-                    CN     = "https://gitcode.com/mcpp-res/pango/releases/download/1.56.1-2/pango-1.56.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/pango/releases/download/1.56.1-3/pango-1.56.1.tar.gz",
                 },
-                sha256 = "9be92e7fcbb1544921c67ba2576b070371e864ddda2e8d420c0a6f2ca1ef5b2f",
+                sha256 = "d520087d521729124c43bf4b86ae90f4049f23f580e10cd6b1b186873b3d4ab0",
             },
         },
     },

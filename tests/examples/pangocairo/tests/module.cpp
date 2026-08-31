@@ -34,6 +34,20 @@ int main()
                      reinterpret_cast<PangoCairoFontMap *>(map)) == CAIRO_FONT_TYPE_FT,
           "…and its font type is FreeType — HAVE_CAIRO_FREETYPE took");
 
+    // ⚠️ FAMILIES ARE ENUMERATED BEFORE DRAWING, matching the header-route
+    // test next door. When this ran AFTER the draw, the module test drew 0
+    // pixels on a runner where the header test drew 116 — same machine, same
+    // four families, identical drawing code. The only difference was this
+    // call's position, so it is now in the same place in both, and the count
+    // is reported so the two are comparable rather than merely both "ok".
+    int families = -1;
+    {
+        PangoFontFamily **f = nullptr;
+        pango_font_map_list_families(map, &f, &families);
+        g_free(f);
+    }
+    g_print("   font families visible: %d\n", families);
+
     PangoContext *ctx = pango_font_map_create_context(map);
     PangoLayout *layout = pango_layout_new(ctx);
     pango_layout_set_text(layout, "Hello \344\270\226\347\225\214", -1);
@@ -64,8 +78,6 @@ int main()
 
     // ⚠️ Only assertable when the runner HAS fonts — see the header-route test
     // next door for why 0 families is a property of the machine.
-    int families = -1;
-    { PangoFontFamily **f = nullptr; pango_font_map_list_families(map, &f, &families); g_free(f); }
     if (families > 0)
         // `> 0`, not a tuned number — see the header-route test next door for
         // why a threshold here is an assertion about the runner's fonts.
