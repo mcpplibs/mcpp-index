@@ -1,6 +1,6 @@
 # mcpp 图形栈:从「能跑通」到「能开发」的覆盖面设计
 
-Date: 2026-08-30 · 前置:[`2026-08-30-gbm-cross-repo-closed-loop-plan.md`](2026-08-30-gbm-cross-repo-closed-loop-plan.md) §19/§20 · **状态:已实现并闭环验证(v1.9,§11 总账 / §14 fork 规范 / §18 八角度复核 / §19 合成器闸门与 GObject 栈,含沙箱实测 · §20 gio 与一次被推翻的判断 · §21 namespace 是契约 · §22 pango:文本排版接上了)**
+Date: 2026-08-30 · 前置:[`2026-08-30-gbm-cross-repo-closed-loop-plan.md`](2026-08-30-gbm-cross-repo-closed-loop-plan.md) §19/§20 · **状态:已实现并闭环验证(v2.0,§11 总账 / §14 fork 规范 / §18 八角度复核 / §19 合成器闸门与 GObject 栈,含沙箱实测 · §20 gio 与一次被推翻的判断 · §21 namespace 是契约 · §22 pango:文本排版接上了 · §23 模块名与包装体完备性)**
 
 ## 0. 这份文档解决什么
 
@@ -2174,3 +2174,72 @@ error: dependency 'gnome.gobject' is requested as both a version dep
 | 端到端 | 1,492 个像素 |
 
 **文本排版那条线接上了。**
+
+---
+
+## 23. 模块名与包装体完备性:两个已发布包的修正(2026-08-31)
+
+### 23.1 托管方不是负责方 —— 模块名改了两个
+
+| 包(索引键) | 旧模块名 | 新模块名 |
+|---|---|---|
+| `freedesktop.cairo` | `freedesktop.cairo` | **`cairo`** |
+| `freedesktop.libdisplay-info` | `freedesktop.displayinfo` | **`displayinfo`** |
+
+**索引 namespace 是货架标签,从不进模块名。** cairo 是它自己的项目,
+freedesktop.org 托管 git 但不拥有那套接口;libdisplay-info 解析的是 **VESA** 的
+EDID/DisplayID,`freedesktop.*` 这个模块前缀留给 freedesktop 自己的规范(像
+`freedesktop.wayland.client`)。同一条规则下 `freedesktop.egl` 导出的是
+`khronos.egl`。
+
+改名会让老消费者**编译报错并点名模块** —— 这是最该发现问题的地方。
+
+### 23.2 ⭐ 两个包装体都不完备,而且都是「没人问过」
+
+| | 导出 | 缺了什么 |
+|---|---|---|
+| `cairo` | 470 → **697** | `cairo_t`,以及**全部 192 个枚举量** |
+| `displayinfo` | 206 → **501** | **全部 295 个枚举量** |
+
+`cairo_t` 的原因很具体:正则是 `cairo_[a-z0-9_]+_t`,要求 `cairo_` 与 `_t` 之间
+至少有一个字符 —— 于是
+```c
+typedef struct _cairo cairo_t;      /* cairo.h:135 */
+```
+**这个库里用得最多的类型,恰好是它唯一匹配不到的名字。**
+
+**为什么一直没人发现,这才是要记的:**
+
+- cairo:唯一 import 那个模块的测试**同时**写了 `#include <cairo.h>`,头文件把
+  模块缺的都补上了。**一个从没被要求独立站住的 import,不是被测试了,是被装饰了。**
+- displayinfo:**没有任何测试点过一个枚举量**。而且只在 GCC 上加一个也发现不了 ——
+  导出 enum 会让枚举量在 GCC 可见,clang 拒绝同一个文件(§21.5)。
+
+### 23.3 它是从**外面**被发现的
+
+`gnome.pangocairo` **不能混用两条消费路线**(`pangocairo.h` 经 glib 到
+`<stdio.h>`),所以它只能问模块要 `cairo_t` —— 结果什么都没拿到。
+
+于是 pango 那一版带了个变通:**自己扫 `cairo.h`**。现在 cairo 修好了,
+**那个变通已经删掉**,普通的 `export import cairo;` 就够了 —— 本来就该够。
+
+> 一个包的包装体缺不缺,自己的测试可能永远问不出来;**是别的包在用它的时候问出来的。**
+
+### 23.4 发布形态:发资产,不重切 tag
+
+这两个包用的是 **release 资产**(`cairo-1.18.2-mcpp2.tar.gz`)而不是 tag 归档,
+所以修正走 `-mcpp3` 新资产:**tag 不动,零窗口**,而且资产名自带修订号。
+(对比 glib/pango 用 tag 归档,只能原地重切 + 换 sha。)
+
+⚠️ 本地 store 按 `(name, version)` 索引,所以已经解开过 `1.18.2` 的机器**拿不到
+新资产** —— 本次验证时就撞上了(`failed to read compiled module`),清掉 store
+条目才对。这是「包版本与上游对齐」这条约定的固定代价,值得写在这里。
+
+### 23.5 结果
+
+| | |
+|---|---|
+| `cairo` | 697 个导出;测试拆成两个文件,一条路线一个,module.cpp **一个头都不包** |
+| `displayinfo` | 501 个导出;测试比较两个枚举量,导出清单再塌陷就是编译错误 |
+| `gnome.pangocairo` | 变通删除,`export import cairo;` |
+| 验证 | 五个示例 × 两条工具链全绿 |

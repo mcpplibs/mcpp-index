@@ -1,4 +1,4 @@
-// freedesktop.cairo — draw something, read the pixels back, and check that the
+// cairo, via its HEADERS — draw something, read the pixels back, and check that the
 // feature split actually took effect.
 //
 // Cairo needs no display and no fonts on disk to draw: an image surface is
@@ -14,11 +14,26 @@
 #ifdef __linux__
 
 #include <cairo.h>
+// ⚠️ cairo.h does NOT reach the feature headers. This name used to arrive from
+// the module — which is precisely the confusion this split removes: on the
+// header route you include what you use.
+#include <cairo-ft.h>
 
 #include <cstdio>
 #include <cstring>
 
-import freedesktop.cairo;
+// ⚠️ THIS FILE IS THE HEADER ROUTE, AND IT NO LONGER IMPORTS.
+//
+// It used to do BOTH — `#include <cairo.h>` and `import freedesktop.cairo;` —
+// and that is why nobody noticed the module was incomplete: the header
+// supplied every name the module was missing, including `cairo_t` and all 192
+// enumerators. An import that is never asked to stand on its own is not
+// tested, it is decorated.
+//
+// `tests/module.cpp` next door takes the module route alone. Two files,
+// because on GCC the two routes cannot be combined in one TU anyway: reaching
+// a system header both textually and through a module's global fragment makes
+// the same type two entities.
 
 namespace {
 

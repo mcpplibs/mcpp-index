@@ -22,12 +22,20 @@
 -- then segfaulted. The fork's test now reads the font map's FONT TYPE and
 -- requires `CAIRO_FONT_TYPE_FT`, which catches it immediately.
 --
--- ⚠️ AND freedesktop.cairo's MODULE IS NOT SUFFICIENT ON ITS OWN. Measured on
--- 1.18.2: 470 names, ZERO enumerators (no `CAIRO_FORMAT_ARGB32`, no
--- `CAIRO_FONT_TYPE_FT`) and no `cairo_t`. The index's own cairo example does
--- not notice, because it writes BOTH `#include <cairo.h>` and
--- `import freedesktop.cairo;`. pangocairo cannot mix the routes, so its module
--- scans cairo.h itself; that can go when cairo's wrapper is fixed.--
+-- ✅ AND THIS PACKAGE IS WHERE cairo's MODULE GAP WAS FOUND. On the
+-- `1.18.2-mcpp2` asset `freedesktop.cairo` exported 470 names, ZERO
+-- enumerators and no `cairo_t`. The index's own cairo example did not notice,
+-- because it wrote BOTH `#include <cairo.h>` and `import freedesktop.cairo;`
+-- — the header supplied what the module lacked, so that import had never been
+-- asked to stand on its own.
+--
+-- It surfaced here because pangocairo CANNOT mix the two routes
+-- (`pangocairo.h` reaches glib and therefore <stdio.h>), so it had to ask the
+-- module for `cairo_t` and got nothing. This package carried a workaround for
+-- one release — scanning cairo.h itself — and that workaround is GONE:
+-- `1.18.2-mcpp3` exports 697 names and the plain re-export is enough.
+--
+-- The module it re-exports is now `cairo`, not `freedesktop.cairo`.--
 -- ─────────────────────────────────────────────────────────────────────────
 -- ⭐ TWO WAYS TO CONSUME IT, AND YOU PICK ONE
 --
@@ -90,14 +98,14 @@ package = {
             ["1.56.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/pango/archive/refs/tags/1.56.1.tar.gz",
-                    -- ⚠️ The container tag is `1.56.1-4`, not `1.56.1`. gitcode
+                    -- ⚠️ The container tag is `1.56.1-5`, not `1.56.1`. gitcode
                     -- refuses to REPLACE an asset of the same name in an
                     -- existing release, so each corrected tarball needs a new
                     -- container tag while the PACKAGE version stays upstream's.
                     -- Verified byte-identical to the GLOBAL tag archive.
-                    CN     = "https://gitcode.com/mcpp-res/pango/releases/download/1.56.1-4/pango-1.56.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/pango/releases/download/1.56.1-5/pango-1.56.1.tar.gz",
                 },
-                sha256 = "b470a658e05ef0e14d779bc852371ce52dd11efa76d10782347be40f1d63476b",
+                sha256 = "0882a260346cbdb6b553177269a8acc083a2985bbe929b458406af98e90a03ad",
             },
         },
     },

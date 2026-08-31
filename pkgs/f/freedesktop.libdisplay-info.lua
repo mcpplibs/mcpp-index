@@ -45,7 +45,7 @@
 -- THE MODULE IS GENERATED, not hand-written: 206 names read out of the public
 -- headers, so a version bump cannot silently drop one.
 --
---     import freedesktop.displayinfo;
+--     import displayinfo;
 --
 -- and that also removes a real burden — not one of the seven public headers has
 -- an `extern "C"` block, so a C++ TU that #includes them mangles every
@@ -53,6 +53,27 @@
 -- di_info_get_make(di_info const*)`. The module does that wrapping once, inside
 -- the module purview, so a consumer does not. (compat.libseat has the same
 -- upstream problem and no module, so there the consumer still wraps.)
+--
+-- ─────────────────────────────────────────────────────────────────────────
+-- ⚠️ THE MODULE IS `displayinfo`, NOT `freedesktop.displayinfo`
+--
+--     import displayinfo;
+--
+-- freedesktop.org HOSTS this library; the interfaces it parses are **VESA's**
+-- (EDID, DisplayID). `freedesktop.*` in a module name is for freedesktop's own
+-- specifications, the way `freedesktop.wayland.client` is. The index namespace
+-- is a shelf label and never enters the module name.
+--
+-- This changed in the mcpp3 asset; a consumer on the old name gets a compile
+-- error naming the module.
+--
+-- ⭐ AND THE WRAPPER EXPORTED 206 NAMES AND NOT ONE ENUMERATOR — the module
+-- carried `enum di_edid_…` but nothing inside it. 295 of them.
+--
+-- ⚠️ It went unnoticed because no test named an enumerator, and adding one on
+-- GCC alone would not have noticed either: exporting an enum makes its
+-- enumerators visible there, and clang rejects the same file. The same gap was
+-- in `freedesktop.cairo`. 501 names now, and the test compares two enumerators.
 package = {
     spec        = "1",
     namespace   = "freedesktop",
@@ -66,10 +87,10 @@ package = {
         linux = {
             ["0.2.0"] = {
                 url = {
-                    GLOBAL = "https://github.com/mcpplibs/libdisplay-info/releases/download/v0.2.0/libdisplay-info-0.2.0-mcpp2.tar.gz",
-                    CN     = "https://gitcode.com/mcpp-res/libdisplay-info/releases/download/0.2.0/libdisplay-info-0.2.0-mcpp2.tar.gz",
+                    GLOBAL = "https://github.com/mcpplibs/libdisplay-info/releases/download/v0.2.0/libdisplay-info-0.2.0-mcpp3.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/libdisplay-info/releases/download/0.2.0/libdisplay-info-0.2.0-mcpp3.tar.gz",
                 },
-                sha256 = "8df9a8064146b2b38378bd8b146894d084ffda43b88b43c485b954da073a7617",
+                sha256 = "8b2238a7b275e7da831d96c4f73b607a522d03620e6d5e0f12c605ef04659c8b",
             },
         },
     },

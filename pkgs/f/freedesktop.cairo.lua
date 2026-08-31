@@ -47,6 +47,36 @@
 -- `cairo_paint` working, and gives every PATH garbage fixed-point coordinates:
 -- `cairo_rectangle(4,4,16,16)` came out with extents -8.03e+06 … 4.37e+06 and
 -- `cairo_fill` changed zero pixels. Measured.
+--
+-- ─────────────────────────────────────────────────────────────────────────
+-- ⚠️ THE MODULE IS `cairo`, NOT `freedesktop.cairo`
+--
+--     import cairo;
+--
+-- cairo is its own project; freedesktop.org hosts the git and does not own the
+-- interface. **The index namespace is a shelf label and never enters the module
+-- name** — the same reason `freedesktop.egl` exports `khronos.egl`.
+--
+-- This changed in the mcpp3 asset. A consumer on the old name gets a compile
+-- error naming the module, which is the right place to find out.
+--
+-- ⭐ AND THE WRAPPER WAS INCOMPLETE: 470 names, missing `cairo_t` and all 192
+-- enumerators. It was found from OUTSIDE, by `gnome.pangocairo`, which cannot
+-- mix the two consumption routes and therefore had to ask the module for
+-- `cairo_t` and got nothing.
+--
+--     cairo_t          `typedef struct _cairo cairo_t;` — the typedef regex
+--                      needed a character between `cairo_` and `_t`, so the
+--                      most-used type in the library was the one it could not
+--                      match.
+--     192 enumerators  every CAIRO_FORMAT_*, CAIRO_STATUS_*, CAIRO_OPERATOR_*.
+--                      The scan never entered a `typedef enum` body.
+--
+-- ⚠️ WHY NOBODY NOTICED, and the lesson worth keeping: the only test that
+-- imported the module ALSO wrote `#include <cairo.h>`, so the header supplied
+-- whatever the module lacked. **An import that is never asked to stand on its
+-- own is not tested, it is decorated.** The fork now has two test files, one
+-- per route, and exports 697 names.
 package = {
     spec        = "1",
     namespace   = "freedesktop",
@@ -60,10 +90,10 @@ package = {
         linux = {
             ["1.18.2"] = {
                 url = {
-                    GLOBAL = "https://github.com/mcpplibs/cairo/releases/download/v1.18.2/cairo-1.18.2-mcpp2.tar.gz",
-                    CN     = "https://gitcode.com/mcpp-res/cairo/releases/download/1.18.2/cairo-1.18.2-mcpp2.tar.gz",
+                    GLOBAL = "https://github.com/mcpplibs/cairo/releases/download/v1.18.2/cairo-1.18.2-mcpp3.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/cairo/releases/download/1.18.2/cairo-1.18.2-mcpp3.tar.gz",
                 },
-                sha256 = "202352a38d0847628c55cd0f9c67e85ac78667ad76bc88691ab47606d1104ef7",
+                sha256 = "5a82cfb52365f40b7ecc679d7d67c3c34459aef4a69b4b75c2c0c964d74ec6e1",
             },
         },
     },
