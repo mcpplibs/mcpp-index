@@ -2261,7 +2261,16 @@ error: xlings install_packages failed … with 2 index repos configured
 ⚠️ 我一度反过来做了(先把 pango 的变通删掉),两边都红。**代码是对的,次序是
 错的**;已经回滚并把这段理由写进了 `gnome.pangocairo` 的描述符,免得下次再犯。
 
-### 23.6 结果
+### 23.6 收尾:pango 随后切过来
+
+cairo 落地后,`gnome.pangocairo` 的 `cairo.h` 变通**已经删掉**,改成普通的
+`export import cairo;`。两侧都绿。
+
+> **代码是对的,次序错了,两边都红。** 这不是本 fork 的问题,是索引机制的形状:
+> 一个成员只能声明一个项目级 index repo,所以跨 namespace 的联动改动**必须**分两
+> 次落地,而且顺序唯一。
+
+### 23.7 结果
 
 | | |
 |---|---|

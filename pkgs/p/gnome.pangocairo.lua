@@ -31,19 +31,19 @@
 --
 -- It surfaced here because pangocairo CANNOT mix the two routes
 -- (`pangocairo.h` reaches glib and therefore <stdio.h>), so it had to ask the
--- module for `cairo_t` and got nothing. This package therefore scans cairo.h
--- itself.
+-- module for `cairo_t` and got nothing. This package carried a workaround —
+-- scanning cairo.h itself — for two releases; it is GONE, and it re-exports
+-- the `cairo` module plainly.
 --
--- ⚠️ THAT WORKAROUND STAYS UNTIL cairo's FIX IS PUBLISHED, not merely written.
--- It is fixed in `1.18.2-mcpp3` (697 names), but this package resolves cairo
--- from the PUBLISHED index — and the change cannot even be TESTED in one index
--- PR, because a member may declare only ONE project-level index repo:
+-- ⚠️ THE ORDER WAS THE HARD PART, not the code. The workaround could not be
+-- removed in the same change that fixed cairo: this package resolves cairo
+-- from the PUBLISHED index, and a member may declare only ONE project-level
+-- index repo —
 --
 --     error: ≥2 project-level index repos is a known xlings resolution gap
 --
 -- so an example cannot use a local `gnome.*` descriptor and a local
--- `freedesktop.*` descriptor at the same time. cairo lands first; this
--- follows.--
+-- `freedesktop.*` descriptor together. cairo landed first; this follows.--
 -- ─────────────────────────────────────────────────────────────────────────
 -- ⭐ TWO WAYS TO CONSUME IT, AND YOU PICK ONE
 --
@@ -106,14 +106,14 @@ package = {
             ["1.56.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/pango/archive/refs/tags/1.56.1.tar.gz",
-                    -- ⚠️ The container tag is `1.56.1-6`, not `1.56.1`. gitcode
+                    -- ⚠️ The container tag is `1.56.1-7`, not `1.56.1`. gitcode
                     -- refuses to REPLACE an asset of the same name in an
                     -- existing release, so each corrected tarball needs a new
                     -- container tag while the PACKAGE version stays upstream's.
                     -- Verified byte-identical to the GLOBAL tag archive.
-                    CN     = "https://gitcode.com/mcpp-res/pango/releases/download/1.56.1-6/pango-1.56.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/pango/releases/download/1.56.1-7/pango-1.56.1.tar.gz",
                 },
-                sha256 = "19507c6712304750a0e9cc282135dda1919a1b89c0c4ce61e22411df0532a980",
+                sha256 = "e6664cfefd58df72ea59b529527088e0efb5418c2eb59510f33742591c810429",
             },
         },
     },
