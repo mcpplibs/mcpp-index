@@ -107,6 +107,7 @@ members = [
     "tests/examples/glib",
     "tests/examples/gobject",
     "tests/examples/gmodule",
+    "tests/examples/gio",
     "tests/examples/libgbm",
     "tests/examples/libpng",
     "tests/examples/libwebp",
