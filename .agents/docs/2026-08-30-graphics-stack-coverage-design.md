@@ -1,6 +1,6 @@
 # mcpp 图形栈:从「能跑通」到「能开发」的覆盖面设计
 
-Date: 2026-08-30 · 前置:[`2026-08-30-gbm-cross-repo-closed-loop-plan.md`](2026-08-30-gbm-cross-repo-closed-loop-plan.md) §19/§20 · **状态:已实现并闭环验证(v1.8,§11 总账 / §14 fork 规范 / §18 八角度复核 / §19 合成器闸门与 GObject 栈,含沙箱实测 · §20 gio 与一次被推翻的判断 · §21 namespace 是契约:四个成员补上 import)**
+Date: 2026-08-30 · 前置:[`2026-08-30-gbm-cross-repo-closed-loop-plan.md`](2026-08-30-gbm-cross-repo-closed-loop-plan.md) §19/§20 · **状态:已实现并闭环验证(v1.9,§11 总账 / §14 fork 规范 / §18 八角度复核 / §19 合成器闸门与 GObject 栈,含沙箱实测 · §20 gio 与一次被推翻的判断 · §21 namespace 是契约 · §22 pango:文本排版接上了)**
 
 ## 0. 这份文档解决什么
 
@@ -2047,3 +2047,112 @@ error: use of undeclared identifier 'G_UNICODE_OTHER_LETTER'
 
 CI 加了导出数下限(glib ≥1900、gio ≥2400)、pango 那三个符号按名断言、一个
 枚举量、以及转出链。**塌陷是静默的,所以必须有东西去数。**
+
+---
+
+## 22. pango:文本排版那条线接上了(2026-08-31)
+
+§19.7 说 pango 被 gio 挡住。gio 到位(§20),闸门就开了。
+
+### 22.1 三个成员,和 fork 的判据
+
+| 成员 | 是什么 | 模块导出 |
+|---|---|---|
+| `gnome.pango` | 分项、bidi、断行、markup | 851 |
+| `gnome.pangoft2` | fontconfig 选文件,FreeType 出字形 | 88 |
+| `gnome.pangocairo` | cairo 后端 —— `pango_cairo_show_layout` | 284 |
+
+判据仍是**生成器,不是行数**。pango 有三个,本 fork 再加一个:
+
+```
+configure_file         pango-features.h.meson -> pango-features.h
+configure_file         (没有输入模板)          -> config.h
+gobject/glib-mkenums   pango_headers          -> pango-enum-types.{h,c}   27 个
+(fork 自己的)          gen_module()           -> 三个 .cppm
+```
+
+⚠️ **`config.h` 是特殊的一个**:上游写的是
+`configure_file(output: 'config.h', configuration: pango_conf)`,**没有
+`input:`** —— meson 按 key 逐条发 `#define`,树里根本没有可替换的模板。所以这个
+文件必须**写出来**,里面每个值都是本包做的**决定**。其中两个是算术而非选择:
+
+```
+PANGO_BINARY_AGE    = minor * 100 + micro      # 5601
+PANGO_INTERFACE_AGE = minor 为奇数 ? 0 : micro  # 1
+```
+
+`pango_version_check()` 读第一个,所以写错不会构建失败,而是让一次**正确的版本
+比较给出错误答案**。测试两个方向都断言了。
+
+### 22.2 ⭐ 唯一一个产出像素的测试
+
+`pangocairo` 把 `"Hello 世界"` 画到 ARGB32 surface 上,数非透明像素:**1,492**。
+走到那一步要七个包:
+
+```
+gnome.pango        分项、bidi、断行
+gnome.pangoft2     fontconfig 选文件,FreeType 光栅化
+gnome.gio          PangoFontMap 是 GListModel
+compat.harfbuzz    整形
+compat.fribidi     bidi 算法
+freedesktop.cairo  字形落下去的那张 surface
+```
+
+**空白图片意味着其中之一没干活。**
+
+⚠️ 而且它**诚实地降级**:`freedesktop.fontconfig` 故意把运行期路径编译成空,
+所以没有 `FONTCONFIG_FILE` 的 runner 合法地找到零个字体族 —— 那就没有东西可画、
+也没有东西可断言。**那种情况被报告出来,而不是被静默略过**,因为「0 个字体族,
+所以唯一的真检查没跑」和「文字画出来了」不能长得一样。
+
+### 22.3 ⚠️ 本 fork 踩到的一次静默降级
+
+`HAVE_CAIRO_FREETYPE` 被一次编辑失误从 config.h 里弄丢了。**什么都没有构建失败。**
+`pangocairo-fontmap.c` 只是**一个后端都没注册**,程序在运行期死于
+
+```
+Pango-CRITICAL: Unknown $PANGOCAIRO_BACKEND value.
+  Available backends are:            <- 空列表
+```
+
+随后段错误。测试现在读 font map 的**字体类型**并要求 `CAIRO_FONT_TYPE_FT` ——
+这条断言会当场抓住它。同一类:**"能编译" 对配置宏没有任何证明力。**
+
+### 22.4 ⚠️ `freedesktop.cairo` 的模块自己就不够用(待办)
+
+1.18.2 实测:导出 470 个名字、**零个枚举量**(没有 `CAIRO_FORMAT_ARGB32`、
+没有 `CAIRO_FONT_TYPE_FT`)、**没有 `cairo_t`**。
+
+索引自己的 cairo 示例没发现,因为它**同时**写了 `#include <cairo.h>` 和
+`import freedesktop.cairo;` —— 头文件补上了模块缺的那半。**这意味着
+`import freedesktop.cairo;` 从来没有被单独检验过。**
+
+pangocairo 不能混用两条路(pangocairo.h 经 glib 到 `<stdio.h>`,混用会让
+`struct _IO_FILE` 变成两个实体),所以 `gnome.pangocairo` 自己扫 `cairo.h`。
+从两个模块导出同一个实体是无害的(是同一批 global-module 实体),所以这是**追加**
+而不是冲突。**cairo 的包装体修好后那行可以去掉。**
+
+同类的漏名坑见 §21.4;`freedesktop.cairo` 是同一个生成器家族里还没修的一个。
+
+### 22.5 依赖形态:点名 pangocairo 一个就够
+
+`gnome.pango` 和 `gnome.pangoft2` 是 `gnome.pangocairo` 的 workspace **path**
+依赖,`gnome.gio` 又是 `gnome.pango` 的。消费者再点名任何一个都会得到
+
+```
+error: dependency 'gnome.gobject' is requested as both a version dep
+       (by 'pango') and a path dep (by 'gnome.gio@2.82.5'). Pick one.
+```
+
+这条错误就是本 fork 第一次构建时学到的。
+
+### 22.6 结果
+
+| | |
+|---|---|
+| fork CI | 三个 job 全绿(两条工具链 + `upstream/` 未改) |
+| 测试 | 六个:三个成员 × 两条消费路线 |
+| 索引 | 三个示例,gcc 16.1 与 llvm 22.1 双绿 |
+| 端到端 | 1,492 个像素 |
+
+**文本排版那条线接上了。**

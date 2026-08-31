@@ -1,0 +1,15 @@
+# gnome.pangocairo — the whole text-layout line, ending in pixels.
+#
+# ⭐ Naming this one package pulls seven: pango, pangoft2, gio (and glib,
+# gobject, gmodule behind it), harfbuzz, fribidi, fontconfig, freetype and
+# cairo. The test renders text and counts the ink.
+[indices]
+gnome = { path = "../../.." }
+
+[package]
+name     = "pangocairo-tests"
+version  = "0.1.0"
+standard = "c++23"
+
+[target.'cfg(linux)'.dependencies.gnome]
+pangocairo = "1.56.1"

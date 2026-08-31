@@ -1,0 +1,15 @@
+# gnome.pango — international text layout, without a font backend.
+#
+# ⚠️ NAMES pango ALONE. gio, gobject, glib, harfbuzz and fribidi all arrive
+# transitively; gio in particular is a workspace PATH dependency of pango, and
+# naming it here as well is `requested as both a version dep and a path dep`.
+[indices]
+gnome = { path = "../../.." }
+
+[package]
+name     = "pango-tests"
+version  = "0.1.0"
+standard = "c++23"
+
+[target.'cfg(linux)'.dependencies.gnome]
+pango = "1.56.1"

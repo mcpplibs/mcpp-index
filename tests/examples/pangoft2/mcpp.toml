@@ -1,0 +1,11 @@
+# gnome.pangoft2 — the FreeType/fontconfig backend.
+[indices]
+gnome = { path = "../../.." }
+
+[package]
+name     = "pangoft2-tests"
+version  = "0.1.0"
+standard = "c++23"
+
+[target.'cfg(linux)'.dependencies.gnome]
+pangoft2 = "1.56.1"
