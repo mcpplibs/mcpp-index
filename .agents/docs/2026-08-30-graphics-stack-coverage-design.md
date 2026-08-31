@@ -1,6 +1,6 @@
 # mcpp 图形栈:从「能跑通」到「能开发」的覆盖面设计
 
-Date: 2026-08-30 · 前置:[`2026-08-30-gbm-cross-repo-closed-loop-plan.md`](2026-08-30-gbm-cross-repo-closed-loop-plan.md) §19/§20 · **状态:已实现并闭环验证(v1.7,§11 总账 / §14 fork 规范 / §18 八角度复核 / §19 合成器闸门与 GObject 栈,含沙箱实测 · §20 gio 与一次被推翻的判断)**
+Date: 2026-08-30 · 前置:[`2026-08-30-gbm-cross-repo-closed-loop-plan.md`](2026-08-30-gbm-cross-repo-closed-loop-plan.md) §19/§20 · **状态:已实现并闭环验证(v1.8,§11 总账 / §14 fork 规范 / §18 八角度复核 / §19 合成器闸门与 GObject 栈,含沙箱实测 · §20 gio 与一次被推翻的判断 · §21 namespace 是契约:四个成员补上 import)**
 
 ## 0. 这份文档解决什么
 
@@ -1944,3 +1944,106 @@ nick 是公开 API(`g_flags_get_value_by_nick` 读它):`G_CONVERTER_NO_FLAGS`
 
 **pango 的闸门开了**:它的五个依赖(gio、gobject、harfbuzz、fribidi、
 fontconfig、cairo)全部在索引里。
+
+---
+
+## 21. namespace 是契约:gnome.* 补上 import(2026-08-31)
+
+### 21.1 判据不是我原来以为的那个
+
+索引里 **namespace 决定消费形态**:
+
+| | |
+|---|---|
+| `compat.xxx` | 按**头文件**消费,包不提供模块 |
+| `<归属方>.xxx` | 包**提供 `import`** |
+
+全索引核对成立:`freedesktop.cairo` 导出 544 个名字、`wlroots.wlroots` 986、
+`freedesktop.libdisplay-info` 206、`freedesktop.wayland` 有
+`import freedesktop.wayland.client;`、`freedesktop.fontconfig` 有
+`src/fontconfig.cppm`;而 `compat.harfbuzz`/`freetype`/`pcre2`/`fribidi` 都只有
+头文件。**`gnome.*` 四个是当时唯一的违例** —— 用了归属 namespace 却没有模块。
+
+我原来在描述符里写的是「没有模块,因为 API 宏化」。**观察对,结论错**:宏确实
+过不了模块边界,但那不代表模块无意义 —— 它仍然交付 2,732 个声明,而 gio 的函数
+API 根本不需要宏。已就地标 ❌ 并改正。
+
+### 21.2 两条路不能混用(这一条决定了形态)
+
+```
+import gnome.gio;        // 模块路线
+#include <gio/gio.h>     // 头文件路线
+```
+
+同一个 TU 两条都走,会经由**两条路径**到达 `<time.h>` —— 一次через模块的 global
+fragment,一次直接 —— 于是**同一个文件里的同一个 `struct tm` 变成两个实体**:
+
+```
+error: conflicting declaration 'struct tm'
+note: previous declaration as 'struct tm'   (of module gnome.glib)
+```
+
+所以消费者**二选一**,而选哪条由**宏**决定:模块带不了宏,glib 的宏占 API 的一半
+(glib 1,337 `#define` 对 1,312 声明;gio 1,679 对 1,753)。用
+`G_DEFINE_TYPE`/`G_OBJECT`/`G_TYPE_*` 的代码走头文件;用函数 API 的(gio 的大
+多数)走模块,一个头都不用包。**每个成员因此各带两个测试**。
+
+### 21.3 ❌ 两种更省事的形态,都实测否掉了
+
+| 形态 | 为什么不行 |
+|---|---|
+| 宏侧头文件(抽出全部 1,928 个 `#define`,自身不 include 任何东西) | 小范围可行 —— 探针编译、链接、运行都过。**不 scale**:glib 的版本/弃用机制是**预处理器有状态**的,顺序由**include 图**决定而不是文件列表。摊平后依次得到「`#ifdef` 两个分支都被发出、后者静默重定义前者」→「`#error "GLIB_VERSION_MIN_REQUIRED must be <= GLIB_VERSION_CUR_STABLE"`」→「`missing binary operator before token 'GLIB_DEPRECATED_MACRO'`」。**每修一个就冒出下一个,因为摊平本身才是错的**;忠实投影等于写半个预处理器 |
+| `export import <glib-object.h>;`(具名模块转出 header unit) | 声明**确实**全部带过去了(实测),但导入方**拿不到宏**。所以导出清单无论如何都得列 |
+
+### 21.4 ⭐ 生成器四次「静默漏名」—— 全部由消费者或另一条工具链发现
+
+每一次产出的包装体**都能编译**:
+
+| | 发生了什么 |
+|---|---|
+| `= '{'` | `G_VARIANT_CLASS_DICT_ENTRY = '{'` 是**字符字面量里的花括号**。typedef 读取器把它计入,再也没配平,于是**吞掉了 `gvariant.h` 剩下的全部内容** —— 每个 `g_variant_*` 函数消失,而另外 1,853 个名字让模块看起来很完整 |
+| `G_DECLARE_INTERFACE` | 展开成 typedef **和** `_get_type`,文本扫描器两个都看不见。牺牲者是 `GListModel`、`GListStore`、`g_list_model_get_type` —— **正是 pango 等的那几个** |
+| `<glibconfig.h>` | 拼写不带 `glib/` 前缀,所以按 umbrella 的 `<glib/…>` 行推导头文件集合看不到它 —— 而 `gsize`/`gssize` 正是在那里 typedef 的 |
+| `void (g_free) (…)` | glib 把名字**加括号**以防宏展开,声明符因此位于括号深度 1;深度 0 规则丢掉了 `g_free`、`g_string_free` 和 GVariant 的构造函数 |
+
+还有一次结构性的:**注释剥离与 typedef 读取器是两个读者**,后者有自己的
+`getline` 循环、从没见过前者,于是 `typedef enum { … } GUnicodeScript;` 里的
+脚本代码注释(`/* Geor */`)变成了导出名。**一个流上两个读者就是 bug**,改成
+「先整文件剥一次注释」才是修法 —— 和 §20.6 的排除模式、以及 gio 扫描器那次
+是同一类。
+
+### 21.5 ⭐⭐ 只有两条工具链能看见的一条
+
+生成器一度只导出 enum 的 typedef,依据是一次 mcpp 端到端实跑:
+`GModuleFlags f = G_MODULE_BIND_LAZY;` 编译并运行了。
+
+**它是在 GCC 上编译的。** clang 拒绝同一个文件:
+
+```
+error: use of undeclared identifier 'G_MODULE_BIND_LAZY'
+error: use of undeclared identifier 'G_ZLIB_COMPRESSOR_FORMAT_ZLIB'
+error: use of undeclared identifier 'G_UNICODE_OTHER_LETTER'
+```
+
+—— 因为 using 声明命名一个枚举**不引入它的枚举量**,GCC 的可达性是宽松解读。
+现在每个枚举量都按名导出。
+
+> **这是本 fork 里「CI 跑两条工具链」最有力的一条论据**:单条工具链会把这个
+> 判成 done。
+
+### 21.6 结果
+
+| 模块 | 导出 |
+|---|---|
+| `gnome.glib` | 2,732 |
+| `gnome.gobject` | 495 · 转出 `gnome.glib` |
+| `gnome.gmodule` | 20 · 转出 `gnome.glib` |
+| `gnome.gio` | 2,850 · 转出全部三个 |
+
+转出**不是便利**:glib 是 workspace **path** 依赖,消费者再点名它就会得到
+`requested as both a version dep and a path dep`。所以 `import gnome.gio;`
+必须和 `#include <gio/gio.h>` 一样完整 —— 这一条也是先以失败出现的
+(`'GQuark' was not declared in this scope`,消费者什么都没做错)。
+
+CI 加了导出数下限(glib ≥1900、gio ≥2400)、pango 那三个符号按名断言、一个
+枚举量、以及转出链。**塌陷是静默的,所以必须有东西去数。**

@@ -111,6 +111,39 @@
 -- upstream tree also contains two `COPYING` symlinks, which a Windows
 -- extraction would not survive — one more reason the descriptor offers
 -- `linux` alone.
+-- ─────────────────────────────────────────────────────────────────────────
+-- ⭐ TWO WAYS TO CONSUME IT, AND YOU PICK ONE
+--
+--     import gnome.glib;          -- the module route
+--     #include <glib.h>       -- the header route
+--
+-- The namespace is the contract in this index: `compat.xxx` means headers, an
+-- owner namespace means the package exposes `import`. This module exports
+-- 2,732 names.
+--
+-- ⚠️ THE TWO ROUTES DO NOT COMPOSE. A TU that imports the module AND textually
+-- includes a glib header reaches <time.h> twice — once through the module's
+-- global fragment, once directly — and the same `struct tm` from the same file
+-- becomes two entities:
+--
+--     error: conflicting declaration 'struct tm'
+--     note: previous declaration as 'struct tm'   (of module gnome.glib)
+--
+-- WHICH ROUTE IS DECIDED BY MACROS. A module cannot carry them, and glib's are
+-- half its API — 1,337 `#define` against 1,312 declarations for glib, 1,679
+-- against 1,753 for gio. `G_DEFINE_TYPE`, `G_OBJECT`, `g_signal_connect` and
+-- every `G_TYPE_*` are macros, so code that defines a GObject subclass takes
+-- the HEADER route. Code that uses the function API — most of gio — takes the
+-- MODULE route and includes nothing at all.
+--
+-- The wrapper is GENERATED from upstream's public headers, so a name upstream
+-- adds or removes cannot be silently missed. That is not a preference at this
+-- size: four separate silent misses were found by consumers rather than by the
+-- build — a brace inside a char literal that swallowed the rest of a file,
+-- `G_DECLARE_INTERFACE` (which expands to the names rather than spelling
+-- them), `<glibconfig.h>` being spelled without a `glib/` prefix, and glib's
+-- habit of parenthesising a name to defend it from macro expansion.
+--
 package = {
     spec        = "1",
     namespace   = "gnome",
@@ -125,14 +158,14 @@ package = {
             ["2.82.5"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/glib/archive/refs/tags/2.82.5.tar.gz",
-                    -- ⚠️ The container tag is `2.82.5-3`, not `2.82.5`. gitcode
+                    -- ⚠️ The container tag is `2.82.5-4`, not `2.82.5`. gitcode
                     -- refuses to REPLACE an asset of the same name in an
                     -- existing release, so each corrected tarball needs a new
                     -- container tag while the PACKAGE version stays upstream's.
                     -- Verified byte-identical to the GLOBAL tag archive.
-                    CN     = "https://gitcode.com/mcpp-res/glib/releases/download/2.82.5-3/glib-2.82.5.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/glib/releases/download/2.82.5-4/glib-2.82.5.tar.gz",
                 },
-                sha256 = "628b8f98a51238563704bf50817d575a46421acc32d987ca93edc941a1749d62",
+                sha256 = "38a175bcd8899f376b6540e2e3ef7450169205fc56bdb909cfb086a0438553e5",
             },
         },
     },
