@@ -60,7 +60,21 @@ int main()
     pango_layout_get_pixel_size(layout, &w, &h);
     g_print("   layout pixel size: %dx%d\n", w, h);
 
+    // ⚠️ THE SURFACE IS CHECKED, and its format is PRINTED. The first version
+    // of this test only counted pixels, so when it reported 0 on a runner
+    // where the header-route twin reported 116 there was nothing to go on:
+    // "0 pixels" is a symptom shared by "nothing was drawn", "the surface is
+    // in an error state" and "the pixel loop is reading the wrong bytes".
     cairo_surface_t *surf = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 400, 100);
+    g_print("   surface status=%d format=%d (CAIRO_FORMAT_ARGB32=%d)\n",
+            (int) cairo_surface_status(surf),
+            (int) cairo_image_surface_get_format(surf),
+            (int) CAIRO_FORMAT_ARGB32);
+    check(cairo_surface_status(surf) == CAIRO_STATUS_SUCCESS,
+          "the ARGB32 surface was created without error");
+    check(cairo_image_surface_get_format(surf) == CAIRO_FORMAT_ARGB32,
+          "…and the format it reports is the one that was asked for");
+
     cairo_t *cr = cairo_create(surf);
     cairo_set_source_rgb(cr, 0, 0, 0);
     cairo_move_to(cr, 10, 10);
@@ -69,6 +83,7 @@ int main()
 
     cairo_surface_flush(surf);
     const unsigned char *d = cairo_image_surface_get_data(surf);
+    check(d != nullptr, "the surface has readable pixel data");
     const int stride = cairo_image_surface_get_stride(surf);
     long drawn = 0;
     for (int y = 0; d && y < 100; ++y)

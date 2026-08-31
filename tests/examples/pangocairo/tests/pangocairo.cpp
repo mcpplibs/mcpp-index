@@ -127,24 +127,31 @@ int main()
     const long drawn = ink(surf);
     std::printf("   non-transparent pixels: %ld\n", drawn);
 
-    if (families > 0) {
+    // ⚠️ THE GUARD IS THE LAYOUT'S OWN METRICS, NOT THE FAMILY COUNT.
+    //
+    // `families > 0` looked like enough and is not. A CI runner reported FOUR
+    // families and measured this layout at 80x858545 — a nonsense height on a
+    // 100px surface, because "four families" there means fontconfig has
+    // entries but no usable font behind them. The glyphs then land off the
+    // surface and the ink count is arbitrary: 0 in one process and 116 in
+    // another, from byte-identical drawing code.
+    //
+    // An earlier version also asserted `drawn > 100`, which passed here (216
+    // pixels, 184 families) and failed there (72) — a threshold calibrated to
+    // the developer's font set is an assertion about the MACHINE. Ink is ink.
+    const bool usable = families > 0 && w > 0 && h > 0 && h <= 100;
+    if (usable) {
         // ⭐ THE WHOLE LINE, IN ONE ASSERTION.
-        check(w > 0 && h > 0, "the layout measured a non-empty box");
-        // ⚠️ `> 0`, NOT `> 100`. An earlier version used 100 and PASSED here
-        // (216 pixels, 184 font families) while FAILING on a CI runner with
-        // four families and 72 — because with almost no fonts "世界" renders
-        // as tofu boxes and the ink is thinner. The threshold was calibrated
-        // to the developer's font set, which makes it an assertion about the
-        // MACHINE rather than about this build. Ink is ink: any positive count
-        // proves all seven packages put pixels down.
         check(drawn > 0,
               "pango_cairo_show_layout put ink on the surface — seven packages");
     } else {
-        // Not a pass. The runner has no fonts, so the only real check could
-        // not run, and saying so is the point.
-        std::printf("   ⚠️  0 font families: this runner has no fonts, so the\n"
-                    "       rendering assertion was NOT run. That is a property\n"
-                    "       of the machine, not of this build.\n");
+        // Not a pass. The machine cannot render, so the only real check could
+        // not run, and saying so is the point: "it was skipped" and "it worked"
+        // must not look alike.
+        std::printf("   \342\232\240  no usable font (families=%d, layout %dx%d on a\n"
+                    "       100px surface): the rendering assertion was NOT run.\n"
+                    "       That is a property of this machine, not this build.\n",
+                    families, w, h);
         check(drawn >= 0, "the surface is readable (rendering check skipped)");
     }
 
