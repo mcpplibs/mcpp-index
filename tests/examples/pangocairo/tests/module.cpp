@@ -67,7 +67,9 @@ int main()
     int families = -1;
     { PangoFontFamily **f = nullptr; pango_font_map_list_families(map, &f, &families); g_free(f); }
     if (families > 0)
-        check(drawn > 100, "pango_cairo_show_layout put ink on the surface");
+        // `> 0`, not a tuned number — see the header-route test next door for
+        // why a threshold here is an assertion about the runner's fonts.
+        check(drawn > 0, "pango_cairo_show_layout put ink on the surface");
     else
         g_print("   ⚠️  0 font families: the rendering assertion was NOT run.\n");
 

@@ -130,7 +130,14 @@ int main()
     if (families > 0) {
         // ⭐ THE WHOLE LINE, IN ONE ASSERTION.
         check(w > 0 && h > 0, "the layout measured a non-empty box");
-        check(drawn > 100,
+        // ⚠️ `> 0`, NOT `> 100`. An earlier version used 100 and PASSED here
+        // (216 pixels, 184 font families) while FAILING on a CI runner with
+        // four families and 72 — because with almost no fonts "世界" renders
+        // as tofu boxes and the ink is thinner. The threshold was calibrated
+        // to the developer's font set, which makes it an assertion about the
+        // MACHINE rather than about this build. Ink is ink: any positive count
+        // proves all seven packages put pixels down.
+        check(drawn > 0,
               "pango_cairo_show_layout put ink on the surface — seven packages");
     } else {
         // Not a pass. The runner has no fonts, so the only real check could
