@@ -39,10 +39,10 @@ package = {
         linux = {
             ["1.26.0"] = {
                 url = {
-                    GLOBAL = "https://github.com/mcpplibs/wayland/releases/download/v1.26.0/wayland-1.26.0-mcpp3.tar.gz",
-                    CN     = "https://gitcode.com/mcpp-res/wayland/releases/download/1.26.0/wayland-1.26.0-mcpp3.tar.gz",
+                    GLOBAL = "https://github.com/mcpplibs/wayland/releases/download/v1.26.0/wayland-1.26.0-mcpp4.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/wayland/releases/download/1.26.0/wayland-1.26.0-mcpp4.tar.gz",
                 },
-                sha256 = "b95537b21b0df2119a84ec8b3b833a564259e52fbbe2b119c5f9dd7cbaad55a0",
+                sha256 = "9bce2cc00c61399a3c2fb15e730b664073694154860bc5e2b4496bcf09e55e52",
             },
         },
     },

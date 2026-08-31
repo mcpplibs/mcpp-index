@@ -20,6 +20,21 @@
 -- `libwayland-server.so.0` are distinct SONAMEs that Mesa's libEGL_mesa needs
 -- BOTH of, and mcpp links every library target in a package against all of its
 -- sources — so one package cannot emit two libraries with disjoint contents.
+--
+-- ─────────────────────────────────────────────────────────────────────────
+-- ⭐ wl_signal_* 在 mcpp4 之前够不着(已修复)
+--
+-- `wayland-server-core.h` 把 wl_signal_init / _add / _get / _emit 定义成
+-- `static inline` —— 内部链接,C++ 禁止从模块导出。于是走**模块路线**的消费者
+-- 一个都拿不到。
+--
+-- 这不是边角:每一次 wlroots 监听注册都是
+-- `wl_signal_add(&thing->events.x, &listener)`,所以**用模块写不了合成器**。
+--
+-- ⚠️ 一直没发现,是因为这个包的测试从没调用过其中任何一个。缺口是从**外面**
+-- 被问出来的 —— 一个最小 wlroots 合成器编不过。同一类问题在
+-- `freedesktop.cairo`(少 cairo_t)和 `displayinfo`(少 295 个枚举量)上都出现
+-- 过,发现方式也一样:**自己的测试问不出来,别的包在真实用途里能。**
 package = {
     spec        = "1",
     namespace   = "freedesktop",
@@ -33,10 +48,10 @@ package = {
         linux = {
             ["1.26.0"] = {
                 url = {
-                    GLOBAL = "https://github.com/mcpplibs/wayland/releases/download/v1.26.0/wayland-1.26.0-mcpp3.tar.gz",
-                    CN     = "https://gitcode.com/mcpp-res/wayland/releases/download/1.26.0/wayland-1.26.0-mcpp3.tar.gz",
+                    GLOBAL = "https://github.com/mcpplibs/wayland/releases/download/v1.26.0/wayland-1.26.0-mcpp4.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/wayland/releases/download/1.26.0/wayland-1.26.0-mcpp4.tar.gz",
                 },
-                sha256 = "b95537b21b0df2119a84ec8b3b833a564259e52fbbe2b119c5f9dd7cbaad55a0",
+                sha256 = "9bce2cc00c61399a3c2fb15e730b664073694154860bc5e2b4496bcf09e55e52",
             },
         },
     },

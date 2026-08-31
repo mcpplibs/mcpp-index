@@ -92,6 +92,26 @@ int main()
               "WL_MARSHAL_FLAG_DESTROY keeps upstream's value");
     }
 
+    // ⭐ 这八个函数在 mcpp4 之前根本够不着(`static inline` 无法从模块导出),
+    // 而**没有任何测试调用过它们**,所以谁都没发现。缺口是从外面被一个最小
+    // wlroots 合成器问出来的。下面每一行都是"再塌陷就编译不过"的探针。
+    {
+        // wayland-util.h 的定点数 —— 协议里每个亚像素坐标的载体
+        check(wl_fixed_from_int(3) == 768, "wl_fixed_from_int");
+        check(wl_fixed_to_double(wl_fixed_from_double(1.5)) == 1.5, "wl_fixed double 往返");
+        check(wl_fixed_from_double(-1.5) == -384, "负数按上游 round() 舍入");
+
+        // wayland-server-core.h 的 signal —— 每次 wlroots 挂监听都要它
+        wl_signal sig{};
+        wl_signal_init(&sig);
+        check(sig.listener_list.next == &sig.listener_list, "wl_signal_init");
+        wl_listener l{};
+        l.notify = [](wl_listener *, void *) {};
+        wl_signal_add(&sig, &l);
+        check(wl_signal_get(&sig, l.notify) == &l, "wl_signal_add + wl_signal_get");
+        wl_list_remove(&l.link);
+    }
+
     std::printf("\n%d check(s) failed\n", failures);
     return failures == 0 ? 0 : 1;
 }
