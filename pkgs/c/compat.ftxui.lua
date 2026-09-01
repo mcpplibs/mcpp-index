@@ -1,6 +1,7 @@
 -- M6.x glob-aware Form B descriptor for FTXUI 6.1.9 and 7.0.3.
 --
--- Pure C++ library (no C++23 modules); compiled sources + public headers.
+-- Compiled sources + public headers by default; 7.0.3 additionally offers
+-- upstream's named modules behind the opt-in `modules` feature (see below).
 -- Uses mcpp 0.0.4's glob exclusion (`!` prefix) to skip the
 -- *_test.cpp / *_fuzzer.cpp files that live alongside the library
 -- sources in the same directories (6.1.9: ~30 test / ~16 fuzzer;
@@ -13,6 +14,69 @@
 -- with 6.1.9. Upstream added C++20 module units (src/ftxui/*.cppm,
 -- FTXUI_BUILD_MODULES, off by default); the `*.cpp` globs never match them,
 -- and the plain .cpp sources still compile header-only style.
+--
+-- The `modules` feature (7.0.3+)
+-- ------------------------------
+-- 7.x ships upstream's own named modules — an `ftxui` umbrella that
+-- `export import`s four sub-modules (ftxui.component/.dom/.screen/.util),
+-- each of which textually includes the matching public headers in its global
+-- module fragment. `features.modules` adds exactly the five files upstream's
+-- cmake/ftxui_modules.cmake lists, so `import ftxui;` becomes available
+-- without touching the header surface: the module units carry no definitions
+-- of their own (they are `export namespace ftxui { using ... }` re-exports),
+-- so they layer ON TOP of the same libftxui.a the default build produces.
+-- Both surfaces coexist in one archive; a consumer picks either.
+--
+-- OFF BY DEFAULT — but NOT because the units fail to build. They build and
+-- run under gcc 16.1.0 and llvm 22.1.8 alike, verified on the mcpp version CI
+-- pins. The reason is cost and choice: the module surface is five extra TUs
+-- and their BMIs that no header consumer of 7.0.3 should pay for unasked,
+-- upstream itself defaults FTXUI_BUILD_MODULES to OFF, and there is a
+-- consumer-side constraint below that only the consumer can honour.
+--
+-- ⚠️ THE CONSTRAINT IS IN THE CONSUMER'S TU, NOT IN THIS PACKAGE, AND #292
+-- IS WHY IT IS WORTH SPELLING OUT. Because each sub-module puts the public
+-- headers — and transitively libstdc++ — into a global module fragment, a
+-- consumer TU that writes `import ftxui;` and ALSO textually `#include`s a
+-- standard header hands gcc two copies of the standard library's
+-- declarations. gcc 16 refuses, at volume:
+--
+--     c++config.h:355:15: error: redefinition of 'void std::__terminate()'
+--     memoryfwd.h:68:11:  error: conflicting declaration of template
+--                                'template<class> struct std::allocator'
+--     stringfwd.h:55:12:  error: conflicting declaration of template
+--                                'template<class _CharT> struct std::char_traits'
+--
+-- That is exactly what sank #292's first attempt at this. Its smoke TU wrote
+-- `import ftxui;` above `#include <string>` and `#include <gtest/gtest.h>`,
+-- and the linux gcc leg died on those three errors (and ~16k more) while
+-- llvm, macOS and windows stayed green — clang accepts the mixed TU. The one
+-- object that failed in that run was the smoke TU's own (`obj/module.o`); the
+-- package's five module units had already compiled.
+--
+-- A consumer that stays ON the module surface — `import std;` beside
+-- `import ftxui;`, no textual includes, the discipline tests/examples/
+-- asio-module already documents — builds clean on both compilers. That is
+-- what tests/examples/ftxui-module asserts, and it is why that member can run
+-- on both of CI's linux legs rather than needing a toolchain pin.
+--
+-- Upstream's own module CI is llvm-only (`test_modules` in
+-- .github/workflows/build.yaml: a one-entry ubuntu + llvm matrix carrying
+-- `# TODO add gcc / msvc`), and ftxui_modules.cmake still forces
+-- `-fmodules-ts` under CMAKE_COMPILER_IS_GNUCXX above a bare
+-- `# TODO: Explain why this is needed.`. So gcc is UNTESTED upstream — worth
+-- knowing before trusting the combination far — but, as measured here, it is
+-- not broken.
+--
+-- On 6.1.9 the feature's glob matches nothing (no .cppm before 7.0.0), which
+-- is a warning rather than an error — the same union-of-layouts tolerance
+-- compat.catch2 and compat.redis-plus-plus rely on. `modules` below is the
+-- declared export set, in the same spelling every other module package in
+-- this index uses. Note what it does NOT buy here: mcpp validates
+-- `[modules].exports` against the scanner only for the PRIMARY manifest of a
+-- build, so a DEPENDENCY's list is never checked — measured by deleting
+-- `ftxui.util` from it and rebuilding with the package cache bypassed, which
+-- built and passed. It is documentation and metadata, not a guard.
 --
 -- ONE version skew the globs cannot express (no per-version build blocks,
 -- mcpp-community/mcpp#290): FTXUI 7 moved Loop's method definitions from
@@ -98,6 +162,40 @@ package = {
             "!*/src/ftxui/**/*_fuzzer.cpp",     -- fuzz targets (16 in 6.1.9, 6 in 7.0.3)
         },
         targets = { ["ftxui"] = { kind = "lib" } },
+        -- The export set of the `modules` feature, in the spelling every other
+        -- module package in this index uses. Documentation and metadata only:
+        -- mcpp checks `[modules].exports` against the scanner for the PRIMARY
+        -- manifest of a build, never for a dependency's, so nothing here is
+        -- enforced at a consumer's build (measured — see the header comment).
+        -- Order follows upstream's ftxui_modules.cmake.
+        modules = {
+            "ftxui",
+            "ftxui.component",
+            "ftxui.dom",
+            "ftxui.screen",
+            "ftxui.util",
+        },
+        features = {
+            -- Upstream's five module units, verbatim from
+            -- cmake/ftxui_modules.cmake. `*.cppm` cannot collide with the base
+            -- `**/*.cpp` globs (different extension), so this is a pure
+            -- ADDITION — no `!` exclusion is involved and the base source set
+            -- is untouched whether the feature is on or off. That matters:
+            -- a `!` exclusion in mcpp is global and would out-rank a feature
+            -- entry naming the same file, so "exclude in base, add back in the
+            -- feature" is not an expressible shape.
+            --
+            -- No `include_dirs` here (features cannot carry them, and none is
+            -- needed): the GMF `#include <ftxui/...>` resolve through the
+            -- package-level `*/include`, which mcpp applies to the package's
+            -- own TUs as well as to consumers.
+            --
+            -- Consumer-side rule, gcc only: don't mix `import ftxui;` with a
+            -- textual `#include` in one TU. See the header comment.
+            ["modules"] = {
+                sources = { "*/src/ftxui/*.cppm" },
+            },
+        },
         deps    = { },
         windows = {
             cxxflags = { "-DUNICODE", "-D_UNICODE" },

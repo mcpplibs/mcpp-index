@@ -1,0 +1,28 @@
+# compat.ftxui's `modules` feature: upstream's own named modules for 7.0.3 —
+# the `ftxui` umbrella plus ftxui.component/.dom/.screen/.util. The sibling
+# member tests/examples/core covers the default HEADER surface at the same
+# version and requests no feature; this member exists to prove the feature.
+#
+# Part of the self-referential workspace: the dependency resolves to the
+# checked-in descriptor (pkgs/c/compat.ftxui.lua) through the workspace-root
+# `[indices]` redirect, which this member inherits.
+#
+# ⚠️ EVERY TU HERE STAYS ON THE MODULE SURFACE — `import std;` beside
+# `import ftxui...;`, and not one textual `#include`. That is not style, it is
+# the thing the member is guarding. A consumer TU that mixes `import ftxui;`
+# with a textual `#include` of a standard header hands gcc two copies of
+# libstdc++'s declarations through the sub-modules' global module fragments,
+# and gcc 16 rejects it with thousands of `redefinition of 'void
+# std::__terminate()'` / `conflicting declaration of template ... std::allocator`
+# errors. That is what took down #292's first attempt at compiling these units,
+# and it is a CONSUMER-side constraint, not a defect in the package. clang
+# accepts the mixed TU, which is why only the linux gcc leg went red there.
+#
+# Kept unmixed, the feature builds and runs on gcc 16.1.0 and llvm 22.1.8
+# alike, so this member needs no toolchain pin and runs on both linux legs.
+[package]
+name    = "ftxui-module-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+ftxui = { version = "7.0.3", features = ["modules"] }

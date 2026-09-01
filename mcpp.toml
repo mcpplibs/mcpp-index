@@ -45,6 +45,7 @@ members = [
     "tests/examples/ffmpeg",
     "tests/examples/ffmpeg-module",
     "tests/examples/fmtlib.fmt",
+    "tests/examples/ftxui-module",
     "tests/examples/gmp",
     "tests/examples/gmp-gmpxx",
     "tests/examples/godot-cpp",
