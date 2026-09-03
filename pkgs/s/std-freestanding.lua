@@ -44,6 +44,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.5.2"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/std-freestanding/archive/refs/tags/0.5.2.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/std-freestanding/releases/download/0.5.2/std-freestanding-0.5.2.tar.gz",
+                },
+                sha256 = "c919229d97bd06ec1ba67fd92e0570b33addb239d517839ab39aec1bddaaf7f2",
+            },
             ["0.5.1"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/std-freestanding/archive/refs/tags/0.5.1.tar.gz",
@@ -95,6 +102,13 @@ package = {
             },
         },
         macosx = {
+            ["0.5.2"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/std-freestanding/archive/refs/tags/0.5.2.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/std-freestanding/releases/download/0.5.2/std-freestanding-0.5.2.tar.gz",
+                },
+                sha256 = "c919229d97bd06ec1ba67fd92e0570b33addb239d517839ab39aec1bddaaf7f2",
+            },
             ["0.5.1"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/std-freestanding/archive/refs/tags/0.5.1.tar.gz",
@@ -146,6 +160,13 @@ package = {
             },
         },
         windows = {
+            ["0.5.2"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/std-freestanding/archive/refs/tags/0.5.2.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/std-freestanding/releases/download/0.5.2/std-freestanding-0.5.2.tar.gz",
+                },
+                sha256 = "c919229d97bd06ec1ba67fd92e0570b33addb239d517839ab39aec1bddaaf7f2",
+            },
             ["0.5.1"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/std-freestanding/archive/refs/tags/0.5.1.tar.gz",
