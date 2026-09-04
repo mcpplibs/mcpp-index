@@ -26,8 +26,8 @@
 -- information no independent one could: these routines are an ABI contract with
 -- a COMPILER, and "the builtins that ship with the clang in this toolchain" is
 -- the question a consumer is asking. A change to the PACKAGING moves the fourth
--- segment, which orders above the bare number and satisfies the same
--- requirements.
+-- segment, which must be written out in full: a bare requirement in mcpp is an
+-- EXACT PIN, not a caret.
 --
 package = {
     spec        = "1",

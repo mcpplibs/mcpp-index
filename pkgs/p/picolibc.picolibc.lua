@@ -38,8 +38,8 @@
 -- files was compared against, byte for byte. A change to the PACKAGING moves
 -- the fourth segment: `1.8.12.1` orders strictly above `1.8.12`, because mcpp
 -- compares an arbitrary-length dot list with absent segments as zero, and
--- satisfies every requirement `1.8.12` satisfies, because a bare requirement is
--- a caret. A consumer therefore writes the number upstream released.
+-- must be written out in full: a bare requirement in mcpp is an EXACT PIN, not a
+-- caret, so `"1.8.12"` names a version that does not exist and fails at fetch.
 --
 package = {
     spec        = "1",
@@ -57,30 +57,30 @@ package = {
 
     xpm = {
         linux = {
-            ["1.8.12.2"] = {
+            ["1.8.12.3"] = {
                 url    = {
-                    GLOBAL = "https://github.com/mcpplibs/picolibc/archive/refs/tags/1.8.12.2.tar.gz",
-                    CN     = "https://gitcode.com/mcpp-res/picolibc/releases/download/1.8.12.2/picolibc-1.8.12.2.tar.gz",
+                    GLOBAL = "https://github.com/mcpplibs/picolibc/archive/refs/tags/1.8.12.3.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/picolibc/releases/download/1.8.12.3/picolibc-1.8.12.3.tar.gz",
                 },
-                sha256 = "29045a2eed39a421353dec6f7763f3d78eda88d0957f9eec6833143d92b2e2fd",
+                sha256 = "b0c772f8e4ab76728960f60df993b843e3f697ae8ba96554cf0948dd2e567f22",
             },
         },
         macosx = {
-            ["1.8.12.2"] = {
+            ["1.8.12.3"] = {
                 url    = {
-                    GLOBAL = "https://github.com/mcpplibs/picolibc/archive/refs/tags/1.8.12.2.tar.gz",
-                    CN     = "https://gitcode.com/mcpp-res/picolibc/releases/download/1.8.12.2/picolibc-1.8.12.2.tar.gz",
+                    GLOBAL = "https://github.com/mcpplibs/picolibc/archive/refs/tags/1.8.12.3.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/picolibc/releases/download/1.8.12.3/picolibc-1.8.12.3.tar.gz",
                 },
-                sha256 = "29045a2eed39a421353dec6f7763f3d78eda88d0957f9eec6833143d92b2e2fd",
+                sha256 = "b0c772f8e4ab76728960f60df993b843e3f697ae8ba96554cf0948dd2e567f22",
             },
         },
         windows = {
-            ["1.8.12.2"] = {
+            ["1.8.12.3"] = {
                 url    = {
-                    GLOBAL = "https://github.com/mcpplibs/picolibc/archive/refs/tags/1.8.12.2.tar.gz",
-                    CN     = "https://gitcode.com/mcpp-res/picolibc/releases/download/1.8.12.2/picolibc-1.8.12.2.tar.gz",
+                    GLOBAL = "https://github.com/mcpplibs/picolibc/archive/refs/tags/1.8.12.3.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/picolibc/releases/download/1.8.12.3/picolibc-1.8.12.3.tar.gz",
                 },
-                sha256 = "29045a2eed39a421353dec6f7763f3d78eda88d0957f9eec6833143d92b2e2fd",
+                sha256 = "b0c772f8e4ab76728960f60df993b843e3f697ae8ba96554cf0948dd2e567f22",
             },
         },
     },
