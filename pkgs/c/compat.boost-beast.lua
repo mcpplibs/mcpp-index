@@ -30,10 +30,12 @@
 -- single-file boost/type_index.hpp shims (a dir-only grep would miss it —
 -- that mistake cost the first draft of this closure a dependency).
 --
--- The default feature re-states boost-asio's two disable defines: feature
--- defines propagate to direct consumers, and restating them here keeps a
--- beast consumer's TUs consistent even if transitive propagation through an
--- intermediate package ever changes. Same values on both sides = idempotent.
+-- The default feature re-states boost-asio's three runtime defines (the two
+-- optional-boost disables plus BOOST_ASIO_HAS_THREADS, which feeds
+-- BOOST_ASIO_VERSION_TAG): feature defines propagate to direct consumers, and
+-- restating them here keeps a beast consumer's TUs consistent even if
+-- transitive propagation through an intermediate package ever changes. Same
+-- values on both sides = idempotent.
 --
 -- Header-only, traditional `#include` consumption; no CN mirror yet; BSL-1.0.
 package = {
@@ -81,11 +83,12 @@ int mcpp_compat_boost_beast_anchor(void) { return 0; }
         sources      = { "mcpp_generated/boost_beast_anchor.cpp" },
         targets      = { ["boost_beast"] = { kind = "lib" } },
         features = {
-            ["default"]        = { implies = { "asio-no-boost-extras" } },
-            ["asio-no-boost-extras"] = {
+            ["default"]     = { implies = { "asio-config" } },
+            ["asio-config"] = {
                 defines = {
                     "BOOST_ASIO_DISABLE_BOOST_CONTEXT_FIBER",
                     "BOOST_ASIO_DISABLE_BOOST_DATE_TIME",
+                    "BOOST_ASIO_HAS_THREADS",
                 },
             },
         },

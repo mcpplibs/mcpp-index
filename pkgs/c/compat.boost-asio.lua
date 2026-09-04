@@ -85,12 +85,21 @@ int mcpp_compat_boost_asio_anchor(void) { return 0; }
         -- every TU that compiles an asio header — direct consumers here, and
         -- compat.boost-beast consumers through its own identical default
         -- feature (idempotent, same values — see that descriptor).
+        --
+        -- BOOST_ASIO_HAS_THREADS is pinned for the same reason
+        -- chriskohlhoff.asio pins ASIO_HAS_THREADS: the workspace's
+        -- llvm-on-Windows toolchain (clang → x86_64-pc-windows-msvc) defines
+        -- no _MT/_REENTRANT and boost::config yields no BOOST_HAS_THREADS, so
+        -- asio's own detection (detail/config.hpp) silently selects
+        -- null_thread. It also feeds BOOST_ASIO_VERSION_TAG, so it must agree
+        -- across every TU — hence a feature define, not a cflag.
         features = {
-            ["default"]        = { implies = { "no-boost-extras" } },
-            ["no-boost-extras"] = {
+            ["default"]     = { implies = { "asio-config" } },
+            ["asio-config"] = {
                 defines = {
                     "BOOST_ASIO_DISABLE_BOOST_CONTEXT_FIBER",
                     "BOOST_ASIO_DISABLE_BOOST_DATE_TIME",
+                    "BOOST_ASIO_HAS_THREADS",
                 },
             },
         },

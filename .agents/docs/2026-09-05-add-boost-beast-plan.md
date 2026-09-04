@@ -87,13 +87,21 @@ BOOST_ASIO_DISABLE_BOOST_CONTEXT_FIBER
 BOOST_ASIO_DISABLE_BOOST_DATE_TIME
 ```
 
-二者经 compat.boost-asio 的 `default` → `no-boost-extras` feature 的
+二者经 compat.boost-asio 的 `default` → `asio-config` feature 的
 `defines` 传播（先例：chriskohlhoff.asio 的 separate-compilation、
 compat.curl 的 staticlib）。compat.boost-beast 的 default feature
-**原样重述**这两个宏：feature defines 对直接消费者传播是已验证行为，
+**原样重述**这些宏：feature defines 对直接消费者传播是已验证行为，
 隔着中间包（beast）向消费者的传播没有现成先例，重述一遍保证 beast 消费者
 的每个 TU 看到一致配置；两侧同值，幂等无 ODR 风险。
 关闭后 beast 不用 spawn/deadline_timer，无能力损失。
+
+第三个宏 `BOOST_ASIO_HAS_THREADS`：workspace 的 llvm-on-Windows 工具链
+（clang → x86_64-pc-windows-msvc）不定义 `_MT`/`_REENTRANT`，boost::config
+也给不出 `BOOST_HAS_THREADS`，asio 的探测（detail/config.hpp 1169-1190 行）
+会静默选中 null_thread；且该宏参与 `BOOST_ASIO_VERSION_TAG`（符号级别名），
+跨 TU 必须一致——所以必须作为 feature define 传播而不是 cflag。这是 CI
+windows 腿上 boost-asio 成员首跑 crash（exit 0xC0000409）后的修正，
+与 chriskohlhoff.asio 钉 `ASIO_HAS_THREADS` 完全同构。
 
 ## 命名
 
