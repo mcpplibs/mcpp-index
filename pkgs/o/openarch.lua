@@ -18,6 +18,14 @@
 -- mechanism that is a table of 256 gates. One probe source runs on all three
 -- and prints byte-identical output.
 --
+-- ⚠️⚠️ 0.8.0 IS LISTED AND SHOULD NOT BE USED ON Cortex-M. It shipped the
+-- backend, declared its capabilities, and never bound it to `backend-auto` —
+-- the table that turns `openarch = "<version>"` into a backend. A consumer on a
+-- thumb target got `no package provides capability 'openarch-backend'`. 0.8.1
+-- binds all five M-profile arch spellings. The older version stays listed
+-- because a version that has been published is a version someone may have
+-- pinned; the note is here so nobody pins it on purpose.
+--
 -- ⭐⭐ 0.8.0 ADDS A FOURTH MACHINE AND THE FIRST *PARTIAL* BACKEND.
 --
 -- ARM Cortex-M has no memory management unit and no per-CPU register, so
@@ -48,6 +56,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.8.1"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openarch/archive/refs/tags/0.8.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openarch/releases/download/0.8.1/openarch-0.8.1.tar.gz",
+                },
+                sha256 = "d53e74f2ac9fbfa714db7496de91e45a85da54ccc7645449943eb34e55067a89",
+            },
             ["0.8.0"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openarch/archive/refs/tags/0.8.0.tar.gz",
@@ -113,6 +128,13 @@ package = {
             },
         },
         macosx = {
+            ["0.8.1"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openarch/archive/refs/tags/0.8.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openarch/releases/download/0.8.1/openarch-0.8.1.tar.gz",
+                },
+                sha256 = "d53e74f2ac9fbfa714db7496de91e45a85da54ccc7645449943eb34e55067a89",
+            },
             ["0.8.0"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openarch/archive/refs/tags/0.8.0.tar.gz",
@@ -178,6 +200,13 @@ package = {
             },
         },
         windows = {
+            ["0.8.1"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openarch/archive/refs/tags/0.8.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openarch/releases/download/0.8.1/openarch-0.8.1.tar.gz",
+                },
+                sha256 = "d53e74f2ac9fbfa714db7496de91e45a85da54ccc7645449943eb34e55067a89",
+            },
             ["0.8.0"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openarch/archive/refs/tags/0.8.0.tar.gz",
