@@ -1,0 +1,12 @@
+# compat.boost-asio test project: the direct-consumer path for the boostorg
+# asio tree — feature-define propagation (BOOST_ASIO_DISABLE_BOOST_* reach
+# this TU), a real steady_timer round through io_context, and the coroutine
+# surface (co_spawn + awaitable). Stackful spawn/deadline_timer stay absent
+# by design; the descriptor's disable defines are what keep boost.context and
+# boost.date_time out of the closure.
+[package]
+name = "boost-asio-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+boost-asio = "1.92.0"

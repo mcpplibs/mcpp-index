@@ -1,0 +1,10 @@
+# compat.boost-beast test project: offline HTTP parse/serialize round-trip,
+# zlib round-trip and SSL-detection — the assertions exercise the whole
+# 25-package modular-boost closure transitively (asio, system, core, mp11,
+# intrusive, ...) through one `#include <boost/beast.hpp>`.
+[package]
+name = "boost-beast-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+boost-beast = "1.92.0"

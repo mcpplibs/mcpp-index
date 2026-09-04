@@ -9,6 +9,16 @@
 
 ### Added
 
+- 收录 `compat.boost-beast` 1.92.0（Boost.Beast，HTTP/WebSocket），沿 modular-boost
+  拆包路线一次性补齐其 24 个传递依赖：`boost-asio`、`boost-align`、`boost-bind`、
+  `boost-compat`、`boost-container`、`boost-container-hash`、`boost-core`、
+  `boost-describe`、`boost-endian`、`boost-intrusive`、`boost-io`、`boost-logic`、
+  `boost-move`、`boost-mp11`、`boost-optional`、`boost-predef`、
+  `boost-preprocessor`、`boost-smart-ptr`、`boost-static-string`、`boost-system`、
+  `boost-type-index`、`boost-utility`、`boost-variant2`、`boost-winapi`。
+  29 包 include 树两两不相交、闭包逐 include 核实；`boost-asio` 经 default
+  feature 携带 `BOOST_ASIO_DISABLE_BOOST_CONTEXT_FIBER` / `..._DATE_TIME`，
+  保持家族 header-only。新增 `boost-beast` 与 `boost-asio` 两个工作区成员。
 - 收录 `gzj-creator.galay` 5.0.2 原生 Form-A 模块包，覆盖 `galay.utils` 与
   `galay.kernel` 默认模块，并加入 Unix 示例工程和索引文档。
 
