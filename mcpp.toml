@@ -33,6 +33,7 @@ members = [
     "tests/examples/concurrentqueue",
     "tests/examples/concurrentqueue-c-api",
     "tests/examples/core",
+    "tests/examples/cuda-runtime",
     "tests/examples/curl",
     "tests/examples/eigen",
     "tests/examples/eui-neo",
