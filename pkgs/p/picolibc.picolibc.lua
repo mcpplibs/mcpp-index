@@ -19,50 +19,54 @@
 -- GENERATES, included — is byte-identical. The prebuilt ships seven copies of
 -- one directory.
 --
--- ⭐ Compiled with the SAME `compile_flags` as the program consuming it, ABI
--- agreement holds by construction rather than by a naming convention, and the
--- version lands in `mcpp.lock` rather than being pinned inside a target table.
---
 -- ⚠️ `picocrt` IS DELIBERATELY ABSENT. A startup object decides where execution
 -- begins and how it reaches the host — which board is running. Choosing among
 -- picolibc's nine variants is a board-support package's job; `cortex-m-rt`
--- supplies its own, including the thread-pointer initialisation without which
--- a `printf` program links cleanly, runs, prints nothing and hangs.
+-- supplies its own, including the thread-pointer initialisation without which a
+-- `printf` program links cleanly, runs, prints nothing and hangs.
+--
+-- ⚠️ THE NAMESPACE IS UPSTREAM'S, NOT `mcpplibs`. This package vendors someone
+-- else's sources and adds a manifest; the code is theirs and the identity says
+-- so. `mcpplibs` is for packages whose CONTENT this organisation wrote.
+--
+-- ⭐ The wrapper REPOSITORY can still live under mcpplibs — `ocornut.imgui` is
+-- published from `mcpplibs/imgui-m` for exactly this reason. Where the manifest
+-- lives and whose code it describes are different questions.
 package = {
     spec        = "1",
-    namespace   = "mcpplibs",
+    namespace   = "picolibc",
     name        = "picolibc",
-    description = "picolibc as a source package: a freestanding C library compiled with the consuming program's own flags, so there is no multilib and no ABI convention to match",
+    description = "picolibc 1.8.12 as a source package: a freestanding C library compiled with the consuming program's own flags, so there is no multilib and no ABI convention to match",
     licenses    = {"BSD-3-Clause", "BSD-2-Clause"},
     repo        = "https://github.com/mcpplibs/picolibc",
     type        = "package",
 
     xpm = {
         linux = {
-            ["1.8.12"] = {
+            ["0.1.1"] = {
                 url    = {
-                    GLOBAL = "https://github.com/mcpplibs/picolibc/archive/refs/tags/1.8.12.tar.gz",
-                    CN     = "https://gitcode.com/mcpp-res/picolibc/releases/download/1.8.12/picolibc-1.8.12.tar.gz",
+                    GLOBAL = "https://github.com/mcpplibs/picolibc/archive/refs/tags/0.1.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/picolibc/releases/download/0.1.1/picolibc-0.1.1.tar.gz",
                 },
-                sha256 = "8f3d7a41d9981905d389b321edbfa2fac4946e5acc3a0677617b8184b21d4420",
+                sha256 = "2265a49e58ed02b2166a4cbef40595a2250c7a0821156f96d4e04ae2086ccf89",
             },
         },
         macosx = {
-            ["1.8.12"] = {
+            ["0.1.1"] = {
                 url    = {
-                    GLOBAL = "https://github.com/mcpplibs/picolibc/archive/refs/tags/1.8.12.tar.gz",
-                    CN     = "https://gitcode.com/mcpp-res/picolibc/releases/download/1.8.12/picolibc-1.8.12.tar.gz",
+                    GLOBAL = "https://github.com/mcpplibs/picolibc/archive/refs/tags/0.1.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/picolibc/releases/download/0.1.1/picolibc-0.1.1.tar.gz",
                 },
-                sha256 = "8f3d7a41d9981905d389b321edbfa2fac4946e5acc3a0677617b8184b21d4420",
+                sha256 = "2265a49e58ed02b2166a4cbef40595a2250c7a0821156f96d4e04ae2086ccf89",
             },
         },
         windows = {
-            ["1.8.12"] = {
+            ["0.1.1"] = {
                 url    = {
-                    GLOBAL = "https://github.com/mcpplibs/picolibc/archive/refs/tags/1.8.12.tar.gz",
-                    CN     = "https://gitcode.com/mcpp-res/picolibc/releases/download/1.8.12/picolibc-1.8.12.tar.gz",
+                    GLOBAL = "https://github.com/mcpplibs/picolibc/archive/refs/tags/0.1.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/picolibc/releases/download/0.1.1/picolibc-0.1.1.tar.gz",
                 },
-                sha256 = "8f3d7a41d9981905d389b321edbfa2fac4946e5acc3a0677617b8184b21d4420",
+                sha256 = "2265a49e58ed02b2166a4cbef40595a2250c7a0821156f96d4e04ae2086ccf89",
             },
         },
     },
