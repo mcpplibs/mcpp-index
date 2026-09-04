@@ -40,30 +40,30 @@ package = {
 
     xpm = {
         linux = {
-            ["22.1.8.1"] = {
+            ["22.1.8.2"] = {
                 url    = {
-                    GLOBAL = "https://github.com/mcpplibs/compiler-rt-builtins/archive/refs/tags/22.1.8.1.tar.gz",
-                    CN     = "https://gitcode.com/mcpp-res/compiler-rt-builtins/releases/download/22.1.8.1/compiler-rt-builtins-22.1.8.1.tar.gz",
+                    GLOBAL = "https://github.com/mcpplibs/compiler-rt-builtins/archive/refs/tags/22.1.8.2.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/compiler-rt-builtins/releases/download/22.1.8.2/compiler-rt-builtins-22.1.8.2.tar.gz",
                 },
-                sha256 = "799797e79e927d28b949e8723d9642e2b8a9d8e997b8c56ecc84ee8220228da3",
+                sha256 = "c6070e0b878aef1d526ce764b9ad3d6e5396b230d059262ed5615c2e0bf78dfd",
             },
         },
         macosx = {
-            ["22.1.8.1"] = {
+            ["22.1.8.2"] = {
                 url    = {
-                    GLOBAL = "https://github.com/mcpplibs/compiler-rt-builtins/archive/refs/tags/22.1.8.1.tar.gz",
-                    CN     = "https://gitcode.com/mcpp-res/compiler-rt-builtins/releases/download/22.1.8.1/compiler-rt-builtins-22.1.8.1.tar.gz",
+                    GLOBAL = "https://github.com/mcpplibs/compiler-rt-builtins/archive/refs/tags/22.1.8.2.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/compiler-rt-builtins/releases/download/22.1.8.2/compiler-rt-builtins-22.1.8.2.tar.gz",
                 },
-                sha256 = "799797e79e927d28b949e8723d9642e2b8a9d8e997b8c56ecc84ee8220228da3",
+                sha256 = "c6070e0b878aef1d526ce764b9ad3d6e5396b230d059262ed5615c2e0bf78dfd",
             },
         },
         windows = {
-            ["22.1.8.1"] = {
+            ["22.1.8.2"] = {
                 url    = {
-                    GLOBAL = "https://github.com/mcpplibs/compiler-rt-builtins/archive/refs/tags/22.1.8.1.tar.gz",
-                    CN     = "https://gitcode.com/mcpp-res/compiler-rt-builtins/releases/download/22.1.8.1/compiler-rt-builtins-22.1.8.1.tar.gz",
+                    GLOBAL = "https://github.com/mcpplibs/compiler-rt-builtins/archive/refs/tags/22.1.8.2.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/compiler-rt-builtins/releases/download/22.1.8.2/compiler-rt-builtins-22.1.8.2.tar.gz",
                 },
-                sha256 = "799797e79e927d28b949e8723d9642e2b8a9d8e997b8c56ecc84ee8220228da3",
+                sha256 = "c6070e0b878aef1d526ce764b9ad3d6e5396b230d059262ed5615c2e0bf78dfd",
             },
         },
     },

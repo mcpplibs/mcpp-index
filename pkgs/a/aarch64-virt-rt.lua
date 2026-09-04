@@ -56,6 +56,13 @@ package = {
     xpm = {
         linux = {
             deps = { "xim:qemu-arm@9.2.4-1" },
+            ["0.2.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/aarch64-virt-rt/archive/refs/tags/0.2.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/aarch64-virt-rt/releases/download/0.2.0/aarch64-virt-rt-0.2.0.tar.gz",
+                },
+                sha256 = "4a828424e82a3c97f6d45456fdfa557c7ab361929ef54bb3055037867a4e1978",
+            },
             ["0.1.1"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/aarch64-virt-rt/archive/refs/tags/0.1.1.tar.gz",
@@ -73,6 +80,13 @@ package = {
         },
         macosx = {
             deps = { "xim:qemu-arm@9.2.4-1" },
+            ["0.2.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/aarch64-virt-rt/archive/refs/tags/0.2.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/aarch64-virt-rt/releases/download/0.2.0/aarch64-virt-rt-0.2.0.tar.gz",
+                },
+                sha256 = "4a828424e82a3c97f6d45456fdfa557c7ab361929ef54bb3055037867a4e1978",
+            },
             ["0.1.1"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/aarch64-virt-rt/archive/refs/tags/0.1.1.tar.gz",
@@ -90,6 +104,13 @@ package = {
         },
         windows = {
             deps = { "xim:qemu-arm@9.2.4-1" },
+            ["0.2.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/aarch64-virt-rt/archive/refs/tags/0.2.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/aarch64-virt-rt/releases/download/0.2.0/aarch64-virt-rt-0.2.0.tar.gz",
+                },
+                sha256 = "4a828424e82a3c97f6d45456fdfa557c7ab361929ef54bb3055037867a4e1978",
+            },
             ["0.1.1"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/aarch64-virt-rt/archive/refs/tags/0.1.1.tar.gz",

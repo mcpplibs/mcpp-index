@@ -57,30 +57,30 @@ package = {
 
     xpm = {
         linux = {
-            ["1.8.12.1"] = {
+            ["1.8.12.2"] = {
                 url    = {
-                    GLOBAL = "https://github.com/mcpplibs/picolibc/archive/refs/tags/1.8.12.1.tar.gz",
-                    CN     = "https://gitcode.com/mcpp-res/picolibc/releases/download/1.8.12.1/picolibc-1.8.12.1.tar.gz",
+                    GLOBAL = "https://github.com/mcpplibs/picolibc/archive/refs/tags/1.8.12.2.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/picolibc/releases/download/1.8.12.2/picolibc-1.8.12.2.tar.gz",
                 },
-                sha256 = "8c148d5cce7857caeeeacacc95c28e1bbdf13cc06408876ae2fdaece2caaefa8",
+                sha256 = "29045a2eed39a421353dec6f7763f3d78eda88d0957f9eec6833143d92b2e2fd",
             },
         },
         macosx = {
-            ["1.8.12.1"] = {
+            ["1.8.12.2"] = {
                 url    = {
-                    GLOBAL = "https://github.com/mcpplibs/picolibc/archive/refs/tags/1.8.12.1.tar.gz",
-                    CN     = "https://gitcode.com/mcpp-res/picolibc/releases/download/1.8.12.1/picolibc-1.8.12.1.tar.gz",
+                    GLOBAL = "https://github.com/mcpplibs/picolibc/archive/refs/tags/1.8.12.2.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/picolibc/releases/download/1.8.12.2/picolibc-1.8.12.2.tar.gz",
                 },
-                sha256 = "8c148d5cce7857caeeeacacc95c28e1bbdf13cc06408876ae2fdaece2caaefa8",
+                sha256 = "29045a2eed39a421353dec6f7763f3d78eda88d0957f9eec6833143d92b2e2fd",
             },
         },
         windows = {
-            ["1.8.12.1"] = {
+            ["1.8.12.2"] = {
                 url    = {
-                    GLOBAL = "https://github.com/mcpplibs/picolibc/archive/refs/tags/1.8.12.1.tar.gz",
-                    CN     = "https://gitcode.com/mcpp-res/picolibc/releases/download/1.8.12.1/picolibc-1.8.12.1.tar.gz",
+                    GLOBAL = "https://github.com/mcpplibs/picolibc/archive/refs/tags/1.8.12.2.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/picolibc/releases/download/1.8.12.2/picolibc-1.8.12.2.tar.gz",
                 },
-                sha256 = "8c148d5cce7857caeeeacacc95c28e1bbdf13cc06408876ae2fdaece2caaefa8",
+                sha256 = "29045a2eed39a421353dec6f7763f3d78eda88d0957f9eec6833143d92b2e2fd",
             },
         },
     },

@@ -62,6 +62,13 @@ package = {
     -- published is a version someone may have pinned.
     xpm = {
         linux = {
+            ["0.7.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/riscv-virt-rt/archive/refs/tags/0.7.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/riscv-virt-rt/releases/download/0.7.0/riscv-virt-rt-0.7.0.tar.gz",
+                },
+                sha256 = "f97ba771783d8f5fa56bb5bfc7ed9626f448db2605b9fe95ff1cef4137aceb74",
+            },
             ["0.6.1"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/riscv-virt-rt/archive/refs/tags/0.6.1.tar.gz",
@@ -128,6 +135,13 @@ package = {
             },
         },
         macosx = {
+            ["0.7.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/riscv-virt-rt/archive/refs/tags/0.7.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/riscv-virt-rt/releases/download/0.7.0/riscv-virt-rt-0.7.0.tar.gz",
+                },
+                sha256 = "f97ba771783d8f5fa56bb5bfc7ed9626f448db2605b9fe95ff1cef4137aceb74",
+            },
             ["0.6.1"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/riscv-virt-rt/archive/refs/tags/0.6.1.tar.gz",
@@ -194,6 +208,13 @@ package = {
             },
         },
         windows = {
+            ["0.7.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/riscv-virt-rt/archive/refs/tags/0.7.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/riscv-virt-rt/releases/download/0.7.0/riscv-virt-rt-0.7.0.tar.gz",
+                },
+                sha256 = "f97ba771783d8f5fa56bb5bfc7ed9626f448db2605b9fe95ff1cef4137aceb74",
+            },
             ["0.6.1"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/riscv-virt-rt/archive/refs/tags/0.6.1.tar.gz",

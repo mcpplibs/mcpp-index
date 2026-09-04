@@ -43,30 +43,30 @@ package = {
 
     xpm = {
         linux = {
-            ["0.2.3"] = {
+            ["0.2.4"] = {
                 url    = {
-                    GLOBAL = "https://github.com/mcpplibs/cortex-m-rt/archive/refs/tags/0.2.3.tar.gz",
-                    CN     = "https://gitcode.com/mcpp-res/cortex-m-rt/releases/download/0.2.3/cortex-m-rt-0.2.3.tar.gz",
+                    GLOBAL = "https://github.com/mcpplibs/cortex-m-rt/archive/refs/tags/0.2.4.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/cortex-m-rt/releases/download/0.2.4/cortex-m-rt-0.2.4.tar.gz",
                 },
-                sha256 = "2b926b10df89ad35d9eff7d1c318b334317d106525cb24eea00a0c623e448ce7",
+                sha256 = "6709be9d6795e377b9b82a7dde805aee1bb8b99bde4ab720bf4ea8055190e12e",
             },
         },
         macosx = {
-            ["0.2.3"] = {
+            ["0.2.4"] = {
                 url    = {
-                    GLOBAL = "https://github.com/mcpplibs/cortex-m-rt/archive/refs/tags/0.2.3.tar.gz",
-                    CN     = "https://gitcode.com/mcpp-res/cortex-m-rt/releases/download/0.2.3/cortex-m-rt-0.2.3.tar.gz",
+                    GLOBAL = "https://github.com/mcpplibs/cortex-m-rt/archive/refs/tags/0.2.4.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/cortex-m-rt/releases/download/0.2.4/cortex-m-rt-0.2.4.tar.gz",
                 },
-                sha256 = "2b926b10df89ad35d9eff7d1c318b334317d106525cb24eea00a0c623e448ce7",
+                sha256 = "6709be9d6795e377b9b82a7dde805aee1bb8b99bde4ab720bf4ea8055190e12e",
             },
         },
         windows = {
-            ["0.2.3"] = {
+            ["0.2.4"] = {
                 url    = {
-                    GLOBAL = "https://github.com/mcpplibs/cortex-m-rt/archive/refs/tags/0.2.3.tar.gz",
-                    CN     = "https://gitcode.com/mcpp-res/cortex-m-rt/releases/download/0.2.3/cortex-m-rt-0.2.3.tar.gz",
+                    GLOBAL = "https://github.com/mcpplibs/cortex-m-rt/archive/refs/tags/0.2.4.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/cortex-m-rt/releases/download/0.2.4/cortex-m-rt-0.2.4.tar.gz",
                 },
-                sha256 = "2b926b10df89ad35d9eff7d1c318b334317d106525cb24eea00a0c623e448ce7",
+                sha256 = "6709be9d6795e377b9b82a7dde805aee1bb8b99bde4ab720bf4ea8055190e12e",
             },
         },
     },
