@@ -48,6 +48,24 @@
 -- mcpp 2026.8.20.2+) and stops treating an absent C library as an error, while
 -- still supplying the emulator. 0.4.0 stays listed; its default template is
 -- unaffected.
+-- THE EMULATOR IS NO LONGER AN INSTALL-TIME EDGE, BECAUSE THE PACKAGE NOW SAYS
+-- WHEN IT IS NEEDED.
+--
+-- `deps` here is materialised when the PACKAGE is installed, so it fetched the
+-- emulator for anyone who added this board — including a CI job that compiles
+-- firmware and never runs it. From 0.7.1 the package declares the emulator in
+-- `[xlings.workspace]` with `when = "run"`, which provisions it for the verbs
+-- that execute an artefact and no others.
+--
+-- MEASURED, AND ONLY A SANDBOX COULD MEASURE IT. Both board repositories assert
+-- the tier in their own CI and both pass, because a repository testing itself
+-- builds from its working tree where no package install happens. In a fresh
+-- sandbox the same build downloaded 33 MB of emulator anyway — through this
+-- line. The tier was correct and bought nothing.
+--
+-- Older versions keep working: their `[xlings.workspace]` entry is untiered,
+-- which means `Always`, so the emulator arrives when they build rather than
+-- when they install.
 package = {
     spec        = "1",
     namespace   = "mcpplibs",
@@ -90,7 +108,7 @@ package = {
                 },
                 sha256 = "a0c59deff6b40061637f452c8eafb17cfcb1a7a23f8da4a79050db352e27b064",
             },
-            deps = { "xim:picolibc-riscv@1.8.12", "xim:qemu-riscv@9.2.4-1" },
+            deps = { "xim:picolibc-riscv@1.8.12" },
             ["0.1.0"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/riscv-virt-rt/archive/refs/tags/0.1.0.tar.gz",
@@ -170,7 +188,7 @@ package = {
                 },
                 sha256 = "a0c59deff6b40061637f452c8eafb17cfcb1a7a23f8da4a79050db352e27b064",
             },
-            deps = { "xim:picolibc-riscv@1.8.12", "xim:qemu-riscv@9.2.4-1" },
+            deps = { "xim:picolibc-riscv@1.8.12" },
             ["0.1.0"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/riscv-virt-rt/archive/refs/tags/0.1.0.tar.gz",
@@ -250,7 +268,7 @@ package = {
                 },
                 sha256 = "a0c59deff6b40061637f452c8eafb17cfcb1a7a23f8da4a79050db352e27b064",
             },
-            deps = { "xim:picolibc-riscv@1.8.12", "xim:qemu-riscv@9.2.4-1" },
+            deps = { "xim:picolibc-riscv@1.8.12" },
             ["0.1.0"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/riscv-virt-rt/archive/refs/tags/0.1.0.tar.gz",

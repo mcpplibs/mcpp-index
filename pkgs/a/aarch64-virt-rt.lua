@@ -44,6 +44,24 @@
 -- `ldflag`, not as a directive one board needs and the other cannot express.
 -- The board-package interface is therefore complete, and "board package" and
 -- "C library provider" are separable roles.
+-- THE EMULATOR IS NO LONGER AN INSTALL-TIME EDGE, BECAUSE THE PACKAGE NOW SAYS
+-- WHEN IT IS NEEDED.
+--
+-- `deps` here is materialised when the PACKAGE is installed, so it fetched the
+-- emulator for anyone who added this board — including a CI job that compiles
+-- firmware and never runs it. From 0.7.1 the package declares the emulator in
+-- `[xlings.workspace]` with `when = "run"`, which provisions it for the verbs
+-- that execute an artefact and no others.
+--
+-- MEASURED, AND ONLY A SANDBOX COULD MEASURE IT. Both board repositories assert
+-- the tier in their own CI and both pass, because a repository testing itself
+-- builds from its working tree where no package install happens. In a fresh
+-- sandbox the same build downloaded 33 MB of emulator anyway — through this
+-- line. The tier was correct and bought nothing.
+--
+-- Older versions keep working: their `[xlings.workspace]` entry is untiered,
+-- which means `Always`, so the emulator arrives when they build rather than
+-- when they install.
 package = {
     spec        = "1",
     namespace   = "mcpplibs",
@@ -55,7 +73,6 @@ package = {
 
     xpm = {
         linux = {
-            deps = { "xim:qemu-arm@9.2.4-1" },
             ["0.2.1"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/aarch64-virt-rt/archive/refs/tags/0.2.1.tar.gz",
@@ -86,7 +103,6 @@ package = {
             },
         },
         macosx = {
-            deps = { "xim:qemu-arm@9.2.4-1" },
             ["0.2.1"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/aarch64-virt-rt/archive/refs/tags/0.2.1.tar.gz",
@@ -117,7 +133,6 @@ package = {
             },
         },
         windows = {
-            deps = { "xim:qemu-arm@9.2.4-1" },
             ["0.2.1"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/aarch64-virt-rt/archive/refs/tags/0.2.1.tar.gz",
