@@ -127,7 +127,18 @@ throw-exception）；仓库 URL 与注释中保留上游仓原名 `container_has
   消费 TU；真实跑 `steady_timer` + `io_context::run`、post/defer、
   co_spawn/awaitable、tcp endpoint。`#include <boost/asio.hpp>` 单体头
   顺带验证 disable 宏守卫下单体 include 可用。
-- 两成员只消费 `compat` 命名空间，继承根 workspace 的 `[indices]`
+- `tests/examples/boost-family/`：**大测试成员**，一次性消费全部 23 个没有
+  专属成员的小依赖包（align/bind/compat/container/container-hash/core/
+  describe/endian/intrusive/io/logic/move/mp11/optional/predef/preprocessor/
+  smart-ptr/static-string/system/type-index/utility/variant2/winapi），
+  按主题分 6 个 tests/*.cpp（core-smart / containers / meta /
+  system-errors / bytes-logic / io-platform），每个组件都有可失败断言。
+  实测踩坑三则已固化进测试注释：boost::logic::tribool 连 `operator!` 都
+  返回 tribool（取 bool 只能 explicit 转换或 indeterminate()）；
+  boost/winapi 头在非 Windows 平台 `#error`（include 与断言都在
+  `#ifdef _WIN32` 内，由 windows CI 腿真实覆盖）；intrusive::list 析构前
+  必须 clear（调试断言 hook 不得带链析构）。
+- 三成员只消费 `compat` 命名空间，继承根 workspace 的 `[indices]`
   重定向，不声明自己的 indices。
 - 正向验证在 CI（linux/macos/windows 三平台）；无 feature 需要负向验证
   （无源码门控），disable 宏的"负向"体现在：闭包树里根本没有

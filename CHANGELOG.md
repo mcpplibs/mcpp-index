@@ -20,7 +20,12 @@
   feature 携带 `BOOST_ASIO_DISABLE_BOOST_CONTEXT_FIBER` / `..._DATE_TIME`
   与 `BOOST_ASIO_HAS_THREADS`（llvm-on-Windows 无 `_MT`/`BOOST_HAS_THREADS`，
   不钉定会静默退化为 null_thread 且 VERSION_TAG 跨 TU 漂移），保持家族
-  header-only。新增 `boost-beast` 与 `boost-asio` 两个工作区成员。
+  header-only。新增 `boost-beast`、`boost-asio`、`boost-family` 三个工作区
+  成员；其中 `boost-family` 为大测试成员，一个工程 6 个测试文件覆盖全部
+  23 个没有专属成员的小依赖包（core/smart-ptr、container/intrusive/
+  optional/static-string、mp11/describe/preprocessor/type-index/predef、
+  system/compat/bind、endian/container-hash/logic/align、io/utility/
+  winapi）。
 - 收录 `gzj-creator.galay` 5.0.2 原生 Form-A 模块包，覆盖 `galay.utils` 与
   `galay.kernel` 默认模块，并加入 Unix 示例工程和索引文档。
 

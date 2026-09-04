@@ -1,0 +1,32 @@
+# compat boost 家族"大测试"成员:为每个没有专属成员的小依赖包提供行为断言。
+# 消费全部 23 个小包(boost-beast / boost-asio / 既有 uuid/config/assert/
+# throw-exception/type-traits 各有专属成员,不在其中),按主题分成 6 个
+# tests/*.cpp,每个组件都有可失败的有效断言。
+[package]
+name = "boost-family-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+boost-align = "1.92.0"
+boost-bind = "1.92.0"
+boost-compat = "1.92.0"
+boost-container = "1.92.0"
+boost-container-hash = "1.92.0"
+boost-core = "1.92.0"
+boost-describe = "1.92.0"
+boost-endian = "1.92.0"
+boost-intrusive = "1.92.0"
+boost-io = "1.92.0"
+boost-logic = "1.92.0"
+boost-move = "1.92.0"
+boost-mp11 = "1.92.0"
+boost-optional = "1.92.0"
+boost-predef = "1.92.0"
+boost-preprocessor = "1.92.0"
+boost-smart-ptr = "1.92.0"
+boost-static-string = "1.92.0"
+boost-system = "1.92.0"
+boost-type-index = "1.92.0"
+boost-utility = "1.92.0"
+boost-variant2 = "1.92.0"
+boost-winapi = "1.92.0"
