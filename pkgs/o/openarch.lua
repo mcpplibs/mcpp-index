@@ -18,6 +18,19 @@
 -- mechanism that is a table of 256 gates. One probe source runs on all three
 -- and prints byte-identical output.
 --
+-- ⭐⭐ 0.8.0 ADDS A FOURTH MACHINE AND THE FIRST *PARTIAL* BACKEND.
+--
+-- ARM Cortex-M has no memory management unit and no per-CPU register, so
+-- `openarch-cortex-m` declares `openarch-backend` and `openarch:preemption`
+-- and NOT `openarch:address-space` or `openarch:percpu-register`. A kernel that
+-- needs either is refused BY NAME at resolution rather than by a wall of
+-- `undefined reference to arch_pte_*` at link time.
+--
+-- Splitting the capability is what made admitting the machine possible;
+-- `openarch:preemption` — `arch_trap_switch`, the action the trap group was
+-- missing — is what made it worth doing. A microcontroller is exactly where a
+-- hand-written task switcher is otherwise re-invented per project.
+--
 -- ⚠️ THE TARBALL CARRIES FOUR PACKAGES AND A CONSUMER NAMES ONE. Since 0.4.0
 -- the repository root is BOTH the interface package and a workspace; the ABI
 -- contract and the three backends are members reached by `path` from inside the
@@ -35,6 +48,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.8.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openarch/archive/refs/tags/0.8.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openarch/releases/download/0.8.0/openarch-0.8.0.tar.gz",
+                },
+                sha256 = "592a20562e3f02c523970bedaed44ef806daa3fc2a2b22a0188d92b34afb8277",
+            },
             ["0.7.0"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openarch/archive/refs/tags/0.7.0.tar.gz",
@@ -93,6 +113,13 @@ package = {
             },
         },
         macosx = {
+            ["0.8.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openarch/archive/refs/tags/0.8.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openarch/releases/download/0.8.0/openarch-0.8.0.tar.gz",
+                },
+                sha256 = "592a20562e3f02c523970bedaed44ef806daa3fc2a2b22a0188d92b34afb8277",
+            },
             ["0.7.0"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openarch/archive/refs/tags/0.7.0.tar.gz",
@@ -151,6 +178,13 @@ package = {
             },
         },
         windows = {
+            ["0.8.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openarch/archive/refs/tags/0.8.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openarch/releases/download/0.8.0/openarch-0.8.0.tar.gz",
+                },
+                sha256 = "592a20562e3f02c523970bedaed44ef806daa3fc2a2b22a0188d92b34afb8277",
+            },
             ["0.7.0"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openarch/archive/refs/tags/0.7.0.tar.gz",
