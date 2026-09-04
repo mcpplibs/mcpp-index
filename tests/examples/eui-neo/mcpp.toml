@@ -3,4 +3,4 @@ name = "eui-neo-tests"
 version = "0.1.0"
 
 [dependencies.compat]
-eui-neo = "0.5.8"
+eui-neo = "0.5.9"

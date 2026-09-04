@@ -15,7 +15,7 @@
 -- genuinely vendored single-file headers live at its root (stb_image,
 -- nanosvg, nanosvgrast) and the sources include them as `"3rd/stb_image.h"`.
 --
--- The build recipe below tracks upstream `CMakeLists.txt` (v0.5.8): CORE_SOURCES
+-- The build recipe below tracks upstream `CMakeLists.txt` (v0.5.9): CORE_SOURCES
 -- plus the OpenGL backend and, for the glfw window backend, `ime_bridge.c`.
 -- 0.5.5 grew a Shadertoy subsystem: render_backend.h and include/eui/types.h now
 -- include core/render/shadertoy.h unconditionally, and opengl_backend.cpp calls
@@ -48,8 +48,16 @@
 -- both app-main TUs' source lists are unchanged, so deps/features/flags all
 -- carry over.
 --
+-- 0.5.9: CORE_SOURCES is byte-identical to 0.5.8, so the lib shape does not
+-- change. Upstream removes xmake integration and the unused EUI_APP_RUNNER
+-- stub from eui_neo.h, hardens render cache optimizations (text batch
+-- vertex/flush stats, backdrop blur capture tracking and invalidation, dirty
+-- rect pass estimation heuristic), and streamlines external CMake app setup
+-- via global properties. 3rd/, dependencies, features, and flags carry over
+-- unchanged.
+--
 -- All `mcpp` paths are GLOBS relative to the verdir; the leading `*/` absorbs
--- the GitHub tarball's `EUI-NEO-0.5.8/` wrap layer.
+-- the GitHub tarball's `EUI-NEO-0.5.9/` wrap layer.
 package = {
     spec        = "1",
     namespace   = "compat",
@@ -132,6 +140,14 @@ package = {
                 url    = "https://github.com/sudoevolve/EUI-NEO/archive/refs/tags/v0.5.8.tar.gz",
                 sha256 = "004d46f34d986030b1351080b381bcc48053eb24ebbdf52602b78364f285cd38",
             },
+            -- 0.5.9 has no CN mirror yet (never published to mcpp-res), so it
+            -- is a plain-string GLOBAL url — check_mirror_urls.lua exempts
+            -- plain strings, and the maintainer flips it to { GLOBAL, CN }
+            -- when the mirror lands. sha256 stays the same.
+            ["0.5.9"] = {
+                url    = "https://github.com/sudoevolve/EUI-NEO/archive/refs/tags/v0.5.9.tar.gz",
+                sha256 = "370d1da706d94bbbb144fa1634e1d9796a8a1ffd58b696fbb801296aef15703d",
+            },
         },
         macosx = {
             ["0.5.3"] = {
@@ -162,6 +178,11 @@ package = {
                 url    = "https://github.com/sudoevolve/EUI-NEO/archive/refs/tags/v0.5.8.tar.gz",
                 sha256 = "004d46f34d986030b1351080b381bcc48053eb24ebbdf52602b78364f285cd38",
             },
+            -- 0.5.9: see the linux block — plain-string GLOBAL, no CN mirror.
+            ["0.5.9"] = {
+                url    = "https://github.com/sudoevolve/EUI-NEO/archive/refs/tags/v0.5.9.tar.gz",
+                sha256 = "370d1da706d94bbbb144fa1634e1d9796a8a1ffd58b696fbb801296aef15703d",
+            },
         },
         windows = {
             ["0.5.3"] = {
@@ -191,6 +212,11 @@ package = {
             ["0.5.8"] = {
                 url    = "https://github.com/sudoevolve/EUI-NEO/archive/refs/tags/v0.5.8.tar.gz",
                 sha256 = "004d46f34d986030b1351080b381bcc48053eb24ebbdf52602b78364f285cd38",
+            },
+            -- 0.5.9: see the linux block — plain-string GLOBAL, no CN mirror.
+            ["0.5.9"] = {
+                url    = "https://github.com/sudoevolve/EUI-NEO/archive/refs/tags/v0.5.9.tar.gz",
+                sha256 = "370d1da706d94bbbb144fa1634e1d9796a8a1ffd58b696fbb801296aef15703d",
             },
         },
     },

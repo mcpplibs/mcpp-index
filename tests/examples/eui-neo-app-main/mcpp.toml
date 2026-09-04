@@ -30,4 +30,4 @@ name = "eui-neo-app-main-tests"
 version = "0.1.0"
 
 [dependencies.compat]
-eui-neo = { version = "0.5.8", features = ["app-main"] }
+eui-neo = { version = "0.5.9", features = ["app-main"] }

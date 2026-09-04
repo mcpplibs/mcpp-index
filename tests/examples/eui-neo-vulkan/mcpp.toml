@@ -6,7 +6,7 @@ version = "0.1.0"
 # package resolves the exclusive choice in its own preprocessor from the
 # MCPP_FEATURE_* flags. The window backend stays GLFW, unnamed.
 [dependencies.compat]
-eui-neo = { version = "0.5.8", features = ["vulkan"] }
+eui-neo = { version = "0.5.9", features = ["vulkan"] }
 
 [build]
 cxxflags = ["-DHAVE_EUI_VULKAN=1"]

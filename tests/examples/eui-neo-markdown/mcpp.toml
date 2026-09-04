@@ -7,4 +7,4 @@ version = "0.1.0"
 # what switches components/markdown.h from its fallback to the real parser.
 
 [dependencies.compat]
-eui-neo = { version = "0.5.8", features = ["markdown"] }
+eui-neo = { version = "0.5.9", features = ["markdown"] }
