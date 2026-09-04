@@ -1,0 +1,12 @@
+# compat.cuda-runtime is a Linux-only adapter: the problem it solves is that an
+# mcpp binary on Linux runs under mcpp's own loader and therefore cannot see the
+# host's driver. macOS and Windows have neither that loader arrangement nor an
+# NVIDIA userspace driver in this shape, so the dependency is conditioned rather
+# than the member being excluded — the member still builds on all three, which
+# is what keeps the test source itself from rotting.
+[package]
+name    = "cuda-runtime-tests"
+version = "0.1.0"
+
+[target.'cfg(linux)'.dependencies.compat]
+cuda-runtime = "2026.09.05"
