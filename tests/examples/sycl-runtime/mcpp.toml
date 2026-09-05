@@ -9,4 +9,4 @@ name    = "sycl-runtime-tests"
 version = "0.1.0"
 
 [target.'cfg(linux)'.dependencies.compat]
-sycl-runtime = "2026.09.06"
+sycl-runtime = "2026.09.07"
