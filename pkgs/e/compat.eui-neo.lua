@@ -714,11 +714,18 @@ local function stage_glib(outdir)
     end
     os.mkdir(path.join(outdir, "include"))
     os.cp(incsrc, path.join(outdir, "include", "glib-2.0"))
-    -- glibconfig.h is a GENERATED header and lands beside the public ones in
-    -- this payload rather than under lib/glib-2.0/include/ as an autotools
-    -- build leaves it. Asserted, because a missing one fails deep inside
+    -- glibconfig.h is a GENERATED header. The 2.80.0 payload (a Debian
+    -- extraction) carried it beside the public headers; 2.88.3, built from
+    -- upstream's release, leaves it where meson installs it, under
+    -- lib/glib-2.0/include/. Both are staged next to the public headers, and
+    -- the result is asserted, because a missing one fails deep inside
     -- glib/gtypes.h with no mention of glib itself.
-    if not os.isfile(path.join(outdir, "include", "glib-2.0", "glibconfig.h")) then
+    local staged = path.join(outdir, "include", "glib-2.0", "glibconfig.h")
+    if not os.isfile(staged) then
+        local generated = path.join(glib.path, "lib", "glib-2.0", "include", "glibconfig.h")
+        if os.isfile(generated) then os.cp(generated, staged) end
+    end
+    if not os.isfile(staged) then
         log.error("eui-neo: glibconfig.h is not in the staged glib headers")
         return false
     end
