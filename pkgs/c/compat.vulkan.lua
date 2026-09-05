@@ -199,7 +199,7 @@ package = {
                 -- fails to dlopen a single driver: an mcpp binary runs under
                 -- mcpp's own glibc, whose search path does not include the
                 -- host's. See the note at the top of compat.vulkan-runtime.
-                ["compat.vulkan-runtime"] = "2026.09.05",
+                ["compat.vulkan-runtime"] = "2026.09.06",
             },
             -- dlopen for the ICDs and layers; pthread for the loader's locks.
             ldflags = { "-ldl", "-lpthread", "-lm" },

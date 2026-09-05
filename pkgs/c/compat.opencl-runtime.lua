@@ -266,6 +266,23 @@ local function symbol_set(nm, lib)
     return set
 end
 
+-- The machine an object was built for, read from the ELF header. `nm` reads a
+-- foreign object without complaint and reports a covering symbol set, so the
+-- symbol test alone would substitute an x86_64 payload into an aarch64 farm --
+-- which is the store every aarch64 machine has today, since the Linux payloads
+-- in this index publish one x86_64 artifact. compat.vulkan-runtime carries the
+-- same guard and the same reason.
+local function elf_machine(file)
+    local f = io.popen(string.format(
+        [[od -An -tu1 -j18 -N2 %s 2>/dev/null | tr -s " "]], sh_quote(file)))
+    if not f then return nil end
+    local line = (f:read("l") or ""):gsub("^%s+", ""):gsub("%s+$", "")
+    f:close()
+    local lo, hi = line:match("^(%d+) (%d+)$")
+    if not lo then return nil end
+    return tonumber(lo) + tonumber(hi) * 256
+end
+
 -- Payloads first, with the same criterion compat.vulkan-runtime applies: the
 -- payload's versioned symbol set must cover the host copy's.
 local function prefer_payloads(outdir, seeds)
@@ -301,6 +318,9 @@ local function prefer_payloads(outdir, seeds)
             local hit = find_in_store(base)
             if not hit then
                 entry.class = "host; no installed payload provides this soname"
+            elseif elf_machine(hit) ~= elf_machine(target) then
+                entry.class = string.format(
+                    "host; the payload %s is built for another machine", hit)
             elseif not nm then
                 entry.class = "host; no nm to compare against " .. hit
             else
