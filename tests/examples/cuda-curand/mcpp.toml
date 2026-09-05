@@ -1,0 +1,28 @@
+# compat.curand — the CUDA operator libraries as ordinary mcpp dependencies.
+#
+# WHAT THIS ASSERTS ON A RUNNER WITH NO DEVICE, WHICH IS EVERY RUNNER HERE.
+# The failure this package was written against happens BEFORE main: NVIDIA's
+# shared objects carry `RUNPATH = $ORIGIN`, and a non-empty RUNPATH on an
+# intermediate library turns off the executable's inherited DT_RPATH for that
+# library's own dependencies, so the program died with
+#
+#     error while loading shared libraries: librt.so.1
+#
+# on a machine that had librt.so.1 in the payload the artifact points at. A test
+# binary that starts at all has proved the farm resolves; the device assertions
+# below then run only where a device answers.
+#
+# ⚠️ ONE OF THE FIVE. compat.cublas / cufft / cusolver / cusparse are generated
+# from the same descriptor template and differ only in the payload they name and
+# the `-l` names they pass, which were read from upstream's own archives. cuRAND
+# carries the smallest payload (85 MB against cuBLAS's 933 MB), so it is the one
+# that runs on every pull request.
+#
+# The `compat` index redirect is inherited from the workspace root.
+[package]
+name    = "cuda-curand-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+curand      = "10.3.10.19"
+cuda-driver = "2026.09.05"

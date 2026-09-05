@@ -1,4 +1,4 @@
-// What compat.cuda-runtime is asserted to do, and what it is not.
+// What compat.cuda-driver is asserted to do, and what it is not.
 //
 // A machine with no NVIDIA driver is a legitimate configuration and is what
 // every runner in this repository is, so the test cannot require a device. It

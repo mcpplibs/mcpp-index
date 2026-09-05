@@ -9,6 +9,33 @@
 
 ### Added
 
+- 收录 CUDA 设备侧的六个适配包:`compat.cudart`(CUDA Runtime)与
+  `compat.cublas` / `cufft` / `curand` / `cusolver` / `cusparse`(五个算子库)。
+  载荷一律来自 xim(`xpm.linux.deps` 接线),本仓库只回答「怎么对它构建」:
+  install() 把载荷的 `include/` 与 `lib/*.so*` 链进包自己的目录,
+  `include_dirs` / `-L` / `runtime.library_dirs` 因而全部落在包内。
+  一律走 12.x 线 —— 设备运行时不得新于它将遇到的驱动,而 `xpm.<platform>.deps`
+  按 OS 读取而非按版本,所以一份描述符只指一条线。
+  ⚠️ 两处上游造成的耦合写在配方里:`compat.cudart` 额外依赖 `xim:cuda-nvcc`,
+  因为 12.x 线的 `crt/host_config.h` 在编译器组件里而 `cuda_runtime.h` 无条件
+  include 它;以及 NVIDIA 的 `.so` 带 `RUNPATH = $ORIGIN`,它会**关掉**可执行
+  文件继承来的 DT_RPATH,所以 glibc 2.34 合并进 libc 的三个存根
+  (`librt.so.1` / `libpthread.so.0` / `libdl.so.2`)必须一并链进同一个目录 ——
+  否则程序在 `main` 之前就以 `librt.so.1: cannot open shared object file` 退出。
+- 新增工作区成员 `tests/examples/cuda-curand`:无设备的机器上断言库能加载并
+  应答(即上面那条 `$ORIGIN` 缺陷的判据),有设备时再断言生成值落在 [0,1]
+  且均值接近 0.5。五个算子库包由同一模板生成,`-l` 名逐个读自上游归档;
+  cuRAND 载荷最小(85 MB,对比 cuBLAS 的 933 MB),因此它是每个 PR 都跑的那个。
+
+### Changed
+
+- `compat.cuda-runtime` 改名为 `compat.cuda-driver`,并改正 `repo` 字段。
+  NVIDIA 词汇里 "CUDA Runtime" 专指 `libcudart`,而本包 farm 的是驱动的
+  `libcuda.so.1`;它的 `capabilities` / `provides` 从第一版起就写作 `cuda.driver`,
+  只有包名不一致。旧条目冻结保留,`compat.cuda-runtime@2026.09.05` 继续解析到
+  同一份实现;工作区成员 `tests/examples/cuda-driver`(原 `cuda-runtime`)同时
+  依赖新旧两个名字,让这条过渡承诺有判据。
+
 - 收录 `compat.boost-beast` 1.92.0（Boost.Beast，HTTP/WebSocket），沿 modular-boost
   拆包路线一次性补齐其 24 个传递依赖：`boost-asio`、`boost-align`、`boost-bind`、
   `boost-compat`、`boost-container`、`boost-container-hash`、`boost-core`、
