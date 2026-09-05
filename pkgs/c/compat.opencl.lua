@@ -1,0 +1,138 @@
+-- compat.opencl — the Khronos OpenCL ICD loader, built from source.
+--
+-- The counterpart of `compat.vulkan`, for the other device API, and it is here
+-- for the same reason: `clGetPlatformIDs` and every other entry point is a
+-- trampoline the loader owns, which dispatches into whatever ICD (vendor
+-- driver) the machine advertises. Headers alone do not link.
+--
+-- Buildable as a plain source list. Upstream's CMake generates exactly one
+-- header, `icd_cmake_config.h`, holding two `#cmakedefine` lines about which
+-- spelling of `secure_getenv` the C library has; it is supplied below rather
+-- than generated, because the answer for every C library this index targets is
+-- the same one.
+--
+-- ⭐ THE VENDOR PATH IS COMPILED IN, NOT CONFIGURED. `icd_platform.h` defines
+-- `ICD_VENDOR_PATH` as `/etc/OpenCL/vendors` and the loader reads that
+-- directory unless `OCL_ICD_VENDORS` names another. So this package finds the
+-- HOST's drivers with no configuration at all — which is the correct default,
+-- since an OpenCL driver, like a Vulkan one, cannot be a package.
+--
+-- ⚠️ `OCL_ICD_VENDORS` REPLACES THAT PATH; IT DOES NOT ADD TO IT.
+-- `khrIcdOsDirEnumerate` reads the variable and, when set, uses it INSTEAD of
+-- the compiled-in path, and it opens ONE directory rather than a list. Vulkan's
+-- `VK_ADD_DRIVER_FILES` is additive and this is not, so a payload driver that
+-- announced itself through the variable would hide the machine's GPU. That is
+-- why the software driver (`xim:pocl`) places its manifest into the subos's
+-- shared vendors directory alongside links to the host's, rather than pointing
+-- the variable at its own payload.
+--
+-- SHARED, with the canonical soname, for the reason `compat.vulkan` records:
+-- everything in a process must converge on one loader, and a library that
+-- dlopens `libOpenCL.so.1` by name has to land here.
+package = {
+    spec        = "1",
+    namespace   = "compat",
+    name        = "opencl",
+    description = "Khronos OpenCL ICD loader — the library an OpenCL program links",
+    licenses    = {"Apache-2.0"},
+    repo        = "https://github.com/KhronosGroup/OpenCL-ICD-Loader",
+    type        = "package",
+
+    xpm = {
+        linux = {
+            ["2026.05.29"] = {
+                url = {
+                    GLOBAL = "https://github.com/KhronosGroup/OpenCL-ICD-Loader/archive/refs/tags/v2026.05.29.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/opencl/releases/download/2026.05.29/opencl-2026.05.29.tar.gz",
+                },
+                sha256 = "48fd0c5181db7cd046f4f731d5955694892e10998d49d09ee0d997e7e04fd939",
+            },
+        },
+        macosx = {
+            ["2026.05.29"] = {
+                url = {
+                    GLOBAL = "https://github.com/KhronosGroup/OpenCL-ICD-Loader/archive/refs/tags/v2026.05.29.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/opencl/releases/download/2026.05.29/opencl-2026.05.29.tar.gz",
+                },
+                sha256 = "48fd0c5181db7cd046f4f731d5955694892e10998d49d09ee0d997e7e04fd939",
+            },
+        },
+    },
+
+    mcpp = {
+        language     = "c++23",
+        import_std   = false,
+        c_standard   = "c11",
+        include_dirs = { "*/loader", "mcpp_generated" },
+
+        generated_files = {
+            -- Upstream's `icd_cmake_config.h.in` is two `#cmakedefine` lines.
+            -- glibc has had `secure_getenv` since 2.17 and musl since 1.1.20;
+            -- `__secure_getenv` is the pre-2.17 spelling and is deliberately
+            -- absent, so a C library with neither takes the `getenv` fallback
+            -- upstream already writes.
+            ["mcpp_generated/icd_cmake_config.h"] = [==[
+/* Generated in place of upstream's CMake step -- see the descriptor note. */
+#pragma once
+#define HAVE_SECURE_GETENV
+]==],
+        },
+
+        sources = {
+            "*/loader/icd.c",
+            "*/loader/icd_dispatch.c",
+            "*/loader/icd_dispatch_generated.c",
+            "*/loader/icd_trace.c",
+        },
+
+        -- Upstream's OPENCL_COMPILE_DEFINITIONS, minus the layer option.
+        -- `CL_ENABLE_LOADER_MANAGED_DISPATCH` is what upstream turns on for a
+        -- shared build and off for a static one; this is a shared build.
+        cflags = {
+            "-DCL_TARGET_OPENCL_VERSION=310",
+            "-DCL_NO_NON_ICD_DISPATCH_EXTENSION_PROTOTYPES",
+            "-DOPENCL_ICD_LOADER_VERSION_MAJOR=3",
+            "-DOPENCL_ICD_LOADER_VERSION_MINOR=1",
+            "-DOPENCL_ICD_LOADER_VERSION_REV=0",
+            "-DCL_SHARED_BUILD",
+            "-DCL_ENABLE_LOADER_MANAGED_DISPATCH",
+        },
+
+        targets = { ["opencl"] = { kind = "lib" } },
+        deps    = { ["compat.opencl-headers"] = "2026.05.29" },
+
+        linux = {
+            targets = { ["opencl"] = { kind = "shared", soname = "libOpenCL.so.1" } },
+            sources = {
+                "*/loader/linux/icd_linux.c",
+                "*/loader/linux/icd_linux_envvars.c",
+                "*/loader/linux/icd_linux_library.c",
+            },
+            cflags = { "-D_GNU_SOURCE" },
+            -- Without this the loader reads every vendor manifest and then
+            -- fails to dlopen a single driver: an mcpp binary runs under mcpp's
+            -- own glibc, whose search path does not include the host's. The
+            -- same relation `compat.vulkan` has to `compat.vulkan-runtime`.
+            deps = {
+                ["compat.opencl-headers"] = "2026.05.29",
+                ["compat.opencl-runtime"] = "2026.09.05",
+            },
+            -- dlopen for the ICDs; pthread for `pthread_once` around the scan.
+            ldflags = { "-ldl", "-lpthread" },
+            runtime = {
+                -- A driver has to match the machine, so it is a capability the
+                -- host (or a software payload) provides, not a dependency this
+                -- package can express. Same call `compat.vulkan` makes.
+                capabilities = { "opencl.icd.driver" },
+            },
+        },
+
+        macosx = {
+            -- Apple ships its own libOpenCL as a framework and there is no ICD
+            -- mechanism, so the loader is built without the linux sources and a
+            -- consumer links the framework instead of dispatching.
+            sources = {},
+            runtime = { capabilities = { "opencl.icd.driver" } },
+        },
+    },
+}

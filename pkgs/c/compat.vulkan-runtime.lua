@@ -352,23 +352,32 @@ end
 -- host does a Vulkan program still touch" could only be answered by reading
 -- the list and guessing.
 --
--- Three classes, and only the third is reducible:
+-- Three classes, and only the first is irreducible:
 --
---   * THE DRIVER FAMILY -- `libvulkan_*.so`, `libGLX_nvidia.so.*`,
---     `libnvidia*.so.*`. Licence-restricted, in ABI lockstep with a kernel
---     module, meaningless off the machine they came from.
---   * VERSION-LOCKED TO THE DRIVER -- the host mesa's `libLLVM.so.20.1`, whose
---     soname names the build the driver was compiled against. This index
---     publishes LLVM 22; substituting it is `not found`, not an upgrade.
+--   * PROPRIETARY VENDOR USERSPACE -- `libGLX_nvidia.so.*`, `libnvidia*.so.*`,
+--     and `libcuda.so.1` alongside them. In ABI lockstep with a kernel module
+--     and not redistributable, which is why the ecosystem LINKS them
+--     (`xim:nvidia-gl-host-link`, `xim:libcuda-host-link`) and never copies.
+--   * THE HOST MESA AND WHAT IT WAS LINKED AGAINST -- `libvulkan_*.so` and the
+--     `libLLVM.so.20.1` whose soname names that build. Neither is irreducible:
+--     Mesa is open source, `xim:mesa` builds it in a subos, and a machine
+--     using the PAYLOAD driver has neither entry. The soname cannot be
+--     substituted, so the answer is not to substitute it -- it is to stop
+--     loading the host's Mesa, which is what `xim:mesa-lavapipe` already does
+--     for the software driver and what extending `xim:mesa`'s driver set does
+--     for AMD and Intel.
 --   * EVERYTHING ELSE -- the X protocol stack, zlib, expat, libxml2, libffi,
---     libdrm. Every one of these is an xim package today.
+--     libdrm, and the C++ runtime. Every one of these is, or should be, an xim
+--     package; `libstdc++`/`libgcc_s` in particular are redistributable and
+--     `xim:gcc-runtime` publishes them.
 --
--- The third class is NOT substituted when the host provides it, and that is a
--- deliberate limit rather than an oversight: the host ICD was linked against
--- the host's copies, a package copy may be OLDER, and the failure mode of an
--- older libstdc++ or libxml2 under a dlopen is a missing symbol version at run
--- time on some machines and not others. Replacing something that works with
--- something that might is not a reduction.
+-- ⚠️ THE SUBSTITUTION IS DIRECTIONAL, NOT FORBIDDEN. A host ICD was linked
+-- against the host's copies of the third class, so an OLDER package copy fails
+-- as a missing symbol version at dlopen time; a NEWER one is what a
+-- distribution upgrade does every day. What this farm does today is the
+-- monotone half -- fill only what the host cannot resolve at all -- because the
+-- version comparison that would license the rest has no reader here yet. The
+-- entries it leaves on the host are recorded rather than accepted.
 --
 -- What IS done: a name the host cannot resolve at all is filled from the
 -- store, which can only add resolutions. A container with an NVIDIA driver and
