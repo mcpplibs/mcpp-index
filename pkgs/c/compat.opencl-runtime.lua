@@ -283,6 +283,15 @@ local function elf_machine(file)
     return tonumber(lo) + tonumber(hi) * 256
 end
 
+-- Both answers are required before the guard fires. An unreadable header --
+-- a dangling farm link, a file the reader cannot open -- is not evidence of a
+-- foreign machine, and reporting it as one would put a wrong reason in the
+-- record; the symbol test below then rejects it for the reason that applies.
+local function machines_differ(a, b)
+    local ma, mb = elf_machine(a), elf_machine(b)
+    return ma ~= nil and mb ~= nil and ma ~= mb
+end
+
 -- Payloads first, with the same criterion compat.vulkan-runtime applies: the
 -- payload's versioned symbol set must cover the host copy's.
 local function prefer_payloads(outdir, seeds)
@@ -318,7 +327,7 @@ local function prefer_payloads(outdir, seeds)
             local hit = find_in_store(base)
             if not hit then
                 entry.class = "host; no installed payload provides this soname"
-            elseif elf_machine(hit) ~= elf_machine(target) then
+            elseif machines_differ(hit, target) then
                 entry.class = string.format(
                     "host; the payload %s is built for another machine", hit)
             elseif not nm then
