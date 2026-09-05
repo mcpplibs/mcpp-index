@@ -9,6 +9,15 @@
 
 ### Added
 
+- 收录 `mcpplibs.rules-cuda` 0.1.0 —— 把「怎么编一个 CUDA 设备翻译单元」收成一条
+  可 import 的构建规则(`host-module = true`)。⭐ **一个仓库都不用新建**,与
+  `grpcgen` 同形:描述符指向 mcpp 自己**源码 tarball** 的一个子路径
+  (`*/examples/09-cuda-kernel/rules-cuda/mcpp.toml`)。规则与它所讲的协议
+  (构建程序协议 v7)由同一次发布产出,指向同一份 tarball 因而不是权宜之计,
+  而是让两者不可能错配。需要 mcpp >= 2026.9.5.2。
+  实测:示例工程去掉 path 依赖、改写一行 `[dependencies.mcpplibs]` 后,
+  在 RTX 4080 上构建并跑出 `12 24 36 48`。
+
 - 收录 CUDA 设备侧的六个适配包:`compat.cudart`(CUDA Runtime)与
   `compat.cublas` / `cufft` / `curand` / `cusolver` / `cusparse`(五个算子库)。
   载荷一律来自 xim(`xpm.linux.deps` 接线),本仓库只回答「怎么对它构建」:
