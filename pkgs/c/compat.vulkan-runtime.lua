@@ -86,7 +86,15 @@ package = {
             -- they cover, and records the surface in HOST-SURFACE.txt. mcpp
             -- identifies an installed package by (name, version), so the new
             -- behaviour needs a new key; the anchor is the same file.
-            ["latest"] = { ref = "2026.09.06" },
+            ["latest"] = { ref = "2026.09.07" },
+            -- 2026.09.07: a soname carried by more than one installed payload
+            -- is now decided by symbol coverage rather than by which store
+            -- path sorts last. See find_in_store below for the measurement
+            -- that produced this version.
+            ["2026.09.07"] = {
+                url    = "https://raw.githubusercontent.com/KhronosGroup/Vulkan-Loader/vulkan-sdk-1.4.357.0/README.md",
+                sha256 = "21ec0987a05bd680ecd11f8be747e27744d7558f7318736f6cb8a5c5ec1b8ba8",
+            },
             -- 2026.09.06: the payload set is DECLARED here rather than
             -- discovered. Until this version the substitution pass took a
             -- payload only when some earlier, unrelated install had already
@@ -497,19 +505,36 @@ local function unresolved_names(outdir, seeds, dirs)
     return out
 end
 
--- One soname, looked for in the payloads this home already has.
+-- One soname, looked for in the payloads this home already has. EVERY copy,
+-- not the last one sorted.
+--
+-- More than one payload can carry a soname, and the extra copy is usually a
+-- driver's vendored one: `xim:mesa-lavapipe` ships its own `libX11.so.6`
+-- beside the driver. Sorting by version and taking the tail picked that copy
+-- over `xim:libX11`'s -- "mesa-lavapipe/26.2.1" sorts after "libX11/1.8.10" --
+-- and it was 5 symbols short of the host's, so the farm kept the host copy for
+-- a soname this index publishes. Measured 2026-09-06 in a fresh subos.
+--
+-- The caller decides between the candidates with the test that matters, which
+-- is symbol coverage; this function's job is to not hide one.
 local function find_in_store(soname)
+    local out, seen = {}, {}
     for _, root in ipairs(xim_store_roots()) do
         local f = io.popen(string.format(
-            [[ls -1 "%s"/xim-x-*/*/lib/%s "%s"/xim-x-*/*/lib64/%s 2>/dev/null | sort -V | tail -1]],
+            [[ls -1 "%s"/xim-x-*/*/lib/%s "%s"/xim-x-*/*/lib64/%s 2>/dev/null | sort -V]],
             root, soname, root, soname))
         if f then
-            local hit = (f:read("l") or ""):gsub("[\r\n]+$", "")
+            for line in f:lines() do
+                local hit = line:gsub("[\r\n]+$", "")
+                if hit ~= "" and not seen[hit] then
+                    seen[hit] = true
+                    out[#out + 1] = hit
+                end
+            end
             f:close()
-            if hit ~= "" then return hit end
         end
     end
-    return nil
+    return out
 end
 
 -- Proprietary vendor userspace: linked from the host by design and never
@@ -643,39 +668,49 @@ local function prefer_payloads(outdir)
         elseif is_store_path(target) then
             entry.class = "payload"
         else
-            local hit = find_in_store(base)
+            local candidates = find_in_store(base)
             local declared = PAYLOAD_PACKAGES[base]
-            if not hit then
+            if #candidates == 0 then
                 entry.class = declared
                     and ("host; " .. declared .. " is declared for this soname "
                          .. "and is not installed, so the declaration did not "
                          .. "take effect")
                     or "host; no installed payload provides this soname"
-            elseif machines_differ(hit, target) then
-                entry.class = string.format(
-                    "host; the payload %s is built for another machine", hit)
             elseif not nm then
-                entry.class = "host; no nm to compare against " .. hit
+                entry.class = "host; no nm to compare against " .. candidates[1]
             else
                 local host_syms = symbol_set(nm, target)
-                local pay_syms  = symbol_set(nm, hit)
-                if not host_syms or not pay_syms then
-                    entry.class = "host; symbol tables unreadable, not compared against " .. hit
-                else
-                    local missing = 0
-                    for sym in pairs(host_syms) do
-                        if not pay_syms[sym] then missing = missing + 1 end
-                    end
-                    if missing == 0 then
-                        os.exec(string.format([[ln -sf "%s" "%s"]], hit, link))
-                        entry.target = hit
-                        entry.class  = "payload; its symbol set covers the host copy " .. target
-                        moved = moved + 1
+                -- The last reason any candidate was refused, so a farm that
+                -- keeps a host copy says why rather than only that it did.
+                local why = nil
+                for _, hit in ipairs(candidates) do
+                    if machines_differ(hit, target) then
+                        why = string.format(
+                            "host; the payload %s is built for another machine", hit)
                     else
-                        entry.class = string.format(
-                            "host; payload %s lacks %d symbol(s) the host copy defines", hit, missing)
+                        local pay_syms = symbol_set(nm, hit)
+                        if not host_syms or not pay_syms then
+                            why = "host; symbol tables unreadable, not compared against " .. hit
+                        else
+                            local missing = 0
+                            for sym in pairs(host_syms) do
+                                if not pay_syms[sym] then missing = missing + 1 end
+                            end
+                            if missing == 0 then
+                                os.exec(string.format([[ln -sf "%s" "%s"]], hit, link))
+                                entry.target = hit
+                                entry.class  = "payload; its symbol set covers the host copy " .. target
+                                moved = moved + 1
+                                why = nil
+                                break
+                            end
+                            why = string.format(
+                                "host; payload %s lacks %d symbol(s) the host copy defines",
+                                hit, missing)
+                        end
                     end
                 end
+                if why then entry.class = why end
             end
         end
         classes[base] = entry
@@ -724,7 +759,13 @@ local function link_runtime_libs(outdir)
     local seeds = icd_seed_libraries(dirs)
     local filled, missing = {}, {}
     for _, soname in ipairs(unresolved_names(outdir, seeds, dirs)) do
-        local hit = find_in_store(soname)
+        -- The FIRST candidate, and a list is what find_in_store returns since
+        -- 2026.09.07. There is no host copy to compare against here -- this
+        -- pass exists precisely for the names the host cannot resolve at all --
+        -- so coverage cannot be the criterion, and the newest copy of a soname
+        -- nothing else provides is the only answer available.
+        local candidates = find_in_store(soname)
+        local hit = candidates[#candidates]
         if hit then
             os.exec(string.format([[ln -sf "%s" "%s"]], hit, path.join(outdir, soname)))
             filled[#filled + 1] = soname .. "  <- " .. hit
