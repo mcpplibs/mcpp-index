@@ -12,10 +12,16 @@
 // `<xmmintrin.h>`, which pulls `<stdlib.h>` into the global module before the
 // std module is imported, and GCC then reports conflicting language linkage
 // for the declarations both provide.
+#include <cstdio>
+#if !defined(HAVE_OPENCL_LOADER)
+int main() {
+    std::printf("compat.opencl: skipped (no windows entry; drivers are enumerated through the registry there)\n");
+    return 0;
+}
+#else
 #define CL_TARGET_OPENCL_VERSION 300
 #include <CL/cl.h>
 #include <CL/cl_ext.h>
-#include <cstdio>
 #include <vector>
 
 int main() {
@@ -51,3 +57,4 @@ int main() {
     }
     return 0;
 }
+#endif

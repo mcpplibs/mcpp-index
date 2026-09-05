@@ -133,10 +133,20 @@ package = {
         },
 
         macosx = {
-            -- Apple ships its own libOpenCL as a framework and there is no ICD
-            -- mechanism, so the loader is built without the linux sources and a
-            -- consumer links the framework instead of dispatching.
-            sources = {},
+            -- The same POSIX sources upstream builds on Apple platforms: the
+            -- loader enumerates `/etc/OpenCL/vendors` and `OCL_ICD_FILENAMES`
+            -- through dlopen there exactly as on Linux. A macOS runner has no
+            -- vendors directory and reports zero platforms, which is the
+            -- loader's own answer and what tests/examples/opencl asserts.
+            -- Apple's OpenCL framework is not involved: a program that links
+            -- this package dispatches through this loader, not the framework.
+            targets = { ["opencl"] = { kind = "shared", soname = "libOpenCL.1.dylib" } },
+            sources = {
+                "*/loader/linux/icd_linux.c",
+                "*/loader/linux/icd_linux_envvars.c",
+                "*/loader/linux/icd_linux_library.c",
+            },
+            ldflags = { "-ldl" },
             runtime = { capabilities = { "opencl.icd.driver" } },
         },
     },
