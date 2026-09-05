@@ -11,20 +11,22 @@
 -- than generated, because the answer for every C library this index targets is
 -- the same one.
 --
--- ⭐ THE VENDOR PATH IS COMPILED IN, NOT CONFIGURED. `icd_platform.h` defines
+-- THE VENDOR PATH IS COMPILED IN, NOT CONFIGURED. `icd_platform.h` defines
 -- `ICD_VENDOR_PATH` as `/etc/OpenCL/vendors` and the loader reads that
 -- directory unless `OCL_ICD_VENDORS` names another. So this package finds the
--- HOST's drivers with no configuration at all — which is the correct default,
--- since an OpenCL driver, like a Vulkan one, cannot be a package.
+-- HOST's proprietary drivers with no configuration at all, which is the
+-- correct default for a driver whose userspace is in ABI lockstep with a
+-- kernel module. An open implementation is a payload: `xim:pocl` runs OpenCL
+-- on the CPU and needs nothing from the host.
 --
--- ⚠️ `OCL_ICD_VENDORS` REPLACES THAT PATH; IT DOES NOT ADD TO IT.
--- `khrIcdOsDirEnumerate` reads the variable and, when set, uses it INSTEAD of
--- the compiled-in path, and it opens ONE directory rather than a list. Vulkan's
--- `VK_ADD_DRIVER_FILES` is additive and this is not, so a payload driver that
--- announced itself through the variable would hide the machine's GPU. That is
--- why the software driver (`xim:pocl`) places its manifest into the subos's
--- shared vendors directory alongside links to the host's, rather than pointing
--- the variable at its own payload.
+-- `OCL_ICD_VENDORS` REPLACES THAT PATH; `OCL_ICD_FILENAMES` ADDS TO IT.
+-- `khrIcdOsVendorsEnumerate` (loader/linux/icd_linux.c) first enumerates the
+-- colon-separated library list in `OCL_ICD_FILENAMES` and then the vendors
+-- directory, so a payload driver announces itself through the list and the
+-- machine's own drivers stay visible. `OCL_ICD_VENDORS` is the wrong knob for
+-- that: it names ONE directory used INSTEAD of the compiled-in path and would
+-- hide the GPU. `xim:pocl` therefore declares `OCL_ICD_FILENAMES` into the
+-- subos environment and touches no vendors directory.
 --
 -- SHARED, with the canonical soname, for the reason `compat.vulkan` records:
 -- everything in a process must converge on one loader, and a library that

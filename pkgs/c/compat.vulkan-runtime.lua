@@ -1,12 +1,16 @@
 -- compat.vulkan-runtime — host Vulkan ICD adapter for mcpp Linux applications.
 --
 -- The exact counterpart of `compat.glx-runtime`, for the same reason and in the
--- same shape. A GPU driver cannot be a package: the ICD has to match the kernel
--- driver on the machine it runs on, so the GL runtime plan
--- (.agents/docs/2026-06-03-gl-runtime-packages-plan.md) settled on modelling it
--- as a HOST CAPABILITY rather than "silently pretending vendor drivers are
--- normal redistributable packages". Nothing is vendored here either — this is a
--- symlink farm plus the metadata that makes it reachable.
+-- same shape. A PROPRIETARY driver cannot be a package: its userspace is in ABI
+-- lockstep with a kernel module and its licence forbids redistribution, so the
+-- GL runtime plan (.agents/docs/2026-06-03-gl-runtime-packages-plan.md) settled
+-- on modelling that as a HOST CAPABILITY. An open driver is a payload --
+-- `xim:mesa-lavapipe` for the CPU, `xim:mesa` for AMD hardware -- and a machine
+-- using one needs nothing from this farm at all. Nothing is vendored here; this
+-- is a symlink farm plus the metadata that makes it reachable, and since
+-- 2026.09.05 every farmed library a published payload also provides is taken
+-- from the payload when the payload's symbol set covers the host copy's, so the
+-- host surface it records is proprietary userspace and packaging backlog only.
 --
 -- WHAT IT FIXES. `compat.vulkan` builds the Khronos loader, and the loader finds
 -- every ICD manifest on the host correctly. It then fails to dlopen a single
@@ -50,6 +54,16 @@ package = {
 
     xpm = {
         linux = {
+            -- 2026.09.05: the farm is seeded from the ICD manifests, closes
+            -- over what they need, prefers installed payloads over host copies
+            -- they cover, and records the surface in HOST-SURFACE.txt. mcpp
+            -- identifies an installed package by (name, version), so the new
+            -- behaviour needs a new key; the anchor is the same file.
+            ["latest"] = { ref = "2026.09.05" },
+            ["2026.09.05"] = {
+                url    = "https://raw.githubusercontent.com/KhronosGroup/Vulkan-Loader/vulkan-sdk-1.4.357.0/README.md",
+                sha256 = "21ec0987a05bd680ecd11f8be747e27744d7558f7318736f6cb8a5c5ec1b8ba8",
+            },
             ["2026.07.29"] = {
                 -- Nothing is downloaded that matters: the package's content is
                 -- the symlink farm install() builds from the host. This is just
@@ -118,65 +132,38 @@ local function candidate_dirs()
     return out
 end
 
--- ICDs first, then the transitive set they pull in — the whole chain has to
--- resolve through this one directory. Verified against Mesa's lavapipe (LLVM,
--- drm, expat, xcb, wayland, zstd) and NVIDIA's ICD, which is libGLX_nvidia.so.0
--- and drags the libnvidia* family.
+-- WHAT IS FARMED BY PATTERN: PROPRIETARY VENDOR USERSPACE ONLY.
 --
--- EVERY DEPENDENCY PATTERN IS VERSIONED (`lib*.so.*`), deliberately. mcpp puts
--- `runtime.library_dirs` on the LINK line as well as the runtime path, so a bare
--- `libxcb.so` harvested here would shadow this index's own `compat.xcb` and the
--- link fails with `undefined reference to XauDisposeAuth`. Versioned sonames are
--- invisible to the linker (it resolves `-lxcb` through `libxcb.so`/`libxcb.a`)
--- and are exactly what dlopen asks for, so the split is not a workaround so much
--- as the correct spelling. `compat.glx-runtime` never hit this only because the
--- GL family it harvests is not otherwise linked from the index.
+-- Until 2026.09.05 this list also named the X client stack, libdrm, LLVM,
+-- zlib, zstd, expat, libxml2, libffi, libedit, ICU and libstdc++, and harvested
+-- every host copy the candidate directories held -- five LLVM versions and the
+-- driver's settings GUI among them. None of that belongs on a program's
+-- runtime path: what an ICD needs is computed below by closing over the
+-- manifests' libraries with `ldd`, and a library a published payload also
+-- provides is then taken from the payload when it covers the host copy.
 --
--- The Mesa ICDs themselves are genuinely named `libvulkan_lvp.so` with no
--- version, which is safe: nothing links `-lvulkan_lvp`.
+-- The vendor family stays a pattern because a proprietary driver dlopens
+-- members of its own family by name at run time (`libnvidia-glvkspirv`,
+-- `libnvidia-gpucomp`), which no `DT_NEEDED` walk can see. Its settings GUI
+-- (`libnvidia-gtk*`) is excluded: it is not part of any driver and would put a
+-- host GTK on the path of every consumer.
+--
+-- EVERY PATTERN IS VERSIONED (`lib*.so.*`), deliberately. mcpp puts
+-- `runtime.library_dirs` on the LINK line as well as the runtime path, so a
+-- bare `libxcb.so` here would shadow this index's own `compat.xcb` at link
+-- time. Versioned sonames are invisible to the linker and are exactly what
+-- dlopen asks for.
 --
 -- The host's own `libvulkan.so*` is deliberately NOT harvested: `compat.vulkan`
 -- builds the loader itself, as a shared object with the canonical
 -- `libvulkan.so.1` soname, and a second one on the path would be resolved by
 -- SDL2's `dlopen` instead. One loader per process is the whole point.
 local host_vulkan_patterns = {
-    -- Mesa ICDs: lavapipe, intel, radeon, nouveau, virtio, asahi, gfxstream
-    "libvulkan_*.so",
-    -- NVIDIA's ICD and its family
     "libGLX_nvidia.so.*",
     "libnvidia*.so.*",
-    -- transitive dependencies, versioned only
-    "libLLVM*.so.*",
-    "libdrm*.so.*",
-    "libexpat.so.*",
-    -- The X client stack, including its own auth dependencies. Incomplete is
-    -- worse than absent here: a farm carrying libxcb.so.1 but not libXau.so.6
-    -- shadows the host copy that would otherwise have resolved, and the
-    -- executable fails to start.
-    "libxcb*.so.*",
-    "libX11-xcb.so.*",
-    "libXau.so.*",
-    "libXdmcp.so.*",
-    "libbsd.so.*",
-    "libmd.so.*",
-    "libxshmfence.so.*",
-    "libwayland-client.so.*",
-    "libz.so.*",
-    "libzstd.so.*",
-    "libelf.so.*",
-    "libffi.so.*",
-    "libedit.so.*",
-    "libtinfo.so.*",
-    "libxml2.so.*",
-    "libstdc++.so.*",
 }
+local never_farm_patterns = { "^libnvidia%-gtk" }
 
--- ⚠️⚠️ THE LIBRARIES THE C RUNTIME OWNS ARE NEVER FARMED FROM THE HOST.
---
--- An mcpp artifact runs under mcpp's own glibc, and a second C library reachable
--- on the same search path is the one failure worse than a missing driver. The
--- same holds for `libgcc_s`, which the toolchain payload provides, and for
--- `libvulkan.so.1`, where the whole point is one loader per process.
 local never_farm = {
     ["libc.so.6"] = true, ["libm.so.6"] = true, ["libdl.so.2"] = true,
     ["libpthread.so.0"] = true, ["librt.so.1"] = true, ["libresolv.so.2"] = true,
@@ -184,7 +171,7 @@ local never_farm = {
     ["libgcc_s.so.1"] = true, ["libvulkan.so.1"] = true,
 }
 
--- ⭐⭐ THE PATTERN LIST NAMES WHAT IS DLOPENED; THIS CLOSES WHAT IT NEEDS.
+-- THE PATTERN LIST NAMES WHAT IS DLOPENED; THIS CLOSES WHAT IT NEEDS.
 --
 -- A hand-written list of transitive dependencies is a list someone has to keep
 -- correct against libraries nobody in this repository builds, and the comment
@@ -206,7 +193,7 @@ local never_farm = {
 -- `DT_NEEDED` soname, always versioned, so nothing this pass adds can shadow a
 -- `libfoo.so` the linker resolves.
 --
--- ⭐ THE SEED IS THE ICD SET, NOT THE FARM. Closing over every file the pattern
+-- THE SEED IS THE ICD SET, NOT THE FARM. Closing over every file the pattern
 -- list matched pulled 64 libraries here, GTK 2 and GTK 3 among them, because
 -- `libnvidia*.so.*` also matches the driver's settings GUI. Those libraries are
 -- on the consuming binary's runtime path, where a host GTK can shadow an index
@@ -214,7 +201,7 @@ local never_farm = {
 -- there. The manifests state exactly which libraries the loader loads, so they
 -- are what gets closed over.
 --
--- ⚠️⚠️ THE `ldd` ON `PATH` IS NOT NECESSARILY THE HOST'S. Under xlings it is the
+-- THE `ldd` ON `PATH` IS NOT NECESSARILY THE HOST'S. Under xlings it is the
 -- payload's own, and a private loader's default search path is its build prefix
 -- rather than the host's — measured on one machine, in one shell, seconds apart:
 --
@@ -343,7 +330,7 @@ local function close_over_needed(outdir, dirs)
     return added
 end
 
--- ⭐⭐ WHAT THE FARM STILL TAKES FROM THE HOST, WRITTEN DOWN.
+-- WHAT THE FARM STILL TAKES FROM THE HOST, WRITTEN DOWN.
 --
 -- This package exists because a GPU driver cannot be a package, and that is
 -- true of the driver. It is not true of `libxcb`, `libz` or `libxml2`, which
@@ -371,7 +358,7 @@ end
 --     package; `libstdc++`/`libgcc_s` in particular are redistributable and
 --     `xim:gcc-runtime` publishes them.
 --
--- ⚠️ THE SUBSTITUTION IS DIRECTIONAL, NOT FORBIDDEN. A host ICD was linked
+-- THE SUBSTITUTION IS DIRECTIONAL, NOT FORBIDDEN. A host ICD was linked
 -- against the host's copies of the third class, so an OLDER package copy fails
 -- as a missing symbol version at dlopen time; a NEWER one is what a
 -- distribution upgrade does every day. What this farm does today is the
@@ -405,7 +392,7 @@ local function unresolved_names(outdir, seeds, dirs)
     if outdir ~= "" then search = outdir .. ":" .. search end
     local f = io.popen(string.format(
         [[for lib in %s; do LD_LIBRARY_PATH=%s ldd "$lib" 2>/dev/null; done ]] ..
-        -- ⚠️ No POSIX character class here: `[[:space:]]` contains `]]`, which
+        -- No POSIX character class here: `[[:space:]]` contains `]]`, which
         -- ends a Lua long-bracket string. The file parsed as far as this line
         -- and then reported `unexpected symbol near '\'` two lines later.
         [[| sed -n 's/^[ \t]*\([^ \t]*\) => not found.*/\1/p' | sort -u]],
@@ -424,7 +411,7 @@ end
 local function find_in_store(soname)
     for _, root in ipairs(xim_store_roots()) do
         local f = io.popen(string.format(
-            [[ls -1 "%s"/xim-x-*/*/lib/%s "%s"/xim-x-*/*/lib64/%s 2>/dev/null | head -1]],
+            [[ls -1 "%s"/xim-x-*/*/lib/%s "%s"/xim-x-*/*/lib64/%s 2>/dev/null | sort -V | tail -1]],
             root, soname, root, soname))
         if f then
             local hit = (f:read("l") or ""):gsub("[\r\n]+$", "")
@@ -433,6 +420,144 @@ local function find_in_store(soname)
         end
     end
     return nil
+end
+
+-- Proprietary vendor userspace: linked from the host by design and never
+-- compared against a payload, because none exists or may exist.
+local vendor_userspace = {
+    "^libnvidia", "^libGLX_nvidia%.so", "^libEGL_nvidia%.so", "^libGLESv[12]_nvidia%.so",
+    "^libcuda%.so", "^libnvcuvid%.so", "^libnvoptix%.so",
+}
+local function is_vendor_userspace(base)
+    for _, pat in ipairs(vendor_userspace) do
+        if base:match(pat) then return true end
+    end
+    return false
+end
+
+-- The host's own Mesa ICDs are the driver. A payload driver replaces them as
+-- a whole through its own manifest; substituting one of their libraries would
+-- mix two Mesa builds in one process.
+local function is_host_driver(base)
+    return base:match("^libvulkan_") ~= nil
+end
+
+local function is_store_path(p)
+    for _, root in ipairs(xim_store_roots()) do
+        if p:sub(1, #root) == root then return true end
+    end
+    return false
+end
+
+-- `nm` from an installed toolchain payload, else from PATH, else nothing. The
+-- comparison below is skipped and recorded when there is none; a farm that
+-- cannot compare keeps the host copy rather than guessing.
+local function find_tool(name)
+    for _, root in ipairs(xim_store_roots()) do
+        local f = io.popen(string.format(
+            [[ls -1 "%s"/xim-x-binutils/*/bin/%s "%s"/xim-x-gcc/*/bin/%s 2>/dev/null | sort -V | tail -1]],
+            root, name, root, name))
+        if f then
+            local hit = (f:read("l") or ""):gsub("[\r\n]+$", "")
+            f:close()
+            if hit ~= "" then return hit end
+        end
+    end
+    local f = io.popen(string.format([[command -v %s 2>/dev/null]], name))
+    if f then
+        local hit = (f:read("l") or ""):gsub("[\r\n]+$", "")
+        f:close()
+        if hit ~= "" then return hit end
+    end
+    return nil
+end
+
+-- The versioned dynamic symbols a library defines, as a set. `name@@VERSION`
+-- for a versioned symbol, so the GLIBCXX and CXXABI nodes of a C++ runtime
+-- take part in the comparison exactly as the loader would apply them.
+local function symbol_set(nm, lib)
+    local f = io.popen(string.format(
+        [[%s -D --defined-only --with-symbol-versions %s 2>/dev/null | awk '{print $NF}']],
+        sh_quote(nm), sh_quote(lib)))
+    if not f then return nil end
+    local set, n = {}, 0
+    for line in f:lines() do
+        local sym = line:gsub("[\r\n]+$", "")
+        if sym ~= "" then set[sym] = true; n = n + 1 end
+    end
+    f:close()
+    if n == 0 then return nil end
+    return set
+end
+
+-- PAYLOADS FIRST. Every farmed soname an installed payload also provides is
+-- re-pointed at the payload when the payload's versioned symbol set covers the
+-- host copy's. The direction matters and is what the symbol test decides: an
+-- ICD linked against the host's libstdc++ needs every GLIBCXX node the host
+-- copy has, which a NEWER payload provides and an older one does not. The
+-- outcome is recorded per entry, so HOST-SURFACE.txt says why each library is
+-- where it is rather than only where it points.
+local function prefer_payloads(outdir)
+    local classes = {}
+    local nm = find_tool("nm")
+    local lsf = io.popen(string.format([[ls -1 "%s" 2>/dev/null]], outdir))
+    if not lsf then return classes end
+    local names = {}
+    for line in lsf:lines() do
+        local base = line:gsub("[\r\n]+$", "")
+        if base ~= "" then names[#names + 1] = base end
+    end
+    lsf:close()
+    local moved = 0
+    for _, base in ipairs(names) do
+        local link = path.join(outdir, base)
+        local rf = io.popen(string.format([[readlink -f "%s" 2>/dev/null]], link))
+        local target = ""
+        if rf then
+            target = (rf:read("l") or ""):gsub("[\r\n]+$", "")
+            rf:close()
+        end
+        local entry = { target = target, class = "" }
+        if is_vendor_userspace(base) then
+            entry.class = "vendor userspace; linked from the host by design"
+        elseif is_host_driver(base) then
+            entry.class = "host driver; a payload driver replaces it as a whole"
+        elseif is_store_path(target) then
+            entry.class = "payload"
+        else
+            local hit = find_in_store(base)
+            if not hit then
+                entry.class = "host; no installed payload provides this soname"
+            elseif not nm then
+                entry.class = "host; no nm to compare against " .. hit
+            else
+                local host_syms = symbol_set(nm, target)
+                local pay_syms  = symbol_set(nm, hit)
+                if not host_syms or not pay_syms then
+                    entry.class = "host; symbol tables unreadable, not compared against " .. hit
+                else
+                    local missing = 0
+                    for sym in pairs(host_syms) do
+                        if not pay_syms[sym] then missing = missing + 1 end
+                    end
+                    if missing == 0 then
+                        os.exec(string.format([[ln -sf "%s" "%s"]], hit, link))
+                        entry.target = hit
+                        entry.class  = "payload; its symbol set covers the host copy " .. target
+                        moved = moved + 1
+                    else
+                        entry.class = string.format(
+                            "host; payload %s lacks %d symbol(s) the host copy defines", hit, missing)
+                    end
+                end
+            end
+        end
+        classes[base] = entry
+    end
+    if moved > 0 then
+        log.info("compat.vulkan-runtime: %d farmed libraries re-pointed at installed payloads", moved)
+    end
+    return classes
 end
 
 local function link_runtime_libs(outdir)
@@ -447,11 +572,26 @@ local function link_runtime_libs(outdir)
             )
         end
     end
+    for _, pat in ipairs(never_farm_patterns) do
+        os.exec(string.format(
+            [[for lib in "%s"/*; do case "$(basename "$lib")" in %s) rm -f "$lib";; esac; done]],
+            outdir, "libnvidia-gtk*"))
+    end
     local dirs = candidate_dirs()
+    -- The ICD libraries themselves. A manifest names its driver by bare
+    -- soname or by path; the loader dlopens the former by name, which only
+    -- resolves through this directory, and the latter's dependencies still do.
+    for _, seed in ipairs(icd_seed_libraries(dirs)) do
+        local base = seed:match("([^/]+)$")
+        if base and not os.isfile(path.join(outdir, base)) then
+            os.exec(string.format([[ln -sf "%s" "%s"]], seed, path.join(outdir, base)))
+        end
+    end
     local n = close_over_needed(outdir, dirs)
     if n > 0 then
         log.info("compat.vulkan-runtime: %d transitive libraries closed over", n)
     end
+    local classes = prefer_payloads(outdir)
 
     -- Gap-filling, then the record. Both read the same seed set the closure
     -- used, so what the report describes is what the loader will do.
@@ -480,7 +620,8 @@ local function link_runtime_libs(outdir)
                     "#",
                     "# Written by compat.vulkan-runtime at install time. The farm is a",
                     "# directory of symlinks; this file says where each one points and",
-                    "# which of them could be a package instead.",
+                    "# why: a payload, proprietary vendor userspace linked by design, or",
+                    "# a host copy with the reason no payload replaced it.",
                     ""}
     local lsf = io.popen(string.format([[ls -1 "%s" 2>/dev/null]], outdir))
     if lsf then
@@ -488,11 +629,19 @@ local function link_runtime_libs(outdir)
         for line in lsf:lines() do
             local base = line:gsub("[\r\n]+$", "")
             if base ~= "" then
-                local rf = io.popen(string.format([[readlink -f "%s" 2>/dev/null]],
-                                                  path.join(outdir, base)))
-                local target = rf and (rf:read("l") or "") or ""
-                if rf then rf:close() end
-                report[#report + 1] = string.format("%-34s %s", base, target)
+                local entry = classes[base]
+                local target, class = "", "filled from an installed payload"
+                if entry then
+                    target, class = entry.target, entry.class
+                else
+                    local rf = io.popen(string.format([[readlink -f "%s" 2>/dev/null]],
+                                                      path.join(outdir, base)))
+                    if rf then
+                        target = (rf:read("l") or ""):gsub("[\r\n]+$", "")
+                        rf:close()
+                    end
+                end
+                report[#report + 1] = string.format("%-34s %s\n%-34s   -- %s", base, target, "", class)
             end
         end
         lsf:close()
