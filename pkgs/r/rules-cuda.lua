@@ -1,3 +1,9 @@
+-- SUPERSEDED (2026-09-05). The CUDA rule now lives in the official plugin
+-- collection `mcpp:plugins` (pkgs/m/mcpp.plugins.lua) as `mcpp.rules.cuda`,
+-- selected by the feature `rules-cuda`. This descriptor stays so a project
+-- pinned to mcpplibs:rules-cuda@0.1.0 keeps resolving; nothing new depends
+-- on it, and it receives no further versions.
+--
 -- rules-cuda —— 把「怎么编一个 CUDA 设备翻译单元」收成一条可 import 的构建规则。
 --
 --   [dependencies.mcpplibs]
@@ -10,7 +16,7 @@
 --
 -- 这是本生态**自己写的** C++,不是上游任何东西,所以留在 `mcpplibs`。
 --
--- ⭐ 一个仓库都不用新建,与 `grpcgen` 同形:描述符指向 mcpp 自己的**源码
+-- 一个仓库都不用新建,与 `grpcgen` 同形:描述符指向 mcpp 自己的**源码
 -- tarball** 的一个子路径。规则包与它所讲的协议(构建程序协议 v7)由同一次发布
 -- 产出,指向同一份 tarball 因而不是权宜之计,而是让两者不可能错配。
 --
