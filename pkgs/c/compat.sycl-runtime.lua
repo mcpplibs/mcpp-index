@@ -63,7 +63,29 @@ package = {
             -- developer machine that had zlib installed for other reasons the
             -- omission was invisible; a fresh runner reported
             -- `FAIL libsycl.so.9: libz.so.1: cannot open shared object file`.
-            deps = { "xim:dpcpp@7.1.0", "xim:zlib" },
+            --
+            -- `xim:libcuda-host-link` is the third, and it is the one the
+            -- 2026.09.06 version was missing. `libur_adapter_cuda.so.0` needs
+            -- `libcuda.so.1`, and until the dpcpp payload gained a search path
+            -- of its own that adapter had none -- so it inherited the
+            -- ARTIFACT's DT_RPATH, which `compat.cuda-runtime` had already put
+            -- the driver on. The moment the payload's libraries acquired
+            -- `RUNPATH = $ORIGIN`, that inheritance switched off for them and
+            -- the adapter could no longer see a driver two farms away. The
+            -- sentinel is the one package permitted to know where the driver
+            -- is; this package declares it and links the same file
+            -- compat.cuda-runtime links, under the same soname, so a program
+            -- that has both farms on its path loads it once.
+            deps = { "xim:dpcpp@7.1.0", "xim:zlib", "xim:libcuda-host-link" },
+            -- 2026.09.06 is kept and frozen: a consumer already pinning it
+            -- keeps resolving, and it installs the farm it always did. It is
+            -- missing `libcuda.so.1`, which on a machine whose dpcpp payload
+            -- predates the search-path repair is invisible, because the
+            -- adapter then inherits the artifact's path instead.
+            ["2026.09.07"] = {
+                url    = "https://raw.githubusercontent.com/intel/llvm/v7.1.0/sycl/LICENSE.TXT",
+                sha256 = "410f3a23b4bbacbd246310d8c014a20af18cfc8c0d740ddf0f673ea20894da9c",
+            },
             ["2026.09.06"] = {
                 -- Nothing downloaded matters: the content is the set of
                 -- symlinks install() creates. A stable, tiny anchor keeps the
@@ -72,7 +94,7 @@ package = {
                 url    = "https://raw.githubusercontent.com/intel/llvm/v7.1.0/sycl/LICENSE.TXT",
                 sha256 = "410f3a23b4bbacbd246310d8c014a20af18cfc8c0d740ddf0f673ea20894da9c",
             },
-            ["latest"] = { ref = "2026.09.06" },
+            ["latest"] = { ref = "2026.09.07" },
         },
     },
 
@@ -258,6 +280,29 @@ function install()
         log.warn("compat.sycl-runtime: the payload at %s has no versioned "
                  .. "library in lib/; the farm is empty", src)
         return true
+    end
+
+    -- The driver, through the sentinel and never through a probe of our own.
+    -- Only the versioned soname: mcpp puts runtime.library_dirs on the LINK
+    -- line as well, and an unversioned `libcuda.so` here would be picked up by
+    -- `-lcuda` and bind the build to one machine's driver.
+    local drv = 0
+    for _, root in ipairs({ path.directory(path.directory(src)) }) do
+        local f = io.popen(string.format(
+            [[ls -1d "%s"/xim-x-libcuda-host-link/*/lib/libcuda.so.1 2>/dev/null | sort -V | tail -1]], root))
+        local hit = f and (f:read("l") or "") or ""
+        if f then f:close() end
+        if hit ~= "" then
+            os.exec(string.format([[ln -sfn "%s" "%s"]], hit, path.join(outdir, "libcuda.so.1")))
+            drv = 1
+        end
+    end
+    if drv == 0 then
+        -- Not fatal, and not this package's business to decide: a machine with
+        -- no NVIDIA driver is a legitimate configuration, and the SYCL runtime
+        -- reports an unavailable back end itself.
+        log.warn("compat.sycl-runtime: no libcuda-host-link found; the CUDA "
+                 .. "back end of the SYCL runtime will report itself unavailable")
     end
 
     local stubs = farm_libc_stubs(outdir, src)
