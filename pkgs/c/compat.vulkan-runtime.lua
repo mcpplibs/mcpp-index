@@ -759,7 +759,13 @@ local function link_runtime_libs(outdir)
     local seeds = icd_seed_libraries(dirs)
     local filled, missing = {}, {}
     for _, soname in ipairs(unresolved_names(outdir, seeds, dirs)) do
-        local hit = find_in_store(soname)
+        -- The FIRST candidate, and a list is what find_in_store returns since
+        -- 2026.09.07. There is no host copy to compare against here -- this
+        -- pass exists precisely for the names the host cannot resolve at all --
+        -- so coverage cannot be the criterion, and the newest copy of a soname
+        -- nothing else provides is the only answer available.
+        local candidates = find_in_store(soname)
+        local hit = candidates[#candidates]
         if hit then
             os.exec(string.format([[ln -sf "%s" "%s"]], hit, path.join(outdir, soname)))
             filled[#filled + 1] = soname .. "  <- " .. hit
