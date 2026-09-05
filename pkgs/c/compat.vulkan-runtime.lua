@@ -343,6 +343,89 @@ local function close_over_needed(outdir, dirs)
     return added
 end
 
+-- ⭐⭐ WHAT THE FARM STILL TAKES FROM THE HOST, WRITTEN DOWN.
+--
+-- This package exists because a GPU driver cannot be a package, and that is
+-- true of the driver. It is not true of `libxcb`, `libz` or `libxml2`, which
+-- this index publishes and which the pattern list nonetheless harvests from
+-- /usr/lib. The distinction was never recorded anywhere, so "how much of the
+-- host does a Vulkan program still touch" could only be answered by reading
+-- the list and guessing.
+--
+-- Three classes, and only the third is reducible:
+--
+--   * THE DRIVER FAMILY -- `libvulkan_*.so`, `libGLX_nvidia.so.*`,
+--     `libnvidia*.so.*`. Licence-restricted, in ABI lockstep with a kernel
+--     module, meaningless off the machine they came from.
+--   * VERSION-LOCKED TO THE DRIVER -- the host mesa's `libLLVM.so.20.1`, whose
+--     soname names the build the driver was compiled against. This index
+--     publishes LLVM 22; substituting it is `not found`, not an upgrade.
+--   * EVERYTHING ELSE -- the X protocol stack, zlib, expat, libxml2, libffi,
+--     libdrm. Every one of these is an xim package today.
+--
+-- The third class is NOT substituted when the host provides it, and that is a
+-- deliberate limit rather than an oversight: the host ICD was linked against
+-- the host's copies, a package copy may be OLDER, and the failure mode of an
+-- older libstdc++ or libxml2 under a dlopen is a missing symbol version at run
+-- time on some machines and not others. Replacing something that works with
+-- something that might is not a reduction.
+--
+-- What IS done: a name the host cannot resolve at all is filled from the
+-- store, which can only add resolutions. A container with an NVIDIA driver and
+-- no X stack is the case this covers, and it used to fail with `libX11.so.6:
+-- cannot open shared object file` naming nothing that could be installed.
+--
+-- And the surface is written to `HOST-SURFACE.txt` inside the package, so the
+-- next round of packaging reads a measurement instead of this comment.
+local function xim_store_roots()
+    local roots = {}
+    local home = (os.getenv and os.getenv("XLINGS_HOME")) or ""
+    if home == "" then home = ((os.getenv and os.getenv("HOME")) or "") .. "/.xlings" end
+    roots[#roots + 1] = path.join(home, "data/xpkgs")
+    local pfx = pkginfo.install_dir()
+    if pfx then roots[#roots + 1] = path.directory(path.directory(pfx)) end
+    return roots
+end
+
+-- The sonames the seeds still cannot resolve with the farm in place.
+local function unresolved_names(outdir, seeds, dirs)
+    if #seeds == 0 then return {} end
+    local args = {}
+    for _, seed in ipairs(seeds) do table.insert(args, sh_quote(seed)) end
+    local search = table.concat(dirs, ":")
+    if outdir ~= "" then search = outdir .. ":" .. search end
+    local f = io.popen(string.format(
+        [[for lib in %s; do LD_LIBRARY_PATH=%s ldd "$lib" 2>/dev/null; done ]] ..
+        -- ⚠️ No POSIX character class here: `[[:space:]]` contains `]]`, which
+        -- ends a Lua long-bracket string. The file parsed as far as this line
+        -- and then reported `unexpected symbol near '\'` two lines later.
+        [[| sed -n 's/^[ \t]*\([^ \t]*\) => not found.*/\1/p' | sort -u]],
+        table.concat(args, " "), sh_quote(search)))
+    if not f then return {} end
+    local out = {}
+    for line in f:lines() do
+        local n = line:gsub("[\r\n]+$", "")
+        if n ~= "" and not never_farm[n] then out[#out + 1] = n end
+    end
+    f:close()
+    return out
+end
+
+-- One soname, looked for in the payloads this home already has.
+local function find_in_store(soname)
+    for _, root in ipairs(xim_store_roots()) do
+        local f = io.popen(string.format(
+            [[ls -1 "%s"/xim-x-*/*/lib/%s "%s"/xim-x-*/*/lib64/%s 2>/dev/null | head -1]],
+            root, soname, root, soname))
+        if f then
+            local hit = (f:read("l") or ""):gsub("[\r\n]+$", "")
+            f:close()
+            if hit ~= "" then return hit end
+        end
+    end
+    return nil
+end
+
 local function link_runtime_libs(outdir)
     os.mkdir(outdir)
     for _, dir in ipairs(candidate_dirs()) do
@@ -355,10 +438,68 @@ local function link_runtime_libs(outdir)
             )
         end
     end
-    local n = close_over_needed(outdir, candidate_dirs())
+    local dirs = candidate_dirs()
+    local n = close_over_needed(outdir, dirs)
     if n > 0 then
         log.info("compat.vulkan-runtime: %d transitive libraries closed over", n)
     end
+
+    -- Gap-filling, then the record. Both read the same seed set the closure
+    -- used, so what the report describes is what the loader will do.
+    local seeds = icd_seed_libraries(dirs)
+    local filled, missing = {}, {}
+    for _, soname in ipairs(unresolved_names(outdir, seeds, dirs)) do
+        local hit = find_in_store(soname)
+        if hit then
+            os.exec(string.format([[ln -sf "%s" "%s"]], hit, path.join(outdir, soname)))
+            filled[#filled + 1] = soname .. "  <- " .. hit
+        else
+            missing[#missing + 1] = soname
+        end
+    end
+    if #filled > 0 then
+        log.info("compat.vulkan-runtime: %d libraries the host could not resolve "
+                 .. "were filled from installed payloads", #filled)
+    end
+    if #missing > 0 then
+        log.warn("compat.vulkan-runtime: %d libraries an ICD needs are on neither "
+                 .. "the host nor in this home; that driver will not load. "
+                 .. "See HOST-SURFACE.txt in the package.", #missing)
+    end
+
+    local report = {"# What this farm takes from the host, and what it could not find.",
+                    "#",
+                    "# Written by compat.vulkan-runtime at install time. The farm is a",
+                    "# directory of symlinks; this file says where each one points and",
+                    "# which of them could be a package instead.",
+                    ""}
+    local lsf = io.popen(string.format([[ls -1 "%s" 2>/dev/null]], outdir))
+    if lsf then
+        report[#report + 1] = "## farmed"
+        for line in lsf:lines() do
+            local base = line:gsub("[\r\n]+$", "")
+            if base ~= "" then
+                local rf = io.popen(string.format([[readlink -f "%s" 2>/dev/null]],
+                                                  path.join(outdir, base)))
+                local target = rf and (rf:read("l") or "") or ""
+                if rf then rf:close() end
+                report[#report + 1] = string.format("%-34s %s", base, target)
+            end
+        end
+        lsf:close()
+    end
+    if #filled > 0 then
+        report[#report + 1] = ""
+        report[#report + 1] = "## filled from an installed payload (the host had no copy)"
+        for _, l in ipairs(filled) do report[#report + 1] = l end
+    end
+    if #missing > 0 then
+        report[#report + 1] = ""
+        report[#report + 1] = "## unresolved -- an ICD names these and nothing here provides them"
+        for _, l in ipairs(missing) do report[#report + 1] = l end
+    end
+    io.writefile(path.join(path.directory(outdir), "HOST-SURFACE.txt"),
+                 table.concat(report, "\n") .. "\n")
     return true
 end
 
