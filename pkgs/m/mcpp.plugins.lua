@@ -2,17 +2,37 @@
 -- each member selected by a feature.
 --
 --   [dependencies.mcpp]
---   plugins = { version = "0.1.1", features = ["rules-spirv"], host-module = true }
+--   plugins = { version = "0.2.0", features = ["rules-spirv"], host-module = true }
 --
 --   // build.mcpp
 --   import mcpp;
 --   import mcpp.rules.spirv;
 --
--- Members of 0.1.1: `mcpp.rules.cuda` (feature `rules-cuda`, mcpp >= 2026.9.5.2),
--- `mcpp.rules.spirv` (feature `rules-spirv`, mcpp >= 2026.9.5.3) and
--- `mcpp.tools.embed` (feature `tools-embed`, mcpp >= 2026.9.5.4, whose fast
--- path compares a declared file input -- without it an edit to the embedded
--- data does not reach the binary). The
+-- Members of 0.2.0, with the mcpp release each relies on:
+--
+--   mcpp.rules.cuda   `rules-cuda`   >= 2026.9.5.2
+--   mcpp.rules.spirv  `rules-spirv`  >= 2026.9.5.3; since 0.2.0 it drives glslc
+--                                    as well as glslang, because `xim:shaderc`
+--                                    publishes one -- the route this rule's own
+--                                    source used to call "a claim rather than a
+--                                    feature"
+--   mcpp.tools.embed  `tools-embed`  >= 2026.9.5.4, whose fast path compares a
+--                                    declared file input; without it an edit to
+--                                    the embedded data does not reach the binary
+--   mcpp.rules.hip    `rules-hip`    >= 2026.9.5.2. HIP on the NVIDIA platform
+--                                    is a header layer over the CUDA runtime,
+--                                    so the compiler is the project's own clang
+--                                    and `xim:hip-nvidia` carries no binaries
+--   mcpp.rules.sycl   `rules-sycl`   >= 2026.9.6.1, the release whose
+--                                    device-source table carries `.sycl`. Needs
+--                                    `compat:sycl-runtime` so the artifact can
+--                                    reach `libsycl.so.9` at run time
+--
+-- The floor recorded for this package is the HIGHEST of those, so it is the
+-- collection's floor rather than any one feature's: a project on 2026.9.5.4
+-- that wants only `rules-cuda` is refused by it. Splitting the package per
+-- member is the alternative and is not taken, because one host-module package
+-- is what makes the collection a collection. The
 -- engine compiles every module interface unit among a host-module package's
 -- feature-resolved sources as a host module of its own (mcpp 2026.9.5.3+),
 -- which is what lets one package carry the collection; a consumer on an older
@@ -36,6 +56,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.2.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.2.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.2.0/mcpp-plugins-0.2.0.tar.gz",
+                },
+                sha256 = "b5ee0cf41f156a3a327c665a84cc60769864f171f20965568255147f06fd4ca2",
+            },
             ["0.1.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.1.1.tar.gz",
@@ -50,9 +77,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.1.1" },
+            ["latest"] = { ref = "0.2.0" },
         },
         macosx = {
+            ["0.2.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.2.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.2.0/mcpp-plugins-0.2.0.tar.gz",
+                },
+                sha256 = "b5ee0cf41f156a3a327c665a84cc60769864f171f20965568255147f06fd4ca2",
+            },
             ["0.1.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.1.1.tar.gz",
@@ -67,9 +101,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.1.1" },
+            ["latest"] = { ref = "0.2.0" },
         },
         windows = {
+            ["0.2.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.2.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.2.0/mcpp-plugins-0.2.0.tar.gz",
+                },
+                sha256 = "b5ee0cf41f156a3a327c665a84cc60769864f171f20965568255147f06fd4ca2",
+            },
             ["0.1.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.1.1.tar.gz",
@@ -84,7 +125,7 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.1.1" },
+            ["latest"] = { ref = "0.2.0" },
         },
     },
 
