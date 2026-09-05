@@ -140,7 +140,11 @@ package = {
             -- loader's own answer and what tests/examples/opencl asserts.
             -- Apple's OpenCL framework is not involved: a program that links
             -- this package dispatches through this loader, not the framework.
-            targets = { ["opencl"] = { kind = "shared", soname = "libOpenCL.1.dylib" } },
+            -- A STATIC library here, as compat.vulkan is on macOS: a shared
+            -- link of a C library under mcpp's macOS toolchain fails on
+            -- `std::__1::ios_base::Init::Init()`, and the one-loader-per-
+            -- process argument that makes the Linux build shared has no ICD
+            -- ecosystem to apply to on this platform.
             sources = {
                 "*/loader/linux/icd_linux.c",
                 "*/loader/linux/icd_linux_envvars.c",

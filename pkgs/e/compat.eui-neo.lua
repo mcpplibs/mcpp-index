@@ -103,7 +103,7 @@ package = {
             -- per-version `deps` does not take effect (see the note in
             -- compat.glx-runtime, established the same way).
             deps = {
-                "xim:glib@2.80.0",
+                "xim:glib@2.88.3",
                 runtime = {
                     "xim:zlib", "xim:pcre2", "xim:libffi",
                     "xim:libselinux", "xim:util-linux",
