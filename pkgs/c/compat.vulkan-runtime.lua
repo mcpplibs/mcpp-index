@@ -54,12 +54,61 @@ package = {
 
     xpm = {
         linux = {
+            -- PLATFORM LEVEL, NOT PER VERSION. A `deps` inside a version entry
+            -- parses and is then not applied; compat.glx-runtime records the
+            -- measurement. The cost of that placement is that a consumer still
+            -- pinned to 2026.07.29 or 2026.09.05 also installs these, which is
+            -- a download it will not read and not a failure.
+            --
+            -- These are the packages whose sonames the farm substitutes for a
+            -- host copy, and the PAYLOAD_PACKAGES table below is the reader
+            -- that keeps the two lists honest: a soname it maps to a package
+            -- that is not installed is reported as a declaration that did not
+            -- take effect, rather than silently farmed from the host.
+            --
+            -- Floors, not pins. Every library here is ABI-stable at the soname
+            -- this farm asks for, and a pin would make one patch bump an edit
+            -- in this file.
+            deps = {
+                runtime = {
+                    "xim:zlib@>=1.3", "xim:expat@>=2.6", "xim:libffi@>=3.4",
+                    "xim:elfutils@>=0.19", "xim:libdrm@>=2.4",
+                    "xim:libxcb@>=1.17", "xim:libX11@>=1.8",
+                    "xim:libXau@>=1.0", "xim:libXdmcp@>=1.1",
+                    "xim:libXext@>=1.3", "xim:libxshmfence@>=1.3",
+                    "xim:wayland@>=1.23", "xim:gcc-runtime@>=15",
+                    "xim:ncurses@>=6.5", "xim:zstd@>=1.5", "xim:xz@>=5.8",
+                    "xim:libmd@>=1.2", "xim:libbsd@>=0.12",
+                },
+            },
             -- 2026.09.05: the farm is seeded from the ICD manifests, closes
             -- over what they need, prefers installed payloads over host copies
             -- they cover, and records the surface in HOST-SURFACE.txt. mcpp
             -- identifies an installed package by (name, version), so the new
             -- behaviour needs a new key; the anchor is the same file.
-            ["latest"] = { ref = "2026.09.05" },
+            ["latest"] = { ref = "2026.09.06" },
+            -- 2026.09.06: the payload set is DECLARED here rather than
+            -- discovered. Until this version the substitution pass took a
+            -- payload only when some earlier, unrelated install had already
+            -- put it in the store, so the same package produced a farm of
+            -- twenty payload libraries on a developer machine and a farm of
+            -- one in a fresh subos -- the environment decided, and the report
+            -- read "no installed payload provides this soname" for sonames
+            -- this index does publish. Measured 2026-09-05 in a fresh subos:
+            -- 30 host entries against 8 on the machine that happened to have
+            -- the stack installed.
+            --
+            -- WHAT IS NOT HERE AND WHY. `xim:icu` (78) and `xim:libedit` (0)
+            -- carry different sonames than the ones a host Mesa built against
+            -- Ubuntu 24.04 asks for (`libicuuc.so.74`, `libedit.so.2`); a
+            -- different soname is a different ABI, so those two cannot
+            -- substitute anything here and would only be a download. Same for
+            -- `xim:libllvm` and `xim:libxml2`, whose payloads the symbol test
+            -- rejects (12215 and 195 symbols short of the host copies).
+            ["2026.09.06"] = {
+                url    = "https://raw.githubusercontent.com/KhronosGroup/Vulkan-Loader/vulkan-sdk-1.4.357.0/README.md",
+                sha256 = "21ec0987a05bd680ecd11f8be747e27744d7558f7318736f6cb8a5c5ec1b8ba8",
+            },
             ["2026.09.05"] = {
                 url    = "https://raw.githubusercontent.com/KhronosGroup/Vulkan-Loader/vulkan-sdk-1.4.357.0/README.md",
                 sha256 = "21ec0987a05bd680ecd11f8be747e27744d7558f7318736f6cb8a5c5ec1b8ba8",
@@ -126,6 +175,12 @@ local function candidate_dirs()
     end
     add("/lib/x86_64-linux-gnu")
     add("/usr/lib/x86_64-linux-gnu")
+    -- The same layout on the other Linux architecture this index builds for.
+    -- Absent until 2026.09.06, which made the farm empty on a Debian-family
+    -- aarch64 machine: every candidate directory was an x86_64 one and
+    -- `os.isdir` skipped them all.
+    add("/lib/aarch64-linux-gnu")
+    add("/usr/lib/aarch64-linux-gnu")
     add("/lib64")
     add("/usr/lib64")
     add("/usr/lib")
@@ -163,6 +218,41 @@ local host_vulkan_patterns = {
     "libnvidia*.so.*",
 }
 local never_farm_patterns = { "^libnvidia%-gtk" }
+
+-- THE DECLARATION'S READER. `xpm.linux.deps` above names the packages whose
+-- libraries this farm substitutes; this table says which soname each one is
+-- declared for. When a soname it maps is still taken from the host, the report
+-- says the declaration did not take effect -- which is the only way a drift
+-- between the two lists becomes visible, since a missing dependency otherwise
+-- looks exactly like a machine that has no payload for it.
+local PAYLOAD_PACKAGES = {
+    ["libz.so.1"]             = "xim:zlib",
+    ["libexpat.so.1"]         = "xim:expat",
+    ["libffi.so.8"]           = "xim:libffi",
+    ["libelf.so.1"]           = "xim:elfutils",
+    ["libdrm.so.2"]           = "xim:libdrm",
+    ["libxcb.so.1"]           = "xim:libxcb",
+    ["libxcb-dri2.so.0"]      = "xim:libxcb",
+    ["libxcb-dri3.so.0"]      = "xim:libxcb",
+    ["libxcb-present.so.0"]   = "xim:libxcb",
+    ["libxcb-randr.so.0"]     = "xim:libxcb",
+    ["libxcb-shm.so.0"]       = "xim:libxcb",
+    ["libxcb-sync.so.1"]      = "xim:libxcb",
+    ["libxcb-xfixes.so.0"]    = "xim:libxcb",
+    ["libX11.so.6"]           = "xim:libX11",
+    ["libX11-xcb.so.1"]       = "xim:libX11",
+    ["libXau.so.6"]           = "xim:libXau",
+    ["libXdmcp.so.6"]         = "xim:libXdmcp",
+    ["libXext.so.6"]          = "xim:libXext",
+    ["libxshmfence.so.1"]     = "xim:libxshmfence",
+    ["libwayland-client.so.0"]= "xim:wayland",
+    ["libstdc++.so.6"]        = "xim:gcc-runtime",
+    ["libtinfo.so.6"]         = "xim:ncurses",
+    ["libzstd.so.1"]          = "xim:zstd",
+    ["liblzma.so.5"]          = "xim:xz",
+    ["libmd.so.0"]            = "xim:libmd",
+    ["libbsd.so.0"]           = "xim:libbsd",
+}
 
 local never_farm = {
     ["libc.so.6"] = true, ["libm.so.6"] = true, ["libdl.so.2"] = true,
@@ -472,6 +562,34 @@ local function find_tool(name)
     return nil
 end
 
+-- THE MACHINE THE OBJECT WAS BUILT FOR, from the ELF header (`e_machine`,
+-- two bytes at offset 18 on both little-endian classes this index targets).
+-- The symbol test cannot see this: `nm` reads an x86_64 object on an aarch64
+-- host perfectly well and reports a covering symbol set, so a store that holds
+-- a foreign payload -- which is what an aarch64 machine gets today, since every
+-- Linux payload in this index publishes one x86_64 artifact -- would otherwise
+-- have that payload substituted into the farm and every dlopen would fail with
+-- `wrong ELF class` at run time.
+local function elf_machine(file)
+    local f = io.popen(string.format(
+        [[od -An -tu1 -j18 -N2 %s 2>/dev/null | tr -s " "]], sh_quote(file)))
+    if not f then return nil end
+    local line = (f:read("l") or ""):gsub("^%s+", ""):gsub("%s+$", "")
+    f:close()
+    local lo, hi = line:match("^(%d+) (%d+)$")
+    if not lo then return nil end
+    return tonumber(lo) + tonumber(hi) * 256
+end
+
+-- Both answers are required before the guard fires. An unreadable header --
+-- a dangling farm link, a file the reader cannot open -- is not evidence of a
+-- foreign machine, and reporting it as one would put a wrong reason in the
+-- record; the symbol test below then rejects it for the reason that applies.
+local function machines_differ(a, b)
+    local ma, mb = elf_machine(a), elf_machine(b)
+    return ma ~= nil and mb ~= nil and ma ~= mb
+end
+
 -- The versioned dynamic symbols a library defines, as a set. `name@@VERSION`
 -- for a versioned symbol, so the GLIBCXX and CXXABI nodes of a C++ runtime
 -- take part in the comparison exactly as the loader would apply them.
@@ -526,8 +644,16 @@ local function prefer_payloads(outdir)
             entry.class = "payload"
         else
             local hit = find_in_store(base)
+            local declared = PAYLOAD_PACKAGES[base]
             if not hit then
-                entry.class = "host; no installed payload provides this soname"
+                entry.class = declared
+                    and ("host; " .. declared .. " is declared for this soname "
+                         .. "and is not installed, so the declaration did not "
+                         .. "take effect")
+                    or "host; no installed payload provides this soname"
+            elseif machines_differ(hit, target) then
+                entry.class = string.format(
+                    "host; the payload %s is built for another machine", hit)
             elseif not nm then
                 entry.class = "host; no nm to compare against " .. hit
             else
