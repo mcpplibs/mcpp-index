@@ -1,0 +1,15 @@
+[package]
+name = "opencl-tests"
+version = "0.1.0"
+
+# The loader and, on Linux, the runtime adapter it depends on. The adapter is
+# what lets the loader's dlopen of a host ICD resolve from inside mcpp's own
+# C library; on a runner with no driver it is empty and the loader reports
+# zero platforms. compat.opencl has no windows entry: Windows drivers are
+# enumerated through the registry, which this index does not model yet, so
+# the test compiles to a skip there.
+[target.'cfg(unix)'.dependencies.compat]
+opencl = "2026.05.29"
+
+[target.'cfg(unix)'.build]
+cxxflags = ["-DHAVE_OPENCL_LOADER=1"]
