@@ -77,11 +77,22 @@ package = {
             -- compat.cuda-runtime links, under the same soname, so a program
             -- that has both farms on its path loads it once.
             deps = { "xim:dpcpp@7.1.0", "xim:zlib", "xim:libcuda-host-link" },
-            -- 2026.09.06 is kept and frozen: a consumer already pinning it
-            -- keeps resolving, and it installs the farm it always did. It is
-            -- missing `libcuda.so.1`, which on a machine whose dpcpp payload
-            -- predates the search-path repair is invisible, because the
-            -- adapter then inherits the artifact's path instead.
+            -- 2026.09.06 is kept so a consumer already pinning it keeps
+            -- resolving.
+            --
+            -- WHAT IS FROZEN IS THE ENTRY, NOT THE BEHAVIOUR, and an earlier
+            -- version of this comment got that wrong. There is ONE `install()`
+            -- in this file and it never reads `pkginfo.version()`, so a
+            -- version key selects the anchor URL and nothing else: installing
+            -- 2026.09.06 today builds exactly the farm 2026.09.07 builds,
+            -- driver included. Measured -- a store holding both showed the
+            -- same `libcuda.so.1` under each.
+            --
+            -- That is the intended behaviour for an adapter whose content is
+            -- generated rather than downloaded, and it is worth stating
+            -- because "kept and frozen" reads as a promise about what an old
+            -- pin installs. It is not one. A version here is a coordinate a
+            -- consumer can name, not a snapshot of this recipe.
             ["2026.09.07"] = {
                 url    = "https://raw.githubusercontent.com/intel/llvm/v7.1.0/sycl/LICENSE.TXT",
                 sha256 = "410f3a23b4bbacbd246310d8c014a20af18cfc8c0d740ddf0f673ea20894da9c",
