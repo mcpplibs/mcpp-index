@@ -130,6 +130,7 @@ members = [
     "tests/examples/tinyhttps",
     "tests/examples/usockets",
     "tests/examples/opencl",
+    "tests/examples/sycl-runtime",
     "tests/examples/vulkan",
     "tests/examples/websocket",
     "tests/examples/uwebsockets",
