@@ -4,11 +4,21 @@
 // DT_NEEDED of libcurand.so resolved through the farm compat.curand builds,
 // including the C library stubs that the component's own `RUNPATH = $ORIGIN`
 // would otherwise hide.
+#include <cstdio>
+
+// The adapters under test exist only on Linux, so the assertions do too. The
+// file still compiles everywhere, which is what keeps it from rotting silently
+// on the two platforms that do not exercise it.
+#ifndef __linux__
+int main() {
+    std::printf("not applicable on this platform\n");
+    return 0;
+}
+#else
 #include <curand.h>
 #include <cuda_runtime.h>
 
 #include <cmath>
-#include <cstdio>
 
 static int failures = 0;
 
@@ -59,3 +69,4 @@ int main() {
     curandDestroyGenerator(gen);
     return failures == 0 ? 0 : 1;
 }
+#endif  // __linux__
