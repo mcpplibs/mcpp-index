@@ -171,6 +171,178 @@ local host_vulkan_patterns = {
     "libstdc++.so.*",
 }
 
+-- ⚠️⚠️ THE LIBRARIES THE C RUNTIME OWNS ARE NEVER FARMED FROM THE HOST.
+--
+-- An mcpp artifact runs under mcpp's own glibc, and a second C library reachable
+-- on the same search path is the one failure worse than a missing driver. The
+-- same holds for `libgcc_s`, which the toolchain payload provides, and for
+-- `libvulkan.so.1`, where the whole point is one loader per process.
+local never_farm = {
+    ["libc.so.6"] = true, ["libm.so.6"] = true, ["libdl.so.2"] = true,
+    ["libpthread.so.0"] = true, ["librt.so.1"] = true, ["libresolv.so.2"] = true,
+    ["ld-linux-x86-64.so.2"] = true, ["ld-linux-aarch64.so.1"] = true,
+    ["libgcc_s.so.1"] = true, ["libvulkan.so.1"] = true,
+}
+
+-- ⭐⭐ THE PATTERN LIST NAMES WHAT IS DLOPENED; THIS CLOSES WHAT IT NEEDS.
+--
+-- A hand-written list of transitive dependencies is a list someone has to keep
+-- correct against libraries nobody in this repository builds, and the comment
+-- above already says incomplete is worse than absent. Measured 2026-09-05:
+-- every pattern above matched, `libvulkan_lvp.so` and `libLLVM.so.20.1` were
+-- both in the farm, and the loader still reported
+--
+--   ERROR: libicuuc.so.74: cannot open shared object file
+--   ERROR | DRIVER: loader_icd_scan: Failed loading library associated with
+--                   ICD JSON libvulkan_lvp.so. Ignoring this JSON
+--
+-- so a machine with a software rasterizer installed enumerated no CPU device at
+-- all. LLVM 20 links ICU; nothing in the list said so, and nothing could have
+-- without someone reading LLVM's dependencies by hand.
+--
+-- `ldd` is asked instead, and it answers TRANSITIVELY, which is the property a
+-- list cannot have. Its output feeds only symlink creation, so the farm keeps
+-- the property the pattern list was written for: what `ldd` reports is a
+-- `DT_NEEDED` soname, always versioned, so nothing this pass adds can shadow a
+-- `libfoo.so` the linker resolves.
+--
+-- ⭐ THE SEED IS THE ICD SET, NOT THE FARM. Closing over every file the pattern
+-- list matched pulled 64 libraries here, GTK 2 and GTK 3 among them, because
+-- `libnvidia*.so.*` also matches the driver's settings GUI. Those libraries are
+-- on the consuming binary's runtime path, where a host GTK can shadow an index
+-- package's; a driver the loader will never dlopen has no business putting it
+-- there. The manifests state exactly which libraries the loader loads, so they
+-- are what gets closed over.
+--
+-- ⚠️⚠️ THE `ldd` ON `PATH` IS NOT NECESSARILY THE HOST'S. Under xlings it is the
+-- payload's own, and a private loader's default search path is its build prefix
+-- rather than the host's — measured on one machine, in one shell, seconds apart:
+--
+--   $ ldd /usr/lib/x86_64-linux-gnu/libvulkan_lvp.so
+--   libLLVM.so.20.1 => not found
+--   $ /usr/bin/ldd /usr/lib/x86_64-linux-gnu/libvulkan_lvp.so
+--   libLLVM.so.20.1 => /lib/x86_64-linux-gnu/libLLVM.so.20.1
+--
+-- The first spelling is not an error the pass can detect: every line reads
+-- `not found`, the `=> /path` pattern matches nothing, and the pass reports
+-- closing over zero libraries — the same reading it gives on a machine that
+-- genuinely needs nothing. So the search path is supplied explicitly rather
+-- than inherited, which makes the answer independent of which `ldd` runs.
+local function icd_manifest_dirs()
+    local out, seen = {}, {}
+    local function add(dir)
+        if dir and dir ~= "" and not seen[dir] and os.isdir(dir) then
+            seen[dir] = true
+            table.insert(out, dir)
+        end
+    end
+    -- The loader's own order. `VK_DRIVER_FILES` is deliberately not consulted:
+    -- it overrides the machine's drivers for one run, and this farm is built
+    -- once, at install time, for every run afterwards.
+    local data_home = os.getenv("XDG_DATA_HOME")
+    if data_home and data_home ~= "" then
+        add(path.join(data_home, "vulkan", "icd.d"))
+    elseif os.getenv("HOME") then
+        add(path.join(os.getenv("HOME"), ".local", "share", "vulkan", "icd.d"))
+    end
+    for _, base in ipairs(split_paths(os.getenv("XDG_DATA_DIRS"))) do
+        add(path.join(base, "vulkan", "icd.d"))
+    end
+    add("/usr/local/share/vulkan/icd.d")
+    add("/usr/share/vulkan/icd.d")
+    add("/etc/vulkan/icd.d")
+    return out
+end
+
+-- Every `library_path` an ICD manifest names, resolved the way the loader
+-- resolves it: a path with a separator is relative to the manifest, a bare
+-- soname is searched for.
+local function icd_seed_libraries(dirs)
+    local mdirs = icd_manifest_dirs()
+    if #mdirs == 0 then return {} end
+    local args = {}
+    for _, d in ipairs(mdirs) do table.insert(args, sh_quote(d)) end
+    local f = io.popen(
+        "for d in " .. table.concat(args, " ") .. "; do " ..
+        "for j in \"$d\"/*.json; do [ -e \"$j\" ] || continue; " ..
+        "sed -n 's/.*\"library_path\"[[:space:]]*:[[:space:]]*\"\\([^\"]*\\)\".*/\\1/p' \"$j\" " ..
+        "| head -1 | while read -r v; do printf '%s\\t%s\\n' \"$d\" \"$v\"; done; " ..
+        "done; done")
+    if not f then return {} end
+    local seeds, seen = {}, {}
+    for line in f:lines() do
+        local dir, value = line:match("^([^\t]*)\t(.*)$")
+        if value and value ~= "" then
+            local candidates = {}
+            if value:sub(1, 1) == "/" then
+                table.insert(candidates, value)
+            elseif value:find("/") then
+                table.insert(candidates, path.join(dir, value))
+            else
+                for _, libdir in ipairs(dirs) do
+                    table.insert(candidates, path.join(libdir, value))
+                end
+            end
+            for _, c in ipairs(candidates) do
+                if not seen[c] and os.isfile(c) then
+                    seen[c] = true
+                    table.insert(seeds, c)
+                end
+            end
+        end
+    end
+    f:close()
+    return seeds
+end
+
+local host_prefixes = {"/usr/", "/lib/", "/lib64/", "/opt/"}
+
+local function close_over_needed(outdir, dirs)
+    local seeds = icd_seed_libraries(dirs)
+    if #seeds == 0 then return 0 end
+
+    local accept = {}
+    for _, dir in ipairs(dirs) do accept[dir] = true end
+    local function is_host_library(full)
+        local dir = full:match("^(.*)/[^/]+$")
+        if dir and accept[dir] then return true end
+        for _, prefix in ipairs(host_prefixes) do
+            if full:sub(1, #prefix) == prefix then return true end
+        end
+        -- Anything else is a payload: mcpp's own C library and toolchain live
+        -- under the user's home, and a second copy of either on this path is
+        -- the one failure worse than a missing driver.
+        return false
+    end
+
+    local args = {}
+    for _, seed in ipairs(seeds) do table.insert(args, sh_quote(seed)) end
+    -- One pass suffices: `ldd` reports the whole transitive closure of a file,
+    -- not just its direct `DT_NEEDED` entries.
+    local f = io.popen(string.format(
+        [[for lib in %s; do LD_LIBRARY_PATH=%s ldd "$lib" 2>/dev/null; done ]] ..
+        [[| sed -n 's/.*=> \(\/[^ ]*\).*/\1/p' | sort -u]],
+        table.concat(args, " "), sh_quote(table.concat(dirs, ":"))))
+    if not f then return 0 end
+    local wanted = {}
+    for line in f:lines() do
+        local full = line:gsub("[\r\n]+$", "")
+        if full ~= "" then wanted[#wanted + 1] = full end
+    end
+    f:close()
+
+    local added = 0
+    for _, full in ipairs(wanted) do
+        local base = full:match("([^/]+)$")
+        if base and not never_farm[base] and is_host_library(full)
+           and not os.isfile(path.join(outdir, base)) then
+            os.exec(string.format([[ln -sf "%s" "%s"]], full, path.join(outdir, base)))
+            added = added + 1
+        end
+    end
+    return added
+end
+
 local function link_runtime_libs(outdir)
     os.mkdir(outdir)
     for _, dir in ipairs(candidate_dirs()) do
@@ -182,6 +354,10 @@ local function link_runtime_libs(outdir)
                 "done"
             )
         end
+    end
+    local n = close_over_needed(outdir, candidate_dirs())
+    if n > 0 then
+        log.info("compat.vulkan-runtime: %d transitive libraries closed over", n)
     end
     return true
 end
