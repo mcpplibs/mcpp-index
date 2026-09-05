@@ -28,22 +28,32 @@ static void check(bool ok, const char* what) {
 }
 
 int main() {
-    // The generator is a host-side object; creating one exercises the library
-    // without needing a device, which is what makes this assertion portable.
-    curandGenerator_t gen{};
-    check(curandCreateGenerator(&gen, CURAND_RNG_PSEUDO_DEFAULT) == CURAND_STATUS_SUCCESS,
-          "curandCreateGenerator answers");
-
+    // ⭐ REACHING THIS LINE IS THE ASSERTION THIS MEMBER EXISTS FOR. Every
+    // DT_NEEDED of libcurand.so had to resolve through the farm compat.curand
+    // builds, including the C library stubs that the component's own
+    // `RUNPATH = $ORIGIN` would otherwise hide. That failure happens before
+    // main on every machine, with or without a device.
     int devices = 0;
     const cudaError_t rc = cudaGetDeviceCount(&devices);
     if (rc != cudaSuccess || devices == 0) {
         // Not a failure. A machine with no NVIDIA driver is a legitimate
-        // configuration and every runner in this repository is one; the
-        // library loaded and answered, which is the part this member owns.
-        std::printf("ok: no device on this machine (%s), skipping the device half\n",
+        // configuration and every runner in this repository is one.
+        //
+        // ⚠️ THE DEVICE CHECK COMES FIRST, and that ordering is a correction.
+        // An earlier revision created the generator before asking, on the
+        // theory that a generator is a host-side object. Measured on CI:
+        // `curandCreateGenerator` fails with `CUDA driver version is
+        // insufficient for CUDA runtime version` on a driverless machine, so
+        // the member reported a failure for the one configuration it was
+        // written to tolerate.
+        std::printf("ok: the library loaded and answered; no device here (%s)\n",
                     cudaGetErrorString(rc));
-        return failures == 0 ? 0 : 1;
+        return 0;
     }
+
+    curandGenerator_t gen{};
+    check(curandCreateGenerator(&gen, CURAND_RNG_PSEUDO_DEFAULT) == CURAND_STATUS_SUCCESS,
+          "curandCreateGenerator answers");
 
     float* dev = nullptr;
     check(cudaMalloc(&dev, 4096 * sizeof(float)) == cudaSuccess, "cudaMalloc");
