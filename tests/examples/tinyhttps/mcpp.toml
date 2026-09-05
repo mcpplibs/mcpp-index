@@ -10,4 +10,4 @@ name = "tinyhttps-tests"
 version = "0.1.0"
 
 [dependencies]
-tinyhttps = "0.2.9"
+tinyhttps = "0.3.0"
