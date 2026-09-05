@@ -2,14 +2,17 @@
 -- each member selected by a feature.
 --
 --   [dependencies.mcpp]
---   plugins = { version = "0.1.0", features = ["rules-spirv"], host-module = true }
+--   plugins = { version = "0.1.1", features = ["rules-spirv"], host-module = true }
 --
 --   // build.mcpp
 --   import mcpp;
 --   import mcpp.rules.spirv;
 --
--- Members of 0.1.0: `mcpp.rules.cuda` (feature `rules-cuda`, mcpp >= 2026.9.5.2)
--- and `mcpp.rules.spirv` (feature `rules-spirv`, mcpp >= 2026.9.5.3). The
+-- Members of 0.1.1: `mcpp.rules.cuda` (feature `rules-cuda`, mcpp >= 2026.9.5.2),
+-- `mcpp.rules.spirv` (feature `rules-spirv`, mcpp >= 2026.9.5.3) and
+-- `mcpp.tools.embed` (feature `tools-embed`, mcpp >= 2026.9.5.4, whose fast
+-- path compares a declared file input -- without it an edit to the embedded
+-- data does not reach the binary). The
 -- engine compiles every module interface unit among a host-module package's
 -- feature-resolved sources as a host module of its own (mcpp 2026.9.5.3+),
 -- which is what lets one package carry the collection; a consumer on an older
@@ -33,6 +36,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.1.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.1.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.1.1/mcpp-plugins-0.1.1.tar.gz",
+                },
+                sha256 = "f2c82e72094b64dddb4edee75173851691e52de9680cd2d07bee5b557d805949",
+            },
             ["0.1.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.1.0.tar.gz",
@@ -40,9 +50,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.1.0" },
+            ["latest"] = { ref = "0.1.1" },
         },
         macosx = {
+            ["0.1.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.1.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.1.1/mcpp-plugins-0.1.1.tar.gz",
+                },
+                sha256 = "f2c82e72094b64dddb4edee75173851691e52de9680cd2d07bee5b557d805949",
+            },
             ["0.1.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.1.0.tar.gz",
@@ -50,9 +67,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.1.0" },
+            ["latest"] = { ref = "0.1.1" },
         },
         windows = {
+            ["0.1.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.1.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.1.1/mcpp-plugins-0.1.1.tar.gz",
+                },
+                sha256 = "f2c82e72094b64dddb4edee75173851691e52de9680cd2d07bee5b557d805949",
+            },
             ["0.1.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.1.0.tar.gz",
@@ -60,7 +84,7 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.1.0" },
+            ["latest"] = { ref = "0.1.1" },
         },
     },
 
