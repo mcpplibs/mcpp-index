@@ -39,7 +39,14 @@ package = {
 
     xpm = {
         linux = {
-            ["latest"] = { ref = "2026.09.05" },
+            ["latest"] = { ref = "2026.09.07" },
+            -- 2026.09.07: a soname carried by more than one installed payload
+            -- is decided by symbol coverage rather than by which store path
+            -- sorts last, and the ELF machine guard refuses a foreign payload.
+            ["2026.09.07"] = {
+                url    = "https://raw.githubusercontent.com/KhronosGroup/OpenCL-ICD-Loader/v2026.05.29/README.md",
+                sha256 = "b332515b9a0bc266ad94fe6e951f0ef7a988ccb9e933068faf0fd8ba3cfde805",
+            },
             ["2026.09.05"] = {
                 -- A stable, tiny anchor so the xpm entry is well-formed; the
                 -- package's content is the farm install() builds from the host.
@@ -218,17 +225,28 @@ local function close_over_needed(outdir, seeds, dirs)
 end
 
 local function find_in_store(soname)
+    -- Every copy, not the last one sorted. A driver payload can carry its own
+    -- copy of a library another package owns -- `xim:mesa-lavapipe` ships one
+    -- of nearly everything beside its driver -- and picking by store-path
+    -- order chose that copy over the dedicated package's. compat.vulkan-runtime
+    -- carries the same lookup and the measurement behind it.
+    local out, seen = {}, {}
     for _, root in ipairs(xim_store_roots()) do
         local f = io.popen(string.format(
-            [[ls -1 "%s"/xim-x-*/*/lib/%s "%s"/xim-x-*/*/lib64/%s 2>/dev/null | sort -V | tail -1]],
+            [[ls -1 "%s"/xim-x-*/*/lib/%s "%s"/xim-x-*/*/lib64/%s 2>/dev/null | sort -V]],
             root, soname, root, soname))
         if f then
-            local hit = (f:read("l") or ""):gsub("[\r\n]+$", "")
+            for line in f:lines() do
+                local hit = line:gsub("[\r\n]+$", "")
+                if hit ~= "" and not seen[hit] then
+                    seen[hit] = true
+                    out[#out + 1] = hit
+                end
+            end
             f:close()
-            if hit ~= "" then return hit end
         end
     end
-    return nil
+    return out
 end
 
 local function find_tool(name)
@@ -324,34 +342,41 @@ local function prefer_payloads(outdir, seeds)
         elseif is_store_path(target) then
             entry.class = "payload"
         else
-            local hit = find_in_store(base)
-            if not hit then
+            local candidates = find_in_store(base)
+            if #candidates == 0 then
                 entry.class = "host; no installed payload provides this soname"
-            elseif machines_differ(hit, target) then
-                entry.class = string.format(
-                    "host; the payload %s is built for another machine", hit)
             elseif not nm then
-                entry.class = "host; no nm to compare against " .. hit
+                entry.class = "host; no nm to compare against " .. candidates[1]
             else
                 local host_syms = symbol_set(nm, target)
-                local pay_syms  = symbol_set(nm, hit)
-                if not host_syms or not pay_syms then
-                    entry.class = "host; symbol tables unreadable, not compared against " .. hit
-                else
-                    local missing = 0
-                    for sym in pairs(host_syms) do
-                        if not pay_syms[sym] then missing = missing + 1 end
-                    end
-                    if missing == 0 then
-                        os.exec(string.format([[ln -sf "%s" "%s"]], hit, link))
-                        entry.target = hit
-                        entry.class  = "payload; its symbol set covers the host copy " .. target
-                        moved = moved + 1
+                local why = nil
+                for _, hit in ipairs(candidates) do
+                  if machines_differ(hit, target) then
+                    why = string.format(
+                        "host; the payload %s is built for another machine", hit)
+                  else
+                    local pay_syms  = symbol_set(nm, hit)
+                    if not host_syms or not pay_syms then
+                        why = "host; symbol tables unreadable, not compared against " .. hit
                     else
-                        entry.class = string.format(
+                        local missing = 0
+                        for sym in pairs(host_syms) do
+                            if not pay_syms[sym] then missing = missing + 1 end
+                        end
+                        if missing == 0 then
+                            os.exec(string.format([[ln -sf "%s" "%s"]], hit, link))
+                            entry.target = hit
+                            entry.class  = "payload; its symbol set covers the host copy " .. target
+                            moved = moved + 1
+                            why = nil
+                            break
+                        end
+                        why = string.format(
                             "host; payload %s lacks %d symbol(s) the host copy defines", hit, missing)
                     end
+                  end
                 end
+                if why then entry.class = why end
             end
         end
         classes[base] = entry
