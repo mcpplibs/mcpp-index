@@ -57,7 +57,13 @@ package = {
             -- The install-time edge. Materialised when THIS package installs,
             -- which is what makes the payload's directory exist by the time
             -- install() below reads it.
-            deps = { "xim:dpcpp@7.1.0" },
+            -- `xim:zlib` is not decoration. `libur_loader.so.0` needs
+            -- `libz.so.1`, which the payload does not carry, and the farm's
+            -- RUNPATH is the only place the loader looks for it. On a
+            -- developer machine that had zlib installed for other reasons the
+            -- omission was invisible; a fresh runner reported
+            -- `FAIL libsycl.so.9: libz.so.1: cannot open shared object file`.
+            deps = { "xim:dpcpp@7.1.0", "xim:zlib" },
             ["2026.09.06"] = {
                 -- Nothing downloaded matters: the content is the set of
                 -- symlinks install() creates. A stable, tiny anchor keeps the
@@ -177,6 +183,9 @@ local function farm_libc_stubs(dst, payload)
     local wanted = {
         { pkg = "xim-x-glibc",       names = { "librt.so.1", "libpthread.so.0", "libdl.so.2" } },
         { pkg = "xim-x-gcc-runtime", names = { "libstdc++.so.6", "libgcc_s.so.1" } },
+        -- zlib ships under lib/ rather than lib64/, so the search below tries
+        -- both rather than assuming one layout per package.
+        { pkg = "xim-x-zlib",        names = { "libz.so.1" } },
     }
     local found = 0
     for _, group in ipairs(wanted) do
@@ -184,8 +193,9 @@ local function farm_libc_stubs(dst, payload)
         if not os.isfile(path.join(dst, name)) then
             for _, root in ipairs(roots) do
                 local f = io.popen(string.format(
-                    [[ls -1d "%s"/%s/*/lib64/%s 2>/dev/null | sort -V | tail -1]],
-                    root, group.pkg, name))
+                    [[ls -1d "%s"/%s/*/lib64/%s "%s"/%s/*/lib/%s 2>/dev/null ]]
+                    .. [[| sort -V | tail -1]],
+                    root, group.pkg, name, root, group.pkg, name))
                 local hit = f and (f:read("l") or "") or ""
                 if f then f:close() end
                 if hit ~= "" then
