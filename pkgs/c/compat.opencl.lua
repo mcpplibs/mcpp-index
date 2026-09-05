@@ -65,7 +65,10 @@ package = {
         language     = "c++23",
         import_std   = false,
         c_standard   = "c11",
-        include_dirs = { "*/loader", "mcpp_generated" },
+        -- `loader/` for the loader's own headers, `include/` for
+        -- `cl_khr_icd2.h`, which upstream keeps beside the public headers it
+        -- does not ship (the ICD2 dispatch table is loader-private).
+        include_dirs = { "*/loader", "*/include", "mcpp_generated" },
 
         generated_files = {
             -- Upstream's `icd_cmake_config.h.in` is two `#cmakedefine` lines.

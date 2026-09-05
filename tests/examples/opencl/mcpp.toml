@@ -1,0 +1,9 @@
+[package]
+name = "opencl-tests"
+version = "0.1.0"
+
+# The loader and the runtime adapter. The adapter is what lets the loader's
+# dlopen of a host ICD resolve from inside mcpp's own C library; on a runner
+# with no driver it is empty, and the loader then reports zero platforms.
+[dependencies.compat]
+opencl = "2026.05.29"
