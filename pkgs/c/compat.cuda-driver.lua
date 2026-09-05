@@ -1,22 +1,17 @@
--- ⚠️ FROZEN — this entry receives no new versions.
---
--- The package moved to `compat:cuda-driver` (pkgs/c/compat.cuda-driver.lua).
--- The name was wrong rather than merely unfashionable: in NVIDIA's vocabulary
--- "CUDA Runtime" is `libcudart`, a redistributable library that a project
--- links and that `xim:cuda-cudart` already delivers, while what this package
--- farms is `libcuda.so.1`, the driver's userspace library. Its own
--- `capabilities` and `provides` said `cuda.driver` from the first version.
---
--- Kept rather than deleted: consumers already writing
---
---     [dependencies.compat]
---     cuda-runtime = "2026.09.05"
---
--- keep resolving to this, and it installs the same farm it always did. To
--- migrate, change the key to `cuda-driver`.
---
--- compat.cuda-runtime — put the host NVIDIA driver on an mcpp binary's
+-- compat.cuda-driver — put the host NVIDIA driver on an mcpp binary's
 -- runtime search path.
+--
+-- THE NAME IS THE CORRECTION. This package shipped once as
+-- `compat.cuda-runtime`, and in NVIDIA's vocabulary "CUDA Runtime" is
+-- `libcudart` — a redistributable library that a project links, and that
+-- `xim:cuda-cudart` already delivers as a payload. What this package farms is
+-- `libcuda.so.1`, the DRIVER's userspace library, which is neither
+-- redistributable nor a payload. Its own `capabilities` and `provides` said
+-- `cuda.driver` from the first version; only the package name disagreed.
+--
+-- `compat.cuda-runtime@2026.09.05` still resolves and still installs the same
+-- farm, so nothing that already depends on it breaks. New versions appear only
+-- here.
 --
 -- WHAT IT FIXES. An mcpp-built program runs under mcpp's OWN glibc
 --
@@ -67,10 +62,17 @@
 package = {
     spec        = "1",
     namespace   = "compat",
-    name        = "cuda-runtime",
-    description = "Host NVIDIA driver runtime adapter for mcpp Linux applications",
+    name        = "cuda-driver",
+    description = "Host NVIDIA driver adapter: reach libcuda.so.1 from an mcpp binary",
     licenses    = {"Apache-2.0"},  -- the recipe; libcuda.so.1 itself is NVIDIA's
-    repo        = "https://github.com/openxlings/xim-pkgindex",
+    -- The upstream of the thing being ADAPTED, as the two sibling adapters do
+    -- (compat.vulkan-runtime names Vulkan-Loader, compat.glx-runtime names
+    -- OpenGL-Registry). The earlier value named `openxlings/xim-pkgindex`,
+    -- which is where the sentinel package that finds the driver lives, not the
+    -- driver. NVIDIA publishes no repository for the userspace driver; the
+    -- kernel modules it is versioned in lockstep with are the closest upstream
+    -- that exists and can be checked.
+    repo        = "https://github.com/NVIDIA/open-gpu-kernel-modules",
     type        = "package",
 
     xpm = {
@@ -94,11 +96,11 @@ package = {
         language     = "c++23",
         import_std   = false,
         c_standard   = "c11",
-        sources      = { "mcpp_generated/cuda_runtime_empty.c" },
-        targets      = { ["cuda_runtime"] = { kind = "lib" } },
+        sources      = { "mcpp_generated/cuda_driver_empty.c" },
+        targets      = { ["cuda_driver"] = { kind = "lib" } },
         deps         = {},
         runtime = {
-            library_dirs = { "mcpp_generated/cuda_runtime/lib" },
+            library_dirs = { "mcpp_generated/cuda_driver/lib" },
             capabilities = { "cuda.driver" },
             provides     = { "cuda.driver" },
         },
@@ -136,10 +138,10 @@ function install()
 
     local generated = path.join(pkginfo.install_dir(), "mcpp_generated")
     os.mkdir(generated)
-    io.writefile(path.join(generated, "cuda_runtime_empty.c"),
-        "int mcpp_compat_cuda_runtime_anchor(void) { return 0; }\n")
+    io.writefile(path.join(generated, "cuda_driver_empty.c"),
+        "int mcpp_compat_cuda_driver_anchor(void) { return 0; }\n")
 
-    local outdir = path.join(generated, "cuda_runtime", "lib")
+    local outdir = path.join(generated, "cuda_driver", "lib")
     os.mkdir(outdir)
 
     local src = sentinel_dir()
@@ -147,7 +149,7 @@ function install()
         -- Reported, not fatal. The farm is empty, the link still succeeds, and
         -- a program that needs a device says so itself -- which is the same
         -- answer a machine with no driver gives.
-        log.warn("compat.cuda-runtime: libcuda-host-link not found; "
+        log.warn("compat.cuda-driver: libcuda-host-link not found; "
                  .. "the runtime library directory will be empty")
         return true
     end
