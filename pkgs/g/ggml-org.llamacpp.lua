@@ -24,18 +24,39 @@ package = {
 
     xpm = {
         linux = {
+            ["b10069.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/llama.cpp-m/archive/refs/tags/b10069.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/llamacpp/releases/download/b10069.1/llamacpp-b10069.1.tar.gz",
+                },
+                sha256 = "4f30c253a7008f82e5bba9d8f894db660e3ebfbc18e2ee745d13c85b7332bbf5",
+            },
             ["b10069"] = {
                 url = "https://github.com/mcpplibs/llama.cpp-m/archive/refs/tags/b10069.tar.gz",
                 sha256 = "be0b0deeb31136ea9cf0ba61eda1fb7baf8795a6579494a0991afd2323213e0b",
             },
         },
         macosx = {
+            ["b10069.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/llama.cpp-m/archive/refs/tags/b10069.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/llamacpp/releases/download/b10069.1/llamacpp-b10069.1.tar.gz",
+                },
+                sha256 = "4f30c253a7008f82e5bba9d8f894db660e3ebfbc18e2ee745d13c85b7332bbf5",
+            },
             ["b10069"] = {
                 url = "https://github.com/mcpplibs/llama.cpp-m/archive/refs/tags/b10069.tar.gz",
                 sha256 = "be0b0deeb31136ea9cf0ba61eda1fb7baf8795a6579494a0991afd2323213e0b",
             },
         },
         windows = {
+            ["b10069.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/llama.cpp-m/archive/refs/tags/b10069.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/llamacpp/releases/download/b10069.1/llamacpp-b10069.1.tar.gz",
+                },
+                sha256 = "4f30c253a7008f82e5bba9d8f894db660e3ebfbc18e2ee745d13c85b7332bbf5",
+            },
             ["b10069"] = {
                 url = "https://github.com/mcpplibs/llama.cpp-m/archive/refs/tags/b10069.tar.gz",
                 sha256 = "be0b0deeb31136ea9cf0ba61eda1fb7baf8795a6579494a0991afd2323213e0b",

@@ -7,4 +7,4 @@ name    = "llamacpp-metal-tests"
 version = "0.1.0"
 
 [target.'cfg(macos)'.dependencies.ggml-org]
-llamacpp = { version = "b10069", features = ["backend-metal"] }
+llamacpp = { version = "b10069.1", features = ["backend-metal"] }
