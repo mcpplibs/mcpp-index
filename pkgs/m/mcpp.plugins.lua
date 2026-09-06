@@ -2,13 +2,13 @@
 -- each member selected by a feature.
 --
 --   [dependencies.mcpp]
---   plugins = { version = "0.2.1", features = ["rules-spirv"], host-module = true }
+--   plugins = { version = "0.2.2", features = ["rules-spirv"], host-module = true }
 --
 --   // build.mcpp
 --   import mcpp;
 --   import mcpp.rules.spirv;
 --
--- Members of 0.2.1, with the mcpp release each relies on:
+-- Members of 0.2.2, with the mcpp release each relies on:
 --
 --   mcpp.rules.cuda   `rules-cuda`   >= 2026.9.5.2
 --   mcpp.rules.spirv  `rules-spirv`  >= 2026.9.5.3; since 0.2.0 it drives glslc
@@ -39,6 +39,20 @@
 --                                    the runtime binding's choice and differs
 --                                    between a developer machine and a runner
 --
+-- 0.2.2 changes every rule at once and changes none of the floors. Each rule
+-- now takes only the device sources whose EXTENSION it claims -- `.cu`,
+-- `.hip`, `.sycl`, the shader stages -- instead of the whole of
+-- `mcpp::device_sources()`, which is the package's set and not one rule's
+-- share of it. Taking all of it is right for exactly as long as a build has one
+-- rule in it; with two, measured, the CUDA rule compiled a `.comp` AS CUDA and
+-- produced an object while the shader rule failed on the `.cu`. A rule whose
+-- backend the build does not name now also returns without complaint, which is
+-- what lets a build program call every rule it imports unconditionally.
+--
+-- No floor moves, because none of that needs a newer engine. mcpp 2026.9.6.5
+-- adds the engine's half -- a device source that reached no action is refused,
+-- naming the file -- but a rule package does not require it to work.
+--
 -- The floor recorded for this package is the HIGHEST of those, so it is the
 -- collection's floor rather than any one feature's: a project on 2026.9.5.4
 -- that wants only `rules-cuda` is refused by it. Splitting the package per
@@ -67,6 +81,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.2.2"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.2.2.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.2.2/mcpp-plugins-0.2.2.tar.gz",
+                },
+                sha256 = "7cffa97b13f2eda3cdb8474f13fc257f01cd56d5bdc4f7cf31a0cd25e10b9844",
+            },
             ["0.2.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.2.1.tar.gz",
@@ -95,9 +116,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.2.1" },
+            ["latest"] = { ref = "0.2.2" },
         },
         macosx = {
+            ["0.2.2"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.2.2.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.2.2/mcpp-plugins-0.2.2.tar.gz",
+                },
+                sha256 = "7cffa97b13f2eda3cdb8474f13fc257f01cd56d5bdc4f7cf31a0cd25e10b9844",
+            },
             ["0.2.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.2.1.tar.gz",
@@ -126,9 +154,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.2.1" },
+            ["latest"] = { ref = "0.2.2" },
         },
         windows = {
+            ["0.2.2"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.2.2.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.2.2/mcpp-plugins-0.2.2.tar.gz",
+                },
+                sha256 = "7cffa97b13f2eda3cdb8474f13fc257f01cd56d5bdc4f7cf31a0cd25e10b9844",
+            },
             ["0.2.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.2.1.tar.gz",
@@ -157,7 +192,7 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.2.1" },
+            ["latest"] = { ref = "0.2.2" },
         },
     },
 
