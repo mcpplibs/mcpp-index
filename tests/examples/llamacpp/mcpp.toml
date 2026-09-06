@@ -7,10 +7,10 @@ name    = "llamacpp-tests"
 version = "0.1.0"
 
 [target.'cfg(linux)'.dependencies.ggml-org]
-llamacpp = "b10069"
+llamacpp = "b10069.2"
 
 [target.'cfg(macos)'.dependencies.ggml-org]
-llamacpp = "b10069"
+llamacpp = "b10069.2"
 
 [target.'cfg(windows)'.dependencies.ggml-org]
-llamacpp = "b10069"
+llamacpp = "b10069.2"

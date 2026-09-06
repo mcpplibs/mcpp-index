@@ -163,7 +163,35 @@ env:
   #   - mcpp#405 依赖 BMI 缓存命中时,被恢复的包传递依赖的 `std` 没进构建图 ——
   #     **每个图形项目的第二次构建必挂**(消费方自己不 `import std` 时现形)。
   #   - mcpp#407 `mcpp build` 会重放 `mcpp test` 留下的构建图。
-  MCPP_VERSION: "2026.8.27.2"
+  #
+  # ── 2026-09-06: raised 2026.8.27.2 -> 2026.9.6.3 ──────────────────────────
+  #
+  # The pin had drifted about ten releases behind, so this index was validated
+  # against an engine no user runs. `llamacpp@b10069.2` made the drift visible
+  # rather than causing it: its build program calls `mcpp::toolchain_sysroot()`
+  # and `mcpp::toolchain_binutils_dir()` (2026.9.5.2+) to hand the ecosystem C
+  # library to the second compiler it drives, and `mcpp::cxx_stdlib()`
+  # (2026.9.6.3) to refuse a libc++ toolchain by name. Under the old pin the
+  # workspace members could not compile it at all. A package whose build program
+  # uses a current engine API is not a defect; a CI that cannot run current
+  # engines is.
+  #
+  # `index.toml` min_mcpp deliberately does NOT move with this. The floor states
+  # the oldest mcpp able to RESOLVE every descriptor -- descriptor grammar --
+  # and every descriptor here parses under both versions. A client on
+  # 2026.8.27.2 keeps the whole index; only `llamacpp@b10069.1` and `.2`, whose
+  # build program needs the newer accessors, are out of reach for it, and
+  # `b10069` remains published for exactly that case. Raising the floor instead
+  # would refuse the index to that client entirely, which is the failure mode
+  # `index-floor-must-degrade` names: the index is data, mcpp is the program,
+  # and publishing data must not invalidate the program.
+  #
+  # THE COST IS PAID ONCE PER MOVE, AND IT IS LARGE: the members' caches key on
+  # `MCPP_VERSION`, so the first run after this line changes rebuilds every
+  # member on every platform. Measured: twelve workspace shards, all still cold
+  # after fifty minutes. Batch descriptor changes that need a newer engine into
+  # ONE pin move rather than several.
+  MCPP_VERSION: "2026.9.6.3"
 
 jobs:
   lint:
@@ -651,13 +679,54 @@ jobs:
           # answer and leaves 16 minutes for a cold cache; 5 is there if that
           # stops being enough.
           #
+          # SUPERSEDED 2026-09-06: it stopped being enough. The table is now
+          # 23925s rather than 15891s, so the paragraph above describes a
+          # measurement that no longer holds; see the dated block below the
+          # concurrency note for what replaced it.
+          #
           # This does cross the concurrency line the old comment drew: with two
           # toolchain legs linux now emits 8 jobs against a measured runner
           # concurrency of 3, so shards queue. Queuing is the right trade —
           # back-to-back shards still finish, a shard over the cap does not.
-          ln=$(shards_for linux 4)
+          # ── 2026-09-06: linux 4 -> 6, windows 2 -> 5 ────────────────────
+          #
+          # The caps were the binding constraint again, and the table has grown
+          # about 50% since they were set. Measured with `plan_shards.lua` on
+          # this tree: linux 23925s, macos 16676s, windows 18435s, so the
+          # formula asks for 6 / 4 / 5 and was being clamped to 4 / 2 / 2.
+          # Windows at 18435s over two shards is roughly 150 minutes a shard,
+          # over the 90-minute job cap before a cold cache is even considered.
+          #
+          # Observed, not predicted. On the 2026.9.6.3 pin move (#361) three
+          # shards were cancelled at exactly 90 minutes: `linux default 0/4`,
+          # `linux default 3/4` and `windows default 0/2`. The two linux ones
+          # passed on a re-run against the warm registry cache; the Windows one
+          # timed out AGAIN at 1h30m13s with the cache restored, because the
+          # pin change invalidates every MEMBER build and that shard carries
+          # godot-cpp-m twice (9.5 and 10 minutes) plus opencv.
+          #
+          # macos stays at 2. It has never been cancelled, so raising it would
+          # be a prediction rather than a measurement; the formula's 4 is there
+          # the day it is.
+          ln=$(shards_for linux 6)
           mn=$(shards_for macos 2)
-          wn=$(shards_for windows 2)
+          wn=$(shards_for windows 5)
+          # THE TWO LINUX LEGS ARE NOT THE SAME COST, AND THE PLANNER CANNOT
+          # SEE THAT. `plan_shards.lua` takes a PLATFORM and reads one timing
+          # table; it has no toolchain dimension, so `linux default` and
+          # `linux llvm` receive an identical split of an identical estimate.
+          # They are not identical work: the llvm leg resolves a different
+          # compiler with no sysroot, and it is the slower of the two.
+          #
+          # Measured on this PR: with both legs at 6, every `linux default`
+          # shard finished and `linux llvm 5/6` was cancelled at 1h30m16s. The
+          # split was right for the leg the table was measured on and wrong for
+          # the other one.
+          #
+          # Giving llvm its own count is the smallest correct fix. Teaching the
+          # planner about toolchains is the larger one, and it needs a timing
+          # table per leg that CI does not produce yet.
+          lln=$(( ln + 3 ))
           {
             printf '{"include":['
             # linux runs TWICE: once on mcpp's default toolchain and once on
@@ -678,7 +747,7 @@ jobs:
             # That is the price of the coverage; the levers if it hurts are
             # in the shards_for comment above.
             emit linux   ubuntu-latest  linux-x86_64   tar.gz bin/mcpp     registry/bin/xlings     default "$ln"
-            emit linux   ubuntu-latest  linux-x86_64   tar.gz bin/mcpp     registry/bin/xlings     llvm    "$ln"
+            emit linux   ubuntu-latest  linux-x86_64   tar.gz bin/mcpp     registry/bin/xlings     llvm    "$lln"
             emit macos   macos-15       macosx-arm64   tar.gz bin/mcpp     registry/bin/xlings     default "$mn"
             emit windows windows-latest windows-x86_64 zip    bin/mcpp.exe registry/bin/xlings.exe default "$wn"
             printf ']}'
