@@ -1,0 +1,6 @@
+[package]
+name = "spirv-headers-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+spirv-headers = "1.4.357.0"
