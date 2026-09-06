@@ -679,13 +679,38 @@ jobs:
           # answer and leaves 16 minutes for a cold cache; 5 is there if that
           # stops being enough.
           #
+          # SUPERSEDED 2026-09-06: it stopped being enough. The table is now
+          # 23925s rather than 15891s, so the paragraph above describes a
+          # measurement that no longer holds; see the dated block below the
+          # concurrency note for what replaced it.
+          #
           # This does cross the concurrency line the old comment drew: with two
           # toolchain legs linux now emits 8 jobs against a measured runner
           # concurrency of 3, so shards queue. Queuing is the right trade —
           # back-to-back shards still finish, a shard over the cap does not.
-          ln=$(shards_for linux 4)
+          # ── 2026-09-06: linux 4 -> 6, windows 2 -> 5 ────────────────────
+          #
+          # The caps were the binding constraint again, and the table has grown
+          # about 50% since they were set. Measured with `plan_shards.lua` on
+          # this tree: linux 23925s, macos 16676s, windows 18435s, so the
+          # formula asks for 6 / 4 / 5 and was being clamped to 4 / 2 / 2.
+          # Windows at 18435s over two shards is roughly 150 minutes a shard,
+          # over the 90-minute job cap before a cold cache is even considered.
+          #
+          # Observed, not predicted. On the 2026.9.6.3 pin move (#361) three
+          # shards were cancelled at exactly 90 minutes: `linux default 0/4`,
+          # `linux default 3/4` and `windows default 0/2`. The two linux ones
+          # passed on a re-run against the warm registry cache; the Windows one
+          # timed out AGAIN at 1h30m13s with the cache restored, because the
+          # pin change invalidates every MEMBER build and that shard carries
+          # godot-cpp-m twice (9.5 and 10 minutes) plus opencv.
+          #
+          # macos stays at 2. It has never been cancelled, so raising it would
+          # be a prediction rather than a measurement; the formula's 4 is there
+          # the day it is.
+          ln=$(shards_for linux 6)
           mn=$(shards_for macos 2)
-          wn=$(shards_for windows 2)
+          wn=$(shards_for windows 5)
           {
             printf '{"include":['
             # linux runs TWICE: once on mcpp's default toolchain and once on
