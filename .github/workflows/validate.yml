@@ -711,6 +711,22 @@ jobs:
           ln=$(shards_for linux 6)
           mn=$(shards_for macos 2)
           wn=$(shards_for windows 5)
+          # THE TWO LINUX LEGS ARE NOT THE SAME COST, AND THE PLANNER CANNOT
+          # SEE THAT. `plan_shards.lua` takes a PLATFORM and reads one timing
+          # table; it has no toolchain dimension, so `linux default` and
+          # `linux llvm` receive an identical split of an identical estimate.
+          # They are not identical work: the llvm leg resolves a different
+          # compiler with no sysroot, and it is the slower of the two.
+          #
+          # Measured on this PR: with both legs at 6, every `linux default`
+          # shard finished and `linux llvm 5/6` was cancelled at 1h30m16s. The
+          # split was right for the leg the table was measured on and wrong for
+          # the other one.
+          #
+          # Giving llvm its own count is the smallest correct fix. Teaching the
+          # planner about toolchains is the larger one, and it needs a timing
+          # table per leg that CI does not produce yet.
+          lln=$(( ln + 3 ))
           {
             printf '{"include":['
             # linux runs TWICE: once on mcpp's default toolchain and once on
@@ -731,7 +747,7 @@ jobs:
             # That is the price of the coverage; the levers if it hurts are
             # in the shards_for comment above.
             emit linux   ubuntu-latest  linux-x86_64   tar.gz bin/mcpp     registry/bin/xlings     default "$ln"
-            emit linux   ubuntu-latest  linux-x86_64   tar.gz bin/mcpp     registry/bin/xlings     llvm    "$ln"
+            emit linux   ubuntu-latest  linux-x86_64   tar.gz bin/mcpp     registry/bin/xlings     llvm    "$lln"
             emit macos   macos-15       macosx-arm64   tar.gz bin/mcpp     registry/bin/xlings     default "$mn"
             emit windows windows-latest windows-x86_64 zip    bin/mcpp.exe registry/bin/xlings.exe default "$wn"
             printf ']}'
