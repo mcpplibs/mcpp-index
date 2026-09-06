@@ -24,26 +24,27 @@ package = {
 
     xpm = {
         linux = {
-            -- b10069.1 ADDS `backend-vulkan`, AND ITS BUILD PROGRAM NEEDS A NEWER
-            -- mcpp THAN THIS INDEX'S CI PINS. It calls `mcpp::toolchain_sysroot()`
-            -- and `mcpp::toolchain_binutils_dir()` (mcpp 2026.9.5.2+) to tell the
-            -- shader generator's compiler where the ecosystem's C library is;
-            -- without them it reads the host's, which is the dependency this
-            -- ecosystem removes. On an older mcpp the build program does not
-            -- compile, and the error names the function rather than the version --
-            -- a qualified name that does not exist is ill-formed, not `false`, so
-            -- no package can probe for it (mcpp docs/07).
+            -- b10069.1 ADDS `backend-vulkan`, AND ITS BUILD PROGRAM NEEDS mcpp
+            -- 2026.9.5.2+. It calls `mcpp::toolchain_sysroot()` and
+            -- `mcpp::toolchain_binutils_dir()` to tell the shader generator's
+            -- compiler where the ecosystem's C library is; without them that
+            -- compiler reads the host's, which is the dependency this ecosystem
+            -- removes. On an older mcpp the build program does not compile, and
+            -- the error names the function rather than the version -- a qualified
+            -- name that does not exist is ill-formed, not `false`, so no package
+            -- can probe for it (mcpp docs/07).
             --
-            -- The workspace members therefore stay on `b10069`: this index's CI
-            -- pins 2026.8.27.2, and what it can build is what builds for users of
-            -- that version. The new version's build is verified where it belongs,
-            -- in llama.cpp-m's own CI, which pins 2026.9.6.2 and runs the backend
-            -- on a software Vulkan device with no GPU.
+            -- This entry is what raised the CI pin to 2026.9.6.2 (validate.yml).
+            -- The pin had drifted about ten releases behind, so it was not this
+            -- package that outran the index; the index had stopped following the
+            -- engine. The workspace members build `b10069.1` under the new pin.
             --
-            -- `min_mcpp` is NOT the lever for this. It states the oldest mcpp that
-            -- can RESOLVE every descriptor, and this descriptor uses no new
-            -- grammar; raising it would brick clients over a build-program API
-            -- they may never reach.
+            -- `min_mcpp` is NOT the lever for this, and does not move. It states
+            -- the oldest mcpp that can RESOLVE every descriptor, and this
+            -- descriptor uses no new grammar. A client on the floor keeps the
+            -- whole index and keeps `b10069`, which stays published for exactly
+            -- that case; raising the floor would refuse the index outright over a
+            -- build-program API such a client may never reach.
             ["b10069.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/llama.cpp-m/archive/refs/tags/b10069.1.tar.gz",
