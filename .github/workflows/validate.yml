@@ -163,7 +163,35 @@ env:
   #   - mcpp#405 依赖 BMI 缓存命中时,被恢复的包传递依赖的 `std` 没进构建图 ——
   #     **每个图形项目的第二次构建必挂**(消费方自己不 `import std` 时现形)。
   #   - mcpp#407 `mcpp build` 会重放 `mcpp test` 留下的构建图。
-  MCPP_VERSION: "2026.8.27.2"
+  #
+  # ── 2026-09-06: raised 2026.8.27.2 -> 2026.9.6.3 ──────────────────────────
+  #
+  # The pin had drifted about ten releases behind, so this index was validated
+  # against an engine no user runs. `llamacpp@b10069.2` made the drift visible
+  # rather than causing it: its build program calls `mcpp::toolchain_sysroot()`
+  # and `mcpp::toolchain_binutils_dir()` (2026.9.5.2+) to hand the ecosystem C
+  # library to the second compiler it drives, and `mcpp::cxx_stdlib()`
+  # (2026.9.6.3) to refuse a libc++ toolchain by name. Under the old pin the
+  # workspace members could not compile it at all. A package whose build program
+  # uses a current engine API is not a defect; a CI that cannot run current
+  # engines is.
+  #
+  # `index.toml` min_mcpp deliberately does NOT move with this. The floor states
+  # the oldest mcpp able to RESOLVE every descriptor -- descriptor grammar --
+  # and every descriptor here parses under both versions. A client on
+  # 2026.8.27.2 keeps the whole index; only `llamacpp@b10069.1` and `.2`, whose
+  # build program needs the newer accessors, are out of reach for it, and
+  # `b10069` remains published for exactly that case. Raising the floor instead
+  # would refuse the index to that client entirely, which is the failure mode
+  # `index-floor-must-degrade` names: the index is data, mcpp is the program,
+  # and publishing data must not invalidate the program.
+  #
+  # THE COST IS PAID ONCE PER MOVE, AND IT IS LARGE: the members' caches key on
+  # `MCPP_VERSION`, so the first run after this line changes rebuilds every
+  # member on every platform. Measured: twelve workspace shards, all still cold
+  # after fifty minutes. Batch descriptor changes that need a newer engine into
+  # ONE pin move rather than several.
+  MCPP_VERSION: "2026.9.6.3"
 
 jobs:
   lint:
