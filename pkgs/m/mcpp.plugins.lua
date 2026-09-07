@@ -2,13 +2,13 @@
 -- each member selected by a feature.
 --
 --   [dependencies.mcpp]
---   plugins = { version = "0.2.5", features = ["rules-spirv"], host-module = true }
+--   plugins = { version = "0.2.6", features = ["rules-spirv"], host-module = true }
 --
 --   // build.mcpp
 --   import mcpp;
 --   import mcpp.rules.spirv;
 --
--- Members of 0.2.5, with the mcpp release each relies on:
+-- Members of 0.2.6, with the mcpp release each relies on:
 --
 --   mcpp.rules.cuda   `rules-cuda`   >= 2026.9.5.2
 --   mcpp.rules.spirv  `rules-spirv`  >= 2026.9.5.3; since 0.2.0 it drives glslc
@@ -38,6 +38,33 @@
 --                                    unpinned, because the C library version is
 --                                    the runtime binding's choice and differs
 --                                    between a developer machine and a runner
+--
+-- 0.2.6 fixes a generated artifact that could not be included on its own, and
+-- the shape of the defect is worth the paragraph. `mcpp.rules.spirv` chooses
+-- between two shader compilers, and the whole premise of that choice is that
+-- they produce an EQUIVALENT header. glslc emits an initialiser list, so the
+-- rule already wrote the declaration around it -- and wrote `#pragma once` and
+-- `#include <cstdint>` while it was there. glslang emits a complete C
+-- declaration, so the rule wrote nothing, and that file named `uint32_t` while
+-- including nothing:
+--
+--   tri_vert.h:3:7: error: 'uint32_t' does not name a type
+--
+-- Every consumer that worked had put a Vulkan header in front of it, so an
+-- incomplete header read as a working one for as long as nobody included it
+-- first. A sandbox on a clean machine is what found it. Both routes now
+-- produce the same two files: `<base>.inc` from the compiler, `<base>.h` from
+-- the rule. An existing build directory upgrades in place -- measured.
+--
+-- It also gives the "every rule compiles for this host" fixture its own
+-- denominator: that fixture asserts EVERY rule, and "every" was a list it
+-- carried, so a seventh member would have been covered by a step whose name
+-- said it already was. The list is now compared against the package's own
+-- `[features]` before the build.
+--
+-- The exact `xim:shaderc` pin described below is unchanged in this release: it
+-- reverts to `>=2026.3` once an mcpp carrying the cmd-escaping fix is
+-- published.
 --
 -- 0.2.5 is the release in which the collection stopped being a Linux
 -- collection. Three things changed and none of them is a new member.
@@ -182,6 +209,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.2.6"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.2.6.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.2.6/mcpp-plugins-0.2.6.tar.gz",
+                },
+                sha256 = "5bbeb6b8058afba98c60d5611bf183294546109c7a3044de79623e37f7425c9c",
+            },
             ["0.2.5"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.2.5.tar.gz",
@@ -238,9 +272,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.2.5" },
+            ["latest"] = { ref = "0.2.6" },
         },
         macosx = {
+            ["0.2.6"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.2.6.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.2.6/mcpp-plugins-0.2.6.tar.gz",
+                },
+                sha256 = "5bbeb6b8058afba98c60d5611bf183294546109c7a3044de79623e37f7425c9c",
+            },
             ["0.2.5"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.2.5.tar.gz",
@@ -297,9 +338,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.2.5" },
+            ["latest"] = { ref = "0.2.6" },
         },
         windows = {
+            ["0.2.6"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.2.6.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.2.6/mcpp-plugins-0.2.6.tar.gz",
+                },
+                sha256 = "5bbeb6b8058afba98c60d5611bf183294546109c7a3044de79623e37f7425c9c",
+            },
             ["0.2.5"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.2.5.tar.gz",
@@ -356,7 +404,7 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.2.5" },
+            ["latest"] = { ref = "0.2.6" },
         },
     },
 
