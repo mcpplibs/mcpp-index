@@ -2,13 +2,13 @@
 -- each member selected by a feature.
 --
 --   [dependencies.mcpp]
---   plugins = { version = "0.2.3", features = ["rules-spirv"], host-module = true }
+--   plugins = { version = "0.2.4", features = ["rules-spirv"], host-module = true }
 --
 --   // build.mcpp
 --   import mcpp;
 --   import mcpp.rules.spirv;
 --
--- Members of 0.2.3, with the mcpp release each relies on:
+-- Members of 0.2.4, with the mcpp release each relies on:
 --
 --   mcpp.rules.cuda   `rules-cuda`   >= 2026.9.5.2
 --   mcpp.rules.spirv  `rules-spirv`  >= 2026.9.5.3; since 0.2.0 it drives glslc
@@ -38,6 +38,42 @@
 --                                    unpinned, because the C library version is
 --                                    the runtime binding's choice and differs
 --                                    between a developer machine and a runner
+--
+-- 0.2.4 moves every member's floor to the same release, 2026.9.6.6, and the
+-- reason is one change in the engine rather than five in the rules: a payload
+-- a DEPENDENCY declared is now both installed and ANSWERABLE. Before it,
+-- `mcpp::xpkg_dir` compared the whole version position against a directory
+-- name, so a rule could declare `>=8.5.0`, have it installed, and still be told
+-- nothing was there -- which is why every project using a rule repeated that
+-- rule's own package list.
+--
+-- So each rule now declares the payloads it drives, under the feature that
+-- selects it and the accelerator it serves:
+--
+--   [target.'cfg(accelerator = "cuda")'.feature-xlings.rules-cuda]
+--   "xim:cuda-nvcc" = "12.9.86"
+--
+-- Two gates, and both must open before a byte is downloaded: the feature says
+-- whether the rule is wanted, the selector says whether this build compiles for
+-- the device. A consumer writes the dependency edge and nothing else.
+--
+-- The SHAPE of each default is a judgement about coupling rather than a style.
+-- An exact version where the payload's version is coupled to something the rule
+-- cannot see -- a CUDA runtime must not be newer than the driver it will meet,
+-- and the 12.9 line reaches every driver from r525 where 13.x raises that to
+-- r580. A floor (`>=`) where no such coupling exists: glslang, dpcpp, the CANN
+-- toolkit. mcpp reads the difference: a bare version is a CHOICE, so a project
+-- pinning a different one wins and the override is reported; a `>=` is a
+-- REQUIREMENT, so a project pinning below it is refused naming both sides.
+-- Either way one version is installed.
+--
+-- NOT declared by the rules: anything the produced PROGRAM chooses to run on. A
+-- Vulkan ICD is a device, and a rule declaring one would force a software
+-- renderer onto consumers that have a GPU. The runtime adapters
+-- (`compat:cuda-runtime`, `compat:sycl-runtime`, `compat:vulkan-runtime`) stay
+-- in the project for that reason and for a structural one: this package is
+-- reached through a `[build-dependencies]` edge, so its own `[dependencies]`
+-- deliberately do not reach the consumer's target.
 --
 -- 0.2.3 adds `mcpp.rules.ascendc`, the first member for a vendor this
 -- collection had not built for, and it carries the collection's new floor:
@@ -69,9 +105,16 @@
 -- adds the engine's half -- a device source that reached no action is refused,
 -- naming the file -- but a rule package does not require it to work.
 --
--- The floor recorded for this package is the HIGHEST of those, so it is the
--- collection's floor rather than any one feature's: a project on 2026.9.5.4
--- that wants only `rules-cuda` is refused by it. Splitting the package per
+-- The floor is the HIGHEST of those, and from 0.2.4 every member shares one:
+-- 2026.9.6.6. It is DOCUMENTATION rather than a gate -- nothing in this
+-- descriptor or in the package's manifest records a per-package engine floor,
+-- and the index-level `min_mcpp` is deliberately not raised for a package
+-- (raising it would make the whole index unreadable to clients stopped below
+-- it). What an older client gets instead is legible at the point of use: on
+-- 2026.9.6.5 the rule's payload table is folded and installed and `xpkg_dir`
+-- cannot answer a range, so the rule reports its toolkit as absent and names
+-- the floor; at or below 2026.9.6.4 the `cfg(accelerator = ...)` selector on a
+-- tool table is refused outright, naming the tool and the predicate. Splitting the package per
 -- member is the alternative and is not taken, because one host-module package
 -- is what makes the collection a collection. The
 -- engine compiles every module interface unit among a host-module package's
@@ -97,6 +140,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.2.4"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.2.4.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.2.4/mcpp-plugins-0.2.4.tar.gz",
+                },
+                sha256 = "abcf165e49e631f380141ea66e32f7a9d4cc6179d1f0f984eed906b7924d9b66",
+            },
             ["0.2.3"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.2.3.tar.gz",
@@ -139,9 +189,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.2.3" },
+            ["latest"] = { ref = "0.2.4" },
         },
         macosx = {
+            ["0.2.4"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.2.4.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.2.4/mcpp-plugins-0.2.4.tar.gz",
+                },
+                sha256 = "abcf165e49e631f380141ea66e32f7a9d4cc6179d1f0f984eed906b7924d9b66",
+            },
             ["0.2.3"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.2.3.tar.gz",
@@ -184,9 +241,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.2.3" },
+            ["latest"] = { ref = "0.2.4" },
         },
         windows = {
+            ["0.2.4"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.2.4.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.2.4/mcpp-plugins-0.2.4.tar.gz",
+                },
+                sha256 = "abcf165e49e631f380141ea66e32f7a9d4cc6179d1f0f984eed906b7924d9b66",
+            },
             ["0.2.3"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.2.3.tar.gz",
@@ -229,7 +293,7 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.2.3" },
+            ["latest"] = { ref = "0.2.4" },
         },
     },
 
