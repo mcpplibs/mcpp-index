@@ -2,13 +2,13 @@
 -- each member selected by a feature.
 --
 --   [dependencies.mcpp]
---   plugins = { version = "0.2.4", features = ["rules-spirv"], host-module = true }
+--   plugins = { version = "0.2.5", features = ["rules-spirv"], host-module = true }
 --
 --   // build.mcpp
 --   import mcpp;
 --   import mcpp.rules.spirv;
 --
--- Members of 0.2.4, with the mcpp release each relies on:
+-- Members of 0.2.5, with the mcpp release each relies on:
 --
 --   mcpp.rules.cuda   `rules-cuda`   >= 2026.9.5.2
 --   mcpp.rules.spirv  `rules-spirv`  >= 2026.9.5.3; since 0.2.0 it drives glslc
@@ -38,6 +38,48 @@
 --                                    unpinned, because the C library version is
 --                                    the runtime binding's choice and differs
 --                                    between a developer machine and a runner
+--
+-- 0.2.5 is the release in which the collection stopped being a Linux
+-- collection. Three things changed and none of them is a new member.
+--
+-- ONE SHADER COMPILER PER PLATFORM. `xim:glslang` is published for Linux
+-- alone, so `rules-spirv` reached one platform even though the Vulkan and
+-- OpenGL libraries in the index reach three -- the gap sat in the middle
+-- layer, where a developer on Windows could link Vulkan, open a window and
+-- draw a triangle provided they brought their own shader compiler, which is
+-- the one thing a build system is for. macOS and Windows now take
+-- `xim:shaderc`, and the rule CHOOSES between the two, so cross-platform
+-- parity is provided by the rule's ability to choose rather than by
+-- publishing one compiler three times.
+--
+-- CUDA AND SYCL ON WINDOWS. NVIDIA and Intel both publish Windows assets for
+-- the components these rules drive, so this was recipe work rather than
+-- packaging work: `xim:cuda-nvcc`, `xim:cuda-cudart`, `xim:cuda-cccl`,
+-- `xim:libcurand` and `xim:dpcpp` gained Windows sections in xim-pkgindex,
+-- and the rules gained the host-dependent halves that go with them -- the
+-- `.exe` suffix, `lib/x64`, and the decision that on Windows the CUDA rule
+-- takes its clang route whatever the project's compiler is, because the nvcc
+-- route needs MSVC's cl.exe located by asking the machine about its Visual
+-- Studio installation.
+--
+-- AND EVERY RULE IS NOW COMPILED FOR EVERY PLATFORM. Each consumer in that
+-- repository drives one rule end to end and therefore needs that rule's
+-- payload, and payloads are published for one, two or three platforms -- so
+-- the half of a rule written for a host was exactly the half that host never
+-- compiled. A fixture that names no accelerator (every rule returns
+-- immediately, nothing is downloaded) now compiles all six modules on Linux,
+-- macOS and Windows. It found three defects on its first run, one per host
+-- difference, none of them visible to a Linux build.
+--
+-- ONE DECLARATION IN THIS RELEASE IS AN EXACT VERSION WHERE THE SHAPE
+-- WOULD BE A FLOOR. `xim:shaderc` is pinned rather than floored on macOS and
+-- Windows because mcpp 2026.9.6.6 cannot pass a `>` through a Windows command
+-- line: the JSON provisioning argument is escaped for the child's argv parser
+-- and cmd.exe reads the `>` in `>=2026.3` as a redirection, answering `The
+-- filename, directory name, or volume label syntax is incorrect.` An exact
+-- version is a legitimate declaration -- mcpp reads it as a CHOICE, so a
+-- project pinning a different one still wins -- and it reverts to a floor once
+-- a released engine escapes that argument.
 --
 -- 0.2.4 moves every member's floor to the same release, 2026.9.6.6, and the
 -- reason is one change in the engine rather than five in the rules: a payload
@@ -140,6 +182,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.2.5"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.2.5.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.2.5/mcpp-plugins-0.2.5.tar.gz",
+                },
+                sha256 = "e720350af4bc9ae05e43da8f55651ae1f9e87de88749070546a86441ae459df8",
+            },
             ["0.2.4"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.2.4.tar.gz",
@@ -189,9 +238,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.2.4" },
+            ["latest"] = { ref = "0.2.5" },
         },
         macosx = {
+            ["0.2.5"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.2.5.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.2.5/mcpp-plugins-0.2.5.tar.gz",
+                },
+                sha256 = "e720350af4bc9ae05e43da8f55651ae1f9e87de88749070546a86441ae459df8",
+            },
             ["0.2.4"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.2.4.tar.gz",
@@ -241,9 +297,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.2.4" },
+            ["latest"] = { ref = "0.2.5" },
         },
         windows = {
+            ["0.2.5"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.2.5.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.2.5/mcpp-plugins-0.2.5.tar.gz",
+                },
+                sha256 = "e720350af4bc9ae05e43da8f55651ae1f9e87de88749070546a86441ae459df8",
+            },
             ["0.2.4"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.2.4.tar.gz",
@@ -293,7 +356,7 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.2.4" },
+            ["latest"] = { ref = "0.2.5" },
         },
     },
 
