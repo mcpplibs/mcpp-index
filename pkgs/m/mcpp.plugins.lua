@@ -2,13 +2,47 @@
 -- each member selected by a feature.
 --
 --   [dependencies.mcpp]
---   plugins = { version = "0.2.6", features = ["rules-spirv"], host-module = true }
+--   plugins = { version = "0.3.0", features = ["rules-spirv"], host-module = true }
 --
 --   // build.mcpp
 --   import mcpp;
 --   import mcpp.rules.spirv;
 --
--- Members of 0.2.6, with the mcpp release each relies on:
+-- 0.3.0 is the release in which an embedded payload is reached by IMPORTING a
+-- module rather than by including a header whose name the rule chose. It also
+-- adds two members and the two declarations that let a rule package introduce a
+-- device language on its own. It requires **mcpp 2026.9.7.1**, which is where
+-- those declarations are read.
+--
+--   mcpp.rules.slang  `rules-slang`  >= 2026.9.7.1. Slang is a language rather
+--                                    than a second driver for GLSL -- its own
+--                                    module system, generics, and targets
+--                                    beyond SPIR-V -- so it has its own rule
+--                                    and its own extension. `.slang` is NOT in
+--                                    the engine's built-in table: this feature
+--                                    declares `device_extensions = [".slang"]`
+--                                    and `rule_module = "mcpp.rules.slang"`,
+--                                    and the engine routes it from there. That
+--                                    is the criterion for the whole
+--                                    arrangement -- a new device language costs
+--                                    no engine release
+--   mcpp.tools.island `tools-island` >= 2026.9.7.1. Generates the `extern "C"`
+--                                    boundary a device island is reached
+--                                    across: the header its compiler reads and
+--                                    the module the C++ side imports, from
+--                                    declarations marked where they are
+--                                    defined. Handed both halves of a seam, it
+--                                    refuses two that declare one name
+--                                    differently -- the only check available at
+--                                    a boundary where C linkage does not mangle
+--                                    and the two halves never meet at the link
+--
+-- Every rule that generates a consumer-facing declaration now chooses a module
+-- interface or a header from `[language] modules`, which the engine reports; and
+-- a project that declares its rules needs no `build.mcpp` at all, because mcpp
+-- writes the program those declarations describe.
+--
+-- Members of 0.3.0, with the mcpp release each relies on:
 --
 --   mcpp.rules.cuda   `rules-cuda`   >= 2026.9.5.2
 --   mcpp.rules.spirv  `rules-spirv`  >= 2026.9.5.3; since 0.2.0 it drives glslc
@@ -174,8 +208,13 @@
 -- adds the engine's half -- a device source that reached no action is refused,
 -- naming the file -- but a rule package does not require it to work.
 --
--- The floor is the HIGHEST of those, and from 0.2.4 every member shares one:
--- 2026.9.6.6. It is DOCUMENTATION rather than a gate -- nothing in this
+-- The floor is the HIGHEST of those, and from 0.3.0 every member shares one:
+-- 2026.9.7.1 -- the release that reads `device_extensions` and `rule_module`,
+-- reports `[language] modules` and the package's own name to a build program,
+-- and writes the build program a declared rule set describes. A client below it
+-- does not see a degraded surface, it sees the rules never route: the file falls
+-- through to the ordinary source scan and mcpp says it has no role for the
+-- extension. It is DOCUMENTATION rather than a gate -- nothing in this
 -- descriptor or in the package's manifest records a per-package engine floor,
 -- and the index-level `min_mcpp` is deliberately not raised for a package
 -- (raising it would make the whole index unreadable to clients stopped below
@@ -209,6 +248,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.3.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.3.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.3.0/mcpp-plugins-0.3.0.tar.gz",
+                },
+                sha256 = "c4ce00e2b79c43ee4a08a8876a8ab7113f41081895a6036dfede6aa7719d731b",
+            },
             ["0.2.6"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.2.6.tar.gz",
@@ -272,9 +318,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.2.6" },
+            ["latest"] = { ref = "0.3.0" },
         },
         macosx = {
+            ["0.3.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.3.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.3.0/mcpp-plugins-0.3.0.tar.gz",
+                },
+                sha256 = "c4ce00e2b79c43ee4a08a8876a8ab7113f41081895a6036dfede6aa7719d731b",
+            },
             ["0.2.6"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.2.6.tar.gz",
@@ -338,9 +391,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.2.6" },
+            ["latest"] = { ref = "0.3.0" },
         },
         windows = {
+            ["0.3.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.3.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.3.0/mcpp-plugins-0.3.0.tar.gz",
+                },
+                sha256 = "c4ce00e2b79c43ee4a08a8876a8ab7113f41081895a6036dfede6aa7719d731b",
+            },
             ["0.2.6"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.2.6.tar.gz",
@@ -404,7 +464,7 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.2.6" },
+            ["latest"] = { ref = "0.3.0" },
         },
     },
 
