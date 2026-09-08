@@ -208,7 +208,34 @@
 -- adds the engine's half -- a device source that reached no action is refused,
 -- naming the file -- but a rule package does not require it to work.
 --
--- The floor is the HIGHEST of those, and from 0.3.0 every member shares one:
+-- 0.4.0 moves the shared floor to 2026.9.8.1, and it is the COLLECTION's rather
+-- than any member's. The package now divides into two units by what each may
+-- import: `src/plugins.cppm` carries the generator and imports only `std`, so
+-- the same code compiles into `mcpp-embed`; `src/declare.cppm` carries the
+-- build-program half. Before 2026.9.8.1 a package's host modules were ordered
+-- by PATH, so `rules/` was compiled before `src/` and importing the second unit
+-- failed with "failed to read compiled module".
+--
+-- WHY THE SPLIT EXISTS. Under `storage::object` the generated assembly names
+-- each payload in `.incbin`, and the object it produces IS those bytes -- while
+-- the assembly's own text does not change when they do. Generated at plan time
+-- it was assembled once, and every later payload change was a green build over
+-- stale bytes; measured against 0.3.0 in a sandbox, from these very packages.
+-- So the generation is an ACTION now, its command is `mcpp-embed`, and the
+-- payloads are its declared inputs. That is the ordinary graph primitive and
+-- needed no new engine channel. A consumer asks for the tool on the same edge
+-- as the rules -- `tools = ["mcpp-embed"]` -- and only for that storage; the
+-- default `header` storage builds no program.
+--
+-- 0.4.0 also passes a depfile from all six rules, so a shader or kernel that
+-- `#include`s another file rebuilds when that file changes. Each spelling was
+-- measured against the tool rather than read from its help text.
+--
+-- BREAKING: `surface::options` gained `target_os` and `has_gas_assembler` and
+-- stopped reading its environment, which is why this is 0.4.0 and not 0.3.1.
+--
+-- The floor before it was the HIGHEST of the per-member ones, and from 0.3.0
+-- every member shared one:
 -- 2026.9.7.1 -- the release that reads `device_extensions` and `rule_module`,
 -- reports `[language] modules` and the package's own name to a build program,
 -- and writes the build program a declared rule set describes. A client below it
@@ -248,6 +275,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.4.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.4.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.4.0/mcpp-plugins-0.4.0.tar.gz",
+                },
+                sha256 = "85a137482baf8890d474e58a051ff8d7e9559d696e3a0c7a17909efd922f33ce",
+            },
             ["0.3.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.3.0.tar.gz",
@@ -318,9 +352,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.3.0" },
+            ["latest"] = { ref = "0.4.0" },
         },
         macosx = {
+            ["0.4.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.4.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.4.0/mcpp-plugins-0.4.0.tar.gz",
+                },
+                sha256 = "85a137482baf8890d474e58a051ff8d7e9559d696e3a0c7a17909efd922f33ce",
+            },
             ["0.3.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.3.0.tar.gz",
@@ -391,9 +432,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.3.0" },
+            ["latest"] = { ref = "0.4.0" },
         },
         windows = {
+            ["0.4.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.4.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.4.0/mcpp-plugins-0.4.0.tar.gz",
+                },
+                sha256 = "85a137482baf8890d474e58a051ff8d7e9559d696e3a0c7a17909efd922f33ce",
+            },
             ["0.3.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.3.0.tar.gz",
@@ -464,7 +512,7 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.3.0" },
+            ["latest"] = { ref = "0.4.0" },
         },
     },
 
