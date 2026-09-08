@@ -2,7 +2,7 @@
 -- each member selected by a feature.
 --
 --   [dependencies.mcpp]
---   plugins = { version = "0.3.0", features = ["rules-spirv"], host-module = true }
+--   plugins = { version = "0.5.0", features = ["rules-spirv"], host-module = true }
 --
 --   // build.mcpp
 --   import mcpp;
@@ -262,6 +262,27 @@
 -- reserved for this package. `mcpplibs:rules-cuda@0.1.0` (pkgs/r/rules-cuda.lua)
 -- stays in the index, superseded by this collection.
 --
+-- 0.5.0 gives an island's entry points the module's own namespace. `docs/42`
+-- states one rule for both lanes -- the module name and the namespace are one
+-- identifier path -- and the shader lane followed it while `mcpp.tools.island`
+-- did not: every entry point was emitted at global scope, so `import
+-- app.kernels` bought a file name and nothing else. A root's directories now
+-- extend the namespace exactly as a payload tree's do.
+--
+-- The API says roots rather than files. `options::roots` names the directories
+-- implementations live under and `options::layout_root` names the one whose
+-- structure decides where entry points live; every other root only has to
+-- define the same names. `options::strip_prefix` emits a short spelling beside
+-- the authored name, which stays canonical because it is the symbol.
+--
+-- It is BREAKING for a consumer of `tools-island`: a qualified name replaces a
+-- global one. Every published consumer pins an exact version, so moving
+-- `latest` breaks none of them, and the three examples in mcpp that use the
+-- generator move to 0.5.0 in the same batch.
+--
+-- The floor does not move. 0.5.0 changes what the package generates, not what
+-- it asks the engine for, so it stays at mcpp 2026.9.8.1.
+--
 -- The descriptor points at the source archive of the tag, the shape `grpcgen`
 -- established; the CN asset is the same bytes, so one sha256 names both.
 package = {
@@ -275,6 +296,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.5.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.5.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.5.0/mcpp-plugins-0.5.0.tar.gz",
+                },
+                sha256 = "ec11aa99e84d8d003afff9d93a9e76d8b84926ab2586058ee5d51344559777b9",
+            },
             ["0.4.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.4.0.tar.gz",
@@ -352,9 +380,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.4.0" },
+            ["latest"] = { ref = "0.5.0" },
         },
         macosx = {
+            ["0.5.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.5.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.5.0/mcpp-plugins-0.5.0.tar.gz",
+                },
+                sha256 = "ec11aa99e84d8d003afff9d93a9e76d8b84926ab2586058ee5d51344559777b9",
+            },
             ["0.4.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.4.0.tar.gz",
@@ -432,9 +467,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.4.0" },
+            ["latest"] = { ref = "0.5.0" },
         },
         windows = {
+            ["0.5.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.5.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.5.0/mcpp-plugins-0.5.0.tar.gz",
+                },
+                sha256 = "ec11aa99e84d8d003afff9d93a9e76d8b84926ab2586058ee5d51344559777b9",
+            },
             ["0.4.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.4.0.tar.gz",
@@ -512,7 +554,7 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.4.0" },
+            ["latest"] = { ref = "0.5.0" },
         },
     },
 
