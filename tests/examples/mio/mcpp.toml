@@ -1,0 +1,8 @@
+# compat.mio test project. Header-only; `compat` redirect inherited from the
+# workspace root.
+[package]
+name = "mio-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+mio = "2023.3.3"

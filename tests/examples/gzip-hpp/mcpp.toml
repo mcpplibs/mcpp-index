@@ -1,0 +1,10 @@
+# compat.gzip-hpp test project. Header-only over zlib: the package's dependency
+# on compat.zlib is what makes <zlib.h> resolve and the deflate symbols link,
+# and this member declares only gzip-hpp so that edge is exercised
+# transitively. `compat` redirect inherited from the workspace root.
+[package]
+name = "gzip-hpp-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+gzip-hpp = "0.1.0"

@@ -1,0 +1,10 @@
+# compat.doctest test project. The entry point comes from doctest's own
+# DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN macro rather than from a package feature —
+# that is the difference from tests/examples/catch2-main, where the framework
+# ships a compiled main. The `compat` redirect is inherited from the root.
+[package]
+name = "doctest-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+doctest = "2.4.12"
