@@ -9,6 +9,45 @@
 
 ### Added
 
+- 收录 `khronos.vulkan-hpp` 1.4.357.0 —— Vulkan 的 C++ 绑定,按 Khronos 现在自己
+  发布的形态消费:`import vulkan;` / `import vulkan_video;`。⭐ 这是本索引第一个走
+  **形态 C 第一条分支**的包(上游自带 `.cppm`,直接点名),此前所有模块包都是合成
+  包装体。描述符里没有一行包装代码:导出面是 Khronos 从 XML registry 生成的。
+  载荷取 **Vulkan-Headers** 的 tarball,与 `compat.vulkan-headers` 同一个 URL、
+  同一个 sha256 —— Khronos 把生成好的 `vulkan.cppm` / `vulkan_video.cppm` 随每个
+  Vulkan-Headers tag 一起发。指向 Vulkan-Hpp 仓反而更差,三条都实测过:该仓没有
+  `vulkan-sdk-*` tag(404),Vulkan-Headers 在那里是 git submodule 而 GitHub 归档
+  永远不含 submodule,以及由此产生的第二份 `vulkan/` include 根会让 `vulkan.hpp`
+  由 `-I` 顺序决定。同一份 tarball 则让两个包不可能错配 —— 模块单元开头就是
+  `VULKAN_HPP_STATIC_ASSERT( VK_HEADER_VERSION == 357 )`。
+  命名空间取 `khronos` 而非 `compat`(本索引里 namespace 是消费形态的契约:
+  `compat.*` 按头文件消费,归属 namespace 承诺 `import`);**模块名保持上游的
+  `vulkan` / `vulkan_video`**,不加索引前缀,否则所有 Vulkan-Hpp 文档对 mcpp 用户
+  都是错的。`import_std = true` 不是偏好:单元第 27 行是无条件的
+  `export import std;`,上游 CMake 也正因此把模块目标 gate 在
+  `23 IN_LIST CMAKE_CXX_COMPILER_IMPORT_STD` 上。依赖取 **loader**
+  (`compat.vulkan`)而不只是头:Vulkan-Hpp 默认 **静态 dispatcher**
+  (`VULKAN_HPP_DISPATCH_LOADER_DYNAMIC` 在没有 `VK_NO_PROTOTYPES` 时为 0),
+  `vk::enumerateInstanceVersion()` 会编成对 `vkEnumerateInstanceVersion` 的直接
+  调用,只依赖头会得到一个"能编译、每个消费者都链接失败"的包。
+  与上游 `Vulkan::HppModule` 一致地**不定义任何 `VK_USE_PLATFORM_*`**:那些宏按
+  平台互斥、无法做成可移植的 feature,而可移植路线也不需要它们 —— GLFW/SDL2 交回
+  的 `VkSurfaceKHR` 包成 `vk::SurfaceKHR{ raw }` 即可,surface/swapchain 本身在
+  模块里是无条件存在的。
+  新增 workspace 成员 `tests/examples/vulkan-hpp-module`(两个测试:`module.cpp`
+  全文无 `#include`,断言枚举量取值、`sType` 默认、`format_traits` 的 constexpr
+  结果、`raii` 层的编译期成员,以及经静态 dispatcher 打到 loader 的两次真实调用;
+  `video.cpp` 单独证明第二个模块单元被编译 —— 它 `import vulkan;`,只能排在第一个
+  之后,而 `sources` 只是一张无序的表)。
+  实测:linux · gcc 16.1.0 与 linux · llvm 22.1.8 两条腿都产出两个 BMI/PCM 并跑通;
+  macOS 与 Windows 走的是与 llvm 腿相同的 clang 路径,其运行期一半早已由
+  `tests/examples/vulkan` 在三条腿上证明(调用的是同一批 loader 入口)。
+  ⚠️ `x86_64-windows-gnu`(mingw)不可用,也不是 CI 腿(索引的 windows 工具链是
+  llvm/MSVC ABI):GCC-on-PE 把模块归属的函数内静态量
+  `vk::errorCategory@vulkan()::instance` 放进消费者对象的普通 `.bss`,与模块对象里
+  的 COMDAT 副本撞成 `multiple definition`;且 `compat.vulkan` 的 windows 入口是
+  MSVC 形态的 `vulkan-1.lib`,mingw 的 ld 找不到。两条都不是描述符能修的。
+
 - 收录 `mcpplibs.rules-cuda` 0.1.0 —— 把「怎么编一个 CUDA 设备翻译单元」收成一条
   可 import 的构建规则(`host-module = true`)。⭐ **一个仓库都不用新建**,与
   `grpcgen` 同形:描述符指向 mcpp 自己**源码 tarball** 的一个子路径

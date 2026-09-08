@@ -13,7 +13,7 @@ combined as needed.
 |---|---|---|---|
 | **A. C-source compat** | plain C or a handful of sources; the user writes `#include <foo.h>` | `pkgs/c/compat.cjson.lua`, `compat.zlib.lua`, `compat.gtest.lua` | `sources` and `c_standard` |
 | **B. header-only** | headers only, nothing to compile | `pkgs/c/compat.eigen.lua`, `compat.opengl.lua`, `compat.khrplatform.lua` | `include_dirs` and an anchor source |
-| **C. C++23 module** | exposes `import x.y;` | `pkgs/n/nlohmann.json.lua` | `modules` plus `generated_files` or a source `.cppm` |
+| **C. C++23 module** | exposes `import x.y;` | `pkgs/n/nlohmann.json.lua` (generated wrapper), `pkgs/k/khronos.vulkan-hpp.lua` (upstream's own `.cppm`) | `modules` plus `generated_files` or a source `.cppm` |
 | **D. External Form-A module repo** | upstream ships its own mcpp descriptor in a separate repository — or the build needs something an inline descriptor cannot express (`build.mcpp`, a workspace, a code generator that must be compiled first) | `pkgs/i/imgui.lua`, `pkgs/m/mcpplibs.*`, `pkgs/f/freedesktop.wayland*.lua` (four entries out of one fork) | `mcpp = "<repo path>"` (Form A) |
 | **E. Whole-source direct build with a generated config** | upstream generates its config header through configure/CMake; here a snapshot of it lands in `generated_files` | `pkgs/c/compat.libpng.lua`, `compat.curl.lua`, `compat.sdl2.lua`, `compat.ffmpeg.lua` | `generated_files` + `include_dirs` |
 | **F. Shared-library compat** | has to be the **only** copy of that `.so` in the process — either because third parties `dlopen` it, or because the ecosystem payload links the same soname | the X11 family such as `pkgs/c/compat.x11.lua`, `compat.vulkan.lua`, `compat.libdrm.lua`, `compat.libffi.lua`, `compat.expat.lua` | `targets = { kind = "shared", soname = … }` |
@@ -137,11 +137,15 @@ Careful: an optional part that is header-only cannot be hidden (it shares the in
 force a feature around it; only extra compilable sources can be gated (`compat.eigen`'s `blas` consists of C++ and
 f2c-converted C, needs no Fortran, and therefore can be gated).
 
-## C. C++23 module (`nlohmann.json`)
+## C. C++23 module (`nlohmann.json` / `khronos.vulkan-hpp`)
 
 Lets users write `import x.y;`. There are two ways to get there:
 
 1. **Upstream already ships a `.cppm`**: point straight at it with `sources = { "*/path/to/unit.cppm" }`.
+   `khronos.vulkan-hpp` is the worked example — Khronos generates `vulkan.cppm` / `vulkan_video.cppm` into every
+   Vulkan-Headers release, so the descriptor names the two units, sets `import_std = true` (the unit's own
+   `export import std;` leaves no choice), declares no `include_dirs` of its own (the headers arrive through the
+   dependency), and authors nothing. The module names stay upstream's — `vulkan`, not `khronos.vulkan`.
 2. **The upstream release does not include one** (the common case): synthesize a wrapper through `generated_files`
    (`#include <header>`, `export module x.y;`, `export using …`), with the base header pinned to a published tag.
    Reuse upstream's official wrapper verbatim rather than inferring the symbol list yourself.

@@ -10,6 +10,18 @@
 -- `vk_video/` ships alongside `vulkan/` and is included by `vulkan_video.h`, so
 -- one include root covers both.
 --
+-- ⚠️ THIS TARBALL ALSO CARRIES VULKAN-HPP. Khronos generates the C++ bindings
+-- in KhronosGroup/Vulkan-Hpp and releases them, already generated, inside every
+-- Vulkan-Headers tag: `include/vulkan/vulkan.hpp`, `vulkan_raii.hpp`, and the
+-- two module interface units `vulkan.cppm` / `vulkan_video.cppm`. This package
+-- exposes them all through `include/` but COMPILES none of them — it is the C
+-- API package, and `#include <vulkan/vulkan.hpp>` is a consumer's own choice.
+-- `khronos.vulkan-hpp` is the package that builds the two `.cppm` units into
+-- the `vulkan` / `vulkan_video` modules, from this same URL and sha256.
+-- A version bump here therefore has to move that package too: its module unit
+-- opens with `VULKAN_HPP_STATIC_ASSERT( VK_HEADER_VERSION == … )`, so a
+-- half-done bump fails to compile rather than shipping a skewed pair.
+--
 -- Versioning follows the Vulkan SDK release the tag belongs to
 -- (`vulkan-sdk-1.4.357.0` → `1.4.357.0`), which is how Khronos ties the header,
 -- loader and validation-layer repos together.

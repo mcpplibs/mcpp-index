@@ -133,6 +133,7 @@ members = [
     "tests/examples/opencl",
     "tests/examples/sycl-runtime",
     "tests/examples/vulkan",
+    "tests/examples/vulkan-hpp-module",
     "tests/examples/websocket",
     "tests/examples/uwebsockets",
     "tests/examples/wil",
