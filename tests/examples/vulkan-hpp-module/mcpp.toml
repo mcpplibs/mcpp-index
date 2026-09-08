@@ -1,0 +1,30 @@
+# Vulkan-Hpp module test project: consumes Khronos' own C++23 module units
+# (`import vulkan;` / `import vulkan_video;`) from the `khronos.vulkan-hpp`
+# package and asserts behavior under `mcpp test`.
+#
+# Overrides the workspace-root redirect: root declares `compat`, this member
+# needs `khronos`. A member-level [indices] REPLACES the inherited table rather
+# than merging with it, which is what keeps this to ONE project index repo —
+# two repos pointing at the same tree make every lookup ambiguous.
+#
+# The consequence is deliberate and worth stating: `compat.vulkan`, which
+# `khronos.vulkan-hpp` depends on for the loader, then resolves from the
+# PUBLISHED index rather than from this checkout. That is the same arrangement
+# tests/examples/asio-ssl leans on, and it is the right one here — the package
+# under test is the module package, and its dependency is a package this index
+# has been shipping for some time.
+[indices]
+khronos = { path = "../../.." }
+
+[package]
+name = "vulkan-hpp-module-tests"
+version = "0.1.0"
+
+[dependencies.khronos]
+vulkan-hpp = "1.4.357.0"
+
+# No [build] section, and no per-platform gating: unlike tests/examples/vulkan,
+# which had to publish its own HAVE_VULKAN_LOADER switch, nothing here is
+# conditional. The package carries all three platforms, and every runtime call
+# the tests make is one the loader answers by itself, before any ICD is
+# involved — so the same source runs on a driverless runner on all of them.

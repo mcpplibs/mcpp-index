@@ -11,7 +11,7 @@ A–D 是四种**基础**形态,先按它们判定;E–G 是在基础形态之�
 |---|---|---|---|
 | **A. C 源码 compat** | 纯 C 或少量源码,用户 `#include <foo.h>` | `pkgs/c/compat.cjson.lua`、`compat.zlib.lua`、`compat.gtest.lua` | `sources` 与 `c_standard` |
 | **B. header-only** | 纯头文件,无需编译 | `pkgs/c/compat.eigen.lua`、`compat.opengl.lua`、`compat.khrplatform.lua` | `include_dirs` 与 anchor 源 |
-| **C. C++23 module** | 暴露 `import x.y;` | `pkgs/n/nlohmann.json.lua` | `modules` 与 `generated_files` 或源 `.cppm` |
+| **C. C++23 module** | 暴露 `import x.y;` | `pkgs/n/nlohmann.json.lua`(合成包装体)、`pkgs/k/khronos.vulkan-hpp.lua`(上游自带 `.cppm`) | `modules` 与 `generated_files` 或源 `.cppm` |
 | **D. 外部 Form-A 模块仓** | 上游自带 mcpp 描述符的独立仓库,或者构建需要内联描述符表达不了的东西(`build.mcpp`、workspace、必须先编译出来才能跑的代码生成器) | `pkgs/i/imgui.lua`、`pkgs/m/mcpplibs.*`、`pkgs/f/freedesktop.wayland*.lua`(一个 fork 出四个条目) | `mcpp = "<repo 路径>"`(Form A) |
 | **E. 生成 config 的全源码直编** | 上游用 configure/CMake 生成配置头,此处以 `generated_files` 落一份快照 | `pkgs/c/compat.libpng.lua`、`compat.curl.lua`、`compat.sdl2.lua`、`compat.ffmpeg.lua` | `generated_files` + `include_dirs` |
 | **F. 共享库 compat** | 必须是进程里**唯一**的那个 `.so` —— 或因为会被第三方 `dlopen`,或因为生态 payload 链的是同一个 soname | `pkgs/c/compat.x11.lua` 等 X11 家族、`compat.vulkan.lua`、`compat.libdrm.lua`、`compat.libffi.lua`、`compat.expat.lua` | `targets = { kind = "shared", soname = … }` |
@@ -127,11 +127,14 @@ mcpp = {
 注意:纯头形式的可选项无法隐藏(与核心共享 include 根),因此不应为其勉强构造 feature;只有额外可编译源码才能被门控
 (`compat.eigen` 的 `blas` 即由 C++ 与 f2c 转换的 C 构成,不依赖 Fortran,因此可门控)。
 
-## C. C++23 module(`nlohmann.json`)
+## C. C++23 module(`nlohmann.json` / `khronos.vulkan-hpp`)
 
 使用户可 `import x.y;`。有两种实现路径:
 
 1. **上游已自带 `.cppm`**:直接 `sources = { "*/path/to/unit.cppm" }`。
+   范例是 `khronos.vulkan-hpp` —— Khronos 把 `vulkan.cppm` / `vulkan_video.cppm` 生成进每个 Vulkan-Headers
+   release,所以描述符只需点名这两个单元、置 `import_std = true`(单元自身的 `export import std;` 没有留余地)、
+   不声明自己的 `include_dirs`(头由依赖带来),不写任何包装体。模块名保持上游的 `vulkan`,而非 `khronos.vulkan`。
 2. **上游 release 不含**(较常见):以 `generated_files` 合成 wrapper(`#include <header>`、`export module x.y;`、
    `export using …`),基底头 pin 至已发布 tag。应逐字复用上游官方 wrapper,而非自行推断符号清单。
 
