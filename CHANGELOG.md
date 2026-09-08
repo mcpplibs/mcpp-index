@@ -9,6 +9,41 @@
 
 ### Added
 
+- 收录 **vulkan-rt 依赖的八个通用库**,一次补齐:`compat.glm` 1.0.2、
+  `compat.doctest` 2.4.12、`compat.argparse` 3.2、`compat.mio` 2023.3.3、
+  `compat.gzip-hpp` 0.1.0、`compat.cpptrace` 1.0.4、`compat.libassert` 2.2.1、
+  `compat.libcoro` 0.16.0。八个都带**已验证的 CN 镜像**
+  (`gitcode.com/mcpp-res/<slug>`,逐个比对 sha256 与 GLOBAL **逐字节相同**,
+  8/8),八个都带 workspace 成员做行为断言。
+  四个不是「拉个头文件就完事」,记在配方里:
+  ⚠️ **`compat.gzip-hpp`** 冻结在一个已经编不过的点上:`utils.hpp` 六处、
+  `decompress.hpp` 一处用 `uint8_t` 却不 include `<cstdint>`(实测 gcc 16.1.0)。
+  而且它是**消费者侧**失败 —— 本包一个 C++ TU 都没有,`cxxflags = {"-include",
+  "cstdint"}`(`compat.redis-plus-plus` 的修法)到不了出错的 TU。唯一可用的杠杆是
+  同名遮蔽头 + `#include_next`,与 `compat.catch2` 修 `<new>` 是同一招;
+  `include_dirs` 因此必须 `mcpp_generated` 在前,调换两行会静默失效。
+  ⭐ **`compat.cpptrace`** 是形态 E 去掉 config 头:六个符号后端、六个 unwinder、
+  三个 demangler **每个文件自己 `#ifdef`**,所以源列表是一条 glob,配置全在 defines。
+  选的后端一律**零外部依赖**:unix 走 libgcc 的 `_Unwind_Backtrace` + `dladdr` +
+  `__cxa_demangle`,windows 走 DbgHelp。⚠️ 代价写在配方里:`dladdr` 不读 DWARF,
+  所以栈帧有函数名、**没有 file:line**;要行号得再加一个 libdwarf 包,留作 feature。
+  **`compat.libassert`** 依赖上面那个(上游是 FetchContent 一份进自己的树,这里是
+  正经依赖,消费者链两次也只有一份 cpptrace);magic_enum **不需要** —— 读 CMakeLists
+  会发现它只在 `LIBASSERT_BUILD_TESTING` 下打开,库源码一次都没提过它。
+  ⚠️ **`compat.libcoro`** 只出**核心**:上游 networking 默认开,但它的 c-ares 在
+  `vendor/c-ares` 这个 **git submodule** 里,而 GitHub 归档从不含 submodule
+  (实测 `find vendor -type f` → 0 个文件)—— 这个产物根本编不出网络那半。所以源列表
+  是上游 `LIBCORO_SOURCE_FILES` 在 `if(LIBCORO_FEATURE_NETWORKING)` 之前的部分,
+  逐条转录而非 glob(`scheduler.cpp`/`poll.cpp`/epoll/kqueue/`net/` 全都不自 guard)。
+  另外 `coro/export.hpp` 是 `generate_export_header` 生成的,tarball 里没有,
+  缺了它第一个 TU 就 fatal error;快照进 `generated_files`,`CORO_STATIC_DEFINE` 走
+  `defines`(要到消费者)而非 `cxxflags`。
+  测试都断言真行为而非「能编译」:glm 断言叉积/列主序/`GLM_FORCE_DEPTH_ZERO_TO_ONE`
+  下近平面映射到 0;gzip 断言 gzip magic + 真的变小 + 往返;cpptrace 断言四层调用链
+  的帧数与**互不相同**的返回地址;libassert 走**失败路径**,断言报告里有表达式原文、
+  消息和两个操作数的值,并且拿到了非空 stacktrace(这条同时证明 cpptrace 是传递到达的);
+  libcoro 用 200 个协程在 `coro::mutex` 下累加。
+
 - 收录 `khronos.vulkan-hpp` 1.4.357.0 —— Vulkan 的 C++ 绑定,按 Khronos 现在自己
   发布的形态消费:`import vulkan;` / `import vulkan_video;`。⭐ 这是本索引第一个走
   **形态 C 第一条分支**的包(上游自带 `.cppm`,直接点名),此前所有模块包都是合成

@@ -128,10 +128,17 @@
 -- Do not mix `import vulkan;` with `#include <vulkan/vulkan.hpp>` in one
 -- translation unit: the header would arrive a second time, textually, as a
 -- different set of entities from the ones the module already owns. The same
--- rule the index's other module packages carry. It has one visible
--- consequence — `vk::to_string` lives in `vulkan_to_string.hpp`, which is NOT
--- among the headers `vulkan.cppm` pulls into the module purview, so it is
--- simply not part of this surface.
+-- rule the index's other module packages carry.
+--
+-- The module's surface is wider than `vulkan.cppm`'s own include list suggests,
+-- and it is worth spelling out because the list reads like an exhaustive one.
+-- `vulkan_to_string.hpp` is not named there — but `vulkan.hpp` includes it
+-- ITSELF (guarded only by `VULKAN_HPP_NO_TO_STRING`, which nothing here
+-- defines), so `vk::to_string` rides in with it and IS exported. Measured
+-- through a plain consumer, and now asserted by the member's `module.cpp` so
+-- the claim cannot rot. Read the same way, `vulkan_static_assertions.hpp` is
+-- genuinely absent: nothing includes it, and it is a self-check for the
+-- headers rather than API a consumer calls.
 --
 -- Licensing is Khronos' dual `Apache-2.0 OR MIT`, as stated in the SPDX line
 -- of every generated file.

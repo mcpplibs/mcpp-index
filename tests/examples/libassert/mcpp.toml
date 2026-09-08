@@ -1,0 +1,9 @@
+# compat.libassert test project. Declares ONLY libassert: cpptrace has to
+# arrive transitively, which is the edge this member exists to prove.
+# `compat` redirect inherited from the workspace root.
+[package]
+name = "libassert-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+libassert = "2.2.1"

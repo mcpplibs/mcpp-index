@@ -1,0 +1,16 @@
+# compat.glm test project. Header-only; the `compat` index redirect is
+# inherited from the workspace root.
+[package]
+name = "glm-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+glm = "1.0.2"
+
+# The two switches a Vulkan consumer sets, declared HERE rather than in the
+# package: they change the meaning of the types crossing a library boundary, so
+# the package must not decide them for everyone. GLM_FORCE_DEPTH_ZERO_TO_ONE is
+# what makes glm::perspective produce Vulkan's 0..1 clip depth instead of
+# OpenGL's -1..1, and the test below asserts exactly that difference.
+[build]
+cxxflags = ["-DGLM_FORCE_DEPTH_ZERO_TO_ONE", "-DGLM_ENABLE_EXPERIMENTAL"]

@@ -1,0 +1,8 @@
+# compat.argparse test project. Header-only; `compat` redirect inherited from
+# the workspace root.
+[package]
+name = "argparse-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+argparse = "3.2"

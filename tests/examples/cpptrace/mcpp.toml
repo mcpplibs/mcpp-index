@@ -1,0 +1,8 @@
+# compat.cpptrace test project. `compat` redirect inherited from the workspace
+# root.
+[package]
+name = "cpptrace-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+cpptrace = "1.0.4"

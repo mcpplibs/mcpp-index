@@ -1,0 +1,9 @@
+# compat.libcoro test project — the CORE (non-networking) half, which is all
+# the pinned tarball can build: upstream's c-ares lives in a git submodule that
+# a GitHub archive does not carry. `compat` redirect inherited from the root.
+[package]
+name = "libcoro-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+libcoro = "0.16.0"
