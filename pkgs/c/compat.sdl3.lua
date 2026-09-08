@@ -840,6 +840,9 @@ typedef unsigned int uintptr_t;
             "*/src/render/direct3d/*.c",
             "*/src/render/direct3d11/*.c",
             "*/src/render/direct3d12/*.c",
+            -- D3D12's renderer is partly C++ (3 files). The `*.c` glob alone
+            -- links half a renderer on windows.
+            "*/src/render/direct3d12/*.cpp",
             "*/src/render/gpu/*.c",
             "*/src/render/ngage/*.c",
             "*/src/render/opengl/*.c",
@@ -909,6 +912,16 @@ typedef unsigned int uintptr_t;
                 -- message-box toolkit, so this is a compile-time header
                 -- dependency like the X11 set above.
                 ["compat.fribidi"]   = "1.0.16",
+                -- ⚠️ glx-headers, NOT compat.opengl: SDL_x11opengl.h includes
+                -- <GL/glx.h>, which the Khronos registry does not carry. The
+                -- two packages overlap on GL/gl.h, so exactly one belongs here
+                -- — the same call compat.sdl2 makes.
+                --
+                -- Easy to miss, because the gcc leg does not need it: that
+                -- toolchain's sysroot already carries GL/glx.h, so linux/gcc
+                -- and a local build both pass while linux/llvm fails with
+                -- "fatal error: 'GL/glx.h' file not found".
+                ["compat.glx-headers"] = "1.7.0",
             },
             ldflags = { "-ldl", "-lpthread", "-lm", "-lrt" },
         },
