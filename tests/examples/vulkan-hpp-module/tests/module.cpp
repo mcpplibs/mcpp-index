@@ -15,13 +15,17 @@
 //   * vulkan_extension_inspection.hpp— the extension registry tables
 //   * vulkan_raii.hpp                — the RAII wrappers, asserted by TYPE
 //
-// Deliberately absent: `vk::to_string`. `vulkan_to_string.hpp` is NOT one of
-// the headers upstream's `vulkan.cppm` pulls into the module purview, so it is
-// simply not part of the module's surface — and it cannot be `#include`d
-// alongside, because it would drag a second, textual copy of all of vulkan.hpp
-// into a TU that already imported it. That is the general rule for this
-// package: `import vulkan;` and `#include <vulkan/vulkan.hpp>` are two roads,
-// and a TU takes exactly one of them.
+// `vk::to_string` is asserted below for a reason worth stating: it lives in
+// `vulkan_to_string.hpp`, which is NOT in the list of headers `vulkan.cppm`
+// names — reading that list as exhaustive gets this wrong. `vulkan.hpp`
+// includes it itself, guarded only by `VULKAN_HPP_NO_TO_STRING`, which nothing
+// defines here, so it rides into the module purview and is exported. The check
+// exists so that stops being a matter of reading and stays true.
+//
+// The rule the module DOES impose: `import vulkan;` and
+// `#include <vulkan/vulkan.hpp>` are two roads and a TU takes exactly one of
+// them — the header would arrive a second time, textually, as a different set
+// of entities from the ones the module already owns.
 //
 // Macros do not travel through a named module either, which is why the
 // extension names below are written as string literals rather than as
@@ -49,6 +53,21 @@ int main() {
     // state that has to survive the module build intact.
     static_assert(vk::ApplicationInfo{}.sType == vk::StructureType::eApplicationInfo);
     static_assert(std::is_standard_layout_v<vk::ApplicationInfo>);
+
+    // ── vulkan_to_string.hpp, which arrives through vulkan.hpp ──────────
+    //
+    // Not in `vulkan.cppm`'s include list, exported all the same. Both
+    // overloads: the enum one and the bitmask one, which is a different
+    // generated file section.
+    if (vk::to_string(vk::Format::eR8G8B8A8Unorm) != "R8G8B8A8Unorm") {
+        std::println("vk::to_string(Format) gave {}", vk::to_string(vk::Format::eR8G8B8A8Unorm));
+        return 5;
+    }
+    if (vk::to_string(vk::ImageUsageFlagBits::eColorAttachment) != "ColorAttachment") {
+        std::println("vk::to_string(ImageUsageFlagBits) gave {}",
+                     vk::to_string(vk::ImageUsageFlagBits::eColorAttachment));
+        return 6;
+    }
 
     // ── vulkan_format_traits.hpp: constexpr, evaluated at compile time ───
     static_assert(vk::blockSize(vk::Format::eR8G8B8A8Unorm) == 4);
