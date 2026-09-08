@@ -2,7 +2,7 @@
 -- each member selected by a feature.
 --
 --   [dependencies.mcpp]
---   plugins = { version = "0.5.1", features = ["rules-spirv"], host-module = true }
+--   plugins = { version = "0.5.2", features = ["rules-spirv"], host-module = true }
 --
 --   // build.mcpp
 --   import mcpp;
@@ -289,6 +289,14 @@
 -- a single-file root from registering a re-run glob over the directory that
 -- file happens to sit in.
 --
+-- 0.5.2 derives a namespace segment by path arithmetic rather than by string
+-- surgery. The island fixture, run on Windows for the first time, put an entry
+-- point in `app::kernels::_::image`: a root stated with forward slashes and a
+-- directory iterator appending with the preferred separator left `\image`
+-- rather than `image`, and the root directory became a segment. The shader lane
+-- shares that function and had the same defect latent -- its Windows fixture
+-- keeps every payload in one directory, so a segment was never derived there.
+--
 -- The descriptor points at the source archive of the tag, the shape `grpcgen`
 -- established; the CN asset is the same bytes, so one sha256 names both.
 package = {
@@ -302,6 +310,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.5.2"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.5.2.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.5.2/mcpp-plugins-0.5.2.tar.gz",
+                },
+                sha256 = "d73079f93378f2af6b6513eb6f751d8eace99936b61ff3f5ef786e16a49a8e2a",
+            },
             ["0.5.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.5.1.tar.gz",
@@ -393,9 +408,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.5.1" },
+            ["latest"] = { ref = "0.5.2" },
         },
         macosx = {
+            ["0.5.2"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.5.2.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.5.2/mcpp-plugins-0.5.2.tar.gz",
+                },
+                sha256 = "d73079f93378f2af6b6513eb6f751d8eace99936b61ff3f5ef786e16a49a8e2a",
+            },
             ["0.5.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.5.1.tar.gz",
@@ -487,9 +509,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.5.1" },
+            ["latest"] = { ref = "0.5.2" },
         },
         windows = {
+            ["0.5.2"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.5.2.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.5.2/mcpp-plugins-0.5.2.tar.gz",
+                },
+                sha256 = "d73079f93378f2af6b6513eb6f751d8eace99936b61ff3f5ef786e16a49a8e2a",
+            },
             ["0.5.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.5.1.tar.gz",
@@ -581,7 +610,7 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.5.1" },
+            ["latest"] = { ref = "0.5.2" },
         },
     },
 
