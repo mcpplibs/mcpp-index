@@ -971,6 +971,25 @@ typedef unsigned int uintptr_t;
 
         windows = {
             sources = {
+                -- ⚠️ SDL3 IS NOT ALL C ON WINDOWS, and a `*.c` glob that misses
+                -- a file produces NO diagnostic until the link:
+                --
+                --     lld-link: error: undefined symbol: WIN_InitGameInput
+                --     lld-link: error: undefined symbol: SDL_GAMEINPUT_JoystickDriver
+                --
+                -- `WIN_InitGameInput` lives in
+                -- `video/windows/SDL_windowsgameinput.cpp` and
+                -- `SDL_GAMEINPUT_JoystickDriver` in
+                -- `joystick/gdk/SDL_gameinputjoystick.cpp`; both are reached
+                -- because the CHECKED-IN windows config sets
+                -- SDL_JOYSTICK_GAMEINPUT, which this descriptor does not get to
+                -- decide. `core/windows` has two more C++ TUs.
+                --
+                -- Found by asking the tree which sources are not .c rather than
+                -- by chasing the symbols the linker happened to name.
+                "*/src/core/windows/*.cpp",
+                "*/src/video/windows/*.cpp",
+                "*/src/joystick/gdk/*.cpp",
                 "*/src/audio/directsound/*.c",
                 "*/src/audio/wasapi/*.c",
                 "*/src/camera/mediafoundation/*.c",
