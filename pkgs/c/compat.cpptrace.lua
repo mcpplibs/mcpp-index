@@ -49,6 +49,23 @@
 --     it every declaration carries `__declspec(dllexport)` /
 --     `visibility("default")` for a shared library this package does not build.
 --
+--     ⚠️ IT GOES IN `defines`, NOT `cxxflags`, AND ONLY WINDOWS SAYS SO. The
+--     macro decorates DECLARATIONS, so it has to reach every TU that INCLUDES
+--     the headers — not just this package's own. As `cxxflags` (package-private)
+--     Linux stayed green, because there the difference is
+--     `visibility("default")` versus nothing and the link is unaffected. On the
+--     MSVC ABI it is `dllimport` versus nothing, which is an ABI difference, and
+--     `compat.libassert` — whose TUs include these headers — failed to link:
+--
+--         lld-link: warning: locally defined symbol imported:
+--             cpptrace::v1::runtime_error::runtime_error(...) [LNK4217]
+--         lld-link: error: undefined symbol: __declspec(dllimport)
+--             cpptrace::v1::stacktrace_frame::operator!=(...) const
+--
+--     Measured on the windows CI leg. The BACKEND macros below stay in
+--     `cxxflags` on purpose: those select which .cpp compiles to something and
+--     are nobody else's business.
+--
 -- Upstream also ships `src/cpptrace.cppm` (`export module cpptrace;`). It is
 -- deliberately NOT built here: this entry is `compat.*`, which in this index
 -- promises header consumption and nothing else, and libassert — the reason
@@ -129,7 +146,8 @@ package = {
         targets = { ["cpptrace"] = { kind = "lib" } },
         deps    = { },
 
-        cxxflags = { "-DCPPTRACE_STATIC_DEFINE" },
+        -- Interface-visible: see the header note. Not `cxxflags`.
+        defines = { "CPPTRACE_STATIC_DEFINE" },
 
         linux = {
             cxxflags = {
