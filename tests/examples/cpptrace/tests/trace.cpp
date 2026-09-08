@@ -17,6 +17,21 @@
 #  error "cpptrace/version.hpp does not describe 1.0.4 — the generated header drifted from the tarball"
 #endif
 
+// The package builds objects, not a shared library, so every cpptrace
+// declaration this TU sees must be plain — not dllimport, not
+// visibility("default"). The package delivers that with a shim in front of
+// cpptrace/basic.hpp, because no descriptor key carries a define to a
+// consumer's TUs.
+//
+// This check exists because the failure it guards is invisible on Linux: there
+// the difference is only a visibility attribute and everything still links. On
+// the MSVC ABI it is `dllimport` versus nothing, and the link fails with
+// "undefined symbol: __declspec(dllimport) ...". Asserting the macro at COMPILE
+// time fails on every platform the moment the shim stops being reached.
+#if !defined(CPPTRACE_STATIC_DEFINE)
+#  error "CPPTRACE_STATIC_DEFINE is not set for this consumer TU — the compat.cpptrace basic.hpp shim was not reached (include_dirs order?)"
+#endif
+
 // noinline so the three frames cannot be collapsed into one by the optimiser;
 // the test is about the unwinder seeing depth.
 #if defined(_MSC_VER)

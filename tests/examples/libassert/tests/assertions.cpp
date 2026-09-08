@@ -29,6 +29,20 @@
 #  error "libassert/version.hpp does not describe 2.2.1 — the generated header drifted from the tarball"
 #endif
 
+// Both packages build objects rather than shared libraries, so the
+// declarations this TU sees must be plain. Each delivers that with a shim in
+// front of the one header that reads its macro — no descriptor key carries a
+// define into a consumer's TUs. On Linux the difference is only a visibility
+// attribute, so a regression is invisible; on the MSVC ABI it is `dllimport`
+// against a locally defined symbol, which is exactly how this member first
+// failed on the windows CI leg.
+#if !defined(LIBASSERT_STATIC_DEFINE)
+#  error "LIBASSERT_STATIC_DEFINE is not set — the compat.libassert platform.hpp shim was not reached"
+#endif
+#if !defined(CPPTRACE_STATIC_DEFINE)
+#  error "CPPTRACE_STATIC_DEFINE is not set — compat.cpptrace's basic.hpp shim did not reach a transitive consumer"
+#endif
+
 static std::string captured;
 static std::size_t trace_frames = 0;
 static int failures = 0;

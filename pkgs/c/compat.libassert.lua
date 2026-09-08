@@ -29,8 +29,16 @@
 -- build is static. It is checked in rather than generated, so this is a define
 -- and not a snapshot — but it is not optional, and it has to reach CONSUMERS
 -- too, not just this package's own TUs: the attribute is on the declarations
--- they include. Hence `defines`, which mcpp applies to both, rather than
--- `cxxflags`, which is package-private.
+-- they include.
+--
+-- ⚠️ NO DESCRIPTOR KEY CAN DELIVER THAT. `defines` is package-private, same as
+-- `cxxflags` — measured on the compile database, and stated for features in
+-- `docs/repository-and-schema.md`. So the define is carried by a SHIM in front
+-- of `libassert/platform.hpp`, which is both the only header that reads the
+-- macro and the one every other libassert header includes. `compat.cpptrace`
+-- carries the identical arrangement for its own `basic.hpp`, and the reason it
+-- is not optional is written up there: on the MSVC ABI a `dllimport`
+-- declaration of a locally defined symbol is a link error, not a warning.
 --
 -- ── One generated header ───────────────────────────────────────────────────
 --
@@ -92,9 +100,23 @@ package = {
         import_std   = false,
         c_standard   = "c11",
 
-        include_dirs = { "*/include", "mcpp_generated" },
+        -- ORDER MATTERS: mcpp_generated FIRST, for the platform.hpp shim.
+        include_dirs = { "mcpp_generated", "*/include" },
 
         generated_files = {
+            ["mcpp_generated/libassert/platform.hpp"] = [==[
+// mcpp-index shim: libassert is built as objects here, not as a shared
+// library, so every declaration must be plain rather than
+// dllimport/visibility-default. Upstream reads LIBASSERT_STATIC_DEFINE in this
+// header and nowhere else, and every other libassert header includes this one.
+#ifndef MCPP_COMPAT_LIBASSERT_STATIC_SHIM
+#define MCPP_COMPAT_LIBASSERT_STATIC_SHIM
+#ifndef LIBASSERT_STATIC_DEFINE
+#  define LIBASSERT_STATIC_DEFINE
+#endif
+#include_next <libassert/platform.hpp>
+#endif
+]==],
             ["mcpp_generated/libassert/version.hpp"] = [==[
 /* configure_file() of cmake/in/version-hpp.in for libassert 2.2.1. */
 #ifndef LIBASSERT_VERSION_HPP
@@ -117,6 +139,8 @@ package = {
         targets = { ["libassert"] = { kind = "lib" } },
         deps    = { ["compat.cpptrace"] = "1.0.4" },
 
+        -- Belt and braces for this package's own TUs; the shim above is what
+        -- reaches everyone else's.
         defines = { "LIBASSERT_STATIC_DEFINE" },
     },
 }
