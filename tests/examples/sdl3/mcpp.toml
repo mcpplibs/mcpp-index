@@ -1,0 +1,12 @@
+# compat.sdl3 test project. `compat` redirect inherited from the workspace root.
+#
+# Everything asserted runs on a headless runner: the test forces SDL's DUMMY
+# video driver, so it exercises the real video subsystem — window creation,
+# surface ops, the event queue — without needing a display server on any of the
+# three platforms.
+[package]
+name = "sdl3-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+sdl3 = "3.4.2"
