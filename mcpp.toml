@@ -90,6 +90,7 @@ members = [
     "tests/examples/redis-plus-plus-v133",
     "tests/examples/redis-plus-plus-async",
     "tests/examples/sdl2",
+    "tests/examples/sdl3",
     "tests/examples/spdlog",
     "tests/examples/fontconfig",
     "tests/examples/freetype",

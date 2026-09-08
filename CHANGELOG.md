@@ -9,6 +9,37 @@
 
 ### Added
 
+- 收录 `compat.sdl3` 3.4.2 —— SDL3 窗口/输入/音频层,从源码构建(形态 E)。
+  它是 `compat.sdl2` 的**兄弟而非替代**:两者是不同 API、不同 soname。
+  比 SDL2 好办的两点都是实测:**tarball 没有符号链接**
+  (`tar tvzf|grep -c '^l'` → 0),所以不需要 SDL2 那种 `-nosymlinks` 重打包托管;
+  以及**配置分发器是上游自带的** —— windows/macOS 的 config 都是签入的,
+  只有 linux 会掉进 `SDL_build_config_minimal.h`(那份根本没有视频驱动)。
+  所以只生成**一份** config,而且只有 linux 用它。
+  ⚠️ 生成它必须用**索引自己的工具链 + 索引自己的 X11 头** —— mcpp 的 gcc 自带
+  sysroot,看不见 `/usr/include`,不喂索引的头 SDL 的检测会直接失败退出。
+  ⚠️⚠️ **config 只许声明索引真正打了包的东西**,这是规则不是偏好:CMake 探的是
+  它运行的那台机器,宿主有什么就开什么,然后在这里编不过。三个是靠失败的构建
+  一个个抓出来的 —— XSCRNSAVER(`X11/extensions/scrnsaver.h` 找不到)、LIBTHAI、
+  HIDAPI_LIBUSB;XTEST/XSYNC 一并预防性关掉。剩下的是**可核对**的:配置里所有
+  会被 `dlopen` 的库共 7 个,每一个都有对应的包(fribidi + X11 六件套),
+  与 `linux.deps` 一一对应。
+  源集不是"读 CMakeLists 猜的":configure 之后从
+  `CMakeFiles/SDL3-static.dir/build.make` 把 CMake 真正选中的 266 个源读回来,
+  归并成 **73 个整目录 + 1 个部分目录**(`src/core/linux`,跳过 dbus/IME 那 6 个
+  文件 —— 与 `compat.sdl2` 跳过的是同一批,它们不自 guard)。
+  macOS/Windows 不用生成的 config,所以它们的源集是**从签入 config 里开了哪些
+  driver 反推的**;windows 有一处不显然:`SDL_THREAD_GENERIC_COND_SUFFIX` /
+  `_RWLOCK_SUFFIX` 意味着条件变量和读写锁回退到 generic 实现,所以要单独带上
+  `thread/generic/SDL_syscond.c` 与 `SDL_sysrwlock.c` —— **只这两个**,其余四个
+  与 windows 版同名。
+  测试用 SDL 的 **dummy 视频驱动**,三个平台上无显示器都能跑:断言头与运行时
+  版本一致、编译进来的驱动表里有 dummy 与 offscreen(掉进 minimal config 就一个
+  都没有)、dummy 驱动真能初始化并建出 320x240 的窗口和同尺寸 surface、
+  以及计时器会前进。
+  实测:linux · gcc 16.1.0 与 linux · llvm 22.1.8 两条腿都编过(267 个 TU)并跑通;
+  macOS/Windows 由 CI 裁决。CN 镜像 `gitcode.com/mcpp-res/sdl3` 已建并验过逐字节相同。
+
 - 收录 **vulkan-rt 依赖的八个通用库**,一次补齐:`compat.glm` 1.0.2、
   `compat.doctest` 2.4.12、`compat.argparse` 3.2、`compat.mio` 2023.3.3、
   `compat.gzip-hpp` 0.1.0、`compat.cpptrace` 1.0.4、`compat.libassert` 2.2.1、
