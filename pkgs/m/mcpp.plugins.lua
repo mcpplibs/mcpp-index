@@ -2,7 +2,7 @@
 -- each member selected by a feature.
 --
 --   [dependencies.mcpp]
---   plugins = { version = "0.5.0", features = ["rules-spirv"], host-module = true }
+--   plugins = { version = "0.5.1", features = ["rules-spirv"], host-module = true }
 --
 --   // build.mcpp
 --   import mcpp;
@@ -283,6 +283,12 @@
 -- The floor does not move. 0.5.0 changes what the package generates, not what
 -- it asks the engine for, so it stays at mcpp 2026.9.8.1.
 --
+-- 0.5.1 refuses overlapping roots, which 0.5.0's design record required and
+-- 0.5.0 shipped without: a file reachable from two roots had two namespace
+-- paths, and which one it got depended on the order of the list. It also stops
+-- a single-file root from registering a re-run glob over the directory that
+-- file happens to sit in.
+--
 -- The descriptor points at the source archive of the tag, the shape `grpcgen`
 -- established; the CN asset is the same bytes, so one sha256 names both.
 package = {
@@ -296,6 +302,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.5.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.5.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.5.1/mcpp-plugins-0.5.1.tar.gz",
+                },
+                sha256 = "1be429b00faaf48afa6c607bdcb98f05b242fef297bd2c588f67fae98f0d83e1",
+            },
             ["0.5.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.5.0.tar.gz",
@@ -380,9 +393,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.5.0" },
+            ["latest"] = { ref = "0.5.1" },
         },
         macosx = {
+            ["0.5.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.5.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.5.1/mcpp-plugins-0.5.1.tar.gz",
+                },
+                sha256 = "1be429b00faaf48afa6c607bdcb98f05b242fef297bd2c588f67fae98f0d83e1",
+            },
             ["0.5.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.5.0.tar.gz",
@@ -467,9 +487,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.5.0" },
+            ["latest"] = { ref = "0.5.1" },
         },
         windows = {
+            ["0.5.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.5.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.5.1/mcpp-plugins-0.5.1.tar.gz",
+                },
+                sha256 = "1be429b00faaf48afa6c607bdcb98f05b242fef297bd2c588f67fae98f0d83e1",
+            },
             ["0.5.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.5.0.tar.gz",
@@ -554,7 +581,7 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.5.0" },
+            ["latest"] = { ref = "0.5.1" },
         },
     },
 
