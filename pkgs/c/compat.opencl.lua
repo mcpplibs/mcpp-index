@@ -201,11 +201,28 @@ package = {
                 "*/loader/windows/icd_windows_library.c",
             },
             -- Upstream's `target_link_libraries(OpenCL PRIVATE cfgmgr32.lib
-            -- runtimeobject.lib)`, in the spelling this index uses for a
-            -- Windows system library. cfgmgr32 is the device enumeration the
-            -- DXGK path walks; runtimeobject is WinRT, which the app-package
-            -- scan calls into.
-            ldflags = { "-lcfgmgr32", "-lruntimeobject" },
+            -- runtimeobject.lib)` -- and four more that upstream never has to
+            -- name. cfgmgr32 is the device enumeration the DXGK path walks;
+            -- runtimeobject is WinRT, which the app-package scan calls into.
+            --
+            -- WHY UPSTREAM'S TWO ARE NOT ENOUGH HERE. MSVC pulls the default
+            -- Windows import libraries in through `#pragma comment(lib, ...)`
+            -- in its own SDK headers, so a CMake build never writes advapi32
+            -- or ole32 down. mcpp links with lld and does not inherit that, and
+            -- the build compiled cleanly and then failed at link with nine
+            -- undefined symbols -- eight registry and token calls
+            -- (`RegOpenKeyExA`, `OpenProcessToken`, `GetSidSubAuthority`, ...)
+            -- and `StringFromGUID2`.
+            --
+            -- Measured on this index's own Windows job, which is the only
+            -- Windows the change had: the compile is not the criterion, the
+            -- link is.
+            ldflags = {
+                "-lcfgmgr32",      -- CM_Get_Device_ID_List, the DXGK adapter walk
+                "-lruntimeobject", -- WinRT, for the app-package scan
+                "-ladvapi32",      -- registry + process token
+                "-lole32",         -- StringFromGUID2
+            },
             runtime = { capabilities = { "opencl.icd.driver" } },
         },
     },
