@@ -44,12 +44,15 @@
 //     consumer. The entry is present, so the package did its part; the target
 //     is the machine's answer.
 //
-//   * A SONAME this package states it does not serve. Today that is
-//     `libOpenCL.so.1`: the payload ships an OpenCL adapter, and serving it
-//     would mean depending on `compat:opencl`, which drags the host's
-//     proprietary OpenCL driver farm into every SYCL project. The recipe
-//     records that decision; this list is the half that makes it visible, and
-//     a project that wants the back end declares `compat:opencl` itself.
+//   * A SONAME this package gets from a DECLARED DEPENDENCY rather than from
+//     its own farm. Today that is `libOpenCL.so.1`: `compat:sycl-runtime`
+//     depends on `compat:opencl`, whose shared library is deployed beside the
+//     consumer's executable and is found there through `$ORIGIN`. The name is
+//     listed here rather than resolved through the process, because resolving
+//     through the process is what let another farm answer for
+//     `libnvidia-ml.so.1` and hide the gap this test exists to catch. A short
+//     list that a reader can check is the price of a criterion that cannot be
+//     masked.
 //
 // Which devices exist is deliberately NOT asserted: that is the machine's
 // answer, not this package's.
@@ -83,9 +86,14 @@ bool provided_by_the_artifact(const std::string& soname) {
         || soname.rfind("ld-linux", 0) == 0;
 }
 
-// Stated, not served. See the header for the reason and for what a project
-// that wants it writes instead.
-bool declared_unserved(const std::string& soname) {
+// Served by a declared dependency of this package, not by its farm.
+//
+// `compat:opencl` builds the Khronos ICD loader with the canonical soname and
+// mcpp deploys it beside the consumer's executable, where `$ORIGIN` finds it.
+// Naming it here keeps the farm's self-sufficiency assertion exact: everything
+// NOT on this list must be in the farm, and no other directory on the search
+// path can answer for it.
+bool served_by_a_declared_dependency(const std::string& soname) {
     return soname == "libOpenCL.so.1";
 }
 
@@ -258,9 +266,10 @@ int main() {
                                 name.c_str(), soname.c_str());
                 continue;
             }
-            if (declared_unserved(soname)) {
-                std::printf("note %s needs %s, which this package states it "
-                            "does not serve\n", name.c_str(), soname.c_str());
+            if (served_by_a_declared_dependency(soname)) {
+                std::printf("note %s needs %s, which a declared dependency of "
+                            "this package provides\n",
+                            name.c_str(), soname.c_str());
                 continue;
             }
             std::printf("FAIL %s needs %s, which the farm does not carry\n",

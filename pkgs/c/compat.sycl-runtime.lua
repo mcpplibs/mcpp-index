@@ -128,29 +128,34 @@ package = {
         c_standard   = "c11",
         sources      = { "mcpp_generated/sycl_runtime_empty.c" },
         targets      = { ["sycl_runtime"] = { kind = "lib" } },
-        -- THE OTHER BACK END THE PAYLOAD SHIPS AN ADAPTER FOR IS DELIBERATELY
-        -- NOT SERVED HERE, and saying so is the point: it was unstated before,
-        -- which is the same condition that let the CUDA one break silently.
+        -- THE OTHER BACK END THE PAYLOAD SHIPS AN ADAPTER FOR.
         --
-        -- `libur_adapter_opencl.so.0` has `libOpenCL.so.1` in its DT_NEEDED and
-        -- nothing on an mcpp artifact's search path provides it, so the OpenCL
-        -- back end of a SYCL program does not load. `compat:opencl` builds that
-        -- loader and would fix it in one line here.
+        -- `libur_adapter_opencl.so.0` has `libOpenCL.so.1` in its DT_NEEDED,
+        -- and nothing on an mcpp artifact's search path provided it, so the
+        -- OpenCL back end of a SYCL program did not load. That is the same
+        -- defect as the missing driver soname one API over, and it was
+        -- invisible for the same reason: an adapter that fails to load is
+        -- reported by nothing.
         --
-        -- MEASURED REASON FOR NOT WRITING THAT LINE. `compat:opencl` depends in
-        -- turn on `compat:opencl-runtime`, a farm of the HOST's proprietary
-        -- OpenCL driver family, so the edge would put a machine-specific vendor
-        -- surface into every SYCL project. It also carries `libnvidia-ml.so.1`,
-        -- and with the edge declared it satisfied the CUDA adapter's need for
-        -- NVML -- which made the farm below look correct while it was not. A
-        -- dependency that hides the defect the package next to it is fixing is
-        -- the wrong dependency.
+        -- A DEPENDENCY RATHER THAN A FARM ENTRY. Unlike the driver, this one is
+        -- not a host file that may not be redistributed: `compat:opencl` builds
+        -- the Khronos ICD loader from source with the canonical soname, and it
+        -- reaches the machine's own drivers through `compat:opencl-runtime`.
+        -- Farming a copy here would be a second answer to a question this index
+        -- already answers.
         --
-        -- A project that wants OpenCL devices from SYCL writes
-        -- `[dependencies.compat] opencl = "2026.05.29"` in its own manifest,
-        -- where the vendor surface is its choice. `tests/farm.cpp` records the
-        -- adapter as expected-unserved so the omission stays visible.
-        deps         = {},
+        -- WHAT WAS BRIEFLY WRITTEN HERE INSTEAD, AND WHY IT WAS WRONG. A draft
+        -- declared the adapter unserved, on the ground that `compat:opencl`
+        -- drags a vendor surface in and that its farm -- which carries
+        -- `libnvidia-ml.so.1` -- made this package's own farm look correct
+        -- while it was missing NVML. The second half was true of a criterion
+        -- that measured the PROCESS: `tests/farm.cpp` now reads each member's
+        -- DT_NEEDED against this farm alone, so nothing else on the search path
+        -- can hide a gap in it. With that fixed, the remaining objection was
+        -- only the size of the surface, and a back end the payload ships an
+        -- adapter for is not something a runtime adapter should leave
+        -- unreachable.
+        deps         = { ["compat.opencl"] = "2026.05.29" },
         runtime = {
             library_dirs = { "mcpp_generated/sycl_runtime/lib" },
             capabilities = { "sycl.runtime" },
