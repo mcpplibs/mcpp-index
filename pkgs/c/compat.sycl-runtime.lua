@@ -73,10 +73,19 @@ package = {
             -- `RUNPATH = $ORIGIN`, that inheritance switched off for them and
             -- the adapter could no longer see a driver two farms away. The
             -- sentinel is the one package permitted to know where the driver
-            -- is; this package declares it and links the same file
-            -- compat.cuda-runtime links, under the same soname, so a program
-            -- that has both farms on its path loads it once.
-            deps = { "xim:dpcpp@7.1.0", "xim:zlib", "xim:libcuda-host-link" },
+            -- is; this package declares it and links the same files
+            -- compat.cuda-driver links, under the same sonames, so a program
+            -- that has both farms on its path loads each of them once.
+            --
+            -- PINNED, AND THE PIN IS THE DECISION. 0.0.2 is the version at
+            -- which the sentinel answers for a SET of driver sonames rather
+            -- than for `libcuda.so.1` alone, and the farm below links whatever
+            -- the pinned sentinel published. The unpinned edge that was here
+            -- resolved to `latest`, which reads as "whatever is newest" and
+            -- means "whatever this machine happens to hold" once one version
+            -- is already installed.
+            deps = { "xim:dpcpp@7.1.0", "xim:zlib",
+                     "xim:libcuda-host-link@0.0.2" },
             -- 2026.09.06 is kept so a consumer already pinning it keeps
             -- resolving.
             --
@@ -93,6 +102,10 @@ package = {
             -- because "kept and frozen" reads as a promise about what an old
             -- pin installs. It is not one. A version here is a coordinate a
             -- consumer can name, not a snapshot of this recipe.
+            ["2026.09.10"] = {
+                url    = "https://raw.githubusercontent.com/intel/llvm/v7.1.0/sycl/LICENSE.TXT",
+                sha256 = "410f3a23b4bbacbd246310d8c014a20af18cfc8c0d740ddf0f673ea20894da9c",
+            },
             ["2026.09.07"] = {
                 url    = "https://raw.githubusercontent.com/intel/llvm/v7.1.0/sycl/LICENSE.TXT",
                 sha256 = "410f3a23b4bbacbd246310d8c014a20af18cfc8c0d740ddf0f673ea20894da9c",
@@ -105,7 +118,7 @@ package = {
                 url    = "https://raw.githubusercontent.com/intel/llvm/v7.1.0/sycl/LICENSE.TXT",
                 sha256 = "410f3a23b4bbacbd246310d8c014a20af18cfc8c0d740ddf0f673ea20894da9c",
             },
-            ["latest"] = { ref = "2026.09.07" },
+            ["latest"] = { ref = "2026.09.10" },
         },
     },
 
@@ -115,6 +128,28 @@ package = {
         c_standard   = "c11",
         sources      = { "mcpp_generated/sycl_runtime_empty.c" },
         targets      = { ["sycl_runtime"] = { kind = "lib" } },
+        -- THE OTHER BACK END THE PAYLOAD SHIPS AN ADAPTER FOR IS DELIBERATELY
+        -- NOT SERVED HERE, and saying so is the point: it was unstated before,
+        -- which is the same condition that let the CUDA one break silently.
+        --
+        -- `libur_adapter_opencl.so.0` has `libOpenCL.so.1` in its DT_NEEDED and
+        -- nothing on an mcpp artifact's search path provides it, so the OpenCL
+        -- back end of a SYCL program does not load. `compat:opencl` builds that
+        -- loader and would fix it in one line here.
+        --
+        -- MEASURED REASON FOR NOT WRITING THAT LINE. `compat:opencl` depends in
+        -- turn on `compat:opencl-runtime`, a farm of the HOST's proprietary
+        -- OpenCL driver family, so the edge would put a machine-specific vendor
+        -- surface into every SYCL project. It also carries `libnvidia-ml.so.1`,
+        -- and with the edge declared it satisfied the CUDA adapter's need for
+        -- NVML -- which made the farm below look correct while it was not. A
+        -- dependency that hides the defect the package next to it is fixing is
+        -- the wrong dependency.
+        --
+        -- A project that wants OpenCL devices from SYCL writes
+        -- `[dependencies.compat] opencl = "2026.05.29"` in its own manifest,
+        -- where the vendor surface is its choice. `tests/farm.cpp` records the
+        -- adapter as expected-unserved so the omission stays visible.
         deps         = {},
         runtime = {
             library_dirs = { "mcpp_generated/sycl_runtime/lib" },
@@ -149,6 +184,68 @@ local function payload_dir()
         end
     end
     return nil
+end
+
+-- The version this package asks the sentinel for. One spelling, because the
+-- xpm dependency edge and the directory read back must name the same thing or
+-- the farm silently mirrors an older sentinel than the one that was installed.
+local SENTINEL_VERSION = "0.0.2"
+
+-- The sentinel's install directory, or nil.
+--
+-- ROOT comes first for the reason `farm_libc_stubs` records: this package
+-- installs into a PROJECT-LOCAL store while its dependencies are resolved from
+-- the shared registry, so a store derived from the environment can be the
+-- wrong one, while the store the payload itself came from cannot be.
+local function sentinel_dir(root)
+    local dir = pkginfo.install_dir("xim:libcuda-host-link", SENTINEL_VERSION)
+    if dir then return dir end
+    local roots = {}
+    if root then roots[#roots + 1] = root end
+    local pfx = pkginfo.install_dir()
+    if pfx then roots[#roots + 1] = path.directory(path.directory(pfx)) end
+    local home = (os.getenv and os.getenv("XLINGS_HOME")) or ""
+    if home == "" then home = ((os.getenv and os.getenv("HOME")) or "") .. "/.xlings" end
+    roots[#roots + 1] = path.join(home, "data/xpkgs")
+    roots[#roots + 1] = path.join((os.getenv and os.getenv("HOME")) or "",
+                                  ".mcpp/registry/data/xpkgs")
+    for _, r in ipairs(roots) do
+        local cand = path.join(r, "xim-x-libcuda-host-link", SENTINEL_VERSION)
+        if os.isdir(cand) then return cand end
+    end
+    return nil
+end
+
+-- Link every versioned soname in SRCDIR into DST, and return how many.
+--
+-- ONE enumeration, used for both directories this farm draws from -- the
+-- payload's and the sentinel's. They were two loops with two spellings of the
+-- same filter, and only one of them was an enumeration at all: the driver was
+-- a hand-written name, which is what mcpp#596 reports.
+--
+-- `libfoo.so.N` and `libfoo.so.N.M.P`, including upstream's `.so.9.0.0-0`, but
+-- never a bare `libfoo.so`: mcpp puts `runtime.library_dirs` on the LINK line
+-- as well as the runtime path, so an unversioned name here would be found by
+-- `-lfoo` and would bind the build to this farm instead of to the payload the
+-- project declared. The `.py` exclusion drops the `-gdb.py` sidecars that sit
+-- beside the payload's libraries and match a looser test for a versioned name.
+--
+-- `io.popen` rather than `os.files`: the latter is not available in the recipe
+-- sandbox, which the llvm and cuda-cccl recipes record the same way.
+local function farm_versioned(dst, srcdir)
+    local n = 0
+    local p = io.popen(string.format([[ls -1 "%s" 2>/dev/null]], srcdir))
+    if not p then return 0 end
+    for line in p:lines() do
+        local name = line:gsub("[\r\n]+$", "")
+        if name:match("%.so%.%d") and not name:match("%.py$") then
+            os.exec(string.format([[ln -sfn "%s" "%s"]],
+                                  path.join(srcdir, name), path.join(dst, name)))
+            n = n + 1
+        end
+    end
+    p:close()
+    return n
 end
 
 -- THE C LIBRARY'S COMPATIBILITY STUBS HAVE TO BE FARMED TOO.
@@ -266,48 +363,25 @@ function install()
         return true
     end
 
-    -- `io.popen` rather than `os.files`: the latter is not available in the
-    -- recipe sandbox (`attempt to call a nil value`), which the llvm and
-    -- cuda-cccl recipes record the same way.
-    local n = 0
-    local p = io.popen("ls -1 " .. path.join(src, "lib") .. " 2>/dev/null")
-    if p then
-        for line in p:lines() do
-            -- `libfoo.so.N` and `libfoo.so.N.M.P`, never a bare `libfoo.so`:
-            -- see the header for why an unversioned name here would reach the
-            -- linker.
-            -- `libfoo.so.N`, `libfoo.so.N.M.P` and upstream's `.so.9.0.0-0`,
-            -- but not the `-gdb.py` sidecars that sit beside them and match a
-            -- looser test for a versioned soname.
-            if line:match("%.so%.%d") and not line:match("%.py$") then
-                os.exec("ln -sf " .. path.join(src, "lib", line) .. " "
-                        .. path.join(outdir, line))
-                n = n + 1
-            end
-        end
-        p:close()
-    end
+    local n = farm_versioned(outdir, path.join(src, "lib"))
     if n == 0 then
         log.warn("compat.sycl-runtime: the payload at %s has no versioned "
                  .. "library in lib/; the farm is empty", src)
         return true
     end
 
-    -- The driver, through the sentinel and never through a probe of our own.
-    -- Only the versioned soname: mcpp puts runtime.library_dirs on the LINK
-    -- line as well, and an unversioned `libcuda.so` here would be picked up by
-    -- `-lcuda` and bind the build to one machine's driver.
-    local drv = 0
-    for _, root in ipairs({ path.directory(path.directory(src)) }) do
-        local f = io.popen(string.format(
-            [[ls -1d "%s"/xim-x-libcuda-host-link/*/lib/libcuda.so.1 2>/dev/null | sort -V | tail -1]], root))
-        local hit = f and (f:read("l") or "") or ""
-        if f then f:close() end
-        if hit ~= "" then
-            os.exec(string.format([[ln -sfn "%s" "%s"]], hit, path.join(outdir, "libcuda.so.1")))
-            drv = 1
-        end
-    end
+    -- The driver, through the sentinel and never through a probe of our own,
+    -- and ENUMERATED rather than named.
+    --
+    -- This linked one hand-written `libcuda.so.1` until mcpp#596, and the
+    -- hand-written half is the half that was wrong: `libur_adapter_cuda.so.0`
+    -- has `libnvidia-ml.so.1` in DT_NEEDED as well, the farm did not carry it,
+    -- the adapter did not load, and the program aborted with no diagnosis.
+    -- Which driver libraries exist is the sentinel's question; a farm that
+    -- reads its directory cannot disagree with it, and a farm that names a
+    -- file did.
+    local sentinel = sentinel_dir(path.directory(path.directory(src)))
+    local drv = sentinel and farm_versioned(outdir, path.join(sentinel, "lib")) or 0
     if drv == 0 then
         -- Not fatal, and not this package's business to decide: a machine with
         -- no NVIDIA driver is a legitimate configuration, and the SYCL runtime
@@ -317,7 +391,11 @@ function install()
     end
 
     local stubs = farm_libc_stubs(outdir, src)
-    log.info("compat.sycl-runtime: %d versioned sonames from %s, %d C-library stubs",
-             n, src, stubs)
+    -- Every count, not just the payload's. The three halves of this farm fail
+    -- independently -- a payload with no libraries, a machine with no driver,
+    -- a store whose C-library stubs were not found -- and one number could not
+    -- distinguish them.
+    log.info("compat.sycl-runtime: %d payload sonames from %s, %d driver "
+             .. "soname(s), %d C-library stubs", n, src, drv, stubs)
     return true
 end

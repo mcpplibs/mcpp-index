@@ -143,6 +143,22 @@
 
 ### Changed
 
+- `compat.sycl-runtime` 2026.09.10 与 `compat.cuda-driver` 2026.09.10:驱动一侧
+  的 farm 由**枚举哨兵目录**得到,不再手写 `libcuda.so.1` 一个名字,并把哨兵
+  依赖钉到 `xim:libcuda-host-link@0.0.2`。手写的那一半正是错的那一半:
+  `libur_adapter_cuda.so.0` 的 DT_NEEDED 里除 `libcuda.so.1` 之外还有
+  `libnvidia-ml.so.1`,farm 没有携带,适配器加载失败,CUDA 后端整个消失,
+  程序以退出码 134 终止且不打印任何异常文本(mcpp#596)。哪些驱动库存在是
+  哨兵包的问题;读它的目录得到的 farm 无法与它不一致,而写死文件名的 farm 已经
+  不一致了。旧版本键保留:本文件只有一个 `install()` 且不读 `pkginfo.version()`,
+  所以旧钉今天安装得到的仍是当前 farm,新版本键的作用是让已经装过该目录的机器
+  重新安装。
+- `compat.sycl-runtime` 明确声明**不服务** `libOpenCL.so.1`。载荷自带 OpenCL
+  适配器,而 `compat:opencl` 会连带引入宿主专有 OpenCL 驱动的 farm,把一份
+  随机器而变的厂商面塞进每一个 SYCL 工程;实测中它还提供了 `libnvidia-ml.so.1`,
+  从而遮住上一条正在修的缺口。需要该后端的工程在自己的 manifest 里声明
+  `compat:opencl`。
+
 - `compat.cuda-runtime` 改名为 `compat.cuda-driver`,并改正 `repo` 字段。
   NVIDIA 词汇里 "CUDA Runtime" 专指 `libcudart`,而本包 farm 的是驱动的
   `libcuda.so.1`;它的 `capabilities` / `provides` 从第一版起就写作 `cuda.driver`,
@@ -171,6 +187,15 @@
   `galay.kernel` 默认模块，并加入 Unix 示例工程和索引文档。
 
 ### Fixed
+
+- `tests/examples/sycl-runtime` 的判据由**三个手写 soname 的 dlopen**改为
+  **对 farm 全体成员做 DT_NEEDED 闭包走查**。farm 有 26 个成员而断言只有三个
+  名字,坏掉的两个不在其中,所以这条判据在缺陷存在期间一直是绿的。改用 dlopen
+  全体成员仍然不够:dlopen 量的是**进程**,而进程的搜索路径上不止本包放的东西
+  —— 实测中另一个 farm 提供了 `libnvidia-ml.so.1`,把本包的缺口遮成通过。
+  现在的走查只看 farm 自己,并区分三种读数:解析到、farm 里存在但悬空(无驱动的
+  机器,记 note)、farm 根本没有(打包缺口,失败)。三条腿都实测过:补全后 26/26
+  通过;拿掉 NVML 后点名成员与 soname 失败;把驱动链改为悬空后 24/26 通过。
 
 - 跟进 Galay 5.0.1 对 C++23 module prelude 的跨平台 intrinsic 头文件守卫修复，
   避免 Clang 在 Linux/macOS 上错误转发 `intrin.h`。
