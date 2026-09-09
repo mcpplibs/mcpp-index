@@ -47,7 +47,7 @@
 -- package's own `[xlings]`, because mcpp materialises `[xlings] deps` for the
 -- ROOT project only and this must resolve when the package itself installs.
 --
--- ⭐ THE FARM MIRRORS THE SENTINEL; IT DOES NOT HOLD AN OPINION.
+-- THE FARM MIRRORS THE SENTINEL; IT DOES NOT HOLD AN OPINION.
 --
 -- This package used to name `libcuda.so.1` and link that one file. It now
 -- links every versioned soname the sentinel publishes, which is the same
@@ -133,16 +133,17 @@ package = {
 import("xim.libxpkg.pkginfo")
 import("xim.libxpkg.log")
 
+-- The version this package asks the sentinel for. One spelling, because the
+-- xpm dependency edge and the directory read back must name the same thing or
+-- the farm silently mirrors an older sentinel than the one that was installed.
+local SENTINEL_VERSION = "0.0.2"
+
 -- The sentinel's install directory.
 --
 -- `pkginfo.install_dir` scans only the member-local xpkgs roots; a dependency
 -- installed into the shared registry cache is invisible to it and comes back
 -- nil, so the known roots are tried before giving up. This is the same fallback
 -- compat.mysql-connector-cpp needs for the same reason.
--- The version this package asks the sentinel for. One spelling, because the
--- xpm dependency edge and the directory read back must name the same thing or
--- the farm silently mirrors an older sentinel than the one that was installed.
-local SENTINEL_VERSION = "0.0.2"
 
 local function sentinel_dir()
     local dir = pkginfo.install_dir("xim:libcuda-host-link", SENTINEL_VERSION)
