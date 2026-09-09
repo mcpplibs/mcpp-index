@@ -14,8 +14,11 @@
 // for the declarations both provide.
 #include <cstdio>
 #if !defined(HAVE_OPENCL_LOADER)
+// Reached only if a consumer builds this file without the loader on the line.
+// It used to be the Windows path, which had no loader to depend on; the
+// package has one now and the manifest declares it on every platform.
 int main() {
-    std::printf("compat.opencl: skipped (no windows entry; drivers are enumerated through the registry there)\n");
+    std::printf("compat.opencl: skipped (built without the loader)\n");
     return 0;
 }
 #else

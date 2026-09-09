@@ -28,6 +28,13 @@
 -- hide the GPU. `xim:pocl` therefore declares `OCL_ICD_FILENAMES` into the
 -- subos environment and touches no vendors directory.
 --
+-- WINDOWS ENUMERATES SOMEWHERE ELSE AND NEEDS NO ADAPTER. There the loader
+-- reads `HKLM\SOFTWARE\Khronos\OpenCL\Vendors`, the display adapters through
+-- DXGK, and installed app packages, and each entry names a DLL by absolute
+-- path. An mcpp artifact runs under the SYSTEM loader on Windows, so those
+-- paths resolve with no help -- which is why this platform has a loader here
+-- and no `compat.opencl-runtime` beside it.
+--
 -- SHARED, with the canonical soname, for the reason `compat.vulkan` records:
 -- everything in a process must converge on one loader, and a library that
 -- dlopens `libOpenCL.so.1` by name has to land here.
@@ -51,6 +58,15 @@ package = {
             },
         },
         macosx = {
+            ["2026.05.29"] = {
+                url = {
+                    GLOBAL = "https://github.com/KhronosGroup/OpenCL-ICD-Loader/archive/refs/tags/v2026.05.29.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/opencl/releases/download/2026.05.29/opencl-2026.05.29.tar.gz",
+                },
+                sha256 = "48fd0c5181db7cd046f4f731d5955694892e10998d49d09ee0d997e7e04fd939",
+            },
+        },
+        windows = {
             ["2026.05.29"] = {
                 url = {
                     GLOBAL = "https://github.com/KhronosGroup/OpenCL-ICD-Loader/archive/refs/tags/v2026.05.29.tar.gz",
@@ -151,6 +167,62 @@ package = {
                 "*/loader/linux/icd_linux_library.c",
             },
             ldflags = { "-ldl" },
+            runtime = { capabilities = { "opencl.icd.driver" } },
+        },
+
+        windows = {
+            -- Upstream's WIN32 source list. The loader enumerates drivers from
+            -- the registry (`HKLM\SOFTWARE\Khronos\OpenCL\Vendors`), from the
+            -- display adapters through DXGK, and from installed app packages,
+            -- and loads each with LoadLibrary.
+            --
+            -- NO RUNTIME ADAPTER HERE, AND THAT ASYMMETRY IS THE WHOLE REASON
+            -- LINUX HAS ONE. `compat.opencl-runtime` exists to undo mcpp's
+            -- PRIVATE loader: a bare-soname dlopen from inside an mcpp binary
+            -- does not search the host's library path. A Windows artifact runs
+            -- under the system loader, and the registry names each vendor DLL
+            -- by absolute path, so there is nothing to undo.
+            --
+            -- STATIC, as on macOS, and for a Windows-specific reason on top of
+            -- the one recorded there. A program that wants THE system loader
+            -- links the vendor's `OpenCL.lib` against
+            -- `C:\Windows\System32\OpenCL.dll`; a package shipping a second
+            -- `OpenCL.dll` would compete with that rather than converge on it.
+            -- A program that links this package dispatches through this copy,
+            -- which is the same contract macOS has. It also keeps the module
+            -- definition file out of the build: upstream exports through
+            -- `loader/windows/OpenCL.def`, which only a DLL needs.
+            sources = {
+                "*/loader/windows/icd_windows.c",
+                "*/loader/windows/icd_windows_apppackage.c",
+                "*/loader/windows/icd_windows_dxgk.c",
+                "*/loader/windows/icd_windows_envvars.c",
+                "*/loader/windows/icd_windows_hkr.c",
+                "*/loader/windows/icd_windows_library.c",
+            },
+            -- Upstream's `target_link_libraries(OpenCL PRIVATE cfgmgr32.lib
+            -- runtimeobject.lib)` -- and four more that upstream never has to
+            -- name. cfgmgr32 is the device enumeration the DXGK path walks;
+            -- runtimeobject is WinRT, which the app-package scan calls into.
+            --
+            -- WHY UPSTREAM'S TWO ARE NOT ENOUGH HERE. MSVC pulls the default
+            -- Windows import libraries in through `#pragma comment(lib, ...)`
+            -- in its own SDK headers, so a CMake build never writes advapi32
+            -- or ole32 down. mcpp links with lld and does not inherit that, and
+            -- the build compiled cleanly and then failed at link with nine
+            -- undefined symbols -- eight registry and token calls
+            -- (`RegOpenKeyExA`, `OpenProcessToken`, `GetSidSubAuthority`, ...)
+            -- and `StringFromGUID2`.
+            --
+            -- Measured on this index's own Windows job, which is the only
+            -- Windows the change had: the compile is not the criterion, the
+            -- link is.
+            ldflags = {
+                "-lcfgmgr32",      -- CM_Get_Device_ID_List, the DXGK adapter walk
+                "-lruntimeobject", -- WinRT, for the app-package scan
+                "-ladvapi32",      -- registry + process token
+                "-lole32",         -- StringFromGUID2
+            },
             runtime = { capabilities = { "opencl.icd.driver" } },
         },
     },
