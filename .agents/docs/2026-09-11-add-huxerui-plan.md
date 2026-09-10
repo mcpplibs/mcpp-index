@@ -92,9 +92,14 @@ dependencies from the target axis. A missing entry surfaces as
 `Package <x> was not found in the pkg-config search path`, which names it.
 
 macOS needs no payloads (`[runtime] frameworks`, supplied by the system SDK).
-windows keeps `xim:wix@5.0.2` exactly as emitted — upstream declares it on the
-host axis, because wix.exe runs on the build machine, and the host axis *is*
-emitted.
+windows carries **no** `xim:wix`, though emit produces one. Upstream declares
+wix on the host axis and the host axis is what a descriptor can carry, but
+emitted is not needed: wix builds an MSI, upstream's rule tolerates its absence
+by construction (`if (root.empty()) return {};`), and upstream's manifest says
+an application wanting an installer "declares this line too". CI settled it —
+`xim:wix`'s own install hook fails on a clean windows-latest runner, so
+declaring it took every Windows consumer down for a tool almost none would run.
+Fixed separately in xim-pkgindex#808.
 
 ## 5. The CI pin moves with this PR
 
@@ -110,12 +115,29 @@ rules.cppm:274:61: error: 'package_name' is not a member of 'mcpp'
 
 This is the situation #361 established the pattern for — *"A package whose build
 program uses a current engine API is not a defect; a CI that cannot run current
-engines is."* — so `MCPP_VERSION` moves to **2026.9.10.2** (current) in the same
-PR, and the comment records why.
+engines is."* — so `MCPP_VERSION` moves in the same PR.
+
+It moves to **2026.9.7.1**, the floor, and not to the current release. That was
+the second attempt. 2026.9.10.2 was tried first and CI rejected it:
+`mysql-connector-cpp` failed on linux default, linux llvm and macOS while every
+other member passed. Not that package's fault — mcpp's scanner errors on an
+ordinary block comment. Reduced to four lines:
+
+```cpp
+/*
+  module (exe)
+*/
+int main() { return 0; }
+```
+
+and bisected: OK through 2026.9.8.1, broken from 2026.9.9.1 onward (2026.9.11.1
+included). The regression lands one release after 2026.9.7.1 — which is exactly
+the release that first carries `package_name()`. The floor and the last good
+version coincide, so the pin sits there. Reported as mcpp-community/mcpp#606.
 
 `index.toml` `min_mcpp` does **not** move, for the reason that entry gives: the
 floor is about descriptor **grammar**. Verified — `mcpp xpkg parse` accepts this
-descriptor under 2026.8.27.2 (the floor), 2026.9.6.3 and 2026.9.10.2 alike. A
+descriptor under 2026.8.27.2 (the floor), 2026.9.6.3 and 2026.9.7.1 alike. A
 client on the floor keeps resolving the whole index; only building *this*
 package from source needs the newer engine.
 
@@ -128,7 +150,7 @@ newer engine should ride along.
 Member `tests/examples/huxerui-module`, one `[indices] huxerui = { path = "../../.." }`.
 
 ```
-$ mcpp test -p huxerui-module            # 2026.9.10.2
+$ mcpp test -p huxerui-module            # 2026.9.7.1
    Compiling huxerui.huxerui v0.3.0
    Compiling runtime (test)
      Running bin/runtime
@@ -200,3 +222,33 @@ BYTE-IDENTICAL
 `check_platform_version_parity`, `check_cross_package_refs` — all pass on the
 new descriptor, and the first three pass across `pkgs/*/*.lua` to confirm the
 addition does not disturb anything else.
+
+## 10. What CI added that local verification could not
+
+Three defects surfaced only in CI, and all three lived outside this descriptor.
+
+**`xim:wix` had never been installed.** `tests/w/test_wix.py` is static-only and
+nothing in either index pulled wix in, so its install hook had never run
+anywhere. huxerui is its first consumer; on Windows it fails at
+`Provisioning [xlings.workspace] entries declared by dependencies` — before
+huxerui compiles at all. Removing wix from this descriptor was necessary but not
+sufficient: mcpp also provisions what the BUILDING package declares, and
+upstream's `mcpp.toml` declares it. Fixed in xim-pkgindex#808.
+
+**The scanner regression**, above — which is why the pin is the floor.
+
+**`mysql-connector-cpp` on the llvm leg** still fails at 2026.9.7.1, with
+`install() result=nil` and no scanner error. The default (gcc) leg passes, and
+the two legs are not equivalent: gcc reaches its compiler through `--sysroot`
+into a clean subos, while llvm has no sysroot and the host's headers are on the
+search path. Unexplained, tracked separately, and not attributable to this
+package — `huxerui-module` itself is `ok` in that same shard.
+
+Where huxerui stands per leg, at the pin this PR sets:
+
+| leg | huxerui-module |
+|---|---|
+| linux default | ok |
+| linux llvm | ok |
+| macOS | ok |
+| windows | blocked on xim-pkgindex#808, then expected to pass |
