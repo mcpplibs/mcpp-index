@@ -191,7 +191,31 @@ env:
   # member on every platform. Measured: twelve workspace shards, all still cold
   # after fifty minutes. Batch descriptor changes that need a newer engine into
   # ONE pin move rather than several.
-  MCPP_VERSION: "2026.9.6.3"
+  # ── 2026-09-11: raised 2026.9.6.3 -> 2026.9.10.2 ──────────────────────────
+  #
+  # Same shape as the move above, and for the same reason. `huxerui.huxerui`
+  # is a Form A package whose build program (`mcpp/huxerui-build-rules`) calls
+  # `mcpp::package_name()` and `mcpp::package_namespace()`. Those are mcpp#587,
+  # merged 2026-09-08 and first released in v2026.9.7.1 -- one release past the
+  # old pin -- so under 2026.9.6.3 the host module does not compile at all:
+  #
+  #     error: dependency 'huxerui': host module 'huxerui.rules' compile failed
+  #     rules.cppm:274:61: error: 'package_name' is not a member of 'mcpp'
+  #
+  # Verified at 2026.9.10.2: `mcpp test -p huxerui-module` builds the SDK from
+  # source as an index dependency and the member's assertion passes
+  # (`test result ok. 1 passed`), and the same member still fails on 2026.9.6.3
+  # with the error above. Nothing else in this PR needs the newer engine.
+  #
+  # `index.toml` min_mcpp does NOT move, for the reason the previous entry
+  # gives: the floor is about descriptor GRAMMAR, and `mcpp xpkg parse` accepts
+  # pkgs/h/huxerui.huxerui.lua under 2026.9.6.3 and 2026.9.10.2 alike. A client
+  # on the floor keeps resolving the whole index; only building THIS package
+  # from source needs the newer engine.
+  #
+  # The batching guidance above applies: this move pays the cold-cache cost, so
+  # any other descriptor waiting on a newer engine should ride along.
+  MCPP_VERSION: "2026.9.10.2"
 
 jobs:
   lint:

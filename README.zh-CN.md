@@ -25,7 +25,7 @@ mcpp self config --mirror CN   # 切换至国内镜像,默认使用 GLOBAL 上�
 本仓收录两类包:
 
 - **原生 mcpp 模块库**:以 C++23 模块发布、`import` 即用,包括 `mcpplibs.*`、`nlohmann.json`、`imgui`、`ffmpeg`、`opencv`,以及由
-  用户基于 mcpp 开发并登记进索引的库(如 `tensorvia-cpu`)。其上游通常自带 `mcpp.toml`,描述文件(Form A)只声明
+  用户基于 mcpp 开发并登记进索引的库(如 `tensorvia-cpu`、`huxerui.huxerui`)。其上游通常自带 `mcpp.toml`,描述文件(Form A)只声明
   元数据与下载地址。
 - **第三方 C/C++ 库(`compat`)**:其上游不提供 mcpp 支持,描述文件(Form B)内联构建信息。该类库存在
   header-only、纯 C 源码、C++23 module wrapper 等形态,可选组件经 `features` 门控,并配备 GitCode CN 镜像。
