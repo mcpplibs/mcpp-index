@@ -7,6 +7,48 @@
 
 ## [Unreleased]
 
+### Changed
+
+- **farm 只携带这个 runtime 够得到的东西,并且把「一个钉挪动」这件事在整条链上补齐。**
+  三个 farm(`compat.glx-runtime` / `compat.opencl-runtime` / `compat.vulkan-runtime`)
+  一起到 2026.09.11,消费者链 `compat.glfw` 3.4.0.1、`compat.opencl` 2026.09.11、
+  `compat.vulkan` 1.4.357.2、`compat.sycl-runtime` 2026.09.11 同步。
+
+  ⭐ **剔掉 `libnvidia-pkcs11*`,并撤回它带来的 OpenSSL 依赖。** 它是加密令牌模块,
+  由应用自己的 PKCS#11 配置加载,不由任何 GPU 驱动派发;进 farm 只因为名字匹配
+  `libnvidia*.so.*`。判据是 `LD_DEBUG=libs`(**带对照**):两条链上 `pkcs11` 出现
+  **0 次**,而驱动确实够得到的 `libnvidia-glvkspirv` 出现 6 次、OpenCL adapter 出现
+  23 次 —— 对照证明这个仪器分得开,所以 0 是读数不是沉默。它们也是 farm 里唯一需要
+  `libcrypto` 的成员,随之消失的还有那条无解的 `libcrypto.so.1.1`(OpenSSL 1.1 上游
+  已 EOL)。
+
+  ⚠️⚠️ **一个更早的判据什么都没测到**:把成员删掉看示例还跑不跑 —— 删掉
+  `libnvidia-glvkspirv` 示例照样跑。原因是被测二进制和被改的 farm 不是同一个
+  (产物目录有两个,钉着不同版本)。**判据又一次指错了对象。**
+
+### Fixed
+
+- **三处只有真跑一遍才会现形的缺陷。**
+
+  ⚠️⚠️ **排除循环遍历了模式表却把模式写死。** `compat.vulkan-runtime` 的
+  `never_farm_patterns` 绑定了 `pat` 然后传了字面量 `libnvidia-gtk*`,于是这张表
+  **看起来是列表、行为上只有一条**。往里加 `libnvidia-pkcs11` 毫无效果 —— farm 依旧
+  81 个成员、两个 PKCS#11 都在,这是「排除」写完之后才发现的。
+
+  ⚠️⚠️ **`readelf -d` 不是传递的,一趟补不完。** 上一版用 `ldd`(答案是整个传递闭包)
+  所以一趟够;换成 `readelf` 是对的(它答**文件**说什么,而不是**这台机器**能不能解析),
+  但这一轮补进来的库会带来自己的依赖。实测:`compat.glx-runtime` 第一次真安装,
+  farm 从 52 涨到 77 **仍缺 9 条**,包括 `libLLVM.so.20.1` 和 `libstdc++.so.6`。
+  现在迭代到不动点(带上界防环),再测 **86 个成员、0 缺口、0 封条**。
+
+  ⚠️ 找不到 `readelf` 时那一趟静默返回空,读数与「已完全闭合」相同;现在明确告警,
+  且 `compat.glx-runtime` 的工具查找也先查 store 再查 PATH。
+
+  实测(本机,真驱动):`compat.glx-runtime` 86 成员 / 0 缺口,**零直接宿主触达** ——
+  4 条走 `xim:nvidia-gl-host-link`、24 条走其它 xim 载荷、其余走 subos 库视图。
+  SYCL 示例 `members 49 / walked 49 / findings 无`,Vulkan 示例
+  `members 56 / walked 56 / findings 无`,两者都在 RTX 4080 上跑出正确结果。
+
 ### Fixed
 
 - **两处只有把 glx 那一版真正跑一遍才会现形的缺陷。** 上一轮我量了 opencl 和

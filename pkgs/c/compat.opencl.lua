@@ -49,6 +49,19 @@ package = {
 
     xpm = {
         linux = {
+            -- A new version because this package's pin on its runtime farm
+            -- moved. An installed copy RECORDS the pin it resolved with, so a
+            -- moved pin does not reach a machine that already holds the old
+            -- version -- and where a consumer also names the farm directly, the
+            -- two disagree and the build stops. Measured on a CI runner with a
+            -- warm ~/.mcpp; see the note on compat.vulkan 1.4.357.1.
+            ["2026.09.11"] = {
+                url = {
+                    GLOBAL = "https://github.com/KhronosGroup/OpenCL-ICD-Loader/archive/refs/tags/v2026.05.29.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/opencl/releases/download/2026.05.29/opencl-2026.05.29.tar.gz",
+                },
+                sha256 = "48fd0c5181db7cd046f4f731d5955694892e10998d49d09ee0d997e7e04fd939",
+            },
             ["2026.05.29"] = {
                 url = {
                     GLOBAL = "https://github.com/KhronosGroup/OpenCL-ICD-Loader/archive/refs/tags/v2026.05.29.tar.gz",
@@ -58,6 +71,19 @@ package = {
             },
         },
         macosx = {
+            -- A new version because this package's pin on its runtime farm
+            -- moved. An installed copy RECORDS the pin it resolved with, so a
+            -- moved pin does not reach a machine that already holds the old
+            -- version -- and where a consumer also names the farm directly, the
+            -- two disagree and the build stops. Measured on a CI runner with a
+            -- warm ~/.mcpp; see the note on compat.vulkan 1.4.357.1.
+            ["2026.09.11"] = {
+                url = {
+                    GLOBAL = "https://github.com/KhronosGroup/OpenCL-ICD-Loader/archive/refs/tags/v2026.05.29.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/opencl/releases/download/2026.05.29/opencl-2026.05.29.tar.gz",
+                },
+                sha256 = "48fd0c5181db7cd046f4f731d5955694892e10998d49d09ee0d997e7e04fd939",
+            },
             ["2026.05.29"] = {
                 url = {
                     GLOBAL = "https://github.com/KhronosGroup/OpenCL-ICD-Loader/archive/refs/tags/v2026.05.29.tar.gz",
@@ -67,6 +93,19 @@ package = {
             },
         },
         windows = {
+            -- A new version because this package's pin on its runtime farm
+            -- moved. An installed copy RECORDS the pin it resolved with, so a
+            -- moved pin does not reach a machine that already holds the old
+            -- version -- and where a consumer also names the farm directly, the
+            -- two disagree and the build stops. Measured on a CI runner with a
+            -- warm ~/.mcpp; see the note on compat.vulkan 1.4.357.1.
+            ["2026.09.11"] = {
+                url = {
+                    GLOBAL = "https://github.com/KhronosGroup/OpenCL-ICD-Loader/archive/refs/tags/v2026.05.29.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/opencl/releases/download/2026.05.29/opencl-2026.05.29.tar.gz",
+                },
+                sha256 = "48fd0c5181db7cd046f4f731d5955694892e10998d49d09ee0d997e7e04fd939",
+            },
             ["2026.05.29"] = {
                 url = {
                     GLOBAL = "https://github.com/KhronosGroup/OpenCL-ICD-Loader/archive/refs/tags/v2026.05.29.tar.gz",
@@ -136,7 +175,7 @@ package = {
             -- same relation `compat.vulkan` has to `compat.vulkan-runtime`.
             deps = {
                 ["compat.opencl-headers"] = "2026.05.29",
-                ["compat.opencl-runtime"] = "2026.09.10",
+                ["compat.opencl-runtime"] = "2026.09.11",
             },
             -- dlopen for the ICDs; pthread for `pthread_once` around the scan.
             ldflags = { "-ldl", "-lpthread" },

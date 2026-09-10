@@ -42,16 +42,19 @@ package = {
             -- PLATFORM LEVEL, NOT PER VERSION, matching compat.vulkan-runtime:
             -- a `deps` inside a version entry is not read.
             --
-            -- `xim:openssl` is here because a farmed member needs
-            -- `libcrypto.so.3` and this ecosystem publishes it. The rule this
-            -- package follows is that anything xlings or this index can supply
-            -- comes from there, and the host is reached for one class only --
-            -- proprietary vendor userspace, which cannot be a package at all.
-            -- A floor, not a pin: the soname is ABI-stable at 3.x.
+            -- The rule this package follows is that anything xlings or this
+            -- index can supply comes from there, and the host is reached
+            -- through a named sentinel rather than by this package itself.
+            -- `xim:nvidia-video-host-link` owns "where is the host's
+            -- `libnvcuvid.so.1`", which two farmed members need.
+            --
+            -- OpenSSL was declared here for one release and is gone with the
+            -- member that asked for it: the PKCS#11 provider the name pattern
+            -- swept in and no OpenCL entry point reaches.
             deps = {
-                runtime = { "xim:openssl@>=3", "xim:nvidia-video-host-link" },
+                runtime = { "xim:nvidia-video-host-link" },
             },
-            ["latest"] = { ref = "2026.09.10" },
+            ["latest"] = { ref = "2026.09.11" },
             -- 2026.09.07: a soname carried by more than one installed payload
             -- is decided by symbol coverage rather than by which store path
             -- sorts last, and the ELF machine guard refuses a foreign payload.
@@ -64,6 +67,18 @@ package = {
             -- install() output is baked into the installed payload: without one
             -- a host that already holds the previous version keeps the open
             -- farm. The anchor is unchanged; only install() behaviour is.
+            -- 2026.09.11: the farm carries only what this runtime can
+            -- reach. `libnvidia-pkcs11*` is a PKCS#11 token module that matched
+            -- the vendor name pattern and nothing else -- measured with
+            -- LD_DEBUG on both examples, it is looked for zero times while a
+            -- member the driver does reach appears six -- so it leaves, and the
+            -- OpenSSL declaration it was the only reason for leaves with it.
+            -- A new key because install() output is baked into the installed
+            -- payload.
+            ["2026.09.11"] = {
+                url    = "https://raw.githubusercontent.com/KhronosGroup/OpenCL-ICD-Loader/v2026.05.29/README.md",
+                sha256 = "b332515b9a0bc266ad94fe6e951f0ef7a988ccb9e933068faf0fd8ba3cfde805",
+            },
             ["2026.09.10"] = {
                 url    = "https://raw.githubusercontent.com/KhronosGroup/OpenCL-ICD-Loader/v2026.05.29/README.md",
                 sha256 = "b332515b9a0bc266ad94fe6e951f0ef7a988ccb9e933068faf0fd8ba3cfde805",
@@ -199,6 +214,32 @@ local never_farm = {
     ["libgcc_s.so.1"] = true, ["libOpenCL.so.1"] = true,
 }
 
+-- WHAT THE PATTERN SWEEPS IN THAT THIS RUNTIME CANNOT REACH.
+--
+-- `libnvidia-gtk*` is the driver's settings GUI. `libnvidia-pkcs11*` is its
+-- PKCS#11 provider: a cryptographic token module, loaded by an application's
+-- own PKCS#11 configuration and by nothing in a GPU driver's dispatch. Both
+-- match `libnvidia*.so.*` by name alone.
+--
+-- MEASURED, WITH A CONTROL, before removing them. `LD_DEBUG=libs` on a run of
+-- each example says which files the process actually looked for:
+--
+--   pkcs11                      0 occurrences   (Vulkan and SYCL/OpenCL alike)
+--   libnvidia-glvkspirv         6 occurrences   (Vulkan)
+--   libur_adapter_opencl / libOpenCL   23       (SYCL/OpenCL)
+--
+-- The last two are the control: this instrument does report a member the
+-- driver reaches, so a zero for `pkcs11` is a reading rather than a silence.
+-- An earlier attempt -- remove the member and see whether the example still
+-- runs -- could NOT tell the two apart: removing `libnvidia-glvkspirv` left the
+-- example working too, because the binary under test had been built against a
+-- different farm than the one being edited.
+--
+-- They are also the only members that need `libcrypto` at all, so removing them
+-- removes this package's reason to declare OpenSSL, and with it the
+-- `libcrypto.so.1.1` that no ecosystem package can serve: OpenSSL 1.1 is
+-- end-of-life upstream. A member that cannot be reached is not a capability
+-- being dropped -- it is a file the name pattern collected.
 -- Proprietary vendor userspace: linked from the host by design. `libnvidia-gtk*`
 -- is the driver's settings GUI and is not part of any driver.
 local host_opencl_patterns = { "libnvidia*.so.*" }
@@ -232,7 +273,6 @@ end
 -- /usr/lib. What a farmed member needs is answered in this order:
 --
 --   * an installed payload publishes it -> link the payload's copy.
---     `xim:openssl` covers `libcrypto.so.3` and
 --     `xim:nvidia-video-host-link` covers `libnvcuvid.so.1`, which is
 --     what the two encode/optical-flow members need. Both are declared
 --     in `xpm.linux.deps` above, so the reach is visible in the
@@ -482,7 +522,7 @@ end
 -- SILENCE. Four classes, in the order they are tried:
 --
 --   * a package this ecosystem publishes -- declared in `xpm.linux.deps` and
---     taken from the installed payload. `xim:openssl` covers `libcrypto.so.3`.
+--     taken from the installed payload.
 --   * proprietary vendor userspace -- also a package, and deliberately so:
 --     `xim:nvidia-video-host-link` owns the one question "where is the host's
 --     `libnvcuvid.so.1`". The library still comes from the host, because it is
@@ -496,18 +536,37 @@ end
 --     that quietly absorbs an unknown soname: the answer to "what does this
 --     farm take from outside the ecosystem" has to be a list somebody wrote,
 --     not a residue.
-local UNSERVED = {
-    ["libcrypto.so.1.1"] =
-        "OpenSSL 1.1 is end-of-life upstream and this ecosystem publishes 3.x. "
-        .. "The only member that asks for it is NVIDIA's PKCS#11 provider, "
-        .. "which no OpenCL entry point reaches.",
-}
+-- Empty, and the table stays so that the day something lands here somebody has
+-- to write down why it cannot be a package. The warning below is what makes
+-- leaving it blank impossible to do by accident. `libcrypto.so.1.1` was the
+-- only entry and left with the PKCS#11 member that asked for it.
+local UNSERVED = {}
 
 local function seal_unresolved(outdir)
     local filled, unserved, undeclared = {}, {}, {}
-    local names = unresolved_against_farm(outdir)
     local unserved_dir = path.join(path.directory(outdir), "unserved")
-    for _, soname in ipairs(names) do
+    -- ITERATED TO A FIXED POINT, because `readelf -d` reports DIRECT
+    -- dependencies only.
+    --
+    -- The pass this replaced asked `ldd`, whose answer is the whole transitive
+    -- closure, so one round was enough and the comment said so. `readelf` is
+    -- the right instrument -- it answers what the FILE says instead of what
+    -- this machine can resolve -- but it is not transitive, and a library
+    -- filled in one round brings needs of its own. Measured on the first real
+    -- install of this package: the farm went from 52 members to 77 and was
+    -- still nine sonames short, `libLLVM.so.20.1` and `libstdc++.so.6` among
+    -- them, every one of them reachable from something the same round had just
+    -- added.
+    --
+    -- The bound is not a guess about depth; it is there so a cycle cannot spin.
+    -- A round that adds nothing ends the loop, which is the normal exit.
+    local seen = {}
+    for _ = 1, 16 do
+    local added = 0
+    for _, soname in ipairs(unresolved_against_farm(outdir)) do
+        if seen[soname] then goto next end
+        seen[soname] = true
+        added = added + 1
         local candidates = find_in_store(soname)
         local hit = candidates[#candidates]
         if hit then
@@ -520,6 +579,9 @@ local function seal_unresolved(outdir)
             unserved[#unserved + 1] = soname
             if not UNSERVED[soname] then undeclared[#undeclared + 1] = soname end
         end
+        ::next::
+    end
+    if added == 0 then break end
     end
     return filled, unserved, undeclared
 end
@@ -607,7 +669,7 @@ local function link_runtime_libs(outdir)
             os.exec(
                 "for lib in " .. sh_quote(dir) .. "/" .. pattern ..
                 "; do [ -e \"$lib\" ] || continue; " ..
-                "case \"$(basename \"$lib\")\" in libnvidia-gtk*) continue;; esac; " ..
+                "case \"$(basename \"$lib\")\" in libnvidia-gtk*|libnvidia-pkcs11*) continue;; esac; " ..
                 "ln -sf \"$lib\" " .. sh_quote(outdir) .. "/\"$(basename \"$lib\")\"; " ..
                 "done"
             )
