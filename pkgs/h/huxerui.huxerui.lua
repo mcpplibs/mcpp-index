@@ -73,45 +73,24 @@ package = {
 
     xpm = {
         linux = {
-            -- The transitive .pc closure of gtk4 + epoxy + libsoup, pinned,
-            -- copied from the v0.3.0 tag's [target.'cfg(linux)'.xlings.workspace].
+            -- DIRECT dependencies only -- the four modules upstream's cmake
+            -- and build.mcpp actually ask pkg-config for. The rest of the GTK
+            -- stack arrives through them: each xim package declares its own
+            -- deps, and xlings resolves them transitively (`xlings remove
+            -- pango` is REFUSED, naming `xim:gtk4` as the holder, so the
+            -- reverse edges are live).
+            --
+            -- What this list is FOR is installation, not discovery. Discovery
+            -- goes through `mcpp::xpkg_dir`, which answers from the BUILDING
+            -- package's own manifest -- and upstream's mcpp.toml already
+            -- declares the full closure on its target axis. So the descriptor
+            -- only has to guarantee the payloads are present; naming the other
+            -- 32 here would restate pins this index does not own.
             deps = {
-                "xim:cairo@1.18.4",
-                "xim:expat@2.6.2",
-                "xim:fontconfig@2.15.0.1",
-                "xim:freetype@2.13.2",
-                "xim:fribidi@1.0.13",
-                "xim:gdk-pixbuf@2.44.8",
-                "xim:glib@2.88.3",
-                "xim:graphene@1.10.8",
                 "xim:gtk4@4.16.13",
-                "xim:harfbuzz@14.4.0",
-                "xim:libX11@1.8.10",
-                "xim:libXau@1.0.11",
-                "xim:libXdmcp@1.1.5",
-                "xim:libXext@1.3.6",
-                "xim:libXft@2.3.9",
-                "xim:libXrender@0.9.11",
-                "xim:libdatrie@0.2.14",
                 "xim:libepoxy@1.5.10",
-                "xim:libffi@3.4.4",
-                "xim:libglvnd@1.7.0.1",
-                "xim:libjpeg-turbo@3.2.0",
-                "xim:libpng@1.6.43",
-                "xim:libpsl@0.23.3",
-                "xim:libselinux@3.11",
+                "xim:glib@2.88.3",
                 "xim:libsoup@3.6.6",
-                "xim:libthai@0.1.30",
-                "xim:libtiff@4.7.2",
-                "xim:libxcb@1.17.0",
-                "xim:nghttp2@1.70.0",
-                "xim:pango@1.52.1",
-                "xim:pcre2@10.42",
-                "xim:pixman@0.42.2",
-                "xim:sqlite@3.53.4",
-                "xim:util-linux@2.40.2",
-                "xim:xorgproto@2024.1",
-                "xim:zlib@1.3.1",
             },
             ["0.3.0"] = {
                 url    = {
@@ -131,9 +110,36 @@ package = {
             },
         },
         windows = {
-            -- HOST axis, and emitted as such: wix.exe runs on the build
-            -- machine. Only a project that builds an MSI reaches it.
-            deps = { "xim:wix@5.0.2" },
+            -- NO `xim:wix`, and that is not an oversight.
+            --
+            -- `mcpp emit xpkg` emits `deps = { "xim:wix@5.0.2" }` here because
+            -- upstream declares wix on the HOST axis (top-level
+            -- `[xlings.workspace]`), and the host axis is the one a descriptor
+            -- CAN carry. Emitted is not the same as "every consumer needs it".
+            --
+            -- wix.exe builds an MSI. Nothing else in the SDK touches it, the
+            -- rule tolerates its absence by design --
+            --
+            --     inline ... wix() {
+            --         const std::string root = mcpp::xpkg_dir("xim", "wix");
+            --         if (root.empty()) return {};
+            --
+            -- and upstream's own manifest says an application that asks
+            -- huxerui.rules for an installer "declares this line too". So the
+            -- dependency belongs to that application, not to everyone who
+            -- imports huxerui on Windows.
+            --
+            -- Declaring it here was also actively breaking: `xim:wix`'s
+            -- install hook fails on a clean Windows runner --
+            --
+            --     E_INTERNAL: [wix] failed: install hook failed:
+            --     tar -xf "...\xim-x-wix\5.0.2\.nupkg\wix.nupkg" -C "...\tool"
+            --     ; wix installed but registered none of its declared programs
+            --
+            -- which took every Windows consumer of this package down with it,
+            -- for a tool almost none of them would ever run. Reported against
+            -- xim-pkgindex separately; this descriptor should not have been
+            -- asking for it either way.
             ["0.3.0"] = {
                 url    = {
                     GLOBAL = "https://github.com/HuxerUI/HuxerUI/archive/refs/tags/v0.3.0.tar.gz",
