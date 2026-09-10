@@ -65,6 +65,31 @@ package = {
 
     xpm = {
         linux = {
+            -- 1.4.357.1: the same loader source, pinned to the farm that
+            -- answers for its own members (compat.vulkan-runtime 2026.09.10).
+            --
+            -- A NEW VERSION RATHER THAN A MOVED PIN INSIDE 1.4.357.0, and the
+            -- difference is measured. A consumer that ALSO names
+            -- `compat.vulkan-runtime` directly -- mcpp's graphics examples do,
+            -- under a `cfg(linux)` predicate -- compares its own pin against
+            -- the one recorded in its installed copy of this package. Moving
+            -- the pin inside a published version leaves that recorded copy
+            -- saying 2026.09.07 while the manifest says 2026.09.10, and the
+            -- build stops with `irreconcilable versions`. Measured on a CI
+            -- runner with a warm ~/.mcpp; a machine that re-resolves from a
+            -- fresh index does not see it, which is why it survived local
+            -- testing.
+            --
+            -- 1.4.357.0 keeps its old pin for the same reason: a version that
+            -- is already published must keep resolving the way the machines
+            -- holding it recorded.
+            ["1.4.357.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/KhronosGroup/Vulkan-Loader/archive/refs/tags/vulkan-sdk-1.4.357.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/vulkan/releases/download/1.4.357.0/vulkan-1.4.357.0.tar.gz",
+                },
+                sha256 = "54f2537df22313768da0317dda2abdaaab7711b4081c48c869a79db343d0ae70",
+            },
             ["1.4.357.0"] = {
                 url = {
                     GLOBAL = "https://github.com/KhronosGroup/Vulkan-Loader/archive/refs/tags/vulkan-sdk-1.4.357.0.tar.gz",
@@ -74,6 +99,31 @@ package = {
             },
         },
         macosx = {
+            -- 1.4.357.1: the same loader source, pinned to the farm that
+            -- answers for its own members (compat.vulkan-runtime 2026.09.10).
+            --
+            -- A NEW VERSION RATHER THAN A MOVED PIN INSIDE 1.4.357.0, and the
+            -- difference is measured. A consumer that ALSO names
+            -- `compat.vulkan-runtime` directly -- mcpp's graphics examples do,
+            -- under a `cfg(linux)` predicate -- compares its own pin against
+            -- the one recorded in its installed copy of this package. Moving
+            -- the pin inside a published version leaves that recorded copy
+            -- saying 2026.09.07 while the manifest says 2026.09.10, and the
+            -- build stops with `irreconcilable versions`. Measured on a CI
+            -- runner with a warm ~/.mcpp; a machine that re-resolves from a
+            -- fresh index does not see it, which is why it survived local
+            -- testing.
+            --
+            -- 1.4.357.0 keeps its old pin for the same reason: a version that
+            -- is already published must keep resolving the way the machines
+            -- holding it recorded.
+            ["1.4.357.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/KhronosGroup/Vulkan-Loader/archive/refs/tags/vulkan-sdk-1.4.357.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/vulkan/releases/download/1.4.357.0/vulkan-1.4.357.0.tar.gz",
+                },
+                sha256 = "54f2537df22313768da0317dda2abdaaab7711b4081c48c869a79db343d0ae70",
+            },
             ["1.4.357.0"] = {
                 url = {
                     GLOBAL = "https://github.com/KhronosGroup/Vulkan-Loader/archive/refs/tags/vulkan-sdk-1.4.357.0.tar.gz",
@@ -83,6 +133,31 @@ package = {
             },
         },
         windows = {
+            -- 1.4.357.1: the same loader source, pinned to the farm that
+            -- answers for its own members (compat.vulkan-runtime 2026.09.10).
+            --
+            -- A NEW VERSION RATHER THAN A MOVED PIN INSIDE 1.4.357.0, and the
+            -- difference is measured. A consumer that ALSO names
+            -- `compat.vulkan-runtime` directly -- mcpp's graphics examples do,
+            -- under a `cfg(linux)` predicate -- compares its own pin against
+            -- the one recorded in its installed copy of this package. Moving
+            -- the pin inside a published version leaves that recorded copy
+            -- saying 2026.09.07 while the manifest says 2026.09.10, and the
+            -- build stops with `irreconcilable versions`. Measured on a CI
+            -- runner with a warm ~/.mcpp; a machine that re-resolves from a
+            -- fresh index does not see it, which is why it survived local
+            -- testing.
+            --
+            -- 1.4.357.0 keeps its old pin for the same reason: a version that
+            -- is already published must keep resolving the way the machines
+            -- holding it recorded.
+            ["1.4.357.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/xlings-res/vulkan-import/releases/download/1.4.357.1/vulkan-import-1.4.357.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/vulkan-import/releases/download/1.4.357.1/vulkan-import-1.4.357.1.tar.gz",
+                },
+                sha256 = "37a206f866f75f54a56bdb428e4767c9926acd3f8abc8e1b9539853bb45acbf9",
+            },
             ["1.4.357.0"] = {
                 url = {
                     GLOBAL = "https://github.com/xlings-res/vulkan-import/releases/download/1.4.357.1/vulkan-import-1.4.357.1.tar.gz",
