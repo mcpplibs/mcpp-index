@@ -1,0 +1,11 @@
+# A member-level redirect replaces the workspace root's compat redirect, so
+# this test resolves huxerui.huxerui from the current checkout.
+[indices]
+huxerui = { path = "../../.." }
+
+[package]
+name    = "huxerui-module-tests"
+version = "0.1.0"
+
+[dependencies.huxerui]
+huxerui = "0.3.0"
