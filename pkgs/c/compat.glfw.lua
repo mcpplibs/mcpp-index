@@ -168,10 +168,35 @@ package = {
 
 import("xim.libxpkg.pkginfo")
 
+-- THE SOURCE TREE IS NAMED BY UPSTREAM'S TAG, NOT BY THIS PACKAGE'S VERSION.
+--
+-- They were the same string for as long as this package had one version, and
+-- the fallback below spelled the directory as `"glfw-" .. pkginfo.version()`.
+-- The day the package took an ecosystem segment -- 3.4.0.1, for a pin that
+-- moved while upstream did not release -- that expression asked for
+-- `glfw-3.4.0.1/`, which no tarball contains. install() then moved nothing and
+-- the failure appeared two layers away, as `GLFW/glfw3.h: file not found` in a
+-- consumer's test.
+--
+-- A path derived from a version is a path that breaks the first time the
+-- version means something the upstream tag does not.
+local UPSTREAM_TAG = "3.4"
+
+import("xim.libxpkg.log")
+
 function install()
     local srcdir = pkginfo.install_file():replace(".tar.gz", "")
     if not os.isdir(srcdir) then
-        srcdir = "glfw-" .. pkginfo.version()
+        srcdir = "glfw-" .. UPSTREAM_TAG
+    end
+    if not os.isdir(srcdir) then
+        -- Loud, because the alternative is an install that "succeeds" and
+        -- leaves an install_dir with no headers in it.
+        log.error("compat.glfw: no source tree at %s; the tarball's top-level "
+                  .. "directory is named by upstream's tag (%s), and neither "
+                  .. "that nor the downloaded name matched",
+                  srcdir, UPSTREAM_TAG)
+        return false
     end
 
     os.tryrm(pkginfo.install_dir())
