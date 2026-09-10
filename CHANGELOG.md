@@ -7,6 +7,58 @@
 
 ## [Unreleased]
 
+### Changed
+
+- **三个 host farm 改为对自己的成员负责,并且对宿主只保留一条具名的触达**
+  (`compat.glx-runtime` 2026.09.10、`compat.opencl-runtime` 2026.09.10、
+  `compat.vulkan-runtime` 2026.09.10)。
+
+  这三个包的成员由**文件名模式**决定,而完整性(如果检查的话)对着的是**另一个
+  集合** —— ICD 清单里的库。模式存在的理由恰恰是「专有驱动会按名字 dlopen 自己
+  家族的成员,没有任何 `DT_NEEDED` 遍历看得见」;既然这么说了,那些成员在别处也
+  得当作可达的 —— 而它们不是。**从来没被验证的,正是模式为之存在的那一半。**
+
+  实测(装了 NVIDIA 驱动的宿主,用 mcpp 自己的 dlopen 面检查):
+  `compat.glx-runtime` 52 个成员缺 30 条闭包边(它根本没有闭包遍历)、
+  `compat.vulkan-runtime` 76 个缺 5 条、`compat.opencl-runtime` 缺 4 条 ——
+  最后这 4 条就是 mcpp-index#376 报的那几条(该 issue 标题写的是 vulkan,
+  实际观测到的来自 opencl)。
+
+  ⚠️ **配方里「种子不能取整个 farm」的理由测的是排除之前的集合。** 它写着闭包会
+  拉进 64 个库、GTK 在其中 —— 那是对「模式匹配到的每个文件」成立,因为
+  `libnvidia*.so.*` 也匹配驱动的设置界面。farm 是模式匹配**减去**
+  `never_farm_patterns`,对**那个**求闭包在本机只新增 5 个,GTK/GLib/Pango/Cairo
+  一个都没有。**结论会被复查,理由不会。**
+
+  ⭐ 新规则:一个成员需要的每条 soname 都有**明写的答案**,没有静默分支。
+  1. 生态发布了它 —— 在 `xpm.linux.deps` 里声明,从已装载荷取
+     (新增 `xim:openssl`、`xim:mesa`);
+  2. 不可再分发的专有驱动用户态 —— 也走包:新增
+     `xim:nvidia-video-host-link` 拥有「宿主的 `libnvcuvid.so.1` 在哪」这一个
+     问题,和 `libcuda-host-link`/`nvidia-gl-host-link` 同形;
+  3. 两者都不是、也不可能成为 —— 写进配方的 `UNSERVED` 表**并附理由**
+     (今天只有 `libcrypto.so.1.1`:OpenSSL 1.1 上游已 EOL,而只有 NVIDIA 的
+     PKCS#11 提供者要它,没有任何 OpenCL/Vulkan 入口够得到);
+  4. 以上都不是 —— 安装时**打警告点名**。这一条是关键:farm 从生态之外拿了什么,
+     必须是有人写下来的清单,而不是残留物。
+
+  **没有任何一条分支会为成员去 /usr/lib 收一个新文件。** `compat.glx-runtime`
+  一条都不收:那 30 条全部来自已装载荷(4 条 `libnvidia-*` 来自
+  `xim:nvidia-gl-host-link`,其余 26 条来自 `xim:graphics` 拉起来的栈)。
+
+  ⭐ 判据落在 mcpp 会问的那个问题上:成员的 `DT_NEEDED` 用 `readelf -d` 读,
+  归属只对着 farm 这一个目录判。**先前用 `ldd` 是错的** —— 它答的是「在这台机器
+  上能不能解析」,而这台机器包含宿主默认目录,于是宿主碰巧有的 soname 读成已解析、
+  从不被记录,而消费者的搜索路径里没有宿主。实测:`libcrypto` 那两条对这一趟不可见,
+  却被 mcpp 在上一层从同一个目录报了出来。
+
+  实测结果(本机,opencl farm):`members 48 / walked 47 / missing 0`,
+  只剩 `libcrypto.so.1.1` 一条 dangling —— 正是明写为 unserved 的那条。
+  改动前是 4 条 missing。
+
+  ⚠️ 抬版本键是必须的:`install()` 的产物烤进已安装载荷,不换键的机器会一直留着
+  未闭合的 farm。消费者 `compat.glfw` / `compat.opencl` / `compat.vulkan` 同步重钉。
+
 ### Added
 
 - 收录 `compat.sdl3` 3.4.2 —— SDL3 窗口/输入/音频层,从源码构建(形态 E)。

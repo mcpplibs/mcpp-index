@@ -45,6 +45,24 @@ package = {
             -- a download it will not read, and the alternative -- deleting the
             -- published version -- would break them outright.
             deps = { runtime = { "xim:graphics" } },
+            -- 2026.09.10: the farm answers for what its own members need.
+            -- Nothing new is taken from the host: a soname a member needs is
+            -- filled from an installed payload, and otherwise recorded as a
+            -- dangling link. A new key because install() output is baked into
+            -- the installed payload -- without one, a host that already holds
+            -- 2026.08.08 keeps a farm 30 sonames short of closed.
+            --
+            -- The anchor is 2026.08.08's, deliberately: the URL is a
+            -- well-formedness anchor and nothing more, and reusing it means no
+            -- new mirror asset has to exist for a key that changes only
+            -- install() behaviour.
+            ["2026.09.10"] = {
+                url    = {
+                    GLOBAL = "https://raw.githubusercontent.com/KhronosGroup/OpenGL-Registry/a30033d3e812c9bf10094f1010374a6b15e192eb/README.adoc",
+                    CN     = "https://gitcode.com/mcpp-res/glx-runtime/releases/download/2026.08.08/glx-runtime-2026.08.08.adoc",
+                },
+                sha256 = "ea68efce197e68413ebb62c51ab4bccfb2309a2fca776d31b49d972f59f3640e",
+            },
             ["2026.08.08"] = {
                 url    = {
                     GLOBAL = "https://raw.githubusercontent.com/KhronosGroup/OpenGL-Registry/a30033d3e812c9bf10094f1010374a6b15e192eb/README.adoc",
@@ -174,6 +192,160 @@ local required = {
     ["libGL.so.1"] = false,
 }
 
+-- WHAT THE FARM'S OWN MEMBERS NEED, AND WHY NOTHING NEW COMES FROM THE HOST.
+--
+-- The pattern list above decides membership; nothing decided completeness.
+-- Measured 2026-09-10 on a host with the proprietary driver: 52 members, and
+-- 30 sonames those members need that this directory does not carry --
+-- `libX11.so.6`, `libxcb*.so.*`, `libz.so.1`, `libLLVM.so.20.1`,
+-- `libnvidia-glcore.so.*` and `libstdc++.so.6` among them. A consumer reaching
+-- any of those members through this farm gets a load failure that no closure
+-- check can see, because no link edge names it.
+--
+-- THE HOST SURFACE IS HELD AT WHAT THE PATTERN LIST ALREADY TAKES. Two of the
+-- thirty say why: `libstdc++.so.6`, and behind it a host C++ runtime on the
+-- RUNPATH of every GL consumer this index has. mcpp links libstdc++ statically,
+-- and a second one arriving through a farm is the failure class the libc guard
+-- below already exists for. So the rule is:
+--
+--   * an installed payload provides it  -> link the payload's copy
+--   * nothing does                      -> named in UNSERVED with the reason,
+--                                          and linked into a directory this
+--                                          package never creates
+--   * anything else                     -> a warning naming it
+--
+-- and there is no branch at all that harvests a file from /usr/lib. Measured
+-- 2026-09-10 on a host with the proprietary driver: ALL THIRTY come from
+-- installed payloads. The four `libnvidia-*` ones come from
+-- `xim:nvidia-gl-host-link`, which is where this file already says the driver
+-- reaches the subos from; the other twenty-six come from the stack
+-- `xim:graphics` pulls in -- `xim:libX11`, `xim:libxcb`, `xim:mesa`,
+-- `xim:libllvm`, `xim:gcc-runtime` and the rest. The host surface of this farm
+-- is therefore exactly what the pattern list takes, and nothing more.
+--
+-- The dangling branch is not a workaround. mcpp reads this directory with a
+-- three-state rule -- resolved, present-but-dangling (this machine has no such
+-- library), absent everywhere (the publisher never carried it) -- and DANGLING
+-- IS ONLY EXPRESSIBLE IF THIS PACKAGE MADE A LINK. Leaving the soname out
+-- reports "the publisher never considered it" on every machine, including the
+-- ones where the truth is "this host has no X11". The link is also
+-- self-healing, the shape `xim:libcuda-host-link` already uses: it resolves the
+-- moment the machine gains the library.
+local never_farm = {
+    ["libc.so.6"] = true, ["libm.so.6"] = true, ["libdl.so.2"] = true,
+    ["libpthread.so.0"] = true, ["librt.so.1"] = true, ["libresolv.so.2"] = true,
+    ["ld-linux-x86-64.so.2"] = true, ["ld-linux-aarch64.so.1"] = true,
+    ["libgcc_s.so.1"] = true,
+}
+
+local function xim_store_roots()
+    local roots = {}
+    local home = os.getenv("XLINGS_HOME")
+    if home and home ~= "" then roots[#roots + 1] = path.join(home, "data/xpkgs") end
+    local pfx = pkginfo.install_dir()
+    if pfx then roots[#roots + 1] = path.directory(path.directory(pfx)) end
+    return roots
+end
+
+-- Every copy, not the last one sorted: a driver payload can ship its own copy
+-- of a library another package owns. compat.vulkan-runtime carries the
+-- measurement behind this.
+local function find_in_store(soname)
+    local out, seen = {}, {}
+    for _, root in ipairs(xim_store_roots()) do
+        local f = io.popen(string.format(
+            [[ls -1 "%s"/xim-x-*/*/lib/%s "%s"/xim-x-*/*/lib64/%s 2>/dev/null | sort -V]],
+            root, soname, root, soname))
+        if f then
+            for line in f:lines() do
+                local hit = line:gsub("[\r\n]+$", "")
+                if hit ~= "" and not seen[hit] then
+                    seen[hit] = true
+                    out[#out + 1] = hit
+                end
+            end
+            f:close()
+        end
+    end
+    return out
+end
+
+-- WHAT A MEMBER NEEDS IS READ FROM THE MEMBER, NOT FROM A LOADER.
+--
+-- `ldd` answers "can this resolve HERE", and here includes the host's default
+-- directories -- so a soname the host happens to carry reads as resolved and is
+-- never recorded, while the consumer, whose search path is this farm and not
+-- the host, cannot load it. `readelf -d` answers what the FILE says, and
+-- membership is decided against this directory alone, which is the question
+-- mcpp asks of it.
+local function find_tool(name)
+    local f = io.popen(string.format([[command -v %s 2>/dev/null]], name))
+    if f then
+        local hit = (f:read("l") or ""):gsub("[\r\n]+$", "")
+        f:close()
+        if hit ~= "" then return hit end
+    end
+    return nil
+end
+
+local function unresolved_against_farm(outdir)
+    local readelf = find_tool("readelf")
+    if not readelf then return {} end
+    local have, members = {}, {}
+    local lsf = io.popen(string.format([[ls -1 "%s" 2>/dev/null]], outdir))
+    if not lsf then return {} end
+    for line in lsf:lines() do
+        local b = line:gsub("[\r\n]+$", "")
+        if b ~= "" then have[b] = true; members[#members + 1] = b end
+    end
+    lsf:close()
+    local out, seen = {}, {}
+    for _, base in ipairs(members) do
+        local f = io.popen(string.format(
+            [[%s -d %s 2>/dev/null | sed -n 's/.*(NEEDED).*\[\(.*\)\]/\1/p']],
+            sh_quote(readelf), sh_quote(path.join(outdir, base))))
+        if f then
+            for line in f:lines() do
+                local n = line:gsub("[\r\n]+$", "")
+                if n ~= "" and not have[n] and not never_farm[n] and not seen[n] then
+                    seen[n] = true
+                    out[#out + 1] = n
+                end
+            end
+            f:close()
+        end
+    end
+    return out
+end
+
+-- Nothing is here today, and the table exists so that the day something is,
+-- somebody has to write down why it cannot be a package. The warning below is
+-- what makes leaving it blank impossible to do by accident.
+local UNSERVED = {}
+
+local function close_farm(outdir)
+    local filled, unserved, undeclared = {}, {}, {}
+    local unserved_dir = path.join(path.directory(outdir), "unserved")
+    for _, soname in ipairs(unresolved_against_farm(outdir)) do
+        local candidates = find_in_store(soname)
+        local hit = candidates[#candidates]
+        if hit then
+            os.exec(string.format([[ln -sf "%s" "%s"]], hit, path.join(outdir, soname)))
+            filled[#filled + 1] = soname
+        else
+            -- Inside this package, not at the canonical host path: a link into
+            -- /usr/lib resolves on any machine that happens to carry the file,
+            -- which is a host harvest wearing a different name.
+            os.exec(string.format([[ln -sf "%s" "%s"]],
+                                  path.join(unserved_dir, soname),
+                                  path.join(outdir, soname)))
+            unserved[#unserved + 1] = soname
+            if not UNSERVED[soname] then undeclared[#undeclared + 1] = soname end
+        end
+    end
+    return filled, unserved, undeclared
+end
+
 local function link_runtime_libs(outdir)
     os.mkdir(outdir)
     for _, dir in ipairs(candidate_dirs()) do
@@ -185,6 +357,27 @@ local function link_runtime_libs(outdir)
                 "done"
             )
         end
+    end
+
+    -- Completeness, before the guards. Neither branch puts a new host library
+    -- on a consumer's path, so the guards below still see exactly what the
+    -- pattern list matched.
+    local filled, unserved, undeclared = close_farm(outdir)
+    if #filled > 0 then
+        log.info("compat.glx-runtime: %d libraries the farm's members need were "
+                 .. "filled from installed payloads", #filled)
+    end
+    if #unserved > 0 then
+        log.info("compat.glx-runtime: %d sonames the farm's members need are "
+                 .. "published by no installed payload and are recorded as "
+                 .. "unserved", #unserved)
+    end
+    -- The list has to be written, not discovered.
+    for _, soname in ipairs(undeclared) do
+        log.warn("compat.glx-runtime: %s is needed by a farmed member, is "
+                 .. "published by no installed payload, and is not declared in "
+                 .. "UNSERVED. Add the ecosystem package that provides it, or "
+                 .. "record why it cannot be one.", soname)
     end
 
     for name, _ in pairs(required) do
