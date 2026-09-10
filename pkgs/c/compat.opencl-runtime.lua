@@ -39,10 +39,35 @@ package = {
 
     xpm = {
         linux = {
-            ["latest"] = { ref = "2026.09.07" },
+            -- PLATFORM LEVEL, NOT PER VERSION, matching compat.vulkan-runtime:
+            -- a `deps` inside a version entry is not read.
+            --
+            -- `xim:openssl` is here because a farmed member needs
+            -- `libcrypto.so.3` and this ecosystem publishes it. The rule this
+            -- package follows is that anything xlings or this index can supply
+            -- comes from there, and the host is reached for one class only --
+            -- proprietary vendor userspace, which cannot be a package at all.
+            -- A floor, not a pin: the soname is ABI-stable at 3.x.
+            deps = {
+                runtime = { "xim:openssl@>=3", "xim:nvidia-video-host-link" },
+            },
+            ["latest"] = { ref = "2026.09.10" },
             -- 2026.09.07: a soname carried by more than one installed payload
             -- is decided by symbol coverage rather than by which store path
             -- sorts last, and the ELF machine guard refuses a foreign payload.
+            -- 2026.09.10: the farm answers for what its own members need,
+            -- not only for what an ICD manifest names. A member the vendor
+            -- pattern swept in is closed over too; only proprietary vendor
+            -- userspace may be taken from the host for it, anything else is
+            -- filled from an installed payload, and what nothing publishes is
+            -- recorded as unserved rather than left absent. A new key because
+            -- install() output is baked into the installed payload: without one
+            -- a host that already holds the previous version keeps the open
+            -- farm. The anchor is unchanged; only install() behaviour is.
+            ["2026.09.10"] = {
+                url    = "https://raw.githubusercontent.com/KhronosGroup/OpenCL-ICD-Loader/v2026.05.29/README.md",
+                sha256 = "b332515b9a0bc266ad94fe6e951f0ef7a988ccb9e933068faf0fd8ba3cfde805",
+            },
             ["2026.09.07"] = {
                 url    = "https://raw.githubusercontent.com/KhronosGroup/OpenCL-ICD-Loader/v2026.05.29/README.md",
                 sha256 = "b332515b9a0bc266ad94fe6e951f0ef7a988ccb9e933068faf0fd8ba3cfde805",
@@ -188,6 +213,56 @@ local function is_vendor_userspace(base)
     return false
 end
 
+-- THE FARM IS ALSO A SEED SET, AND THE HOST SURFACE DOES NOT GROW FOR IT.
+--
+-- The pattern above exists because a proprietary driver dlopens members of its
+-- own family by name, which no `DT_NEEDED` walk can see. Having said that, this
+-- package has to treat those members as reachable everywhere else too -- and it
+-- did not. The closure below takes the ICD manifests' libraries, so the half of
+-- the farm that was never in doubt is the half that gets verified, and the half
+-- the pattern exists for was never asked what it needs.
+--
+-- Measured on a host with an NVIDIA driver, by mcpp's own dlopen-surface check:
+-- four members were unloadable from this directory --
+-- `libnvidia-encode.so.1` and `libnvidia-opticalflow.so.1` need
+-- `libnvcuvid.so.1`, and the two `libnvidia-pkcs11` providers need
+-- `libcrypto.so.3` / `libcrypto.so.1.1`.
+--
+-- THE FARM REACHES THE HOST THROUGH A NAMED PACKAGE, NOT THROUGH
+-- /usr/lib. What a farmed member needs is answered in this order:
+--
+--   * an installed payload publishes it -> link the payload's copy.
+--     `xim:openssl` covers `libcrypto.so.3` and
+--     `xim:nvidia-video-host-link` covers `libnvcuvid.so.1`, which is
+--     what the two encode/optical-flow members need. Both are declared
+--     in `xpm.linux.deps` above, so the reach is visible in the
+--     recipe rather than discovered at install time.
+--   * nothing does, and nothing can -> named in UNSERVED with the
+--     reason, and linked into a directory this package never creates.
+--   * anything else -> a warning naming it.
+--
+-- There is no branch that harvests a file from /usr/lib for a farmed
+-- member. A library that cannot be redistributed still comes from the
+-- host, but it comes through a `*-host-link` sentinel that owns exactly
+-- that question -- the shape `libcuda-host-link` and
+-- `nvidia-gl-host-link` already have -- so each consumer declares the
+-- host reach it actually has instead of inheriting an open one.
+--
+-- The ICD closure below is left exactly as it is: it is what makes a
+-- driver load at all, and narrowing it is a separate question from
+-- completing the members the vendor pattern swept in.
+local function farm_members(outdir)
+    local out = {}
+    local f = io.popen(string.format([[ls -1 "%s" 2>/dev/null]], outdir))
+    if not f then return out end
+    for line in f:lines() do
+        local base = line:gsub("[\r\n]+$", "")
+        if base ~= "" then out[#out + 1] = path.join(outdir, base) end
+    end
+    f:close()
+    return out
+end
+
 local function close_over_needed(outdir, seeds, dirs)
     if #seeds == 0 then return 0 end
     local accept = {}
@@ -312,6 +387,114 @@ end
 
 -- Payloads first, with the same criterion compat.vulkan-runtime applies: the
 -- payload's versioned symbol set must cover the host copy's.
+-- WHAT A MEMBER NEEDS IS READ FROM THE MEMBER, NOT FROM A LOADER.
+--
+-- `ldd` answers "can this resolve HERE", and here includes the host's default
+-- directories. A soname the host happens to carry therefore reads as resolved
+-- and is never recorded -- while the consumer, whose search path is this farm
+-- and not the host, cannot load it. Measured 2026-09-10: with `ldd` supplying
+-- the host directories, the two `libnvidia-pkcs11` providers' `libcrypto`
+-- needs were invisible to this pass and were reported by mcpp one layer up,
+-- from the same directory.
+--
+-- `readelf -d` answers what the FILE says, and membership is decided against
+-- this directory alone. That is the question mcpp asks, and asking a different
+-- one is how a farm's own check passes while its consumer's does not.
+local function unresolved_against_farm(outdir)
+    local readelf = find_tool("readelf")
+    if not readelf then return {} end
+    local have, members = {}, {}
+    local lsf = io.popen(string.format([[ls -1 "%s" 2>/dev/null]], outdir))
+    if not lsf then return {} end
+    for line in lsf:lines() do
+        local b = line:gsub("[\r\n]+$", "")
+        if b ~= "" then have[b] = true; members[#members + 1] = b end
+    end
+    lsf:close()
+    local out, seen = {}, {}
+    for _, base in ipairs(members) do
+        local f = io.popen(string.format(
+            [[%s -d %s 2>/dev/null | sed -n 's/.*(NEEDED).*\[\(.*\)\]/\1/p']],
+            sh_quote(readelf), sh_quote(path.join(outdir, base))))
+        if f then
+            for line in f:lines() do
+                local n = line:gsub("[\r\n]+$", "")
+                if n ~= "" and not have[n] and not never_farm[n] and not seen[n] then
+                    seen[n] = true
+                    out[#out + 1] = n
+                end
+            end
+            f:close()
+        end
+    end
+    return out
+end
+
+-- WHAT IS STILL UNRESOLVED GETS AN ENTRY: A PAYLOAD, OR A DECLARED NON-ANSWER.
+--
+-- mcpp reads this directory with a three-state rule -- a member's SONAME is
+-- resolved, present-but-dangling (this machine has no such library), or absent
+-- everywhere (the publisher did not carry it). Only the first two are benign,
+-- and DANGLING IS ONLY EXPRESSIBLE IF THIS PACKAGE MADE A LINK. A soname simply
+-- not here reads as a packaging gap on every machine, including the ones where
+-- the truth is "the ecosystem does not publish this and the driver only needs
+-- it for a back end nobody called".
+--
+-- Measured: the same farm produced four findings on a host with the full
+-- desktop stack and eleven inside a sandbox without it, and seven of those
+-- eleven were the sandbox's answer rather than this package's.
+--
+-- THE UNSERVED LINK POINTS INSIDE THIS PACKAGE, NOT AT /usr/lib. Pointing it at
+-- the canonical host path would make it resolve on any machine that happens to
+-- have the file, which is a host harvest wearing a different name. It points at
+-- a directory this package never creates, so it states "considered, and not
+-- served here" and stays that way until the ecosystem gains a package for it.
+-- EVERY SONAME A FARMED MEMBER NEEDS HAS AN ANSWER, AND NONE OF THEM IS
+-- SILENCE. Four classes, in the order they are tried:
+--
+--   * a package this ecosystem publishes -- declared in `xpm.linux.deps` and
+--     taken from the installed payload. `xim:openssl` covers `libcrypto.so.3`.
+--   * proprietary vendor userspace -- also a package, and deliberately so:
+--     `xim:nvidia-video-host-link` owns the one question "where is the host's
+--     `libnvcuvid.so.1`". The library still comes from the host, because it is
+--     in ABI lockstep with a kernel module and is not redistributable, but the
+--     reach is named and declared instead of open.
+--   * neither, and it cannot become one -- named in UNSERVED below WITH THE
+--     REASON, and recorded as a link into a directory this package never
+--     creates, so the state reads as "considered and not served here" rather
+--     than "never considered".
+--   * anything else -- a warning naming it. There is deliberately no branch
+--     that quietly absorbs an unknown soname: the answer to "what does this
+--     farm take from outside the ecosystem" has to be a list somebody wrote,
+--     not a residue.
+local UNSERVED = {
+    ["libcrypto.so.1.1"] =
+        "OpenSSL 1.1 is end-of-life upstream and this ecosystem publishes 3.x. "
+        .. "The only member that asks for it is NVIDIA's PKCS#11 provider, "
+        .. "which no OpenCL entry point reaches.",
+}
+
+local function seal_unresolved(outdir)
+    local filled, unserved, undeclared = {}, {}, {}
+    local names = unresolved_against_farm(outdir)
+    local unserved_dir = path.join(path.directory(outdir), "unserved")
+    for _, soname in ipairs(names) do
+        local candidates = find_in_store(soname)
+        local hit = candidates[#candidates]
+        if hit then
+            os.exec(string.format([[ln -sf "%s" "%s"]], hit, path.join(outdir, soname)))
+            filled[#filled + 1] = soname
+        else
+            os.exec(string.format([[ln -sf "%s" "%s"]],
+                                  path.join(unserved_dir, soname),
+                                  path.join(outdir, soname)))
+            unserved[#unserved + 1] = soname
+            if not UNSERVED[soname] then undeclared[#undeclared + 1] = soname end
+        end
+    end
+    return filled, unserved, undeclared
+end
+
 local function prefer_payloads(outdir, seeds)
     local classes = {}
     local seed_names = {}
@@ -413,6 +596,32 @@ local function link_runtime_libs(outdir)
         log.info("compat.opencl-runtime: %d transitive libraries closed over", n)
     end
     local classes = prefer_payloads(outdir, seeds)
+    local filled, unserved, undeclared = seal_unresolved(outdir)
+    for _, soname in ipairs(filled) do
+        classes[soname] = { target = "", class = "filled from an installed payload" }
+    end
+    for _, soname in ipairs(unserved) do
+        classes[soname] = { target = "",
+                            class = "unserved -- " .. (UNSERVED[soname]
+                                    or "NOT DECLARED; see UNSERVED in this recipe") }
+    end
+    if #filled > 0 then
+        log.info("compat.opencl-runtime: %d libraries a farmed member needs were "
+                 .. "filled from installed payloads", #filled)
+    end
+    if #unserved > 0 then
+        log.info("compat.opencl-runtime: %d sonames a farmed member needs are "
+                 .. "recorded as unserved", #unserved)
+    end
+    -- The list has to be written, not discovered. A soname arriving here that
+    -- nobody decided about is a gap in this recipe, and saying so at install
+    -- time is the only moment anyone is looking.
+    for _, soname in ipairs(undeclared) do
+        log.warn("compat.opencl-runtime: %s is needed by a farmed member, is "
+                 .. "published by no installed payload, and is not declared in "
+                 .. "UNSERVED. Add the ecosystem package that provides it, or "
+                 .. "record why it cannot be one.", soname)
+    end
 
     local report = {"# What this farm takes from the host, and why.",
                     "#",

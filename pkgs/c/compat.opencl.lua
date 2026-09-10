@@ -136,7 +136,7 @@ package = {
             -- same relation `compat.vulkan` has to `compat.vulkan-runtime`.
             deps = {
                 ["compat.opencl-headers"] = "2026.05.29",
-                ["compat.opencl-runtime"] = "2026.09.07",
+                ["compat.opencl-runtime"] = "2026.09.10",
             },
             -- dlopen for the ICDs; pthread for `pthread_once` around the scan.
             ldflags = { "-ldl", "-lpthread" },
