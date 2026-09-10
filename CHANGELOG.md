@@ -7,6 +7,26 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- **两处只有把 glx 那一版真正跑一遍才会现形的缺陷。** 上一轮我量了 opencl 和
+  vulkan,`compat.glx-runtime` 的新逻辑**从头到尾没有被执行过**。
+
+  ⚠️⚠️ **`DT_NEEDED` 里可以是绝对路径。** 这个 farm 的四个 glvnd 厂商入口
+  (`libEGL_nvidia`、`libGLESv1_CM_nvidia`、`libGLESv2_nvidia`、`libGLX_nvidia`)
+  直接写着 `/lib/x86_64-linux-gnu/...`。loader 对这类条目直接打开、**完全不走
+  搜索路径**,所以 farm 既服务不了它也不该为它封 unserved —— 而把它当 soname 会
+  去查一个带斜杠的名字,并且造出一个**名字是路径**的 unserved 链接。三个包一并
+  跳过这类条目。
+
+  ⚠️ **找不到 `readelf` 时那一趟静默返回空**,读数与「farm 已完全闭合」一模一样。
+  这正是这批改动要消灭的那种混淆,只是掉到了工具查找这一层。现在会明确告警,
+  并且 `compat.glx-runtime` 的工具查找也和另外两个一样**先查 store 再查 PATH**
+  —— 这个包跑在从未被要求装工具链的机器上。
+
+  实测(本机,对着已装的 glx farm 走同一套逻辑):52 个成员、跳过 4 条绝对路径、
+  19 条需补,**19 条全部来自生态载荷,0 条 unserved**,没有路径形状的条目。
+
 ### Changed
 
 - **`compat.vulkan` 1.4.357.1 —— 移动一个钉,需要一个新版本。**

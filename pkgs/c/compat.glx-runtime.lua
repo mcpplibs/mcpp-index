@@ -278,7 +278,21 @@ end
 -- the host, cannot load it. `readelf -d` answers what the FILE says, and
 -- membership is decided against this directory alone, which is the question
 -- mcpp asks of it.
+-- The store first, PATH second. Under xlings a payload's own binutils is the
+-- one that matches the objects being read, and a host `readelf` may simply not
+-- be installed -- this package runs on machines that were never asked to have a
+-- toolchain. compat.opencl-runtime and compat.vulkan-runtime look the same way.
 local function find_tool(name)
+    for _, root in ipairs(xim_store_roots()) do
+        local f = io.popen(string.format(
+            [[ls -1 "%s"/xim-x-binutils/*/bin/%s "%s"/xim-x-gcc/*/bin/%s 2>/dev/null | sort -V | tail -1]],
+            root, name, root, name))
+        if f then
+            local hit = (f:read("l") or ""):gsub("[\r\n]+$", "")
+            f:close()
+            if hit ~= "" then return hit end
+        end
+    end
     local f = io.popen(string.format([[command -v %s 2>/dev/null]], name))
     if f then
         local hit = (f:read("l") or ""):gsub("[\r\n]+$", "")
@@ -290,7 +304,20 @@ end
 
 local function unresolved_against_farm(outdir)
     local readelf = find_tool("readelf")
-    if not readelf then return {} end
+    -- A MISSING TOOL IS NOT AN EMPTY ANSWER.
+    --
+    -- Returning `{}` here would report "no member needs anything this farm
+    -- lacks", which is the reading a fully closed farm produces -- so the one
+    -- environment where this pass cannot run would be indistinguishable from
+    -- the one where it ran and found nothing. That is the confusion this whole
+    -- change exists to remove, one layer down, in the tool lookup.
+    if not readelf then
+        log.warn("compat.glx-runtime: readelf was not found, so the farm's own members were "
+                 .. "not checked. This is NOT the same as finding no gaps: "
+                 .. "install xim:binutils, or read HOST-SURFACE.txt with the "
+                 .. "knowledge that it is incomplete.")
+        return {}
+    end
     local have, members = {}, {}
     local lsf = io.popen(string.format([[ls -1 "%s" 2>/dev/null]], outdir))
     if not lsf then return {} end
@@ -307,10 +334,26 @@ local function unresolved_against_farm(outdir)
         if f then
             for line in f:lines() do
                 local n = line:gsub("[\r\n]+$", "")
+                -- AN ABSOLUTE `DT_NEEDED` NEVER GOES THROUGH A SEARCH PATH.
+                --
+                -- The loader opens it directly, so this farm can neither serve
+                -- it nor honestly record it as unserved -- and treating it as a
+                -- soname produces a lookup for a name with slashes in it and,
+                -- worse, an `unserved` link whose name is a path. Measured on
+                -- this farm: four members -- the glvnd vendor entries
+                -- `libEGL_nvidia`, `libGLESv1_CM_nvidia`, `libGLESv2_nvidia`
+                -- and `libGLX_nvidia` -- name `/lib/x86_64-linux-gnu/...`
+                -- outright. They are a host reach that bypasses everything this
+                -- package arranges, which is worth knowing and is not this
+                -- pass's to answer.
+                if n:sub(1, 1) == "/" then
+                    goto continue
+                end
                 if n ~= "" and not have[n] and not never_farm[n] and not seen[n] then
                     seen[n] = true
                     out[#out + 1] = n
                 end
+                ::continue::
             end
             f:close()
         end
