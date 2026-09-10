@@ -83,6 +83,19 @@ package = {
             -- 1.4.357.0 keeps its old pin for the same reason: a version that
             -- is already published must keep resolving the way the machines
             -- holding it recorded.
+            -- A new version because this package's pin on its runtime farm
+            -- moved. An installed copy RECORDS the pin it resolved with, so a
+            -- moved pin does not reach a machine that already holds the old
+            -- version -- and where a consumer also names the farm directly, the
+            -- two disagree and the build stops. Measured on a CI runner with a
+            -- warm ~/.mcpp; see the note on compat.vulkan 1.4.357.1.
+            ["1.4.357.2"] = {
+                url = {
+                    GLOBAL = "https://github.com/KhronosGroup/Vulkan-Loader/archive/refs/tags/vulkan-sdk-1.4.357.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/vulkan/releases/download/1.4.357.0/vulkan-1.4.357.0.tar.gz",
+                },
+                sha256 = "54f2537df22313768da0317dda2abdaaab7711b4081c48c869a79db343d0ae70",
+            },
             ["1.4.357.1"] = {
                 url = {
                     GLOBAL = "https://github.com/KhronosGroup/Vulkan-Loader/archive/refs/tags/vulkan-sdk-1.4.357.0.tar.gz",
@@ -117,6 +130,19 @@ package = {
             -- 1.4.357.0 keeps its old pin for the same reason: a version that
             -- is already published must keep resolving the way the machines
             -- holding it recorded.
+            -- A new version because this package's pin on its runtime farm
+            -- moved. An installed copy RECORDS the pin it resolved with, so a
+            -- moved pin does not reach a machine that already holds the old
+            -- version -- and where a consumer also names the farm directly, the
+            -- two disagree and the build stops. Measured on a CI runner with a
+            -- warm ~/.mcpp; see the note on compat.vulkan 1.4.357.1.
+            ["1.4.357.2"] = {
+                url = {
+                    GLOBAL = "https://github.com/KhronosGroup/Vulkan-Loader/archive/refs/tags/vulkan-sdk-1.4.357.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/vulkan/releases/download/1.4.357.0/vulkan-1.4.357.0.tar.gz",
+                },
+                sha256 = "54f2537df22313768da0317dda2abdaaab7711b4081c48c869a79db343d0ae70",
+            },
             ["1.4.357.1"] = {
                 url = {
                     GLOBAL = "https://github.com/KhronosGroup/Vulkan-Loader/archive/refs/tags/vulkan-sdk-1.4.357.0.tar.gz",
@@ -151,6 +177,19 @@ package = {
             -- 1.4.357.0 keeps its old pin for the same reason: a version that
             -- is already published must keep resolving the way the machines
             -- holding it recorded.
+            -- A new version because this package's pin on its runtime farm
+            -- moved. An installed copy RECORDS the pin it resolved with, so a
+            -- moved pin does not reach a machine that already holds the old
+            -- version -- and where a consumer also names the farm directly, the
+            -- two disagree and the build stops. Measured on a CI runner with a
+            -- warm ~/.mcpp; see the note on compat.vulkan 1.4.357.1.
+            ["1.4.357.2"] = {
+                url = {
+                    GLOBAL = "https://github.com/xlings-res/vulkan-import/releases/download/1.4.357.1/vulkan-import-1.4.357.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/vulkan-import/releases/download/1.4.357.1/vulkan-import-1.4.357.1.tar.gz",
+                },
+                sha256 = "37a206f866f75f54a56bdb428e4767c9926acd3f8abc8e1b9539853bb45acbf9",
+            },
             ["1.4.357.1"] = {
                 url = {
                     GLOBAL = "https://github.com/xlings-res/vulkan-import/releases/download/1.4.357.1/vulkan-import-1.4.357.1.tar.gz",
@@ -274,7 +313,7 @@ package = {
                 -- fails to dlopen a single driver: an mcpp binary runs under
                 -- mcpp's own glibc, whose search path does not include the
                 -- host's. See the note at the top of compat.vulkan-runtime.
-                ["compat.vulkan-runtime"] = "2026.09.10",
+                ["compat.vulkan-runtime"] = "2026.09.11",
             },
             -- dlopen for the ICDs and layers; pthread for the loader's locks.
             ldflags = { "-ldl", "-lpthread", "-lm" },

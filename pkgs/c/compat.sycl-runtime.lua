@@ -102,6 +102,16 @@ package = {
             -- because "kept and frozen" reads as a promise about what an old
             -- pin installs. It is not one. A version here is a coordinate a
             -- consumer can name, not a snapshot of this recipe.
+            -- 2026.09.11: this package's pin on `compat.opencl` moved, so it
+            -- takes a version of its own. An installed copy records the pin it
+            -- resolved with, and a moved pin does not reach a machine that
+            -- already holds the old version -- the chain here is
+            -- sycl-runtime -> opencl -> opencl-runtime, and every link needs
+            -- its own key or the farm at the end never arrives.
+            ["2026.09.11"] = {
+                url    = "https://raw.githubusercontent.com/intel/llvm/v7.1.0/sycl/LICENSE.TXT",
+                sha256 = "410f3a23b4bbacbd246310d8c014a20af18cfc8c0d740ddf0f673ea20894da9c",
+            },
             ["2026.09.10"] = {
                 url    = "https://raw.githubusercontent.com/intel/llvm/v7.1.0/sycl/LICENSE.TXT",
                 sha256 = "410f3a23b4bbacbd246310d8c014a20af18cfc8c0d740ddf0f673ea20894da9c",
@@ -118,7 +128,7 @@ package = {
                 url    = "https://raw.githubusercontent.com/intel/llvm/v7.1.0/sycl/LICENSE.TXT",
                 sha256 = "410f3a23b4bbacbd246310d8c014a20af18cfc8c0d740ddf0f673ea20894da9c",
             },
-            ["latest"] = { ref = "2026.09.10" },
+            ["latest"] = { ref = "2026.09.11" },
         },
     },
 
@@ -155,7 +165,7 @@ package = {
         -- only the size of the surface, and a back end the payload ships an
         -- adapter for is not something a runtime adapter should leave
         -- unreachable.
-        deps         = { ["compat.opencl"] = "2026.05.29" },
+        deps         = { ["compat.opencl"] = "2026.09.11" },
         runtime = {
             library_dirs = { "mcpp_generated/sycl_runtime/lib" },
             capabilities = { "sycl.runtime" },

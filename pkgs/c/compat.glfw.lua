@@ -9,6 +9,19 @@ package = {
 
     xpm = {
         linux = {
+            -- A new version because this package's pin on its runtime farm
+            -- moved. An installed copy RECORDS the pin it resolved with, so a
+            -- moved pin does not reach a machine that already holds the old
+            -- version -- and where a consumer also names the farm directly, the
+            -- two disagree and the build stops. Measured on a CI runner with a
+            -- warm ~/.mcpp; see the note on compat.vulkan 1.4.357.1.
+            ["3.4.0.1"] = {
+                url    = {
+                    GLOBAL = "https://github.com/glfw/glfw/archive/refs/tags/3.4.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/glfw/releases/download/3.4/glfw-3.4.tar.gz",
+                },
+                sha256 = "c038d34200234d071fae9345bc455e4a8f2f544ab60150765d7704e08f3dac01",
+            },
             ["3.4"] = {
                 url    = {
                     GLOBAL = "https://github.com/glfw/glfw/archive/refs/tags/3.4.tar.gz",
@@ -18,6 +31,19 @@ package = {
             },
         },
         macosx = {
+            -- A new version because this package's pin on its runtime farm
+            -- moved. An installed copy RECORDS the pin it resolved with, so a
+            -- moved pin does not reach a machine that already holds the old
+            -- version -- and where a consumer also names the farm directly, the
+            -- two disagree and the build stops. Measured on a CI runner with a
+            -- warm ~/.mcpp; see the note on compat.vulkan 1.4.357.1.
+            ["3.4.0.1"] = {
+                url    = {
+                    GLOBAL = "https://github.com/glfw/glfw/archive/refs/tags/3.4.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/glfw/releases/download/3.4/glfw-3.4.tar.gz",
+                },
+                sha256 = "c038d34200234d071fae9345bc455e4a8f2f544ab60150765d7704e08f3dac01",
+            },
             ["3.4"] = {
                 url    = {
                     GLOBAL = "https://github.com/glfw/glfw/archive/refs/tags/3.4.tar.gz",
@@ -27,6 +53,19 @@ package = {
             },
         },
         windows = {
+            -- A new version because this package's pin on its runtime farm
+            -- moved. An installed copy RECORDS the pin it resolved with, so a
+            -- moved pin does not reach a machine that already holds the old
+            -- version -- and where a consumer also names the farm directly, the
+            -- two disagree and the build stops. Measured on a CI runner with a
+            -- warm ~/.mcpp; see the note on compat.vulkan 1.4.357.1.
+            ["3.4.0.1"] = {
+                url    = {
+                    GLOBAL = "https://github.com/glfw/glfw/archive/refs/tags/3.4.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/glfw/releases/download/3.4/glfw-3.4.tar.gz",
+                },
+                sha256 = "c038d34200234d071fae9345bc455e4a8f2f544ab60150765d7704e08f3dac01",
+            },
             ["3.4"] = {
                 url    = {
                     GLOBAL = "https://github.com/glfw/glfw/archive/refs/tags/3.4.tar.gz",
@@ -80,7 +119,7 @@ package = {
                 "src/posix_module.c",
             },
             deps = {
-                ["compat.glx-runtime"] = "2026.09.10",
+                ["compat.glx-runtime"] = "2026.09.11",
                 ["compat.x11"]       = "1.8.13",
                 ["compat.xcursor"]   = "1.2.3",
                 ["compat.xext"]      = "1.3.7",

@@ -89,7 +89,7 @@ package = {
                     -- the package that ships it today. A dedicated `xim:libgbm`
                     -- would be the better shape and is the smaller-grained
                     -- follow-up, not a reason to reach into /usr/lib meanwhile.
-                    "xim:openssl@>=3", "xim:mesa@>=25",
+                    "xim:mesa@>=25",
                     "xim:nvidia-video-host-link",
                 },
             },
@@ -98,7 +98,7 @@ package = {
             -- they cover, and records the surface in HOST-SURFACE.txt. mcpp
             -- identifies an installed package by (name, version), so the new
             -- behaviour needs a new key; the anchor is the same file.
-            ["latest"] = { ref = "2026.09.10" },
+            ["latest"] = { ref = "2026.09.11" },
             -- 2026.09.07: a soname carried by more than one installed payload
             -- is now decided by symbol coverage rather than by which store
             -- path sorts last. See find_in_store below for the measurement
@@ -112,6 +112,18 @@ package = {
             -- install() output is baked into the installed payload: without one
             -- a host that already holds the previous version keeps the open
             -- farm. The anchor is unchanged; only install() behaviour is.
+            -- 2026.09.11: the farm carries only what this runtime can
+            -- reach. `libnvidia-pkcs11*` is a PKCS#11 token module that matched
+            -- the vendor name pattern and nothing else -- measured with
+            -- LD_DEBUG on both examples, it is looked for zero times while a
+            -- member the driver does reach appears six -- so it leaves, and the
+            -- OpenSSL declaration it was the only reason for leaves with it.
+            -- A new key because install() output is baked into the installed
+            -- payload.
+            ["2026.09.11"] = {
+                url    = "https://raw.githubusercontent.com/KhronosGroup/Vulkan-Loader/vulkan-sdk-1.4.357.0/README.md",
+                sha256 = "21ec0987a05bd680ecd11f8be747e27744d7558f7318736f6cb8a5c5ec1b8ba8",
+            },
             ["2026.09.10"] = {
                 url    = "https://raw.githubusercontent.com/KhronosGroup/Vulkan-Loader/vulkan-sdk-1.4.357.0/README.md",
                 sha256 = "21ec0987a05bd680ecd11f8be747e27744d7558f7318736f6cb8a5c5ec1b8ba8",
@@ -250,7 +262,39 @@ local host_vulkan_patterns = {
     "libGLX_nvidia.so.*",
     "libnvidia*.so.*",
 }
-local never_farm_patterns = { "^libnvidia%-gtk" }
+-- WHAT THE PATTERN SWEEPS IN THAT THIS RUNTIME CANNOT REACH.
+--
+-- `libnvidia-gtk*` is the driver's settings GUI. `libnvidia-pkcs11*` is its
+-- PKCS#11 provider: a cryptographic token module, loaded by an application's
+-- own PKCS#11 configuration and by nothing in a GPU driver's dispatch. Both
+-- match `libnvidia*.so.*` by name alone.
+--
+-- MEASURED, WITH A CONTROL, before removing them. `LD_DEBUG=libs` on a run of
+-- each example says which files the process actually looked for:
+--
+--   pkcs11                      0 occurrences   (Vulkan and SYCL/OpenCL alike)
+--   libnvidia-glvkspirv         6 occurrences   (Vulkan)
+--   libur_adapter_opencl / libOpenCL   23       (SYCL/OpenCL)
+--
+-- The last two are the control: this instrument does report a member the
+-- driver reaches, so a zero for `pkcs11` is a reading rather than a silence.
+-- An earlier attempt -- remove the member and see whether the example still
+-- runs -- could NOT tell the two apart: removing `libnvidia-glvkspirv` left the
+-- example working too, because the binary under test had been built against a
+-- different farm than the one being edited.
+--
+-- They are also the only members that need `libcrypto` at all, so removing them
+-- removes this package's reason to declare OpenSSL, and with it the
+-- `libcrypto.so.1.1` that no ecosystem package can serve: OpenSSL 1.1 is
+-- end-of-life upstream. A member that cannot be reached is not a capability
+-- being dropped -- it is a file the name pattern collected.
+-- SHELL GLOBS, because the only reader is a shell `case`. They were Lua
+-- patterns, and the loop that consumes them passed a hard-coded
+-- `libnvidia-gtk*` instead of the element it had just bound -- so the table
+-- read like a list and behaved like one entry. Adding `libnvidia-pkcs11` to it
+-- changed nothing at all, which is how this was found: the farm still had 81
+-- members and both PKCS#11 providers after the "exclusion" was written.
+local never_farm_patterns = { "libnvidia-gtk*", "libnvidia-pkcs11*" }
 
 -- THE DECLARATION'S READER. `xpm.linux.deps` above names the packages whose
 -- libraries this farm substitutes; this table says which soname each one is
@@ -285,7 +329,6 @@ local PAYLOAD_PACKAGES = {
     ["liblzma.so.5"]          = "xim:xz",
     ["libmd.so.0"]            = "xim:libmd",
     ["libbsd.so.0"]           = "xim:libbsd",
-    ["libcrypto.so.3"]        = "xim:openssl",
     ["libgbm.so.1"]           = "xim:mesa",
     ["libwayland-server.so.0"]= "xim:wayland",
 }
@@ -771,7 +814,6 @@ end
 -- /usr/lib. What a farmed member needs is answered in this order:
 --
 --   * an installed payload publishes it -> link the payload's copy.
---     `xim:openssl` covers `libcrypto.so.3` and
 --     `xim:nvidia-video-host-link` covers `libnvcuvid.so.1`, which is
 --     what the two encode/optical-flow members need. Both are declared
 --     in `xpm.linux.deps` above, so the reach is visible in the
@@ -890,12 +932,11 @@ end
 --   * anything else -- a warning naming it. There is deliberately no branch
 --     that quietly absorbs an unknown soname: what this farm takes from
 --     outside the ecosystem has to be a list somebody wrote, not a residue.
-local UNSERVED = {
-    ["libcrypto.so.1.1"] =
-        "OpenSSL 1.1 is end-of-life upstream and this ecosystem publishes 3.x. "
-        .. "The only member that asks for it is NVIDIA's PKCS#11 provider, "
-        .. "which no Vulkan entry point reaches.",
-}
+-- Empty, and the table stays so that the day something lands here somebody has
+-- to write down why it cannot be a package. The warning below is what makes
+-- leaving it blank impossible to do by accident. `libcrypto.so.1.1` was the
+-- only entry and left with the PKCS#11 member that asked for it.
+local UNSERVED = {}
 
 local function link_runtime_libs(outdir)
     os.mkdir(outdir)
@@ -909,10 +950,23 @@ local function link_runtime_libs(outdir)
             )
         end
     end
-    for _, pat in ipairs(never_farm_patterns) do
-        os.exec(string.format(
-            [[for lib in "%s"/*; do case "$(basename "$lib")" in %s) rm -f "$lib";; esac; done]],
-            outdir, "libnvidia-gtk*"))
+    -- One `case` with every glob, and the globs come from the table. The
+    -- previous shape bound `pat` and then ignored it.
+    do
+        local removed = 0
+        for _, pat in ipairs(never_farm_patterns) do
+            local f = io.popen(string.format(
+                [[for lib in "%s"/*; do case "$(basename "$lib")" in %s) ]] ..
+                [[rm -f "$lib" && echo x;; esac; done | wc -l]], outdir, pat))
+            if f then
+                removed = removed + (tonumber((f:read("l") or "0")) or 0)
+                f:close()
+            end
+        end
+        if removed > 0 then
+            log.info("compat.vulkan-runtime: %d farmed files this runtime "
+                     .. "cannot reach were removed", removed)
+        end
     end
     local dirs = candidate_dirs()
     -- The ICD libraries themselves. A manifest names its driver by bare

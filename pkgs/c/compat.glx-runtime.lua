@@ -56,6 +56,18 @@ package = {
             -- well-formedness anchor and nothing more, and reusing it means no
             -- new mirror asset has to exist for a key that changes only
             -- install() behaviour.
+            -- 2026.09.11: install() changed again after 2026.09.10 was
+            -- published -- an absolute `DT_NEEDED` is no longer treated as a
+            -- soname, and a missing `readelf` now says so instead of reading
+            -- as "no gaps". Behaviour baked into an installed payload needs a
+            -- key of its own, including when the previous key is hours old.
+            ["2026.09.11"] = {
+                url    = {
+                    GLOBAL = "https://raw.githubusercontent.com/KhronosGroup/OpenGL-Registry/a30033d3e812c9bf10094f1010374a6b15e192eb/README.adoc",
+                    CN     = "https://gitcode.com/mcpp-res/glx-runtime/releases/download/2026.08.08/glx-runtime-2026.08.08.adoc",
+                },
+                sha256 = "ea68efce197e68413ebb62c51ab4bccfb2309a2fca776d31b49d972f59f3640e",
+            },
             ["2026.09.10"] = {
                 url    = {
                     GLOBAL = "https://raw.githubusercontent.com/KhronosGroup/OpenGL-Registry/a30033d3e812c9bf10094f1010374a6b15e192eb/README.adoc",
@@ -369,7 +381,28 @@ local UNSERVED = {}
 local function close_farm(outdir)
     local filled, unserved, undeclared = {}, {}, {}
     local unserved_dir = path.join(path.directory(outdir), "unserved")
+    -- ITERATED TO A FIXED POINT, because `readelf -d` reports DIRECT
+    -- dependencies only.
+    --
+    -- The pass this replaced asked `ldd`, whose answer is the whole transitive
+    -- closure, so one round was enough and the comment said so. `readelf` is
+    -- the right instrument -- it answers what the FILE says instead of what
+    -- this machine can resolve -- but it is not transitive, and a library
+    -- filled in one round brings needs of its own. Measured on the first real
+    -- install of this package: the farm went from 52 members to 77 and was
+    -- still nine sonames short, `libLLVM.so.20.1` and `libstdc++.so.6` among
+    -- them, every one of them reachable from something the same round had just
+    -- added.
+    --
+    -- The bound is not a guess about depth; it is there so a cycle cannot spin.
+    -- A round that adds nothing ends the loop, which is the normal exit.
+    local seen = {}
+    for _ = 1, 16 do
+    local added = 0
     for _, soname in ipairs(unresolved_against_farm(outdir)) do
+        if seen[soname] then goto next end
+        seen[soname] = true
+        added = added + 1
         local candidates = find_in_store(soname)
         local hit = candidates[#candidates]
         if hit then
@@ -385,6 +418,9 @@ local function close_farm(outdir)
             unserved[#unserved + 1] = soname
             if not UNSERVED[soname] then undeclared[#undeclared + 1] = soname end
         end
+        ::next::
+    end
+    if added == 0 then break end
     end
     return filled, unserved, undeclared
 end
