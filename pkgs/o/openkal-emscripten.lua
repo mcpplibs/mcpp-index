@@ -26,7 +26,11 @@
 -- different C library build, memory model and loader contract on this
 -- platform. Without the feature its translation unit is empty and the eight
 -- symbols do not exist, which is the same treatment the three absent
--- interfaces get.
+-- interfaces get. From 0.1.1 the feature states `requires_abi = { threads =
+-- true }`, and the consumer's root manifest supplies the switch for the whole
+-- link with `[target.'cfg(os = "emscripten")'.abi] threads = true` (mcpp
+-- 2026.9.12.2); a consumer that activates the feature without it is refused
+-- before anything compiles.
 --
 -- Conformance, measured with emsdk 6.0.9 under node: 86 held, 0 did not hold,
 -- 13 not observed.
@@ -41,6 +45,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.1.1"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-emscripten/archive/refs/tags/0.1.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-emscripten/releases/download/0.1.1/openkal-emscripten-0.1.1.tar.gz",
+                },
+                sha256 = "a33359fc3f3d35f713cacd88b5a2859e77d0ddca4662b9c30da5dce83a36ec6d",
+            },
             ["0.1.0"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-emscripten/archive/refs/tags/0.1.0.tar.gz",
@@ -50,6 +61,13 @@ package = {
             },
         },
         macosx = {
+            ["0.1.1"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-emscripten/archive/refs/tags/0.1.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-emscripten/releases/download/0.1.1/openkal-emscripten-0.1.1.tar.gz",
+                },
+                sha256 = "a33359fc3f3d35f713cacd88b5a2859e77d0ddca4662b9c30da5dce83a36ec6d",
+            },
             ["0.1.0"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-emscripten/archive/refs/tags/0.1.0.tar.gz",
@@ -59,6 +77,13 @@ package = {
             },
         },
         windows = {
+            ["0.1.1"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-emscripten/archive/refs/tags/0.1.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-emscripten/releases/download/0.1.1/openkal-emscripten-0.1.1.tar.gz",
+                },
+                sha256 = "a33359fc3f3d35f713cacd88b5a2859e77d0ddca4662b9c30da5dce83a36ec6d",
+            },
             ["0.1.0"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-emscripten/archive/refs/tags/0.1.0.tar.gz",
