@@ -1022,8 +1022,8 @@ jobs:
         # mcpp says which lever is the right one: for the SYSTEM origin,
         # "everything about which toolset this picks is a property of the
         # machine, not of the caller" (src/toolchain/msvc.cppm). So change the
-        # machine. With 14.51 renamed aside, mcpp's detection and clang's own
-        # both land on 14.44 and cannot disagree.
+        # machine. With 14.51 moved OUT of that directory, mcpp's detection
+        # and clang's own both land on 14.44 and cannot disagree.
         #
         # Ephemeral runner, ephemeral change. `msvc@<toolset>` in a manifest is
         # the per-package way to pin, but this has to hold for every member on
@@ -1037,8 +1037,15 @@ jobs:
             throw "MSVC 14.44.35207 is not on this image; see the emit-windows comment before changing the pin"
           }
           if (Test-Path $bad) {
-            Rename-Item -Path $bad -NewName "14.51.36231.disabled-see-mcpp-609"
-            Write-Host "moved 14.51.36231 aside"
+            # OUT of VC\Tools\MSVC, not renamed inside it. Renaming in
+            # place was tried and does not hide anything: mcpp enumerates
+            # every child of that directory, so
+            # `14.51.36231.disabled-see-mcpp-609` was still found -- and
+            # still sorted last, so still chosen. The log named it:
+            # `...\14.51.36231.disabled-see-mcpp-609\modules\std.ixx`.
+            $park = Join-Path $env:RUNNER_TEMP "msvc-14.51-parked"
+            Move-Item -Path $bad -Destination $park -Force
+            Write-Host "moved 14.51.36231 out to $park"
           } else {
             Write-Host "14.51.36231 not present; nothing to move"
           }
