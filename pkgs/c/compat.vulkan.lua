@@ -403,7 +403,26 @@ package = {
             ldflags = { "-framework", "CoreFoundation", "-lpthread", "-lm" },
             runtime = {
                 -- macOS has no native Vulkan; the ICD is MoltenVK, layered over
-                -- Metal. The loader loads it exactly like any other ICD.
+                -- Metal. Nothing here ships it, and without it nothing crashes:
+                -- vkCreateInstance returns VK_ERROR_INCOMPATIBLE_DRIVER and the
+                -- program sees zero devices (measured on macos-15, mcpp-index #396).
+                --
+                -- HOW A PROGRAM GETS A DEVICE TODAY, both measured there:
+                --   * this static loader searches <executable dir>/vulkan/icd.d
+                --     first -- CoreFoundation's resources directory for an
+                --     unbundled executable is the executable's own directory -- so
+                --     libMoltenVK.dylib beside the executable and
+                --     vulkan/icd.d/MoltenVK_icd.json holding
+                --     "library_path": "../../libMoltenVK.dylib" enumerates the GPU,
+                --     and still does after the directory is copied elsewhere;
+                --   * or VK_DRIVER_FILES=<xim:moltenvk>/share/vulkan/icd.d/MoltenVK_icd.json.
+                -- Either way the instance must enable
+                -- VK_KHR_portability_enumeration and set
+                -- VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR, or the loader
+                -- hides a portability driver from vkEnumeratePhysicalDevices.
+                --
+                -- mcpp cannot yet place those two files beside the executable: it
+                -- deploys *.dll only, flattened into bin/ (mcpp-community/mcpp#615).
                 capabilities = { "vulkan.icd.driver" },
             },
         },
