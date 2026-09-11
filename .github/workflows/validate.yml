@@ -972,7 +972,32 @@ jobs:
         with:
           # Holds toolchains AND the built compat packages (data/xpkgs), so a
           # repeat `mcpp test` rebuilds little.
-          path: ~/.mcpp/registry
+          #
+          # THE INDEX TREES ARE EXCLUDED, and that exclusion is the whole point
+          # of this entry's shape. `data/xim-pkgindex` and `data/mcpplibs` are
+          # the RESOLVED indices -- the descriptors mcpp reads. Caching them
+          # under a key whose `restore-keys` prefix ends at MCPP_VERSION means
+          # a run restores whatever index the last run happened to leave, no
+          # matter what landed upstream since.
+          #
+          # That is not hypothetical. Two successive fixes to `xim:wix`
+          # (openxlings/xim-pkgindex#808, then #809) were each merged, each
+          # re-run here, and each appeared to change nothing -- because neither
+          # was ever loaded. The tell was that `7zip`, which #809 declares,
+          # appeared ZERO times in a log that was supposedly testing #809. The
+          # only thing that ever refreshed the index was moving MCPP_VERSION,
+          # which is a coincidence of cache-key composition rather than a
+          # mechanism anyone chose.
+          #
+          # Excluding rather than keying on the index revision is deliberate.
+          # Keying would evict everything on every upstream commit; measured on
+          # a developer machine, the index trees are ~8 MB against ~28 GB of
+          # `data/xpkgs`. Re-fetching 8 MB per job is the cheap half, and it is
+          # the half that has to be current.
+          path: |
+            ~/.mcpp/registry
+            !~/.mcpp/registry/data/xim-pkgindex
+            !~/.mcpp/registry/data/mcpplibs
           key: ${{ env.REGISTRY_CACHE_KEY }}
           restore-keys: |
             mcpp-registry-${{ runner.os }}-${{ matrix.toolchain }}-${{ env.MCPP_VERSION }}-
