@@ -264,6 +264,41 @@ function install()
     local jobs = (os.default_njob and os.default_njob()) or 4
     local clean_env = "env -u CPPFLAGS -u CFLAGS -u CXXFLAGS -u LDFLAGS "
     local compiler = ""
+
+    -- THE STANDARD LIBRARY THIS IS BUILT AGAINST HAS TO MATCH THE CONSUMER'S.
+    --
+    -- CMake picks the system compiler below, so the static libs come out
+    -- against libstdc++ whatever the consumer uses. On the llvm leg, which
+    -- links libc++, the member then fails at link with the libstdc++ half of
+    -- its own dependency undefined:
+    --
+    --     ld.lld: error: undefined symbol: std::_Rb_tree_increment(...)
+    --     ld.lld: error: undefined symbol:
+    --         std::__cxx11::basic_string<...>::_M_create(...)
+    --
+    -- `llamacpp` refuses a libc++ toolchain by name with
+    -- `mcpp::cxx_stdlib()`, but that is a build-program API and this is an
+    -- inline descriptor with no build program. What an install hook CAN do is
+    -- read the variable that API reads. mcpp exports MCPP_CXX_STDLIB when it
+    -- runs a build program (src/build/build_program.cppm); whether it reaches
+    -- an xlings install hook is not documented either way, so this asks
+    -- rather than assumes, and RECORDS the answer either way.
+    --
+    -- Absent, nothing changes: the build is what it was, and the hook log says
+    -- the variable was not visible -- which is the missing half of the
+    -- diagnosis if the llvm leg fails again.
+    local want_stdlib = os.getenv("MCPP_CXX_STDLIB")
+    hook_log("MCPP_CXX_STDLIB=" .. tostring(want_stdlib))
+    if want_stdlib == "libc++" and os.host() == "linux" then
+        -- -stdlib reaches the compile AND the link, which is what a mixed
+        -- build gets wrong: compiling against libc++ headers and linking
+        -- libstdc++ produces the same undefined symbols one layer later.
+        compiler = compiler
+            .. "-DCMAKE_CXX_FLAGS=-stdlib=libc++ "
+            .. "-DCMAKE_EXE_LINKER_FLAGS=-stdlib=libc++ "
+            .. "-DCMAKE_SHARED_LINKER_FLAGS=-stdlib=libc++ "
+        hook_log("building against libc++ to match the consumer")
+    end
     if os.host() == "macosx" then
         -- Connector 在 project() 前启动 bootstrap CMake；必须通过环境变量
         -- 将最低系统版本同步给 bootstrap 及其后续的内置依赖构建。
