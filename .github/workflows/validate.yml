@@ -496,11 +496,41 @@ jobs:
         id: plan
         shell: bash
         run: |
+          # A FULL RUN IS NO LONGER SOMETHING A PR CAN TRIGGER BY ACCIDENT.
+          #
+          # Every reason to distrust the diff used to escalate to the whole
+          # workspace. On a PR that is the wrong trade twice over: it buries
+          # the change under ~22 shards of unrelated work, and it puts the
+          # PR's own legs behind an hour of queue, so the thing being reviewed
+          # is the last thing to report. Touching this file was enough to
+          # trigger it -- which meant a one-line CI edit could not be reviewed
+          # against a fast signal, measured repeatedly on #390, #391 and #392.
+          #
+          # So `full` now answers only where "check everything" is the actual
+          # request: the weekly cron and a manual `workflow_dispatch`. On a PR
+          # or a push, the same reasons instead WIDEN NOTHING and say so --
+          # `widen` records them, the summary prints them, and a human who
+          # wants the sweep runs the workflow by hand.
+          #
+          # What is deliberately NOT weakened: descriptor and member changes
+          # still select their members exactly as before. The only thing that
+          # changed is what happens when the diff cannot be classified.
           full() {
             echo "MEMBERS=__ALL__" >> "$GITHUB_ENV"
             echo "pkgs=__ALL__" >> "$GITHUB_OUTPUT"
             echo "full run: $1"
             exit 0
+          }
+
+          UNTRUSTED=""
+          widen() {
+            case "${{ github.event_name }}" in
+              schedule|workflow_dispatch) full "$1" ;;
+            esac
+            UNTRUSTED="${UNTRUSTED}${UNTRUSTED:+; }$1"
+            echo "note: '$1' would once have forced a full workspace run;" \
+                 "selecting only what the diff names. Run this workflow" \
+                 "manually (workflow_dispatch) for the full sweep."
           }
 
           # A push to main has a diff too — it was just never asked for.
@@ -528,25 +558,41 @@ jobs:
               base="${{ github.event.before }}"
               # All-zero on branch creation; absent object after a
               # force-push that dropped it. Either way there is nothing to
-              # diff against, and guessing is worse than re-testing.
+              # diff against.
+              #
+              # `widen` no longer exits on a push, so this has to leave a
+              # USABLE range behind. `HEAD` alone (the root-to-HEAD diff)
+              # would name every file in the repo and select every member --
+              # a full run by another name, which is what this change exists
+              # to stop. An empty range selects nothing, and `widen` has
+              # already said why; the summary carries it to a human, who can
+              # dispatch the sweep. Rare either way: merges here are squashes,
+              # so `event.before` is present on every normal push.
+              usable=1
               case "$base" in
                 ""|0000000000000000000000000000000000000000)
-                  full "push with no predecessor" ;;
+                  widen "push with no predecessor"; usable=0 ;;
               esac
-              git cat-file -e "$base^{commit}" 2>/dev/null \
-                || full "push predecessor $base not in history"
-              range="$base..HEAD" ;;
+              if [ "$usable" = 1 ]; then
+                git cat-file -e "$base^{commit}" 2>/dev/null \
+                  || { widen "push predecessor $base not in history"; usable=0; }
+              fi
+              if [ "$usable" = 1 ]; then range="$base..HEAD"; else range=""; fi ;;
             *)
               full "event=${{ github.event_name }}" ;;
           esac
-          changed=$(git diff --name-only $range)
-          printf 'changed files vs %s:\n%s\n' "$base" "$changed"
+          if [ -n "$range" ]; then
+            changed=$(git diff --name-only $range)
+          else
+            changed=""
+          fi
+          printf 'changed files vs %s:\n%s\n' "${base:-<none>}" "$changed"
           sel=""; pkgsel=""
           add() { case " $sel " in *" $1 "*) ;; *) sel="$sel $1" ;; esac; }
           while IFS= read -r f; do
             [ -n "$f" ] || continue
             case "$f" in
-              .github/workflows/validate.yml|tests/*.sh) full "$f" ;;
+              .github/workflows/validate.yml|tests/*.sh) widen "$f" ;;
               mcpp.toml)
                 # Workspace manifest. Every new-package PR appends to the
                 # members list, so that alone must NOT force a full run:
@@ -554,7 +600,7 @@ jobs:
                 # (indices, settings) affects everyone → full.
                 if ! diff -q <(git show "$base:mcpp.toml" | grep -v 'tests/examples/') \
                              <(grep -v 'tests/examples/' mcpp.toml) >/dev/null; then
-                  full "mcpp.toml non-member change"
+                  widen "mcpp.toml non-member change"
                 fi
                 for p in $(comm -13 <(git show "$base:mcpp.toml" | grep -o 'tests/examples/[A-Za-z0-9._-]*' | sort -u) \
                                     <(grep -o 'tests/examples/[A-Za-z0-9._-]*' mcpp.toml | sort -u)); do
@@ -595,7 +641,7 @@ jobs:
               # here. Guard it in `lint` if that ever bites.
               tests/member-timings.tsv) : ;;
               *.md|docs/*|.agents/*|.github/*|tools/*) : ;;
-              *) full "unclassified change: $f" ;;
+              *) widen "unclassified change: $f" ;;
             esac
           done <<EOF
           $changed
@@ -606,6 +652,25 @@ jobs:
           pkgsel=${pkgsel# }
           echo "pkgs=$pkgsel" >> "$GITHUB_OUTPUT"
           echo "changed descriptors: ${pkgsel:-<none>}"
+
+          # Carried to the run summary, not just the log. A widened reason is
+          # the one thing here a reviewer has to see WITHOUT opening a job:
+          # it says this run deliberately tested less than the old behaviour
+          # would have, and what to do about it.
+          if [ -n "$UNTRUSTED" ]; then
+            {
+              echo "### Selective run (full sweep not triggered)"
+              echo
+              echo "These would once have forced a full workspace run:"
+              echo
+              echo "- $UNTRUSTED"
+              echo
+              echo "Selected members: \`${sel:-<none>}\`"
+              echo
+              echo "Run this workflow manually (**Run workflow** /"
+              echo "\`workflow_dispatch\`) for the full sweep."
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
       # Sharding is for the FULL run only, and the shard count per platform is
       # that platform's RUNNER CONCURRENCY — not a round number.
       #
