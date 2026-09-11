@@ -786,7 +786,39 @@ jobs:
             emit linux   ubuntu-latest  linux-x86_64   tar.gz bin/mcpp     registry/bin/xlings     default "$ln"
             emit linux   ubuntu-latest  linux-x86_64   tar.gz bin/mcpp     registry/bin/xlings     llvm    "$lln"
             emit macos   macos-15       macosx-arm64   tar.gz bin/mcpp     registry/bin/xlings     default "$mn"
-            emit windows windows-latest windows-x86_64 zip    bin/mcpp.exe registry/bin/xlings.exe default "$wn"
+            # WINDOWS IS PINNED, like macOS above, and for a reason that cost
+            # a day to find. `windows-latest` rolled to the Visual Studio 18
+            # image (MSVC STL 14.51), and mcpp builds windows with clang
+            # targeting x86_64-pc-windows-msvc -- so every package here
+            # compiles against an STL written for a different front end.
+            #
+            # Most survive that. `huxerui.huxerui` did not:
+            #
+            #     xutility:320: error: static assertion failed: unexpected size
+            #     in instantiation of 'std::_Find_vectorized<
+            #         const huxerui::detail::NodeExtensionHandle, ...>'
+            #
+            # MSVC STL's vectorized `std::find` is guarded by a trait that
+            # decides whether the element type can be compared bitwise.
+            # `NodeExtensionHandle` is 24 bytes with no padding, trivially
+            # copyable, `operator==` defaulted -- the guard admits it under
+            # clang, and the helper it dispatches to implements 1/2/4/8-byte
+            # elements and static_asserts on the rest. Guard and implementation
+            # disagree about what "vectorizable" means, and only clang is there
+            # to notice.
+            #
+            # NOT this index's bug, and not the package's: the same source, the
+            # same clang, compiles on the 2022 image's STL. Upstream HuxerUI's
+            # own mcpp CI is green for exactly that reason -- it pins
+            # `windows-2022`. Reported as mcpp-community/mcpp#609 so the pin can
+            # be lifted when the toolchain combination works.
+            #
+            # 13 of the 14 members on the shard that failed were unaffected, so
+            # this is not a blanket breakage -- which is precisely why a rolling
+            # label is the wrong thing to stand on: the next image moves the set
+            # of packages that happen to trip it, and the failure arrives
+            # attributed to whatever descriptor changed that week.
+            emit windows windows-2022   windows-x86_64 zip    bin/mcpp.exe registry/bin/xlings.exe default "$wn"
             printf ']}'
           } | sed 's/,]}/]}/' > /tmp/matrix.json
           echo "matrix=$(cat /tmp/matrix.json)" >> "$GITHUB_OUTPUT"
