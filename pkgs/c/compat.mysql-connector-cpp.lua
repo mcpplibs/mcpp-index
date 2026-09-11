@@ -46,6 +46,12 @@ package = {
         sources      = { "mcpp_mysql_connector_cpp_anchor.c" },
         include_dirs = { "include" },
         targets      = { ["mysql_connector_cpp"] = { kind = "lib" } },
+        -- The static libraries are compiled against libstdc++ (see the comment
+        -- in install()), so a consumer whose toolchain resolves another C++
+        -- standard library is refused at resolution, naming both, instead of
+        -- failing at link. An mcpp older than the layer grammar reports this
+        -- key as unknown and proceeds as before.
+        requires     = { "mcpp:c++-abi=libstdc++" },
         deps = {
             ["compat.libmysqlclient"] = "8.4.6",
             ["compat.openssl"]        = "3.5.1",
@@ -282,13 +288,12 @@ function install()
     --   1. MEASURED. The probe below logged `MCPP_CXX_STDLIB=nil` on the llvm
     --      leg (mcpplibs/mcpp-index#392, `workspace (linux llvm 0/4)`), and
     --      the link failed exactly as before.
-    --   2. THE ONLY SETTER is `src/build/build_program.cppm` (`e.emplace_back
-    --      ("MCPP_CXX_STDLIB", env.cxxStdlib)`) -- mcpp exports it when it runs
-    --      a BUILD PROGRAM. An xlings install hook is not that.
-    --   3. THE CALL CARRIES NOTHING ELSE either: `make_xlings_env` builds an
-    --      `xlings::Env` of `{binary, home, projectDir}`, and
-    --      `install_packages` is invoked with `XLINGS_HOME` and PATH. No
-    --      toolchain, no compiler, no stdlib crosses that boundary.
+    --   2. BY CONSTRUCTION, NOT BY OMISSION. mcpp 2026.9.12.2 emits
+    --      MCPP_CXX_STDLIB to a dependency's install hook, and it is empty
+    --      there: mcpp resolves the toolchain after the dependency graph,
+    --      because a package in the graph may supply a target-side layer, so no
+    --      standard library exists yet when this hook runs
+    --      (mcpp-community/mcpp#613, measured by its tests/e2e/648).
     --
     -- So neither route is reachable from HERE. `llamacpp` refuses a libc++
     -- toolchain by name with `mcpp::cxx_stdlib()`, but that lives in its
@@ -300,17 +305,16 @@ function install()
     -- before the linker says it: these are STATIC libraries built by CMake
     -- with the system compiler, so `std::__cxx11::` and friends cross the
     -- boundary into the consumer. Consuming them from a libc++ toolchain does
-    -- not work and cannot be made to work from inside this hook. Tracked as
-    -- mcpp-community/mcpp#613 (install hooks need the consumer's stdlib);
-    -- until then
-    -- `validate.yml` keeps this member off the llvm leg, with the same reason
-    -- written there.
+    -- not work and cannot be made to work from inside this hook. The
+    -- descriptor states it instead (`requires` in the mcpp table above), and
+    -- `validate.yml` keeps this member off the llvm leg, because the refusal
+    -- follows this hook's source build and the leg would spend the build to
+    -- reach an answer it already knows.
     --
-    -- The probe stays. It costs one log line, it is the evidence for point 1,
-    -- and the day mcpp does pass the variable through, this line reports it
-    -- and the fix becomes a three-line change directly below.
+    -- The probe stays. It costs one log line and is the evidence for points 1
+    -- and 2: nil from an mcpp older than 2026.9.12.2, empty from a newer one.
     hook_log("MCPP_CXX_STDLIB=" .. tostring(os.getenv("MCPP_CXX_STDLIB"))
-             .. " (expected nil; see the comment above)")
+             .. " (expected nil or empty; see the comment above)")
     if os.host() == "macosx" then
         -- Connector 在 project() 前启动 bootstrap CMake；必须通过环境变量
         -- 将最低系统版本同步给 bootstrap 及其后续的内置依赖构建。
