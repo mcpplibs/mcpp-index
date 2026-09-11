@@ -1,0 +1,25 @@
+# A member-level redirect replaces the workspace root's compat redirect, so
+# this test resolves huxerui.huxerui from the current checkout.
+[indices]
+huxerui = { path = "../../.." }
+
+[package]
+name    = "huxerui-module-tests"
+version = "0.1.0"
+# C++20, because the DEPENDENCY says so and mcpp applies the ROOT's standard to
+# the whole module graph -- upstream's mcpp.toml spells that out:
+#
+#     standard = "c++20"
+#     # The SDK ABI baseline. Do not raise it: mcpp applies the root standard
+#     # to the whole module graph, so this is imposed on every consumer too.
+#
+# Leaving this unset defaulted the member to c++23 and compiled huxerui's own
+# sources at c++23, above the baseline it declares. On windows that is not
+# academic: clang 20.1.7 against MSVC STL 14.51 then instantiates
+# `std::_Find_vectorized` and dies on `static_assert(false, "unexpected size")`
+# in <xutility>. `import std;` still works here -- huxerui is
+# `language = "c++20", import_std = true`.
+standard = "c++20"
+
+[dependencies.huxerui]
+huxerui = "0.3.0"

@@ -27,7 +27,7 @@ Two kinds of packages live here:
 
 - **Native mcpp module libraries**: shipped as C++23 modules and ready to `import` — `mcpplibs.*`, `nlohmann.json`,
   `imgui`, `ffmpeg`, `opencv`, plus libraries developed on top of mcpp by users and registered into the index (such as
-  `tensorvia-cpu`). Their upstream usually carries its own `mcpp.toml`, so the descriptor (Form A) only declares
+  `tensorvia-cpu` and `huxerui.huxerui`). Their upstream usually carries its own `mcpp.toml`, so the descriptor (Form A) only declares
   metadata and a download address.
 - **Third-party C/C++ libraries (`compat`)**: upstream offers no mcpp support, so the descriptor (Form B) inlines the
   build information. These come in several shapes — header-only, plain C sources, C++23 module wrapper — with optional
@@ -47,6 +47,7 @@ A few descriptors worth opening first, one per common shape:
 | C++23 module wrapper | [`nlohmann.json`](pkgs/n/nlohmann.json.lua) | A generated `.cppm` turns a header-only library into `import` |
 | C++23 module, upstream's own | [`khronos.vulkan-hpp`](pkgs/k/khronos.vulkan-hpp.lua) | Khronos ships `vulkan.cppm`, so the descriptor just names it — `import vulkan;` with nothing authored here |
 | External build system | [`compat.openssl`](pkgs/c/compat.openssl.lua) | An `install()` hook drives upstream's own Perl Configure + Make |
+| Form A whose consumer deps must be written by hand | [`huxerui.huxerui`](pkgs/h/huxerui.huxerui.lua) | HuxerUI declares its GTK4 stack on the TARGET axis, which is the form mcpp recommends and which a descriptor structurally cannot carry — three platform blocks, and a cfg selector is not a platform. `mcpp emit xpkg` says so and emits empty `deps`, so the 36-entry closure is transcribed into `xpm.linux.deps` at PLATFORM level (a per-version `deps` is inert). Its `licenses`/`repo` also deliberately disagree with what emit produces |
 
 The full catalog — every shape this index has needed, and the reasoning behind each descriptor including what it
 deliberately leaves out — is in **[Descriptor examples by shape](docs/descriptor-examples.md)**.

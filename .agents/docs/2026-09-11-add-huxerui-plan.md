@@ -1,0 +1,342 @@
+# Adding `huxerui.huxerui` 0.3.0 to mcpp-index
+
+> 2026-09-11 · Form A (shape D, external Form-A module repo) · PR: add HuxerUI + a CI pin that follows the engine
+
+## 1. Shape
+
+Source category (b) — a library developed **on** mcpp. Upstream carries its own
+`mcpp.toml` (`[lib] path = "modules/huxerui.cppm"`, `[build-dependencies]` for
+two code generators and a rule module, `build.mcpp` driving them), so this is
+**Form A**: the descriptor declares metadata plus a download address, and every
+build fact comes from the source's own manifest.
+
+No `mcpp` segment. `mcpp emit xpkg` prints a table-form one aimed at the publish
+flow; pasting it here makes the parser read the descriptor as an **inline
+Form B** and refuse it:
+
+```
+error: synthesised manifest missing sources (mcpp segment must declare `sources = { ... }`)
+```
+
+Omitting it lets mcpp's default lookup find `<verdir>/*/mcpp.toml`, which the
+tag archive provides at `HuxerUI-0.3.0/mcpp.toml`. `imgui.lua` carries the same
+note. `mcpp xpkg parse` then reports `form A — no mcpp segment`.
+
+## 2. Source and hash
+
+v0.3.0's release publishes SDK **binaries** only — no source asset — so the
+url is GitHub's tag archive, the same form `imgui-m` uses:
+
+```
+https://github.com/HuxerUI/HuxerUI/archive/refs/tags/v0.3.0.tar.gz
+sha256 8b326d95015e92925229fdc1ababe4fdf32515e75764472591645622c1cfbb08
+```
+
+Downloaded twice, sha identical both times (9 946 045 bytes). Wrap layer is
+`HuxerUI-0.3.0/`, absorbed by the default lookup.
+
+## 3. Two fields that deliberately disagree with `emit xpkg`
+
+Emit produces `licenses = {"Apache-2.0"}` and
+`repo = "https://github.com/Sunrisepeak/HuxerUI"`. Both are wrong at the source:
+
+* The v0.3.0 tree's `LICENSE` is the **MIT** License verbatim, and
+  xim-pkgindex's entry for the same SDK has always said MIT. Upstream's
+  `license = "Apache-2.0"` is a typo shared by seven manifests in that repo and
+  is being corrected separately. An index must not restate a licence its own
+  artifact contradicts.
+* `Sunrisepeak/HuxerUI` is the author's personal remote; the canonical
+  repository — the one publishing the releases this descriptor downloads — is
+  `HuxerUI/HuxerUI`.
+
+The descriptor is therefore hand-maintained and does **not** carry emit's
+"AUTO-GENERATED / do not edit by hand" banner. Re-emitting over it would
+reintroduce both. (`aimol.tensorvia-cpu` is the cautionary case: it still
+carries that banner while having been hand-edited.)
+
+Naming follows mcpp#278 (INV-NAME): `namespace = "huxerui"` **and** the
+fully-qualified `name = "huxerui.huxerui"`. The split form — namespace plus a
+bare name — parses but can never be installed.
+
+## 4. `xpm.linux.deps`, and why it is written out by hand
+
+Upstream declares the GTK4 stack on the **target axis**:
+
+```toml
+[target.'cfg(linux)'.xlings.workspace]
+"xim:gtk4" = "4.16.13"      # …36 entries, the transitive .pc closure
+```
+
+which is the form mcpp recommends for anything the produced code links against,
+and which a descriptor structurally cannot carry. `emit xpkg` says exactly that:
+
+```
+[target.'cfg(linux)'] declares tools (xim:cairo@1.18.4, …) and the descriptor
+carries no edge for them: its blocks are per platform, and a selector is not a
+platform.
+```
+
+A descriptor has three platform blocks; a cfg selector is not one of them.
+Consumer edges therefore come from this file. Omitted, a consumer would resolve
+huxerui, build it, and die at link on the GTK sonames.
+
+The closure is transcribed at **PLATFORM level** — a per-version `deps` is
+inert, the finding `compat.eui-neo` and `compat.glx-runtime` both record. All 36
+entries and their pins are copied verbatim from the v0.3.0 tag's own manifest
+(diffed against the working tree to confirm they match). They are what the
+package's build compiles against *and* what a consumer must have, so no
+`runtime = { … }` split applies.
+
+Keeping this in step with upstream is manual until mcpp can derive consumer
+dependencies from the target axis. A missing entry surfaces as
+`Package <x> was not found in the pkg-config search path`, which names it.
+
+macOS needs no payloads (`[runtime] frameworks`, supplied by the system SDK).
+windows carries **no** `xim:wix`, though emit produces one. Upstream declares
+wix on the host axis and the host axis is what a descriptor can carry, but
+emitted is not needed: wix builds an MSI, upstream's rule tolerates its absence
+by construction (`if (root.empty()) return {};`), and upstream's manifest says
+an application wanting an installer "declares this line too". CI settled it —
+`xim:wix`'s own install hook fails on a clean windows-latest runner, so
+declaring it took every Windows consumer down for a tool almost none would run.
+Fixed separately in xim-pkgindex#809.
+
+## 5. The CI pin moves with this PR
+
+`mcpp/huxerui-build-rules` calls `mcpp::package_name()` and
+`mcpp::package_namespace()` — mcpp#587, merged 2026-09-08, first released in
+**v2026.9.7.1**. The pin was 2026.9.6.3, one release short, so the host module
+did not compile at all:
+
+```
+error: dependency 'huxerui': host module 'huxerui.rules' compile failed (exit 1)
+rules.cppm:274:61: error: 'package_name' is not a member of 'mcpp'
+```
+
+This is the situation #361 established the pattern for — *"A package whose build
+program uses a current engine API is not a defect; a CI that cannot run current
+engines is."* — so `MCPP_VERSION` moves in the same PR.
+
+It moves to **2026.9.7.1**, the floor, and not to the current release. That was
+the second attempt. 2026.9.10.2 was tried first and CI rejected it:
+`mysql-connector-cpp` failed on linux default, linux llvm and macOS while every
+other member passed. Not that package's fault — mcpp's scanner errors on an
+ordinary block comment. Reduced to four lines:
+
+```cpp
+/*
+  module (exe)
+*/
+int main() { return 0; }
+```
+
+and bisected: OK through 2026.9.8.1, broken from 2026.9.9.1 onward (2026.9.11.1
+included). The regression lands one release after 2026.9.7.1 — which is exactly
+the release that first carries `package_name()`. The floor and the last good
+version coincide, so the pin sits there. Reported as mcpp-community/mcpp#606.
+
+`index.toml` `min_mcpp` does **not** move, for the reason that entry gives: the
+floor is about descriptor **grammar**. Verified — `mcpp xpkg parse` accepts this
+descriptor under 2026.8.27.2 (the floor), 2026.9.6.3 and 2026.9.7.1 alike. A
+client on the floor keeps resolving the whole index; only building *this*
+package from source needs the newer engine.
+
+The pin move pays the cold-cache cost the workflow comment warns about
+(~12 shards, still cold after 50 minutes), so any other descriptor waiting on a
+newer engine should ride along.
+
+## 6. Verification
+
+Member `tests/examples/huxerui-module`, one `[indices] huxerui = { path = "../../.." }`.
+
+```
+$ mcpp test -p huxerui-module            # 2026.9.11.2
+   Compiling huxerui.huxerui v0.3.0
+   Compiling runtime (test)
+     Running bin/runtime
+runtime ... ok (0.02s)
+ test result ok. 1 passed; 0 failed; finished in 8.21s
+```
+
+Negative check — the assertion is live, not a no-op:
+
+```
+$ sed -i 's/Color::Rgb(255, 128, 0)/Color::Rgb(1, 2, 3)/' …/runtime.cpp
+$ mcpp test -p huxerui-module
+runtime ... FAIL (exit 1, 0.02s)
+error: test result: FAILED. 0 passed; 1 failed
+```
+
+The test deliberately opens no window. `Rect`/`Color` are header-attached
+entities the module re-exports and would compile even if the library had never
+been built; `FlatLightThemeSpec()`/`FlatDarkThemeSpec()` are out-of-line
+definitions inside libhuxerui, so reaching them is what proves the link.
+
+Old pin still fails, as expected:
+
+```
+$ mcpp-2026.9.6.3 test -p huxerui-module
+rules.cppm:274:61: error: 'package_name' is not a member of 'mcpp'
+```
+
+## 7. A path-length trap found on the way, and left upstream
+
+At a deep checkout the same member fails on **mcpp**, not on this descriptor:
+
+```
+build.mcpp declared an action whose arguments did not fit
+payload: {"id":"hrc:builtin", … "overflow":true}
+```
+
+`mcpp::action` uses fixed buffers (`inputs_[8192]`) and `hrc:builtin` enumerates
+all 44 files under `resources/` as inputs. Measured:
+
+| unpack prefix | inputs | result |
+|---|---|---|
+| 149 chars (deep local checkout) | 8 131 B + ~106 B for the hrc path | **overflows 8 192** |
+| 109 chars (ordinary path) | 6 371 B | builds |
+| in-tree, relative | 1 531 B | builds, 21.45 s |
+
+So it is driven by the unpack prefix, not the file count, and it overflows by
+roughly 45 bytes. That is worse than a clean failure: whether a consumer builds
+depends on how deep their project sits on disk. mcpp's own error names the fix —
+declare the resources **directory** as one input instead of enumerating it —
+and it belongs in `huxerui-build-rules`, not here. Filed as a follow-up against
+HuxerUI; this index is not the place to work around it.
+
+## 8. CN mirror
+
+`mcpp-res/huxerui`, release `0.3.0`, asset `huxerui-0.3.0.tar.gz` — the same
+bytes as GLOBAL.
+
+```
+CN http=200  size=9946045
+GLOBAL sha 8b326d95015e92925229fdc1ababe4fdf32515e75764472591645622c1cfbb08
+CN     sha 8b326d95015e92925229fdc1ababe4fdf32515e75764472591645622c1cfbb08
+BYTE-IDENTICAL
+```
+
+## 9. Lint
+
+`check_mirror_urls`, `check_package_name`, `check_duplicate_versions`,
+`check_platform_version_parity`, `check_cross_package_refs` — all pass on the
+new descriptor, and the first three pass across `pkgs/*/*.lua` to confirm the
+addition does not disturb anything else.
+
+## 10. What CI added that local verification could not
+
+Three defects surfaced only in CI, and all three lived outside this descriptor.
+
+**`xim:wix` had never been installed.** `tests/w/test_wix.py` is static-only and
+nothing in either index pulled wix in, so its install hook had never run
+anywhere. huxerui is its first consumer; on Windows it fails at
+`Provisioning [xlings.workspace] entries declared by dependencies` — before
+huxerui compiles at all. Removing wix from this descriptor was necessary but not
+sufficient: mcpp also provisions what the BUILDING package declares, and
+upstream's `mcpp.toml` declares it.
+
+It took two attempts, and the first is worth recording because it was a wrong
+diagnosis. xim-pkgindex#808 kept the host's `tar` and added a PowerShell
+fallback; the failure merely moved, from `exec failed … tar -xf` to
+`registered none of its declared programs`. The evidence had been in the first
+log all along: `curl` ran fine in the SAME hook moments before `tar` did not --
+the payload was downloaded and sha-verified, which is the only reason execution
+reached the extractor at all. One is a declared dependency; the other was the
+host's. xim-pkgindex#809 declares `xim:7zip` and extracts with it, applying the
+standard this recipe had already set for its own downloader. Verified on a
+Windows runner: 7-Zip installs as a dep, extracts the .nupkg, and `wix.exe`
+runs.
+
+**The scanner regression**, above — which is why the pin is the floor.
+
+**`mysql-connector-cpp` on the llvm leg** still fails at 2026.9.7.1, with
+`install() result=nil` and no scanner error. The default (gcc) leg passes, and
+the two legs are not equivalent: gcc reaches its compiler through `--sysroot`
+into a clean subos, while llvm has no sysroot and the host's headers are on the
+search path. Unexplained, tracked separately, and not attributable to this
+package — `huxerui-module` itself is `ok` in that same shard.
+
+Where huxerui stands per leg, at the pin this PR sets:
+
+| leg | huxerui-module |
+|---|---|
+| linux default | ok |
+| linux llvm | ok |
+| macOS | ok |
+| windows | blocked on xim-pkgindex#809, then expected to pass |
+
+## 11. The index in CI is cached, and the pin is its only cache key
+
+This cost a full round of wrong conclusions, so it is written down rather than
+merely fixed.
+
+`xim:wix` was fixed twice in xim-pkgindex — #808, then #809 — and after each
+merge the windows leg here failed identically. Both were read as "the fix did
+not work". Neither had ever been loaded.
+
+`actions/cache` holds `~/.mcpp/registry`, and that path contains
+`data/xim-pkgindex`: the resolved xim index. Its `restore-keys` prefix stops at
+`MCPP_VERSION`, so as long as that line does not move, every run restores the
+same index snapshot regardless of what landed upstream. The tell was in the log
+all along — `7zip`, which #809 declares, appeared **zero times** in a run that
+was supposedly testing #809.
+
+Two earlier guesses were wrong and are worth naming so they are not repeated:
+that mcpp bundles a frozen index in its release tarball (it does not — a
+pristine extraction contains no `xim-pkgindex` at all; the directory is
+populated at run time), and that a merge therefore propagates on its own.
+
+The practical rule: **a change to a xim package cannot be verified from this
+repo's CI unless `MCPP_VERSION` also moves.** Raising the pin to 2026.9.11.2
+evicts the cache, which is the only reason the windows leg can now see the
+fixed recipe.
+
+## 12. Where `xim:wix` actually belongs — `mcpp pack --format`
+
+This descriptor declares no `xim:wix`, and section 4 argues that from the
+consumer's side: wix builds an MSI, nothing else in the SDK touches it, and
+upstream's own manifest says an application wanting an installer declares it
+itself. That argument is right but incomplete, and the fuller one arrived three
+hours too late to be in v0.3.0.
+
+**mcpp 2026.9.11.1 opened the `--format` value set.** `mcpp pack` owns the
+mechanism and the two universal formats (`tar`, `dir`); every other format lives
+in a package and the engine dispatches to it:
+
+```cpp
+mcpp::provides_pack_format("msi");                              // unconditional
+if (std::string_view(mcpp::pack_format()) != "msi") return 0;   // conditional
+// … submit the wix action …
+```
+
+*Declare unconditionally, submit conditionally* — the declaration is what lets
+`--format bogus` list what is available. `xim-pkgindex`'s `appimagetool` (#802)
+is the same shape from the tool side.
+
+Under that mechanism `xim:wix` stops being a top-level `[xlings.workspace]`
+entry — which is provisioned for **every** build of every consumer — and becomes
+the dependency of the feature that provides the `msi` format, provisioned only
+when someone actually asks for an MSI. `mcpp test -p huxerui-module` would never
+touch it.
+
+The timeline is the whole explanation:
+
+| | |
+|---|---|
+| HuxerUI v0.3.0 released | 2026-09-10 17:36 UTC |
+| mcpp 2026.9.11.1 released (`--format` opens) | 2026-09-10 20:34 UTC |
+
+`provides_pack_format` appears **zero** times in v0.3.0's `build.mcpp` and
+`rules.cppm`. Not a road not taken — a road that did not exist yet, by under
+three hours.
+
+**Nothing to do here, and that is the point.** v0.3.0's tag is immutable, so the
+descriptor cannot reach this; what it can do is not make the problem worse, and
+not declaring wix is exactly that. When a 0.3.1 or 0.4.0 moves wix behind
+`provides_pack_format("msi")`, this descriptor needs no change — it already
+behaves as though that move had happened.
+
+Note also that the two Windows problems are independent. Even with wix out of
+the build entirely, `runtime_pointer_interaction.cpp` still fails to compile
+against MSVC STL 14.51 (§11 and the `windows-2022` pin). Fixing the packaging
+axis would not have unblocked this leg.
