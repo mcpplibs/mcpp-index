@@ -697,7 +697,16 @@ local function normalise_layout(layer)
     -- hook runs on every platform; the host guard is further down and it only
     -- covers the glib staging. With no directory listing available, the
     -- archive's shape is ASKED ABOUT by name rather than discovered.
+    --
+    -- The name carries UPSTREAM's version, which is not always this package's.
+    -- A fourth component is this index re-releasing the same tag -- 0.5.9.1 is
+    -- upstream 0.5.9 with one dependency re-pinned -- and the archive still
+    -- unpacks to `EUI-NEO-0.5.9/`. Taking the version verbatim looked for
+    -- `EUI-NEO-0.5.9.1/`, found nothing, and failed with the error below;
+    -- measured on the first 0.5.9.1 install. Three-component versions are
+    -- unchanged by this.
     local v = pkginfo.version()
+    v = v:match("^(%d+%.%d+%.%d+)%.%d+$") or v
     for _, name in ipairs({ "EUI-NEO-" .. v, "eui-neo-" .. v,
                             "EUI-NEO-v" .. v, "eui-neo-v" .. v }) do
         if os.isfile(path.join(name, "CMakeLists.txt")) then

@@ -21,7 +21,7 @@ name = "vulkan-hpp-module-tests"
 version = "0.1.0"
 
 [dependencies.khronos]
-vulkan-hpp = "1.4.357.1"
+vulkan-hpp = "1.4.357.0"
 
 # No [build] section, and no per-platform gating: unlike tests/examples/vulkan,
 # which had to publish its own HAVE_VULKAN_LOADER switch, nothing here is
