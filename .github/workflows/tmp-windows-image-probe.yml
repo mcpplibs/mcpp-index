@@ -1,0 +1,107 @@
+# TEMPORARY — delete once the windows image question is settled.
+#
+# mcpplibs/mcpp-index#385 pinned the windows leg to `windows-2022` because
+# `windows-latest` (= windows-2025-vs2026, MSVC STL 14.51) cannot compile
+# `huxerui.huxerui`: clang instantiates MSVC STL's vectorized `std::find` for a
+# 24-byte type and hits `static_assert(false, "unexpected size")`
+# (mcpp-community/mcpp#609).
+#
+# The pin worked and cost three members: `vulkan`, `eui-neo-vulkan` and
+# `vulkan-hpp-module` now fail at RUN time with 0xC0000135
+# (STATUS_DLL_NOT_FOUND). The Vulkan loader is not a Windows component -- it
+# arrives with a GPU driver or the SDK -- so whether an image carries
+# `vulkan-1.dll` is a property of the image, and 2022 apparently does not.
+#
+# `windows-2025` was never tried. If its STL is old enough to compile huxerui
+# and its image new enough to carry the loader, it settles both.
+#
+# This workflow answers that in one run instead of a 50-minute full matrix. It
+# is a separate FILE on purpose: validate.yml's `paths:` names only itself, so
+# adding this triggers no member selection.
+name: tmp-windows-image-probe
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths: [".github/workflows/tmp-windows-image-probe.yml"]
+
+env:
+  MCPP_VERSION: "2026.9.11.2"
+
+jobs:
+  probe:
+    strategy:
+      fail-fast: false
+      matrix:
+        image: [windows-2022, windows-2025, windows-latest]
+    runs-on: ${{ matrix.image }}
+    name: probe (${{ matrix.image }})
+    steps:
+      - uses: actions/checkout@v4
+
+      # The whole question, asked directly, before any build can muddy it.
+      - name: What is on this image
+        shell: pwsh
+        run: |
+          Write-Host "label        : ${{ matrix.image }}"
+          Write-Host "ImageOS      : $env:ImageOS"
+          Write-Host "ImageVersion : $env:ImageVersion"
+          Write-Host ""
+          Write-Host "--- Vulkan loader (the vulkan members' failure) ---"
+          foreach ($p in @("$env:SystemRoot\System32\vulkan-1.dll",
+                           "$env:SystemRoot\SysWOW64\vulkan-1.dll")) {
+            if (Test-Path $p) {
+              $v = (Get-Item $p).VersionInfo.FileVersion
+              Write-Host "  PRESENT  $p  ($v)"
+            } else {
+              Write-Host "  absent   $p"
+            }
+          }
+          Write-Host ""
+          Write-Host "--- MSVC toolsets (huxerui's failure) ---"
+          Get-ChildItem "C:\Program Files*\Microsoft Visual Studio\*\*\VC\Tools\MSVC\*" -Directory -EA SilentlyContinue |
+            ForEach-Object { Write-Host "  $($_.FullName)" }
+
+      - name: Download mcpp
+        shell: bash
+        env:
+          MCPP_ARCHIVE: mcpp-${{ env.MCPP_VERSION }}-windows-x86_64.zip
+          MCPP_ROOT: mcpp-${{ env.MCPP_VERSION }}-windows-x86_64
+        run: |
+          curl -L -fsS -o "$MCPP_ARCHIVE" \
+            "https://github.com/mcpp-community/mcpp/releases/download/v${MCPP_VERSION}/${MCPP_ARCHIVE}"
+          powershell -NoProfile -Command "Expand-Archive -Force -Path '${MCPP_ARCHIVE}' -DestinationPath '.'"
+          root="$PWD/$MCPP_ROOT"
+          mkdir -p "$HOME/.mcpp/registry"
+          cp -a "$root/registry/." "$HOME/.mcpp/registry/"
+          echo "MCPP_HOME=$HOME/.mcpp" >> "$GITHUB_ENV"
+          echo "MCPP=$(cygpath -m "$root/bin/mcpp.exe")" >> "$GITHUB_ENV"
+
+      # Both members, both allowed to fail, so every image reports a full row
+      # rather than stopping at the first red.
+      - name: huxerui-module (the compile question)
+        id: hux
+        continue-on-error: true
+        shell: bash
+        env:
+          MCPP_INDEX_MIRROR: GLOBAL
+        run: |
+          "$MCPP" test -p huxerui-module
+
+      - name: vulkan (the loader question)
+        id: vk
+        continue-on-error: true
+        shell: bash
+        env:
+          MCPP_INDEX_MIRROR: GLOBAL
+        run: |
+          "$MCPP" test -p vulkan
+
+      - name: Row
+        shell: bash
+        run: |
+          echo "=============================================="
+          echo " image           ${{ matrix.image }}"
+          echo " huxerui-module  ${{ steps.hux.outcome }}"
+          echo " vulkan          ${{ steps.vk.outcome }}"
+          echo "=============================================="
