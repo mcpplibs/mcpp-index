@@ -810,12 +810,13 @@ jobs:
             # together because both were read off the image label. They do not.
             #
             # The 2025 image carries THREE toolsets -- 14.29.30133, 14.44.35207
-            # and 14.51.36231 -- and clang takes the newest. The step that sets
-            # `VCToolsInstallDir` below names 14.44, which gets a new image
-            # (loader present) with an old STL (huxerui compiles). Measured on
-            # this exact combination: `mcpp test -p huxerui-module` reported
-            # `test result ok`, and the compile touched `MSVC\14.44.35207` six
-            # times and 14.51 not once.
+            # and 14.51.36231 -- and the newest is the broken one. The step
+            # below moves 14.51 aside so the machine presents 14.44 as newest,
+            # which gets a new image (loader present) with an old STL (huxerui
+            # compiles). Setting `VCToolsInstallDir` was tried first and steers
+            # only clang's header search; mcpp picks `std.ixx` through its own
+            # SYSTEM detection and the two then disagreed. The step's own
+            # comment carries that.
             emit windows windows-2025   windows-x86_64 zip    bin/mcpp.exe registry/bin/xlings.exe default "$wn"
             printf ']}'
           } | sed 's/,]}/]}/' > /tmp/matrix.json
@@ -1000,30 +1001,49 @@ jobs:
           key: mcpp-toolstore-${{ runner.os }}-${{ matrix.toolchain }}-${{ env.MCPP_VERSION }}-${{ github.run_id }}-${{ matrix.platform }}-${{ matrix.shard }}
           restore-keys: |
             mcpp-toolstore-${{ runner.os }}-${{ matrix.toolchain }}-${{ env.MCPP_VERSION }}-
-      - name: Pin the MSVC toolset clang compiles against
+      - name: Take MSVC 14.51 out of view
         if: runner.os == 'Windows'
         shell: pwsh
         # The 2025 image ships 14.29.30133, 14.44.35207 AND 14.51.36231, and
-        # clang takes the newest -- the one that rejects `huxerui.huxerui`
-        # (mcpp-community/mcpp#609). `VCToolsInstallDir` is what a developer
-        # prompt exports and what clang's MSVC detection reads, so naming 14.44
-        # here keeps the image -- and its Vulkan loader -- while stepping off
-        # the STL that cannot be compiled. See the emit-windows comment above.
+        # 14.51 is the one clang cannot compile: it instantiates MSVC STL's
+        # vectorized `std::find` for any type its `__is_trivially_equality_
+        # comparable` admits, then static_asserts on sizes other than 1/2/4/8
+        # (microsoft/STL#6294, tracked for us as mcpp-community/mcpp#609).
         #
-        # THROW rather than fall back. A missing directory silently reverting to
-        # 14.51 would reappear as the same static_assert three shards later,
-        # attributed to whichever descriptor changed that week -- which is
-        # exactly the failure mode a rolling label already caused here once.
+        # MOVING THE DIRECTORY, not setting VCToolsInstallDir, and the first
+        # attempt is why. That variable steers clang's header search and
+        # nothing else: mcpp finds MSVC STL's `std.ixx` through its own SYSTEM
+        # detection, which takes the NEWEST toolset on the machine. The two
+        # then disagreed -- 14.51's std.ixx compiled against 14.44's headers --
+        # and every member using `import std` died on
+        # `std.ixx:126: fatal error: 'flat_map' file not found`. All five
+        # windows shards, where before only huxerui failed.
+        #
+        # mcpp says which lever is the right one: for the SYSTEM origin,
+        # "everything about which toolset this picks is a property of the
+        # machine, not of the caller" (src/toolchain/msvc.cppm). So change the
+        # machine. With 14.51 renamed aside, mcpp's detection and clang's own
+        # both land on 14.44 and cannot disagree.
+        #
+        # Ephemeral runner, ephemeral change. `msvc@<toolset>` in a manifest is
+        # the per-package way to pin, but this has to hold for every member on
+        # the leg, and no member should have to know about a broken STL.
         run: |
-          $ver  = "14.44.35207"
-          $root = "C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\$ver"
-          if (-not (Test-Path $root)) {
-            Get-ChildItem "C:\Program Files*\Microsoft Visual Studio\*\*\VC\Tools\MSVC\*" -Directory -EA SilentlyContinue |
-              ForEach-Object { Write-Host "  present: $($_.FullName)" }
-            throw "MSVC $ver is not on this image; see the emit-windows comment before changing the pin"
+          $vs   = "C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC"
+          $bad  = Join-Path $vs "14.51.36231"
+          $want = Join-Path $vs "14.44.35207"
+          if (-not (Test-Path $want)) {
+            Get-ChildItem $vs -Directory -EA SilentlyContinue | ForEach-Object { Write-Host "  present: $($_.Name)" }
+            throw "MSVC 14.44.35207 is not on this image; see the emit-windows comment before changing the pin"
           }
-          Write-Host "VCToolsInstallDir -> $root"
-          "VCToolsInstallDir=$root\" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
+          if (Test-Path $bad) {
+            Rename-Item -Path $bad -NewName "14.51.36231.disabled-see-mcpp-609"
+            Write-Host "moved 14.51.36231 aside"
+          } else {
+            Write-Host "14.51.36231 not present; nothing to move"
+          }
+          Write-Host "visible toolsets now:"
+          Get-ChildItem $vs -Directory | ForEach-Object { Write-Host "  $($_.Name)" }
       - name: Download mcpp
         shell: bash
         env:
