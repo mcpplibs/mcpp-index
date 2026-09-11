@@ -1211,8 +1211,11 @@ jobs:
           # yet when the hook runs, and MCPP_CXX_STDLIB is nil (older mcpp) or
           # empty (2026.9.12.2 and later) there (#392; mcpp-community/mcpp#613,
           # measured by its tests/e2e/648). The descriptor states the
-          # requirement instead, `requires = { "mcpp:c++-abi=libstdc++" }`, and a
-          # libc++ consumer is refused at resolution naming both implementations.
+          # requirement instead, `requires = { "mcpp:c++-abi=libstdc++" }` in its
+          # `linux` table, and a libc++ consumer is refused at resolution naming
+          # both implementations. (On macOS the libraries are built with Apple
+          # clang, and the `macosx` table requires libc++, which the default
+          # toolchain there resolves.)
           # That refusal follows the hook's source build, so the member stays off
           # this leg: the leg would spend the build to reach a known refusal.
           #

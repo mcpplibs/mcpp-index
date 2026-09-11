@@ -46,24 +46,27 @@ package = {
         sources      = { "mcpp_mysql_connector_cpp_anchor.c" },
         include_dirs = { "include" },
         targets      = { ["mysql_connector_cpp"] = { kind = "lib" } },
-        -- The static libraries are compiled against libstdc++ (see the comment
-        -- in install()), so a consumer whose toolchain resolves another C++
-        -- standard library is refused at resolution, naming both, instead of
-        -- failing at link. An mcpp older than the layer grammar reports this
-        -- key as unknown and proceeds as before.
-        requires     = { "mcpp:c++-abi=libstdc++" },
         deps = {
             ["compat.libmysqlclient"] = "8.4.6",
             ["compat.openssl"]        = "3.5.1",
         },
 
+        -- THE STANDARD LIBRARY THE STATIC LIBRARIES WERE COMPILED AGAINST, per
+        -- platform, because install() uses each platform's system compiler:
+        -- g++ with libstdc++ on Linux, Apple clang with libc++ on macOS. A
+        -- consumer whose toolchain resolves the other one is refused at
+        -- resolution, naming both, instead of failing at link. An mcpp older
+        -- than the layer grammar reports the key as unknown and proceeds as
+        -- before.
         linux = {
+            requires = { "mcpp:c++-abi=libstdc++" },
             ldflags = {
                 "-Llib", "-l:libmysqlcppconnx-static.a",
                 "-l:libmysqlcppconn-static.a", "-lresolv",
             },
         },
         macosx = {
+            requires = { "mcpp:c++-abi=libc++" },
             ldflags = {
                 "-Llib", "-lmysqlcppconnx-static",
                 "-lmysqlcppconn-static", "-lresolv",
@@ -273,8 +276,8 @@ function install()
 
     -- THE STANDARD LIBRARY THIS IS BUILT AGAINST HAS TO MATCH THE CONSUMER'S.
     --
-    -- CMake picks the system compiler below, so the static libs come out
-    -- against libstdc++ whatever the consumer uses. On the llvm leg, which
+    -- CMake picks the system compiler below, so on Linux the static libs come
+    -- out against libstdc++ whatever the consumer uses. On the llvm leg, which
     -- links libc++, the member then fails at link with the libstdc++ half of
     -- its own dependency undefined:
     --
@@ -306,7 +309,8 @@ function install()
     -- with the system compiler, so `std::__cxx11::` and friends cross the
     -- boundary into the consumer. Consuming them from a libc++ toolchain does
     -- not work and cannot be made to work from inside this hook. The
-    -- descriptor states it instead (`requires` in the mcpp table above), and
+    -- descriptor states it instead (`requires` in the per-platform tables of
+    -- the mcpp segment above), and
     -- `validate.yml` keeps this member off the llvm leg, because the refusal
     -- follows this hook's source build and the leg would spend the build to
     -- reach an answer it already knows.
