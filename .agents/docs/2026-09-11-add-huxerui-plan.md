@@ -99,7 +99,7 @@ by construction (`if (root.empty()) return {};`), and upstream's manifest says
 an application wanting an installer "declares this line too". CI settled it —
 `xim:wix`'s own install hook fails on a clean windows-latest runner, so
 declaring it took every Windows consumer down for a tool almost none would run.
-Fixed separately in xim-pkgindex#808.
+Fixed separately in xim-pkgindex#809.
 
 ## 5. The CI pin moves with this PR
 
@@ -233,7 +233,19 @@ anywhere. huxerui is its first consumer; on Windows it fails at
 `Provisioning [xlings.workspace] entries declared by dependencies` — before
 huxerui compiles at all. Removing wix from this descriptor was necessary but not
 sufficient: mcpp also provisions what the BUILDING package declares, and
-upstream's `mcpp.toml` declares it. Fixed in xim-pkgindex#808.
+upstream's `mcpp.toml` declares it.
+
+It took two attempts, and the first is worth recording because it was a wrong
+diagnosis. xim-pkgindex#808 kept the host's `tar` and added a PowerShell
+fallback; the failure merely moved, from `exec failed … tar -xf` to
+`registered none of its declared programs`. The evidence had been in the first
+log all along: `curl` ran fine in the SAME hook moments before `tar` did not --
+the payload was downloaded and sha-verified, which is the only reason execution
+reached the extractor at all. One is a declared dependency; the other was the
+host's. xim-pkgindex#809 declares `xim:7zip` and extracts with it, applying the
+standard this recipe had already set for its own downloader. Verified on a
+Windows runner: 7-Zip installs as a dep, extracts the .nupkg, and `wix.exe`
+runs.
 
 **The scanner regression**, above — which is why the pin is the floor.
 
@@ -251,4 +263,4 @@ Where huxerui stands per leg, at the pin this PR sets:
 | linux default | ok |
 | linux llvm | ok |
 | macOS | ok |
-| windows | blocked on xim-pkgindex#808, then expected to pass |
+| windows | blocked on xim-pkgindex#809, then expected to pass |
