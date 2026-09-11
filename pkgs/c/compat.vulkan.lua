@@ -33,12 +33,15 @@
 -- this through `APPLE_STATIC_LOADER` + pthread_once; Linux through
 -- `__attribute__((constructor))`. Windows has neither.
 --
--- The supported Windows arrangement is the ordinary one every Vulkan
--- application uses: link `vulkan-1.lib` and let the system `vulkan-1.dll`,
--- installed by any GPU driver, do the ICD loading. The windows xpm entry is
--- therefore a small artifact carrying that import library — symbol stubs, no
--- code — generated from Khronos' own `loader/vulkan-1.def` (shipped in this
--- very loader tarball) with a single reproducible command:
+-- The supported Windows arrangement is the ordinary one: link `vulkan-1.lib`
+-- and load `vulkan-1.dll` at process start. Through 1.4.357.2 that DLL was
+-- assumed to come from the machine's GPU driver, which a driverless machine
+-- does not have (0xC0000135 before `main`, measured on `windows-2022`). From
+-- 1.4.357.3 the artifact also carries the DLL, built from the same tag, and
+-- `runtime.library_dirs` has mcpp place it beside every consuming executable;
+-- see the windows xpm entry. The import library in that artifact — symbol
+-- stubs, no code — is generated from Khronos' own `loader/vulkan-1.def`
+-- (shipped in this very loader tarball) with a single reproducible command:
 --
 --     llvm-dlltool -d vulkan-1.def -l lib/vulkan-1.lib -m i386:x86-64
 --
@@ -89,6 +92,16 @@ package = {
             -- version -- and where a consumer also names the farm directly, the
             -- two disagree and the build stops. Measured on a CI runner with a
             -- warm ~/.mcpp; see the note on compat.vulkan 1.4.357.1.
+            -- 1.4.357.3: the same loader source. A new version on every platform
+            -- because the WINDOWS artifact changed -- it now carries the loader DLL
+            -- (see the windows entry) -- and a version is one key across platforms.
+            ["1.4.357.3"] = {
+                url = {
+                    GLOBAL = "https://github.com/KhronosGroup/Vulkan-Loader/archive/refs/tags/vulkan-sdk-1.4.357.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/vulkan/releases/download/1.4.357.0/vulkan-1.4.357.0.tar.gz",
+                },
+                sha256 = "54f2537df22313768da0317dda2abdaaab7711b4081c48c869a79db343d0ae70",
+            },
             ["1.4.357.2"] = {
                 url = {
                     GLOBAL = "https://github.com/KhronosGroup/Vulkan-Loader/archive/refs/tags/vulkan-sdk-1.4.357.0.tar.gz",
@@ -136,6 +149,16 @@ package = {
             -- version -- and where a consumer also names the farm directly, the
             -- two disagree and the build stops. Measured on a CI runner with a
             -- warm ~/.mcpp; see the note on compat.vulkan 1.4.357.1.
+            -- 1.4.357.3: the same loader source. A new version on every platform
+            -- because the WINDOWS artifact changed -- it now carries the loader DLL
+            -- (see the windows entry) -- and a version is one key across platforms.
+            ["1.4.357.3"] = {
+                url = {
+                    GLOBAL = "https://github.com/KhronosGroup/Vulkan-Loader/archive/refs/tags/vulkan-sdk-1.4.357.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/vulkan/releases/download/1.4.357.0/vulkan-1.4.357.0.tar.gz",
+                },
+                sha256 = "54f2537df22313768da0317dda2abdaaab7711b4081c48c869a79db343d0ae70",
+            },
             ["1.4.357.2"] = {
                 url = {
                     GLOBAL = "https://github.com/KhronosGroup/Vulkan-Loader/archive/refs/tags/vulkan-sdk-1.4.357.0.tar.gz",
@@ -183,6 +206,37 @@ package = {
             -- version -- and where a consumer also names the farm directly, the
             -- two disagree and the build stops. Measured on a CI runner with a
             -- warm ~/.mcpp; see the note on compat.vulkan 1.4.357.1.
+            -- 1.4.357.3: THE LOADER DLL SHIPS WITH THE IMPORT LIBRARY.
+            --
+            -- `vulkan-1.dll` is not a Windows component: it arrives with a GPU
+            -- driver, with LunarG's Vulkan Runtime redistributable, or beside an
+            -- application. So a machine without a driver has no loader, and a
+            -- program linking `vulkan-1.lib` dies before `main` with 0xC0000135
+            -- (STATUS_DLL_NOT_FOUND). Measured on GitHub's `windows-2022` image
+            -- (mcpp-index #387 probe; `vulkan`, `eui-neo-vulkan` and
+            -- `vulkan-hpp-module` all failed that way).
+            --
+            -- The artifact adds `bin/vulkan-1.dll`, built from
+            -- `vulkan-sdk-1.4.357.0` -- the same tag as the headers and the .def --
+            -- by xlings-res/vulkan-loader's windows workflow, which loads the DLL
+            -- and resolves its entry points before publishing. `lib/vulkan-1.lib`
+            -- is byte-identical to 1.4.357.1's, and the DLL exports exactly the
+            -- 265 names in `vulkan-1.def`: every import that library can produce
+            -- resolves, so no consumer can hit "entry point not found".
+            --
+            -- ON A MACHINE THAT ALREADY HAS A DRIVER nothing is lost. The copy
+            -- beside the executable is found first (the application directory
+            -- precedes System32), and the loader still reads
+            -- HKLM\SOFTWARE\Khronos\Vulkan\Drivers, so the GPU driver the
+            -- machine has is the ICD it uses. This is the ordinary arrangement for
+            -- an application that redistributes the loader.
+            ["1.4.357.3"] = {
+                url = {
+                    GLOBAL = "https://github.com/xlings-res/vulkan-import/releases/download/1.4.357.3/vulkan-import-1.4.357.3.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/vulkan-import/releases/download/1.4.357.3/vulkan-import-1.4.357.3.tar.gz",
+                },
+                sha256 = "8118f1bd897e553baffabf484a14db980ce1f0a6cfdb5a6222c0a236ecdf12f5",
+            },
             ["1.4.357.2"] = {
                 url = {
                     GLOBAL = "https://github.com/xlings-res/vulkan-import/releases/download/1.4.357.1/vulkan-import-1.4.357.1.tar.gz",
@@ -359,15 +413,26 @@ package = {
             -- .def it came from. The anchor keeps a buildable target, the same
             -- shape `compat.opengl` uses for a headers-only package.
             --
-            -- The artifact is packed FLAT — lib/ at the archive root, no wrap
-            -- directory — because `-L` is not glob-expanded the way
+            -- The artifact is packed FLAT — lib/ and bin/ at the archive root, no
+            -- wrap directory — because `-L` is not glob-expanded the way
             -- include_dirs and sources are. With a wrap layer the relative
             -- `-Llib` below misses and the link fails with
             -- "LNK1181: cannot open input file 'vulkan-1.lib'".
             sources = { "mcpp_generated/vulkan_import_anchor.c" },
             ldflags = { "-Llib", "-lvulkan-1" },
             runtime = {
-                -- vulkan-1.dll ships with the GPU driver, not with us.
+                -- THE LOADER TRAVELS WITH THE PROGRAM (1.4.357.3+). mcpp copies
+                -- every *.dll under a dependency's runtime library_dirs beside the
+                -- executable it builds -- for transitive dependencies too -- and
+                -- `mcpp pack` always searches the executable's own directory, so
+                -- the same file reaches a packed distribution. Versions before
+                -- 1.4.357.3 have no bin/ in their artifact; mcpp skips a declared
+                -- directory that does not exist, so for them this is inert.
+                --
+                -- The ICD is deliberately NOT supplied: on a machine with a GPU
+                -- driver the driver's ICD is the right one, and a software
+                -- fallback would hide a missing driver behind a slow device.
+                library_dirs = { "bin" },
                 dlopen_libs  = { "vulkan-1.dll" },
                 capabilities = { "vulkan.icd.driver" },
             },

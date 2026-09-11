@@ -3,7 +3,7 @@ name = "vulkan-tests"
 version = "0.1.0"
 
 [dependencies.compat]
-vulkan = "1.4.357.0"
+vulkan = "1.4.357.3"
 
 # All three platforms now carry compat.vulkan — linux/macOS build the loader
 # from source, windows links the import library. HAVE_VULKAN_LOADER stays as the
