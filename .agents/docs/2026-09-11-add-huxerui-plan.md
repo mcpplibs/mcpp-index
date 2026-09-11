@@ -150,7 +150,7 @@ newer engine should ride along.
 Member `tests/examples/huxerui-module`, one `[indices] huxerui = { path = "../../.." }`.
 
 ```
-$ mcpp test -p huxerui-module            # 2026.9.7.1
+$ mcpp test -p huxerui-module            # 2026.9.11.2
    Compiling huxerui.huxerui v0.3.0
    Compiling runtime (test)
      Running bin/runtime
@@ -264,3 +264,29 @@ Where huxerui stands per leg, at the pin this PR sets:
 | linux llvm | ok |
 | macOS | ok |
 | windows | blocked on xim-pkgindex#809, then expected to pass |
+
+## 11. The index in CI is cached, and the pin is its only cache key
+
+This cost a full round of wrong conclusions, so it is written down rather than
+merely fixed.
+
+`xim:wix` was fixed twice in xim-pkgindex — #808, then #809 — and after each
+merge the windows leg here failed identically. Both were read as "the fix did
+not work". Neither had ever been loaded.
+
+`actions/cache` holds `~/.mcpp/registry`, and that path contains
+`data/xim-pkgindex`: the resolved xim index. Its `restore-keys` prefix stops at
+`MCPP_VERSION`, so as long as that line does not move, every run restores the
+same index snapshot regardless of what landed upstream. The tell was in the log
+all along — `7zip`, which #809 declares, appeared **zero times** in a run that
+was supposedly testing #809.
+
+Two earlier guesses were wrong and are worth naming so they are not repeated:
+that mcpp bundles a frozen index in its release tarball (it does not — a
+pristine extraction contains no `xim-pkgindex` at all; the directory is
+populated at run time), and that a merge therefore propagates on its own.
+
+The practical rule: **a change to a xim package cannot be verified from this
+repo's CI unless `MCPP_VERSION` also moves.** Raising the pin to 2026.9.11.2
+evicts the cache, which is the only reason the windows leg can now see the
+fixed recipe.

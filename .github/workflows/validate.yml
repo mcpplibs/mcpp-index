@@ -191,46 +191,44 @@ env:
   # member on every platform. Measured: twelve workspace shards, all still cold
   # after fifty minutes. Batch descriptor changes that need a newer engine into
   # ONE pin move rather than several.
-  # ── 2026-09-11: raised 2026.9.6.3 -> 2026.9.7.1 ───────────────────────────
+  # ── 2026-09-11: raised 2026.9.6.3 -> 2026.9.11.2 ──────────────────────────
   #
-  # Same shape as the move above, and for the same reason. `huxerui.huxerui`
-  # is a Form A package whose build program (`mcpp/huxerui-build-rules`) calls
-  # `mcpp::package_name()` and `mcpp::package_namespace()`. Those are mcpp#587,
-  # merged 2026-09-08 and first released in v2026.9.7.1 -- one release past the
-  # old pin -- so under 2026.9.6.3 the host module does not compile at all:
+  # Same shape as the move above. `huxerui.huxerui` is a Form A package whose
+  # build program calls `mcpp::package_name()` and `mcpp::package_namespace()`
+  # (mcpp#587, first released v2026.9.7.1), so under 2026.9.6.3 its host module
+  # does not compile at all:
   #
-  #     error: dependency 'huxerui': host module 'huxerui.rules' compile failed
   #     rules.cppm:274:61: error: 'package_name' is not a member of 'mcpp'
   #
-  # 2026.9.7.1 is the FLOOR, not the current release, and the difference is
-  # load-bearing. 2026.9.10.2 was tried first and broke `mysql-connector-cpp`
-  # on linux and macOS: mcpp's scanner errors on a plain block comment. Reduced
-  # to four lines --
+  # This landed on 2026.9.7.1 first, deliberately taking the FLOOR rather than
+  # the tip, because 2026.9.9.1 introduced a scanner regression that broke
+  # `mysql-connector-cpp` on linux and macOS -- mcpp read inside a block comment
+  # and choked on libmysqlclient's `module (exe or dll) …`. Reduced to four
+  # lines and reported as mcpp-community/mcpp#606; fixed in 2026.9.11.2, which
+  # is why the pin can now sit at the current release instead of four behind.
+  # Verified at 2026.9.11.2, all three:
   #
-  #     /*
-  #       module (exe)
-  #     */
-  #     int main() { return 0; }
+  #     four-line scanner repro           builds clean
+  #     mcpp test -p huxerui-module       test result ok. 1 passed
+  #     mcpp test -p mysql-connector-cpp  test result ok. 1 passed
   #
-  # -- and bisected across releases:
+  # THE PIN IS ALSO THE ONLY WAY TO REFRESH THE INDEX, and that cost a full
+  # round of wrong conclusions before it was noticed. The registry cache below
+  # holds `~/.mcpp/registry`, which contains `data/xim-pkgindex` -- the resolved
+  # xim index -- and its `restore-keys` prefix stops at MCPP_VERSION. So while
+  # this line does not move, every run restores the same index snapshot no
+  # matter what landed in xim-pkgindex meanwhile.
   #
-  #     2026.8.27.2  OK     2026.9.7.1   OK
-  #     2026.9.6.3   OK     2026.9.10.2  scanner errors
+  # That is how two successive fixes to `xim:wix` (xim-pkgindex#808, then #809)
+  # both appeared to fail here: neither was ever loaded. The tell was that
+  # `7zip` -- which #809 declares -- appeared zero times in a log that was
+  # supposedly testing it. Moving this line evicts that cache, which is the
+  # only reason the windows leg can now see the fixed recipe.
   #
-  # so the regression lands after 2026.9.7.1, which is exactly the release that
-  # first carries `package_name()`. Taking the floor rather than the tip gets
-  # huxerui built without dragging that defect into every other member.
-  # Reported upstream; move to the tip once it is fixed.
-  #
-  # `index.toml` min_mcpp does NOT move, for the reason the previous entry
-  # gives: the floor is about descriptor GRAMMAR, and `mcpp xpkg parse` accepts
-  # pkgs/h/huxerui.huxerui.lua under 2026.9.6.3 and 2026.9.10.2 alike. A client
-  # on the floor keeps resolving the whole index; only building THIS package
-  # from source needs the newer engine.
-  #
-  # The batching guidance above applies: this move pays the cold-cache cost, so
-  # any other descriptor waiting on a newer engine should ride along.
-  MCPP_VERSION: "2026.9.7.1"
+  # `index.toml` min_mcpp still does NOT move: the floor is about descriptor
+  # GRAMMAR, and `mcpp xpkg parse` accepts pkgs/h/huxerui.huxerui.lua under
+  # 2026.8.27.2, 2026.9.6.3, 2026.9.7.1 and 2026.9.11.2 alike.
+  MCPP_VERSION: "2026.9.11.2"
 
 jobs:
   lint:
