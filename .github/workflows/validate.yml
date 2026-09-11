@@ -786,39 +786,37 @@ jobs:
             emit linux   ubuntu-latest  linux-x86_64   tar.gz bin/mcpp     registry/bin/xlings     default "$ln"
             emit linux   ubuntu-latest  linux-x86_64   tar.gz bin/mcpp     registry/bin/xlings     llvm    "$lln"
             emit macos   macos-15       macosx-arm64   tar.gz bin/mcpp     registry/bin/xlings     default "$mn"
-            # WINDOWS IS PINNED, like macOS above, and for a reason that cost
-            # a day to find. `windows-latest` rolled to the Visual Studio 18
-            # image (MSVC STL 14.51), and mcpp builds windows with clang
-            # targeting x86_64-pc-windows-msvc -- so every package here
-            # compiles against an STL written for a different front end.
+            # WINDOWS IS PINNED, like macOS above. `windows-latest` rolled to
+            # the Visual Studio 2026 image and took two separate things with
+            # it, which is why the first attempt at this pin was wrong.
             #
-            # Most survive that. `huxerui.huxerui` did not:
+            # THE TWO AXES. mcpp builds windows with clang targeting
+            # x86_64-pc-windows-msvc, so a windows job depends on the image for
+            # two unrelated things:
             #
-            #     xutility:320: error: static assertion failed: unexpected size
-            #     in instantiation of 'std::_Find_vectorized<
-            #         const huxerui::detail::NodeExtensionHandle, ...>'
+            #   * the Vulkan LOADER. `vulkan-1.dll` is not a Windows component
+            #     -- it arrives with a GPU driver or the SDK -- so `vulkan`,
+            #     `eui-neo-vulkan` and `vulkan-hpp-module` load it or fail at
+            #     0xC0000135. Measured: present on 2025 and on latest, ABSENT
+            #     on 2022.
+            #   * the MSVC STL clang compiles against. 14.51 rejects
+            #     `huxerui.huxerui`: clang instantiates the vectorized
+            #     `std::find` for a 24-byte type and hits
+            #     `static_assert(false, "unexpected size")` in <xutility>
+            #     (mcpp-community/mcpp#609).
             #
-            # MSVC STL's vectorized `std::find` is guarded by a trait that
-            # decides whether the element type can be compared bitwise.
-            # `NodeExtensionHandle` is 24 bytes with no padding, trivially
-            # copyable, `operator==` defaulted -- the guard admits it under
-            # clang, and the helper it dispatches to implements 1/2/4/8-byte
-            # elements and static_asserts on the rest. Guard and implementation
-            # disagree about what "vectorizable" means, and only clang is there
-            # to notice.
+            # Pinning to `windows-2022` answered the second and broke the
+            # first -- a trade, not a fix. The two axes were assumed to move
+            # together because both were read off the image label. They do not.
             #
-            # NOT this index's bug, and not the package's: the same source, the
-            # same clang, compiles on the 2022 image's STL. Upstream HuxerUI's
-            # own mcpp CI is green for exactly that reason -- it pins
-            # `windows-2022`. Reported as mcpp-community/mcpp#609 so the pin can
-            # be lifted when the toolchain combination works.
-            #
-            # 13 of the 14 members on the shard that failed were unaffected, so
-            # this is not a blanket breakage -- which is precisely why a rolling
-            # label is the wrong thing to stand on: the next image moves the set
-            # of packages that happen to trip it, and the failure arrives
-            # attributed to whatever descriptor changed that week.
-            emit windows windows-2022   windows-x86_64 zip    bin/mcpp.exe registry/bin/xlings.exe default "$wn"
+            # The 2025 image carries THREE toolsets -- 14.29.30133, 14.44.35207
+            # and 14.51.36231 -- and clang takes the newest. The step that sets
+            # `VCToolsInstallDir` below names 14.44, which gets a new image
+            # (loader present) with an old STL (huxerui compiles). Measured on
+            # this exact combination: `mcpp test -p huxerui-module` reported
+            # `test result ok`, and the compile touched `MSVC\14.44.35207` six
+            # times and 14.51 not once.
+            emit windows windows-2025   windows-x86_64 zip    bin/mcpp.exe registry/bin/xlings.exe default "$wn"
             printf ']}'
           } | sed 's/,]}/]}/' > /tmp/matrix.json
           echo "matrix=$(cat /tmp/matrix.json)" >> "$GITHUB_OUTPUT"
@@ -1002,6 +1000,30 @@ jobs:
           key: mcpp-toolstore-${{ runner.os }}-${{ matrix.toolchain }}-${{ env.MCPP_VERSION }}-${{ github.run_id }}-${{ matrix.platform }}-${{ matrix.shard }}
           restore-keys: |
             mcpp-toolstore-${{ runner.os }}-${{ matrix.toolchain }}-${{ env.MCPP_VERSION }}-
+      - name: Pin the MSVC toolset clang compiles against
+        if: runner.os == 'Windows'
+        shell: pwsh
+        # The 2025 image ships 14.29.30133, 14.44.35207 AND 14.51.36231, and
+        # clang takes the newest -- the one that rejects `huxerui.huxerui`
+        # (mcpp-community/mcpp#609). `VCToolsInstallDir` is what a developer
+        # prompt exports and what clang's MSVC detection reads, so naming 14.44
+        # here keeps the image -- and its Vulkan loader -- while stepping off
+        # the STL that cannot be compiled. See the emit-windows comment above.
+        #
+        # THROW rather than fall back. A missing directory silently reverting to
+        # 14.51 would reappear as the same static_assert three shards later,
+        # attributed to whichever descriptor changed that week -- which is
+        # exactly the failure mode a rolling label already caused here once.
+        run: |
+          $ver  = "14.44.35207"
+          $root = "C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\$ver"
+          if (-not (Test-Path $root)) {
+            Get-ChildItem "C:\Program Files*\Microsoft Visual Studio\*\*\VC\Tools\MSVC\*" -Directory -EA SilentlyContinue |
+              ForEach-Object { Write-Host "  present: $($_.FullName)" }
+            throw "MSVC $ver is not on this image; see the emit-windows comment before changing the pin"
+          }
+          Write-Host "VCToolsInstallDir -> $root"
+          "VCToolsInstallDir=$root\" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
       - name: Download mcpp
         shell: bash
         env:
