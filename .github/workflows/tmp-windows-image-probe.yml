@@ -105,3 +105,70 @@ jobs:
           echo " huxerui-module  ${{ steps.hux.outcome }}"
           echo " vulkan          ${{ steps.vk.outcome }}"
           echo "=============================================="
+
+  # THE IMAGE IS NOT THE ONLY AXIS, and the inventory step is what showed it:
+  # windows-2025 carries 14.29.30133, 14.44.35207 AND 14.51.36231. clang picks
+  # the newest and dies in it. If it can be pointed at 14.44 instead, the trade
+  # disappears -- a new image (loader present, vulkan passes) with an old STL
+  # (no vectorized-find assert, huxerui compiles).
+  #
+  # Two ways to ask clang, probed separately because they fail differently:
+  # the environment a developer prompt exports (`VCToolsInstallDir`), and
+  # clang's own `/vctoolsdir`. If neither reaches it, the toolset selection is
+  # mcpp's to make and this stops being fixable from CI.
+  toolset:
+    strategy:
+      fail-fast: false
+      matrix:
+        how: [vctoolsinstalldir, vctoolsdir-flag]
+    runs-on: windows-2025
+    name: toolset 14.44 via ${{ matrix.how }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Point at 14.44
+        shell: pwsh
+        run: |
+          $root = "C:\Program Files\Microsoft Visual Studio\18\Enterprise\VC\Tools\MSVC\14.44.35207"
+          if (-not (Test-Path $root)) { throw "14.44 not on this image" }
+          Write-Host "using $root"
+          if ("${{ matrix.how }}" -eq "vctoolsinstalldir") {
+            "VCToolsInstallDir=$root\" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
+          } else {
+            "MCPP_EXTRA_CXXFLAGS=/vctoolsdir `"$root`"" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
+          }
+
+      - name: Download mcpp
+        shell: bash
+        env:
+          MCPP_ARCHIVE: mcpp-${{ env.MCPP_VERSION }}-windows-x86_64.zip
+          MCPP_ROOT: mcpp-${{ env.MCPP_VERSION }}-windows-x86_64
+        run: |
+          curl -L -fsS -o "$MCPP_ARCHIVE" \
+            "https://github.com/mcpp-community/mcpp/releases/download/v${MCPP_VERSION}/${MCPP_ARCHIVE}"
+          powershell -NoProfile -Command "Expand-Archive -Force -Path '${MCPP_ARCHIVE}' -DestinationPath '.'"
+          root="$PWD/$MCPP_ROOT"
+          mkdir -p "$HOME/.mcpp/registry"
+          cp -a "$root/registry/." "$HOME/.mcpp/registry/"
+          echo "MCPP_HOME=$HOME/.mcpp" >> "$GITHUB_ENV"
+          echo "MCPP=$(cygpath -m "$root/bin/mcpp.exe")" >> "$GITHUB_ENV"
+
+      - name: huxerui-module
+        id: hux
+        continue-on-error: true
+        shell: bash
+        env:
+          MCPP_INDEX_MIRROR: GLOBAL
+        run: |
+          "$MCPP" test -p huxerui-module
+
+      # Which STL the compile actually reached, whatever the outcome -- a pass
+      # for the wrong reason and a pass for the right one look identical here
+      # otherwise.
+      - name: Which STL did it use
+        if: always()
+        shell: bash
+        run: |
+          echo "how            ${{ matrix.how }}"
+          echo "huxerui-module ${{ steps.hux.outcome }}"
+          grep -rhoE "MSVC\\\\1[0-9]\\.[0-9]+\\.[0-9]+" tests/examples/huxerui-module/target 2>/dev/null | sort -u | head -3 || true
