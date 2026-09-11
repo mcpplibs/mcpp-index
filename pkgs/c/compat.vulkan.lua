@@ -159,37 +159,6 @@ package = {
             },
         },
         windows = {
-            -- THE LOADER ITSELF, because Windows does not come with one.
-            --
-            -- This package ships `vulkan-1.lib`: symbol stubs, no code. The
-            -- code is `vulkan-1.dll`, and that is NOT an OS component -- it
-            -- arrives with a GPU driver, with LunarG's Runtime redistributable,
-            -- or bundled beside an application. So on a machine without a
-            -- driver there is no loader at all, and a consumer that links the
-            -- import library dies at process start with 0xC0000135
-            -- (STATUS_DLL_NOT_FOUND), before `main`.
-            --
-            -- Measured on this index's own CI: `vulkan`, `eui-neo-vulkan` and
-            -- `vulkan-hpp-module` fail exactly that way on a `windows-2022`
-            -- runner and pass on images that happen to carry a driver. Four
-            -- rounds of pinning images and MSVC toolsets went into looking for
-            -- a runner where that and everything else worked (#388, closed,
-            -- because each round broke a different consumer of the VS
-            -- installation). Declaring the loader takes the image out of the
-            -- question instead.
-            --
-            -- `xim:vulkan-loader` grew a windows payload for this
-            -- (openxlings/xim-pkgindex#818): built on a runner, and the build
-            -- loads the DLL and resolves vkEnumerateInstanceVersion,
-            -- vkCreateInstance and vkGetInstanceProcAddr before publishing.
-            --
-            -- It brings no ICD. The loader finds drivers through the registry,
-            -- so a driverless machine enumerates no devices -- which is what
-            -- this package's own test already asserts against, in its words:
-            -- "answered by the LOADER itself, before any ICD is involved, so
-            -- it is meaningful on a CI runner with no GPU and no driver".
-            deps = { "xim:vulkan-loader@>=1.4.313" },
-
             -- 1.4.357.1: the same loader source, pinned to the farm that
             -- answers for its own members (compat.vulkan-runtime 2026.09.10).
             --

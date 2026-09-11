@@ -1096,6 +1096,60 @@ jobs:
             libavfilter-dev libavdevice-dev libswscale-dev libswresample-dev
           dpkg -l | grep -E 'libav(util|codec)-dev|libswscale-dev'
 
+      # ── The Vulkan loader, which this leg's image does not carry ──────
+      #
+      # `vulkan-1.dll` IS NOT PART OF WINDOWS. It arrives with a GPU driver,
+      # with LunarG's Vulkan Runtime redistributable, or bundled beside an
+      # application -- so a runner with no driver has no loader, and anything
+      # linking `vulkan-1.lib` dies at process start with 0xC0000135
+      # (STATUS_DLL_NOT_FOUND), before `main`. Measured across the three
+      # images (#387 probe, run 34569282837):
+      #
+      #     windows-2022    vulkan-1.dll absent     MSVC 14.29/14.44
+      #                     huxerui PASS            vulkan FAIL 0xC0000135
+      #     windows-2025    vulkan-1.dll PRESENT    MSVC +14.51
+      #                     huxerui FAIL (STL)      vulkan PASS
+      #     windows-latest  same as windows-2025
+      #
+      # Neither image satisfies both, and this leg is pinned to
+      # `windows-2022` to dodge the MSVC STL 14.51 bug
+      # (mcpp-community/mcpp#609, microsoft/STL#6294). So the loader is
+      # provided here, which is what the LunarG Runtime redistributable
+      # exists to do and what Vulkan CI conventionally does -- the
+      # alternatives in common use are a software ICD (SwiftShader,
+      # lavapipe) when device-level coverage is wanted, or dynamic loading
+      # in the consumer (volk, Vulkan-Hpp's dynamic dispatch) when graceful
+      # degradation is wanted. These members assert loader-level calls only,
+      # so a loader with no ICD is exactly the right amount.
+      #
+      # NOT declared as a package dependency instead. That was tried
+      # (#391, closed): `compat.vulkan`'s windows branch declaring
+      # `xim:vulkan-loader` installs the payload, but the DLL never reached
+      # the test executable, and the reason was not found. CI provisioning
+      # is the layer that matches the problem -- the runner is missing a
+      # redistributable, not the package graph.
+      #
+      # Idempotent and hash-pinned: if the image ever grows the DLL, this
+      # leaves it alone.
+      - name: Provide the Vulkan loader (windows leg only)
+        if: matrix.platform == 'windows'
+        shell: bash
+        run: |
+          set -euo pipefail
+          dest=/c/Windows/System32/vulkan-1.dll
+          if [ -f "$dest" ]; then
+            echo "vulkan-1.dll already on this image; leaving it alone"
+            exit 0
+          fi
+          url=https://github.com/xlings-res/vulkan-loader/releases/download/1.4.313/vulkan-loader-1.4.313-windows-x86_64.zip
+          sha=7159d30530572403079e583ebab3c9834d1dd760473487d6476c8a2f34fffe22
+          curl -L -fsS -o loader.zip "$url"
+          echo "$sha *loader.zip" | sha256sum -c -
+          powershell -NoProfile -Command "Expand-Archive -Force -Path 'loader.zip' -DestinationPath 'loader'"
+          cp loader/vulkan-loader-1.4.313/bin/vulkan-1.dll "$dest"
+          rm -rf loader.zip loader
+          ls -l "$dest"
+
       # ── Select the toolchain for this leg ─────────────────────────────
       # No version pin: `llvm` resolves to whatever the toolchain family's
       # current release is for the PINNED MCPP_VERSION, which is the version
