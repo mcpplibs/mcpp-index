@@ -159,6 +159,17 @@ package = {
     -- header, loader and bindings repositories together.
     xpm = {
         linux = {
+            -- 1.4.357.1: the same headers, pinned to compat.vulkan 1.4.357.3, whose
+            -- Windows artifact carries the loader DLL. A new version rather than a
+            -- moved pin, because an installed copy records the pin it resolved
+            -- with (see compat.vulkan 1.4.357.1).
+            ["1.4.357.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/KhronosGroup/Vulkan-Headers/archive/refs/tags/vulkan-sdk-1.4.357.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/vulkan-headers/releases/download/1.4.357.0/vulkan-headers-1.4.357.0.tar.gz",
+                },
+                sha256 = "e87dce08116151f6b6d7de6b6faf41498e87e6cf848ff16fa3bd5402190ad4a3",
+            },
             ["1.4.357.0"] = {
                 url = {
                     GLOBAL = "https://github.com/KhronosGroup/Vulkan-Headers/archive/refs/tags/vulkan-sdk-1.4.357.0.tar.gz",
@@ -168,6 +179,17 @@ package = {
             },
         },
         macosx = {
+            -- 1.4.357.1: the same headers, pinned to compat.vulkan 1.4.357.3, whose
+            -- Windows artifact carries the loader DLL. A new version rather than a
+            -- moved pin, because an installed copy records the pin it resolved
+            -- with (see compat.vulkan 1.4.357.1).
+            ["1.4.357.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/KhronosGroup/Vulkan-Headers/archive/refs/tags/vulkan-sdk-1.4.357.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/vulkan-headers/releases/download/1.4.357.0/vulkan-headers-1.4.357.0.tar.gz",
+                },
+                sha256 = "e87dce08116151f6b6d7de6b6faf41498e87e6cf848ff16fa3bd5402190ad4a3",
+            },
             ["1.4.357.0"] = {
                 url = {
                     GLOBAL = "https://github.com/KhronosGroup/Vulkan-Headers/archive/refs/tags/vulkan-sdk-1.4.357.0.tar.gz",
@@ -177,6 +199,17 @@ package = {
             },
         },
         windows = {
+            -- 1.4.357.1: the same headers, pinned to compat.vulkan 1.4.357.3, whose
+            -- Windows artifact carries the loader DLL. A new version rather than a
+            -- moved pin, because an installed copy records the pin it resolved
+            -- with (see compat.vulkan 1.4.357.1).
+            ["1.4.357.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/KhronosGroup/Vulkan-Headers/archive/refs/tags/vulkan-sdk-1.4.357.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/vulkan-headers/releases/download/1.4.357.0/vulkan-headers-1.4.357.0.tar.gz",
+                },
+                sha256 = "e87dce08116151f6b6d7de6b6faf41498e87e6cf848ff16fa3bd5402190ad4a3",
+            },
             ["1.4.357.0"] = {
                 url = {
                     GLOBAL = "https://github.com/KhronosGroup/Vulkan-Headers/archive/refs/tags/vulkan-sdk-1.4.357.0.tar.gz",
@@ -207,6 +240,6 @@ package = {
         targets = { ["vulkan_hpp"] = { kind = "lib" } },
         -- The loader, for the static dispatcher's direct calls — and, through
         -- it, `compat.vulkan-headers` for the includes these units open.
-        deps    = { ["compat.vulkan"] = "1.4.357.0" },
+        deps    = { ["compat.vulkan"] = "1.4.357.3" },
     },
 }

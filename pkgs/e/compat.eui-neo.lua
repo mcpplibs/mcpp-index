@@ -148,6 +148,13 @@ package = {
                 url    = "https://github.com/sudoevolve/EUI-NEO/archive/refs/tags/v0.5.9.tar.gz",
                 sha256 = "370d1da706d94bbbb144fa1634e1d9796a8a1ffd58b696fbb801296aef15703d",
             },
+            -- 0.5.9.1: upstream 0.5.9 unchanged. Exists because the `vulkan`
+            -- feature now pins compat.vulkan 1.4.357.3, whose Windows artifact
+            -- carries the loader DLL; an installed 0.5.9 records the old pin.
+            ["0.5.9.1"] = {
+                url    = "https://github.com/sudoevolve/EUI-NEO/archive/refs/tags/v0.5.9.tar.gz",
+                sha256 = "370d1da706d94bbbb144fa1634e1d9796a8a1ffd58b696fbb801296aef15703d",
+            },
         },
         macosx = {
             ["0.5.3"] = {
@@ -183,6 +190,13 @@ package = {
                 url    = "https://github.com/sudoevolve/EUI-NEO/archive/refs/tags/v0.5.9.tar.gz",
                 sha256 = "370d1da706d94bbbb144fa1634e1d9796a8a1ffd58b696fbb801296aef15703d",
             },
+            -- 0.5.9.1: upstream 0.5.9 unchanged. Exists because the `vulkan`
+            -- feature now pins compat.vulkan 1.4.357.3, whose Windows artifact
+            -- carries the loader DLL; an installed 0.5.9 records the old pin.
+            ["0.5.9.1"] = {
+                url    = "https://github.com/sudoevolve/EUI-NEO/archive/refs/tags/v0.5.9.tar.gz",
+                sha256 = "370d1da706d94bbbb144fa1634e1d9796a8a1ffd58b696fbb801296aef15703d",
+            },
         },
         windows = {
             ["0.5.3"] = {
@@ -215,6 +229,13 @@ package = {
             },
             -- 0.5.9: see the linux block — plain-string GLOBAL, no CN mirror.
             ["0.5.9"] = {
+                url    = "https://github.com/sudoevolve/EUI-NEO/archive/refs/tags/v0.5.9.tar.gz",
+                sha256 = "370d1da706d94bbbb144fa1634e1d9796a8a1ffd58b696fbb801296aef15703d",
+            },
+            -- 0.5.9.1: upstream 0.5.9 unchanged. Exists because the `vulkan`
+            -- feature now pins compat.vulkan 1.4.357.3, whose Windows artifact
+            -- carries the loader DLL; an installed 0.5.9 records the old pin.
+            ["0.5.9.1"] = {
                 url    = "https://github.com/sudoevolve/EUI-NEO/archive/refs/tags/v0.5.9.tar.gz",
                 sha256 = "370d1da706d94bbbb144fa1634e1d9796a8a1ffd58b696fbb801296aef15703d",
             },
@@ -420,7 +441,7 @@ package = {
                     "*/core/render/vulkan/vulkan_shadertoy.cpp",
                     "*/core/render/vulkan/vulkan_text.cpp",
                 },
-                deps = { ["compat.vulkan"] = "1.4.357.0" },
+                deps = { ["compat.vulkan"] = "1.4.357.3" },
             },
             -- ── Window backend ────────────────────────────────────────────
             -- Exclusive in the same way and for the same reason as the render
