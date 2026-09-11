@@ -2,7 +2,7 @@
 -- each member selected by a feature.
 --
 --   [dependencies.mcpp]
---   plugins = { version = "0.5.2", features = ["rules-spirv"], host-module = true }
+--   plugins = { version = "0.6.0", features = ["rules-spirv"], host-module = true }
 --
 --   // build.mcpp
 --   import mcpp;
@@ -297,6 +297,66 @@
 -- shares that function and had the same defect latent -- its Windows fixture
 -- keeps every payload in one directory, so a segment was never derived there.
 --
+-- 0.6.0 adds a THIRD FAMILY, and the prefix is which of three questions a
+-- member answers: `rules-*` how a translation unit is compiled, `tools-*` what
+-- the build program does itself, `dist-*` what comes out of the LINK and in
+-- what form a user installs it. A `dist-*` member compiles nothing and does
+-- nothing while the build program runs: it consumes link outputs through a
+-- `role = "artifact"` action, reached with `mcpp pack --format <name>`.
+--
+--   mcpp.dist.appimage `dist-appimage` >= 2026.9.11.1, Linux. Declares
+--                                      `xim:appimagetool` on the `cfg(linux)`
+--                                      axis and turns the tree `mcpp pack`
+--                                      staged into one AppImage. The staged
+--                                      bundle is already an AppDir bar three
+--                                      files, so the member writes an
+--                                      `AppRun`, a `.desktop` entry and an
+--                                      icon into it and invokes one tool --
+--                                      it never copies or re-lays-out a tree
+--                                      that can be hundreds of megabytes.
+--                                      `xim:appimagetool` carves its type-2
+--                                      runtime stub out of itself, because
+--                                      appimagetool otherwise downloads one on
+--                                      every invocation and a build must not
+--                                      reach the network
+--   mcpp.dist.wix      `dist-wix`      >= 2026.9.11.1, Windows. The WiX 6 CLI
+--                                      is a .NET tool and is not
+--                                      redistributable through this ecosystem,
+--                                      so it is LOCATED rather than installed
+--                                      -- the `msvc@system` shape. It renders
+--                                      a `.wxs` and passes the program in as a
+--                                      preprocessor variable rather than
+--                                      binding a directory: a bind path that
+--                                      resolves to nothing produced a valid,
+--                                      empty, 52 KB installer with no
+--                                      diagnostic at all
+--   mcpp.dist.apple    `dist-apple`    >= 2026.9.11.1, macOS. A `.app` bundle,
+--                                      its `Info.plist`, and `codesign` only
+--                                      when an identity is given -- a member
+--                                      that signed by default would fail every
+--                                      build on a machine with no identity in
+--                                      its keychain. iOS is the same shape
+--                                      plus a target row, which is a payload
+--                                      rather than a redesign
+--
+-- 0.6.0 also adds `table()` to `mcpp.tools.embed`: N inputs, ONE header, ONE
+-- table, where each row carries the input's key alongside its contents and the
+-- consumer iterates. `file()` writes one header per input and `files()` writes
+-- several; neither can express the shape a shader set wants. A duplicate key is
+-- refused naming BOTH inputs, and the bytes are a numeric array rather than a
+-- raw string literal, because a raw literal cannot carry arbitrary binary and
+-- its delimiter is terminable by the input -- which is the defect in the CMake
+-- code this shape replaces.
+--
+-- THE FLOOR IS STILL DOCUMENTATION AND NOT A GATE, unchanged from the note
+-- below: nothing here records a per-package engine floor and the index-level
+-- `min_mcpp` does not move for a package. What an older client gets is legible
+-- at the point of use and is, for these three members, the best case of that
+-- rule: `mcpp::provides_pack_format` does not exist in an older engine's
+-- bundled `mcpp` module, so a consumer activating `dist-*` fails at the
+-- build.mcpp COMPILE naming the missing function, rather than at a link or in
+-- an artifact.
+--
 -- The descriptor points at the source archive of the tag, the shape `grpcgen`
 -- established; the CN asset is the same bytes, so one sha256 names both.
 package = {
@@ -310,6 +370,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.6.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.6.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.6.0/mcpp-plugins-0.6.0.tar.gz",
+                },
+                sha256 = "503594d5938a39709af98f606053b00caa275c5a9946c87e2ee98276c96aeb23",
+            },
             ["0.5.2"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.5.2.tar.gz",
@@ -408,9 +475,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.5.2" },
+            ["latest"] = { ref = "0.6.0" },
         },
         macosx = {
+            ["0.6.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.6.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.6.0/mcpp-plugins-0.6.0.tar.gz",
+                },
+                sha256 = "503594d5938a39709af98f606053b00caa275c5a9946c87e2ee98276c96aeb23",
+            },
             ["0.5.2"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.5.2.tar.gz",
@@ -509,9 +583,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.5.2" },
+            ["latest"] = { ref = "0.6.0" },
         },
         windows = {
+            ["0.6.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.6.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.6.0/mcpp-plugins-0.6.0.tar.gz",
+                },
+                sha256 = "503594d5938a39709af98f606053b00caa275c5a9946c87e2ee98276c96aeb23",
+            },
             ["0.5.2"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.5.2.tar.gz",
@@ -610,7 +691,7 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.5.2" },
+            ["latest"] = { ref = "0.6.0" },
         },
     },
 
