@@ -1206,13 +1206,18 @@ jobs:
           #     ld.lld: error: undefined symbol:
           #         std::__cxx11::basic_string<...>::_M_create(...)
           #
-          # Its install hook cannot adapt, because nothing tells it what the
-          # consumer chose: MCPP_CXX_STDLIB is exported only when mcpp runs a
-          # BUILD PROGRAM (`src/build/build_program.cppm`), `make_xlings_env`
-          # carries `{binary, home, projectDir}` and no toolchain, and a probe
-          # in the hook measured `MCPP_CXX_STDLIB=nil` on this very leg (#392).
-          # mcpp-community/mcpp#613; when the hook can see the consumer's stdlib,
-          # this entry comes out and the descriptor does the work instead.
+          # Its install hook cannot adapt: mcpp resolves the toolchain after the
+          # dependency graph, so the consumer's standard library does not exist
+          # yet when the hook runs, and MCPP_CXX_STDLIB is nil (older mcpp) or
+          # empty (2026.9.12.2 and later) there (#392; mcpp-community/mcpp#613,
+          # measured by its tests/e2e/648). The descriptor states the
+          # requirement instead, `requires = { "mcpp:c++-abi=libstdc++" }` in its
+          # `linux` table, and a libc++ consumer is refused at resolution naming
+          # both implementations. (On macOS the libraries are built with Apple
+          # clang, and the `macosx` table requires libc++, which the default
+          # toolchain there resolves.)
+          # That refusal follows the hook's source build, so the member stays off
+          # this leg: the leg would spend the build to reach a known refusal.
           #
           # SKIPPED, NOT MARKED GREEN: the incompatibility is real for users on
           # a libc++ toolchain. This stops CI from re-measuring a known answer
