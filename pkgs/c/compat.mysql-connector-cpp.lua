@@ -17,7 +17,10 @@ package = {
                 "xim:make@latest",
             },
             ["26.7.0"] = {
-                url = "https://github.com/mysql/mysql-connector-cpp/archive/refs/tags/26.7.0.tar.gz",
+                url    = {
+                    GLOBAL = "https://github.com/mysql/mysql-connector-cpp/archive/refs/tags/26.7.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mysql-connector-cpp/releases/download/26.7.0/mysql-connector-cpp-26.7.0.tar.gz",
+                },
                 sha256 = "b2299862eefc33fd71c0aac68328305671805fc955e6bd2578ef205c10f98550",
             },
         },
@@ -28,7 +31,10 @@ package = {
                 "xim:cmake@latest",
             },
             ["26.7.0"] = {
-                url = "https://github.com/mysql/mysql-connector-cpp/archive/refs/tags/26.7.0.tar.gz",
+                url    = {
+                    GLOBAL = "https://github.com/mysql/mysql-connector-cpp/archive/refs/tags/26.7.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mysql-connector-cpp/releases/download/26.7.0/mysql-connector-cpp-26.7.0.tar.gz",
+                },
                 sha256 = "b2299862eefc33fd71c0aac68328305671805fc955e6bd2578ef205c10f98550",
             },
         },
@@ -318,6 +324,14 @@ function install()
 
     io.writefile(path.join(prefix, "mcpp_mysql_connector_cpp_anchor.c"),
                  "int mcpp_compat_mysql_connector_cpp_anchor(void) { return 0; }\n")
+
+    -- EXPLICIT, because the last statement above is not a return and the
+    -- pcall would otherwise hand `nil` back as the success value. Every
+    -- failure path here says `return false`; success said nothing, so
+    -- `install() result=nil` is what a WORKING install has been logging all
+    -- along. In a log that is mostly failures that reads like one, and it
+    -- cost a wrong diagnosis once already.
+    return true
         end)
     if not ok then
         hook_log("UNCAUGHT Lua error: " .. tostring(result))
