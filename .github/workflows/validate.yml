@@ -1049,6 +1049,25 @@ jobs:
           } else {
             Write-Host "14.51.36231 not present; nothing to move"
           }
+          # BOTH LEVERS, because they answer different consumers and each
+          # alone was measured failing:
+          #
+          #   * moving 14.51 out settles mcpp, which SCANS the directory and
+          #     takes the newest. Alone, it broke clang: clang's own MSVC
+          #     detection goes through the VS installation's registration,
+          #     which still names 14.51, so it found nothing and emitted a
+          #     compile with NO include paths at all --
+          #     `std.ixx:12: fatal error: 'assert.h' file not found`, the UCRT
+          #     header, from a command line carrying neither /imsvc nor -I.
+          #   * `VCToolsInstallDir` settles clang, which reads it instead of
+          #     detecting. Alone, it left mcpp scanning and picking 14.51, so
+          #     14.51's std.ixx compiled against 14.44's headers --
+          #     `std.ixx:126: fatal error: 'flat_map' file not found`.
+          #
+          # Neither consumer reads the other's answer. Setting both is not
+          # belt-and-braces; it is one answer per consumer.
+          "VCToolsInstallDir=$want\" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
+          Write-Host "VCToolsInstallDir -> $want"
           Write-Host "visible toolsets now:"
           Get-ChildItem $vs -Directory | ForEach-Object { Write-Host "  $($_.Name)" }
       - name: Download mcpp
