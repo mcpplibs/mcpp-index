@@ -221,24 +221,53 @@ jobs:
 
       - name: "A: no MoltenVK anywhere"
         shell: bash
-        run: VK_LOADER_DEBUG=driver "$EXE" 2>&1 | grep -E "PROBE|icd|ICD|manifest|Searching|search" | head -30
+        run: |
+          set +e
+          VK_LOADER_DEBUG=error,warn,driver "$EXE" > "$RUNNER_TEMP/a.out" 2> "$RUNNER_TEMP/a.dbg"; echo "EXIT=$?"
+          cat "$RUNNER_TEMP/a.out"
+          grep -E "Found ICD|drivers named|Could not|Failed|failed|ERROR" "$RUNNER_TEMP/a.dbg" | sort | uniq -c | head -20
 
-      - name: "B: MoltenVK manifest beside the executable (<exe dir>/vulkan/icd.d)"
+      - name: "B: manifest beside the executable, RELATIVE library_path"
         shell: bash
         run: |
+          set +e
           curl -L -fsS -o mvk.tgz https://github.com/xlings-res/moltenvk/releases/download/1.4.2/moltenvk-1.4.2-macosx-universal.tar.gz
           tar -xzf mvk.tgz
           bindir=$(dirname "$EXE")
           mkdir -p "$bindir/vulkan/icd.d"
           cp moltenvk-1.4.2/lib/libMoltenVK.dylib "$bindir/"
           sed 's#"library_path"[^,]*#"library_path" : "../../libMoltenVK.dylib"#' moltenvk-1.4.2/share/vulkan/icd.d/MoltenVK_icd.json > "$bindir/vulkan/icd.d/MoltenVK_icd.json"
+          VK_LOADER_DEBUG=error,warn,driver "$EXE" > "$RUNNER_TEMP/b.out" 2> "$RUNNER_TEMP/b.dbg"; echo "EXIT=$?"
+          cat "$RUNNER_TEMP/b.out"
+          grep -E "Found ICD|drivers named|Could not|Failed|failed|ERROR|dlopen|Loading" "$RUNNER_TEMP/b.dbg" | sort | uniq -c | head -20
+
+      - name: "B2: manifest beside the executable, ABSOLUTE library_path"
+        shell: bash
+        run: |
+          set +e
+          bindir=$(dirname "$EXE")
+          sed "s#\"library_path\"[^,]*#\"library_path\" : \"$bindir/libMoltenVK.dylib\"#" moltenvk-1.4.2/share/vulkan/icd.d/MoltenVK_icd.json > "$bindir/vulkan/icd.d/MoltenVK_icd.json"
           cat "$bindir/vulkan/icd.d/MoltenVK_icd.json"
-          VK_LOADER_DEBUG=driver "$EXE" 2>&1 | grep -E "PROBE|icd|ICD|manifest|MoltenVK|Searching|search" | head -40
-          rm -rf "$bindir/vulkan" "$bindir/libMoltenVK.dylib"
+          VK_LOADER_DEBUG=error,warn,driver "$EXE" > "$RUNNER_TEMP/b2.out" 2> "$RUNNER_TEMP/b2.dbg"; echo "EXIT=$?"
+          cat "$RUNNER_TEMP/b2.out"
+          grep -E "Found ICD|drivers named|Could not|Failed|failed|ERROR" "$RUNNER_TEMP/b2.dbg" | sort | uniq -c | head -20
+
+      - name: "B3: whole bin/ copied elsewhere (does the relative layout travel?)"
+        shell: bash
+        run: |
+          set +e
+          bindir=$(dirname "$EXE")
+          sed 's#"library_path"[^,]*#"library_path" : "../../libMoltenVK.dylib"#' moltenvk-1.4.2/share/vulkan/icd.d/MoltenVK_icd.json > "$bindir/vulkan/icd.d/MoltenVK_icd.json"
+          moved="$RUNNER_TEMP/moved-app"; rm -rf "$moved"; cp -R "$bindir" "$moved"
+          VK_LOADER_DEBUG=error,warn,driver "$moved/vkprobe" > "$RUNNER_TEMP/b3.out" 2> "$RUNNER_TEMP/b3.dbg"; echo "EXIT=$?"
+          cat "$RUNNER_TEMP/b3.out"
+          grep -E "Found ICD|drivers named|Could not|Failed|failed|ERROR" "$RUNNER_TEMP/b3.dbg" | sort | uniq -c | head -20
 
       - name: "C: MoltenVK through VK_DRIVER_FILES (xim:moltenvk's documented route)"
         shell: bash
         run: |
+          set +e
           abs="$PWD/moltenvk-1.4.2/lib/libMoltenVK.dylib"
           sed "s#\"library_path\"[^,]*#\"library_path\" : \"$abs\"#" moltenvk-1.4.2/share/vulkan/icd.d/MoltenVK_icd.json > "$RUNNER_TEMP/mvk_icd.json"
-          VK_LOADER_DEBUG=driver VK_DRIVER_FILES="$RUNNER_TEMP/mvk_icd.json" "$EXE" 2>&1 | grep -E "PROBE|MoltenVK|icd|ICD" | head -30
+          VK_LOADER_DEBUG=error,warn,driver VK_DRIVER_FILES="$RUNNER_TEMP/mvk_icd.json" "$EXE" > "$RUNNER_TEMP/c.out" 2> "$RUNNER_TEMP/c.dbg"; echo "EXIT=$?"
+          cat "$RUNNER_TEMP/c.out"
