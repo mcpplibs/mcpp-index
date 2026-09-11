@@ -1,0 +1,244 @@
+# TEMPORARY PROBE -- do NOT merge. Answers two questions the Vulkan
+# cross-platform design left unmeasured, against the compat.vulkan 1.4.357.3
+# branch (mcpp-index #395):
+#
+#   windows  Does `mcpp pack` carry the deployed vulkan-1.dll, and does the
+#            packed program start from a clean directory on an image that has
+#            NO system loader?
+#   macos    Does the statically linked loader search <exe dir>/vulkan/icd.d
+#            (CFBundle resources of an unbundled executable), and does MoltenVK
+#            enumerate a device on the runner at all?
+name: tmp-vulkan-dist-probe
+
+on:
+  pull_request:
+    paths: [".github/workflows/tmp-vulkan-dist-probe.yml"]
+
+permissions:
+  contents: read
+
+env:
+  MCPP_VERSION: "2026.9.11.2"
+  MCPP_INDEX_MIRROR: GLOBAL
+  PROBE_REF: feat/vulkan-windows-ships-loader
+
+jobs:
+  windows-pack:
+    runs-on: windows-2022
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with: { ref: "${{ env.PROBE_REF }}" }
+
+      - name: The image must have no system Vulkan loader
+        shell: pwsh
+        run: |
+          foreach ($p in @("$env:SystemRoot\System32\vulkan-1.dll", "$env:SystemRoot\SysWOW64\vulkan-1.dll")) {
+            if (Test-Path $p) { throw "found $p -- this image cannot prove anything" }
+          }
+          "no system vulkan-1.dll: confirmed"
+
+      - name: Download mcpp
+        shell: bash
+        run: |
+          a="mcpp-${MCPP_VERSION}-windows-x86_64.zip"
+          curl -L -fsS -o "$a" "https://github.com/mcpp-community/mcpp/releases/download/v${MCPP_VERSION}/$a"
+          powershell -NoProfile -Command "Expand-Archive -Force -Path '$a' -DestinationPath '.'"
+          root="$PWD/mcpp-${MCPP_VERSION}-windows-x86_64"
+          mkdir -p "$HOME/.mcpp/registry" && cp -a "$root/registry/." "$HOME/.mcpp/registry/"
+          echo "MCPP_HOME=$HOME/.mcpp" >> "$GITHUB_ENV"
+          echo "MCPP=$(cygpath -m "$root/bin/mcpp.exe")" >> "$GITHUB_ENV"
+          echo "MCPP_VENDORED_XLINGS=$(cygpath -m "$root/registry/bin/xlings.exe")" >> "$GITHUB_ENV"
+          echo "INDEX=$(cygpath -m "$PWD")" >> "$GITHUB_ENV"
+
+      - name: Write the probe program
+        shell: bash
+        run: |
+          P="$RUNNER_TEMP/vkprobe"; mkdir -p "$P/src"
+          echo "PROBE_DIR=$P" >> "$GITHUB_ENV"
+          cat > "$P/mcpp.toml" <<EOF
+          [package]
+          name    = "vkprobe"
+          version = "0.1.0"
+
+          [indices]
+          compat = { path = "$INDEX" }
+
+          [dependencies.compat]
+          vulkan = "1.4.357.3"
+          EOF
+          cat > "$P/src/main.cpp" <<'EOF'
+          #include <vulkan/vulkan.h>
+          #include <cstdio>
+          #include <cstring>
+          #include <vector>
+          #if defined(_WIN32)
+          extern "C" __declspec(dllimport) void* GetModuleHandleA(const char*);
+          extern "C" __declspec(dllimport) unsigned long GetModuleFileNameA(void*, char*, unsigned long);
+          #endif
+          int main() {
+              uint32_t v = 0;
+              if (vkEnumerateInstanceVersion(&v) != VK_SUCCESS) { std::puts("PROBE: vkEnumerateInstanceVersion failed"); return 1; }
+              std::printf("PROBE: loader api %u.%u.%u\n", VK_VERSION_MAJOR(v), VK_VERSION_MINOR(v), VK_VERSION_PATCH(v));
+          #if defined(_WIN32)
+              char dll[4096] = {0}, exe[4096] = {0};
+              GetModuleFileNameA(GetModuleHandleA("vulkan-1.dll"), dll, sizeof dll);
+              GetModuleFileNameA(nullptr, exe, sizeof exe);
+              std::printf("PROBE: vulkan-1.dll = %s\nPROBE: exe         = %s\n", dll, exe);
+          #endif
+              uint32_t n = 0;
+              vkEnumerateInstanceExtensionProperties(nullptr, &n, nullptr);
+              std::vector<VkExtensionProperties> ex(n);
+              vkEnumerateInstanceExtensionProperties(nullptr, &n, ex.data());
+              bool port = false;
+              for (auto& x : ex) if (!std::strcmp(x.extensionName, "VK_KHR_portability_enumeration")) port = true;
+              const char* names[] = { "VK_KHR_portability_enumeration" };
+              VkApplicationInfo app{}; app.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO; app.apiVersion = VK_API_VERSION_1_1;
+              VkInstanceCreateInfo ci{}; ci.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO; ci.pApplicationInfo = &app;
+              if (port) { ci.enabledExtensionCount = 1; ci.ppEnabledExtensionNames = names; ci.flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR; }
+              VkInstance inst = VK_NULL_HANDLE;
+              VkResult r = vkCreateInstance(&ci, nullptr, &inst);
+              std::printf("PROBE: portability_enumeration=%d vkCreateInstance=%d\n", port ? 1 : 0, (int)r);
+              if (r != VK_SUCCESS) { std::puts("PROBE: devices=0 (no instance)"); return 0; }
+              uint32_t dc = 0; vkEnumeratePhysicalDevices(inst, &dc, nullptr);
+              std::vector<VkPhysicalDevice> ds(dc); vkEnumeratePhysicalDevices(inst, &dc, ds.data());
+              std::printf("PROBE: devices=%u\n", dc);
+              for (auto d : ds) { VkPhysicalDeviceProperties pr; vkGetPhysicalDeviceProperties(d, &pr); std::printf("PROBE: device %s\n", pr.deviceName); }
+              vkDestroyInstance(inst, nullptr);
+              return 0;
+          }
+          EOF
+
+      - name: Build and run in place
+        shell: bash
+        run: |
+          cd "$PROBE_DIR"
+          "$MCPP" build 2>&1 | tail -15
+          exe=$(find target -type f -name vkprobe.exe | head -1); echo "built: $exe"
+          ls -la "$(dirname "$exe")"
+          "$exe"
+
+      - name: Pack, extract into a clean directory, run there
+        shell: bash
+        run: |
+          cd "$PROBE_DIR"
+          "$MCPP" pack 2>&1 | tail -15
+          zip=$(find target/dist -maxdepth 1 -name '*.zip' | head -1); echo "archive: $zip"
+          [ -n "$zip" ] || { echo "PROBE-FAIL: no zip produced"; ls -la target/dist 2>/dev/null; exit 1; }
+          unzip -l "$zip"
+          unzip -l "$zip" | grep -qi 'vulkan-1.dll' && echo "PROBE: archive carries vulkan-1.dll" || { echo "PROBE-FAIL: archive has no vulkan-1.dll"; exit 1; }
+          clean="$RUNNER_TEMP/clean-run"; rm -rf "$clean"; mkdir -p "$clean"
+          powershell -NoProfile -Command "Expand-Archive -Force -Path '$(cygpath -w "$zip")' -DestinationPath '$(cygpath -w "$clean")'"
+          find "$clean" -type f | head -20
+          exe=$(find "$clean" -type f -name vkprobe.exe | head -1)
+          # A PATH with nothing of ours on it, so only the archive can supply the loader.
+          env -i SYSTEMROOT="$SYSTEMROOT" PATH="/c/Windows/System32:/c/Windows" "$exe"
+
+  macos-bundle:
+    runs-on: macos-15
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with: { ref: "${{ env.PROBE_REF }}" }
+
+      - name: Where CoreFoundation puts an unbundled executable's resources
+        shell: bash
+        run: |
+          d="$RUNNER_TEMP/cfprobe/bin"; mkdir -p "$d"
+          cat > "$RUNNER_TEMP/cfprobe/b.c" <<'EOF'
+          #include <CoreFoundation/CoreFoundation.h>
+          #include <stdio.h>
+          static void show(const char *label, CFURLRef u) {
+              char p[4096];
+              if (u && CFURLGetFileSystemRepresentation(u, true, (UInt8 *)p, sizeof p)) printf("PROBE: %s = %s\n", label, p);
+              else printf("PROBE: %s = (none)\n", label);
+          }
+          int main(void) {
+              CFBundleRef b = CFBundleGetMainBundle();
+              printf("PROBE: main bundle %s\n", b ? "present" : "absent");
+              if (!b) return 1;
+              show("bundle url", CFBundleCopyBundleURL(b));
+              show("resources dir", CFBundleCopyResourcesDirectoryURL(b));
+              show("executable", CFBundleCopyExecutableURL(b));
+              return 0;
+          }
+          EOF
+          clang "$RUNNER_TEMP/cfprobe/b.c" -framework CoreFoundation -o "$d/cfprobe"
+          "$d/cfprobe"
+
+      - name: Download mcpp
+        shell: bash
+        run: |
+          a="mcpp-${MCPP_VERSION}-macosx-arm64.tar.gz"
+          curl -L -fsS -o "$a" "https://github.com/mcpp-community/mcpp/releases/download/v${MCPP_VERSION}/$a"
+          tar -xzf "$a"
+          root="$PWD/mcpp-${MCPP_VERSION}-macosx-arm64"
+          mkdir -p "$HOME/.mcpp/registry" && cp -a "$root/registry/." "$HOME/.mcpp/registry/"
+          echo "MCPP_HOME=$HOME/.mcpp" >> "$GITHUB_ENV"
+          echo "MCPP=$root/bin/mcpp" >> "$GITHUB_ENV"
+          echo "MCPP_VENDORED_XLINGS=$root/registry/bin/xlings" >> "$GITHUB_ENV"
+          echo "INDEX=$PWD" >> "$GITHUB_ENV"
+
+      - name: Build the probe (statically linked loader)
+        shell: bash
+        run: |
+          P="$RUNNER_TEMP/vkprobe"; mkdir -p "$P/src"
+          echo "PROBE_DIR=$P" >> "$GITHUB_ENV"
+          printf '[package]\nname    = "vkprobe"\nversion = "0.1.0"\n\n[indices]\ncompat = { path = "%s" }\n\n[dependencies.compat]\nvulkan = "1.4.357.3"\n' "$INDEX" > "$P/mcpp.toml"
+          cat > "$P/src/main.cpp" <<'EOF'
+          #include <vulkan/vulkan.h>
+          #include <cstdio>
+          #include <cstring>
+          #include <vector>
+          int main() {
+              uint32_t v = 0;
+              if (vkEnumerateInstanceVersion(&v) != VK_SUCCESS) { std::puts("PROBE: vkEnumerateInstanceVersion failed"); return 1; }
+              std::printf("PROBE: loader api %u.%u.%u\n", VK_VERSION_MAJOR(v), VK_VERSION_MINOR(v), VK_VERSION_PATCH(v));
+              uint32_t n = 0;
+              vkEnumerateInstanceExtensionProperties(nullptr, &n, nullptr);
+              std::vector<VkExtensionProperties> ex(n);
+              vkEnumerateInstanceExtensionProperties(nullptr, &n, ex.data());
+              bool port = false;
+              for (auto& x : ex) if (!std::strcmp(x.extensionName, "VK_KHR_portability_enumeration")) port = true;
+              const char* names[] = { "VK_KHR_portability_enumeration" };
+              VkApplicationInfo app{}; app.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO; app.apiVersion = VK_API_VERSION_1_1;
+              VkInstanceCreateInfo ci{}; ci.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO; ci.pApplicationInfo = &app;
+              if (port) { ci.enabledExtensionCount = 1; ci.ppEnabledExtensionNames = names; ci.flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR; }
+              VkInstance inst = VK_NULL_HANDLE;
+              VkResult r = vkCreateInstance(&ci, nullptr, &inst);
+              std::printf("PROBE: portability_enumeration=%d vkCreateInstance=%d\n", port ? 1 : 0, (int)r);
+              if (r != VK_SUCCESS) { std::puts("PROBE: devices=0 (no instance)"); return 0; }
+              uint32_t dc = 0; vkEnumeratePhysicalDevices(inst, &dc, nullptr);
+              std::vector<VkPhysicalDevice> ds(dc); vkEnumeratePhysicalDevices(inst, &dc, ds.data());
+              std::printf("PROBE: devices=%u\n", dc);
+              for (auto d : ds) { VkPhysicalDeviceProperties pr; vkGetPhysicalDeviceProperties(d, &pr); std::printf("PROBE: device %s\n", pr.deviceName); }
+              vkDestroyInstance(inst, nullptr);
+              return 0;
+          }
+          EOF
+          cd "$P" && "$MCPP" build 2>&1 | tail -15
+          exe=$(find target -type f -name vkprobe -perm -u+x | head -1); echo "EXE=$PWD/$exe" >> "$GITHUB_ENV"; echo "built: $exe"
+
+      - name: "A: no MoltenVK anywhere"
+        shell: bash
+        run: VK_LOADER_DEBUG=driver "$EXE" 2>&1 | grep -E "PROBE|icd|ICD|manifest|Searching|search" | head -30
+
+      - name: "B: MoltenVK manifest beside the executable (<exe dir>/vulkan/icd.d)"
+        shell: bash
+        run: |
+          curl -L -fsS -o mvk.tgz https://github.com/xlings-res/moltenvk/releases/download/1.4.2/moltenvk-1.4.2-macosx-universal.tar.gz
+          tar -xzf mvk.tgz
+          bindir=$(dirname "$EXE")
+          mkdir -p "$bindir/vulkan/icd.d"
+          cp moltenvk-1.4.2/lib/libMoltenVK.dylib "$bindir/"
+          sed 's#"library_path"[^,]*#"library_path" : "../../libMoltenVK.dylib"#' moltenvk-1.4.2/share/vulkan/icd.d/MoltenVK_icd.json > "$bindir/vulkan/icd.d/MoltenVK_icd.json"
+          cat "$bindir/vulkan/icd.d/MoltenVK_icd.json"
+          VK_LOADER_DEBUG=driver "$EXE" 2>&1 | grep -E "PROBE|icd|ICD|manifest|MoltenVK|Searching|search" | head -40
+          rm -rf "$bindir/vulkan" "$bindir/libMoltenVK.dylib"
+
+      - name: "C: MoltenVK through VK_DRIVER_FILES (xim:moltenvk's documented route)"
+        shell: bash
+        run: |
+          abs="$PWD/moltenvk-1.4.2/lib/libMoltenVK.dylib"
+          sed "s#\"library_path\"[^,]*#\"library_path\" : \"$abs\"#" moltenvk-1.4.2/share/vulkan/icd.d/MoltenVK_icd.json > "$RUNNER_TEMP/mvk_icd.json"
+          VK_LOADER_DEBUG=driver VK_DRIVER_FILES="$RUNNER_TEMP/mvk_icd.json" "$EXE" 2>&1 | grep -E "PROBE|MoltenVK|icd|ICD" | head -30
