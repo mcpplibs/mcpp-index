@@ -290,3 +290,53 @@ The practical rule: **a change to a xim package cannot be verified from this
 repo's CI unless `MCPP_VERSION` also moves.** Raising the pin to 2026.9.11.2
 evicts the cache, which is the only reason the windows leg can now see the
 fixed recipe.
+
+## 12. Where `xim:wix` actually belongs — `mcpp pack --format`
+
+This descriptor declares no `xim:wix`, and section 4 argues that from the
+consumer's side: wix builds an MSI, nothing else in the SDK touches it, and
+upstream's own manifest says an application wanting an installer declares it
+itself. That argument is right but incomplete, and the fuller one arrived three
+hours too late to be in v0.3.0.
+
+**mcpp 2026.9.11.1 opened the `--format` value set.** `mcpp pack` owns the
+mechanism and the two universal formats (`tar`, `dir`); every other format lives
+in a package and the engine dispatches to it:
+
+```cpp
+mcpp::provides_pack_format("msi");                              // unconditional
+if (std::string_view(mcpp::pack_format()) != "msi") return 0;   // conditional
+// … submit the wix action …
+```
+
+*Declare unconditionally, submit conditionally* — the declaration is what lets
+`--format bogus` list what is available. `xim-pkgindex`'s `appimagetool` (#802)
+is the same shape from the tool side.
+
+Under that mechanism `xim:wix` stops being a top-level `[xlings.workspace]`
+entry — which is provisioned for **every** build of every consumer — and becomes
+the dependency of the feature that provides the `msi` format, provisioned only
+when someone actually asks for an MSI. `mcpp test -p huxerui-module` would never
+touch it.
+
+The timeline is the whole explanation:
+
+| | |
+|---|---|
+| HuxerUI v0.3.0 released | 2026-09-10 17:36 UTC |
+| mcpp 2026.9.11.1 released (`--format` opens) | 2026-09-10 20:34 UTC |
+
+`provides_pack_format` appears **zero** times in v0.3.0's `build.mcpp` and
+`rules.cppm`. Not a road not taken — a road that did not exist yet, by under
+three hours.
+
+**Nothing to do here, and that is the point.** v0.3.0's tag is immutable, so the
+descriptor cannot reach this; what it can do is not make the problem worse, and
+not declaring wix is exactly that. When a 0.3.1 or 0.4.0 moves wix behind
+`provides_pack_format("msi")`, this descriptor needs no change — it already
+behaves as though that move had happened.
+
+Note also that the two Windows problems are independent. Even with wix out of
+the build entirely, `runtime_pointer_interaction.cpp` still fails to compile
+against MSVC STL 14.51 (§11 and the `windows-2022` pin). Fixing the packaging
+axis would not have unblocked this leg.
