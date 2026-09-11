@@ -264,6 +264,53 @@ function install()
     local jobs = (os.default_njob and os.default_njob()) or 4
     local clean_env = "env -u CPPFLAGS -u CFLAGS -u CXXFLAGS -u LDFLAGS "
     local compiler = ""
+
+    -- THE STANDARD LIBRARY THIS IS BUILT AGAINST HAS TO MATCH THE CONSUMER'S.
+    --
+    -- CMake picks the system compiler below, so the static libs come out
+    -- against libstdc++ whatever the consumer uses. On the llvm leg, which
+    -- links libc++, the member then fails at link with the libstdc++ half of
+    -- its own dependency undefined:
+    --
+    --     ld.lld: error: undefined symbol: std::_Rb_tree_increment(...)
+    --     ld.lld: error: undefined symbol:
+    --         std::__cxx11::basic_string<...>::_M_create(...)
+    --
+    -- AND THIS HOOK CANNOT KNOW WHAT THE CONSUMER'S IS. That was asked as a
+    -- question and has now been answered; the answer is no, at three levels:
+    --
+    --   1. MEASURED. The probe below logged `MCPP_CXX_STDLIB=nil` on the llvm
+    --      leg (mcpplibs/mcpp-index#392, `workspace (linux llvm 0/4)`), and
+    --      the link failed exactly as before.
+    --   2. THE ONLY SETTER is `src/build/build_program.cppm` (`e.emplace_back
+    --      ("MCPP_CXX_STDLIB", env.cxxStdlib)`) -- mcpp exports it when it runs
+    --      a BUILD PROGRAM. An xlings install hook is not that.
+    --   3. THE CALL CARRIES NOTHING ELSE either: `make_xlings_env` builds an
+    --      `xlings::Env` of `{binary, home, projectDir}`, and
+    --      `install_packages` is invoked with `XLINGS_HOME` and PATH. No
+    --      toolchain, no compiler, no stdlib crosses that boundary.
+    --
+    -- So neither route is reachable from HERE. `llamacpp` refuses a libc++
+    -- toolchain by name with `mcpp::cxx_stdlib()`, but that lives in its
+    -- build program, in its own repo; an inline descriptor has no such place,
+    -- and `[target.'cfg(...)']` self-gating has a platform axis and no
+    -- standard-library axis (a cfg selector is not a platform).
+    --
+    -- WHAT IS TRUE ABOUT THIS PACKAGE, stated plainly so a user reads it
+    -- before the linker says it: these are STATIC libraries built by CMake
+    -- with the system compiler, so `std::__cxx11::` and friends cross the
+    -- boundary into the consumer. Consuming them from a libc++ toolchain does
+    -- not work and cannot be made to work from inside this hook. Tracked as
+    -- mcpp-community/mcpp#613 (install hooks need the consumer's stdlib);
+    -- until then
+    -- `validate.yml` keeps this member off the llvm leg, with the same reason
+    -- written there.
+    --
+    -- The probe stays. It costs one log line, it is the evidence for point 1,
+    -- and the day mcpp does pass the variable through, this line reports it
+    -- and the fix becomes a three-line change directly below.
+    hook_log("MCPP_CXX_STDLIB=" .. tostring(os.getenv("MCPP_CXX_STDLIB"))
+             .. " (expected nil; see the comment above)")
     if os.host() == "macosx" then
         -- Connector 在 project() 前启动 bootstrap CMake；必须通过环境变量
         -- 将最低系统版本同步给 bootstrap 及其后续的内置依赖构建。
