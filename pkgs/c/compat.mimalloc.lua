@@ -103,7 +103,15 @@ package = {
         windows = {
             -- CMakeLists.txt:614 -- psapi/bcrypt for process memory info and
             -- the RNG seed, the rest for the Win32 primitives.
-            ldflags = { "-lpsapi", "-lshell32", "-luser32", "-ladvapi32", "-lbcrypt" },
+            --
+            -- `runtime.libraries` rather than `ldflags`: ldflags reach the
+            -- linker verbatim, and link.exe drops a GNU `-lpsapi` with
+            -- "LNK4044: unrecognized option; ignored" -- silently, until the
+            -- consumer's link ends in unresolved externals. This spelling is
+            -- rendered per dialect (psapi.lib / -lpsapi).
+            runtime = {
+                libraries = { "psapi", "shell32", "user32", "advapi32", "bcrypt" },
+            },
         },
     },
 }
