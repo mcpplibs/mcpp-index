@@ -228,7 +228,7 @@ env:
   # `index.toml` min_mcpp still does NOT move: the floor is about descriptor
   # GRAMMAR, and `mcpp xpkg parse` accepts pkgs/h/huxerui.huxerui.lua under
   # 2026.8.27.2, 2026.9.6.3, 2026.9.7.1 and 2026.9.11.2 alike.
-  MCPP_VERSION: "2026.9.11.2"
+  MCPP_VERSION: "2026.9.12.3"
 
 jobs:
   lint:
