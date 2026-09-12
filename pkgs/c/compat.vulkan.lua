@@ -438,8 +438,15 @@ package = {
             -- `-Llib` below misses and the link fails with
             -- "LNK1181: cannot open input file 'vulkan-1.lib'".
             sources = { "mcpp_generated/vulkan_import_anchor.c" },
-            ldflags = { "-Llib", "-lvulkan-1" },
             runtime = {
+                -- THE IMPORT LIBRARY, SPELLED FOR BOTH LINKERS. This was
+                -- `ldflags = { "-Llib", "-lvulkan-1" }`, which reaches the
+                -- linker verbatim: link.exe drops both with LNK4044 and the
+                -- consumer's build ends in a hundred unresolved vk* symbols.
+                -- `link_library_dirs` renders as /LIBPATH: or -L,
+                -- `libraries` as vulkan-1.lib or -lvulkan-1.
+                link_library_dirs = { "lib" },
+                libraries         = { "vulkan-1" },
                 -- THE LOADER TRAVELS WITH THE PROGRAM (1.4.357.3+). mcpp copies
                 -- every *.dll under a dependency's runtime library_dirs beside the
                 -- executable it builds -- for transitive dependencies too -- and

@@ -161,7 +161,15 @@ package = {
                 "src/win32_window.c",
                 "src/wgl_context.c",
             },
-            ldflags = { "-lgdi32" },
+            -- DIALECT-NEUTRAL, NOT `ldflags`. `ldflags` reaches the linker
+            -- verbatim, so `-lgdi32` arrived at link.exe unchanged and was
+            -- dropped with "LNK4044: unrecognized option '/lgdi32'; ignored"
+            -- -- the first sign being unresolved externals at the end of a
+            -- consumer's build. `runtime.libraries` renders as gdi32.lib for
+            -- MSVC and -lgdi32 for GNU.
+            runtime = {
+                libraries = { "gdi32" },
+            },
         },
     },
 }
