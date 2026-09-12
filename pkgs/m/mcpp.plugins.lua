@@ -2,11 +2,19 @@
 -- each member selected by a feature.
 --
 --   [dependencies.mcpp]
---   plugins = { version = "0.8.0", features = ["rules-spirv"], host-module = true }
+--   plugins = { version = "0.9.0", features = ["rules-spirv"], host-module = true }
 --
 --   // build.mcpp
 --   import mcpp;
 --   import mcpp.rules.spirv;
+--
+-- 0.9.0 requires **mcpp 2026.9.13.1**. `dist-apk` takes a project manifest
+-- template (`options::manifest_template`, six tokens, three required and
+-- refused by name when absent) and `options::java_sources` as an array (one
+-- `javac`, one `d8`); `dist-web` copies through the engine
+-- (`${mcpp.self} stage --verify content --output <dst> <src>`), which is
+-- what lets it run on a Windows host in place of the `cp` it used through
+-- 0.8.0. Design record: mcpp `.agents/docs/2026-09-13-four-upstream-asks-from-a-ui-framework.md`.
 --
 -- 0.3.0 is the release in which an embedded payload is reached by IMPORTING a
 -- module rather than by including a header whose name the rule chose. It also
@@ -427,6 +435,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.9.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.9.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.9.0/mcpp-plugins-0.9.0.tar.gz",
+                },
+                sha256 = "9f7b17450dfd0a7683648945bbbd579a7fd1fc869b0d88dc36095d1d9eac7c60",
+            },
             ["0.8.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.8.0.tar.gz",
@@ -553,9 +568,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.8.0" },
+            ["latest"] = { ref = "0.9.0" },
         },
         macosx = {
+            ["0.9.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.9.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.9.0/mcpp-plugins-0.9.0.tar.gz",
+                },
+                sha256 = "9f7b17450dfd0a7683648945bbbd579a7fd1fc869b0d88dc36095d1d9eac7c60",
+            },
             ["0.8.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.8.0.tar.gz",
@@ -682,9 +704,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.8.0" },
+            ["latest"] = { ref = "0.9.0" },
         },
         windows = {
+            ["0.9.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.9.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.9.0/mcpp-plugins-0.9.0.tar.gz",
+                },
+                sha256 = "9f7b17450dfd0a7683648945bbbd579a7fd1fc869b0d88dc36095d1d9eac7c60",
+            },
             ["0.8.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.8.0.tar.gz",
@@ -811,7 +840,7 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.8.0" },
+            ["latest"] = { ref = "0.9.0" },
         },
     },
 
