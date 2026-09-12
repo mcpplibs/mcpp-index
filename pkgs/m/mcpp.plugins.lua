@@ -357,6 +357,27 @@
 -- build.mcpp COMPILE naming the missing function, rather than at a link or in
 -- an artifact.
 --
+-- 0.7.0 is the release in which `mcpp.rules.slang` can say what a real Slang
+-- project needs and could not before -- found by transcribing xrgui's shader
+-- config (17 shaders, five common slangc flags, one shader with a flag of its
+-- own, `.spv` files loaded at run time):
+--
+--   options::extra_args   slangc takes some two hundred options; the rule
+--                         keeps the ones that decide WHAT is produced and
+--                         passes the rest through verbatim, before `-o`
+--   options::per_file     what one shader gets that the others do not. One
+--                         `compile()` call writes one surface, so calling it
+--                         twice rewrote the generated module with only the
+--                         second call's shaders; a table keyed by the path
+--                         the constrained glob names keeps the one call. A
+--                         key naming no shader is REFUSED, listing the
+--                         shaders seen
+--   options::storage      the axis `rules-spirv` already had: header (embed,
+--                         still the default), object, sidecar
+--
+-- and `profile_for` gains the Vulkan 1.4 row (SPIR-V 1.6). No engine floor
+-- moves: everything is spelling inside the rule.
+--
 -- The descriptor points at the source archive of the tag, the shape `grpcgen`
 -- established; the CN asset is the same bytes, so one sha256 names both.
 package = {
@@ -370,6 +391,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.7.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.7.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.7.0/mcpp-plugins-0.7.0.tar.gz",
+                },
+                sha256 = "165daa19feaae3823f2bc52551c0c4f7e04ab218abad8b6b930635e6d214340c",
+            },
             ["0.6.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.6.0.tar.gz",
@@ -475,9 +503,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.6.0" },
+            ["latest"] = { ref = "0.7.0" },
         },
         macosx = {
+            ["0.7.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.7.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.7.0/mcpp-plugins-0.7.0.tar.gz",
+                },
+                sha256 = "165daa19feaae3823f2bc52551c0c4f7e04ab218abad8b6b930635e6d214340c",
+            },
             ["0.6.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.6.0.tar.gz",
@@ -583,9 +618,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.6.0" },
+            ["latest"] = { ref = "0.7.0" },
         },
         windows = {
+            ["0.7.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.7.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.7.0/mcpp-plugins-0.7.0.tar.gz",
+                },
+                sha256 = "165daa19feaae3823f2bc52551c0c4f7e04ab218abad8b6b930635e6d214340c",
+            },
             ["0.6.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.6.0.tar.gz",
@@ -691,7 +733,7 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.6.0" },
+            ["latest"] = { ref = "0.7.0" },
         },
     },
 
