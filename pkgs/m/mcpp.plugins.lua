@@ -2,7 +2,7 @@
 -- each member selected by a feature.
 --
 --   [dependencies.mcpp]
---   plugins = { version = "0.6.0", features = ["rules-spirv"], host-module = true }
+--   plugins = { version = "0.8.0", features = ["rules-spirv"], host-module = true }
 --
 --   // build.mcpp
 --   import mcpp;
@@ -388,6 +388,32 @@
 -- string helper. Found by elimination in three probes; 0.7.0 is unusable on
 -- that toolset for any consumer whose host modules touch a path.
 --
+-- 0.8.0 is the plugin half of mcpp#622 and needs mcpp 2026.9.12.3, the release
+-- that carries the engine half: `kind = "app"`, `mcpp::deploy`, the `.js`
+-- launcher and its staged stem family, `mcpp::min_platform_version()`,
+-- `mcpp run --format`, and the build program's host compiler under a row's
+-- pin. Four members change or appear:
+--
+--   dist-apk     new. An APK from an `app` target on `*-linux-android`:
+--                aapt2 link, the native libraries (and `libc++_shared.so`
+--                when the link NEEDs it), the deploy'd files under `assets/`,
+--                zipalign, apksigner with `xim:android-debug-keystore`. Level 0
+--                is `NativeActivity` with no Java; level 1 compiles a Java
+--                host with javac and d8. Measured on the x86_64 emulator and on
+--                an arm64 phone through `adb-run`: the program's line came back.
+--   dist-web     new. The `.js`, `.wasm`, `.data` and deploy'd files of a
+--                `wasm32-emscripten` program plus an `index.html`, as a static
+--                directory. POSIX hosts.
+--   dist-apple   the iOS row: a flat bundle, `MinimumOSVersion` from the
+--                engine, no signing on the simulator, a terminal `bundle` step
+--                so that `mcpp run --format app` has one operand. Measured on
+--                macos-15: the simulator installed and launched it through
+--                `simctl-run` 0.2.0.
+--   dist-wix     locates WiX through `xim:wix` and nothing else; the earlier
+--                PATH and MCPP_WIX tiers are gone.
+--
+-- The descriptor points at the source archive of the tag, as before; the CN
+-- asset is the same bytes (compared byte for byte), so one sha256 names both.
 -- The descriptor points at the source archive of the tag, the shape `grpcgen`
 -- established; the CN asset is the same bytes, so one sha256 names both.
 package = {
@@ -401,6 +427,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.8.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.8.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.8.0/mcpp-plugins-0.8.0.tar.gz",
+                },
+                sha256 = "088b500236d78ce7f4f88bc8e7c8f9bed00186be926896724c851ec9119946e7",
+            },
             ["0.7.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.7.1.tar.gz",
@@ -520,9 +553,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.7.1" },
+            ["latest"] = { ref = "0.8.0" },
         },
         macosx = {
+            ["0.8.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.8.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.8.0/mcpp-plugins-0.8.0.tar.gz",
+                },
+                sha256 = "088b500236d78ce7f4f88bc8e7c8f9bed00186be926896724c851ec9119946e7",
+            },
             ["0.7.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.7.1.tar.gz",
@@ -642,9 +682,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.7.1" },
+            ["latest"] = { ref = "0.8.0" },
         },
         windows = {
+            ["0.8.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.8.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.8.0/mcpp-plugins-0.8.0.tar.gz",
+                },
+                sha256 = "088b500236d78ce7f4f88bc8e7c8f9bed00186be926896724c851ec9119946e7",
+            },
             ["0.7.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.7.1.tar.gz",
@@ -764,7 +811,7 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.7.1" },
+            ["latest"] = { ref = "0.8.0" },
         },
     },
 
