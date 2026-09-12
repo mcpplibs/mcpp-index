@@ -378,6 +378,16 @@
 -- and `profile_for` gains the Vulkan 1.4 row (SPIR-V 1.6). No engine floor
 -- moves: everything is spelling inside the rule.
 --
+-- 0.7.1 changes no member's interface and records a compiler: under MSVC 14.52
+-- (36629 and 36725, measured on xrgui's CI) a module whose BMI carries
+-- `std::filesystem::path`'s iterator poisons every importer that touches
+-- `path` again -- `filesystem(1572): error C2801: '_Path_iterator<...>::
+-- operator ==' must be a non-static member`, the STL's own hidden friend.
+-- Nothing in the package instantiates that iterator now: the lib root reads
+-- paths apart as strings, and the members' relative-path arithmetic is one
+-- string helper. Found by elimination in three probes; 0.7.0 is unusable on
+-- that toolset for any consumer whose host modules touch a path.
+--
 -- The descriptor points at the source archive of the tag, the shape `grpcgen`
 -- established; the CN asset is the same bytes, so one sha256 names both.
 package = {
@@ -391,6 +401,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.7.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.7.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.7.1/mcpp-plugins-0.7.1.tar.gz",
+                },
+                sha256 = "a8d1b4dc8187c2b67a17d997245a4e4a3d52e26251f4c824fc5b951b58bbe293",
+            },
             ["0.7.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.7.0.tar.gz",
@@ -503,9 +520,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.7.0" },
+            ["latest"] = { ref = "0.7.1" },
         },
         macosx = {
+            ["0.7.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.7.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.7.1/mcpp-plugins-0.7.1.tar.gz",
+                },
+                sha256 = "a8d1b4dc8187c2b67a17d997245a4e4a3d52e26251f4c824fc5b951b58bbe293",
+            },
             ["0.7.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.7.0.tar.gz",
@@ -618,9 +642,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.7.0" },
+            ["latest"] = { ref = "0.7.1" },
         },
         windows = {
+            ["0.7.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.7.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.7.1/mcpp-plugins-0.7.1.tar.gz",
+                },
+                sha256 = "a8d1b4dc8187c2b67a17d997245a4e4a3d52e26251f4c824fc5b951b58bbe293",
+            },
             ["0.7.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.7.0.tar.gz",
@@ -733,7 +764,7 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.7.0" },
+            ["latest"] = { ref = "0.7.1" },
         },
     },
 
