@@ -2,11 +2,20 @@
 -- each member selected by a feature.
 --
 --   [dependencies.mcpp]
---   plugins = { version = "0.9.1", features = ["rules-spirv"], host-module = true }
+--   plugins = { version = "0.9.2", features = ["rules-spirv"], host-module = true }
 --
 --   // build.mcpp
 --   import mcpp;
 --   import mcpp.rules.spirv;
+--
+-- 0.9.2 measures under **mcpp 2026.9.13.2**, the release that stages a Mach-O
+-- program's tree before the closure walk (mcpp#630, item 3a): `dist-apple`
+-- places the staged tree's deployed files at the bundle's resource
+-- destination (`Contents/Resources/<to>/...` on macOS, the bundle root on
+-- iOS) and the launcher alone in the executable directory. Its iOS fixture
+-- declares `llvm.libcxx` and `llvm.compiler-rt-builtins` under
+-- `cfg(os = "ios")`, which is what an application that imports `std` declares
+-- on those rows from that release. mcpp-community/mcpp-plugins#22.
 --
 -- 0.9.1 (same mcpp floor as 0.9.0): `dist-apk` links a project's
 -- `options::resources` positionally as the application's BASE resources --
@@ -443,6 +452,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.9.2"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.9.2.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.9.2/mcpp-plugins-0.9.2.tar.gz",
+                },
+                sha256 = "0c42984ec91b2e76cde72115ecf3d818ee48866141ae0a54037736b1a0c46def",
+            },
             ["0.9.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.9.1.tar.gz",
@@ -586,6 +602,13 @@ package = {
             ["latest"] = { ref = "0.9.1" },
         },
         macosx = {
+            ["0.9.2"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.9.2.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.9.2/mcpp-plugins-0.9.2.tar.gz",
+                },
+                sha256 = "0c42984ec91b2e76cde72115ecf3d818ee48866141ae0a54037736b1a0c46def",
+            },
             ["0.9.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.9.1.tar.gz",
@@ -729,6 +752,13 @@ package = {
             ["latest"] = { ref = "0.9.1" },
         },
         windows = {
+            ["0.9.2"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.9.2.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.9.2/mcpp-plugins-0.9.2.tar.gz",
+                },
+                sha256 = "0c42984ec91b2e76cde72115ecf3d818ee48866141ae0a54037736b1a0c46def",
+            },
             ["0.9.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.9.1.tar.gz",
