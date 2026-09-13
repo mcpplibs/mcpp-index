@@ -2,11 +2,19 @@
 -- each member selected by a feature.
 --
 --   [dependencies.mcpp]
---   plugins = { version = "0.9.0", features = ["rules-spirv"], host-module = true }
+--   plugins = { version = "0.9.1", features = ["rules-spirv"], host-module = true }
 --
 --   // build.mcpp
 --   import mcpp;
 --   import mcpp.rules.spirv;
+--
+-- 0.9.1 (same mcpp floor as 0.9.0): `dist-apk` links a project's
+-- `options::resources` positionally as the application's BASE resources --
+-- 0.9.0 passed the compiled unit as `-R`, aapt2's overlay, which refuses every
+-- resource the base does not already define, so a launcher icon, colour or
+-- string could not be supplied at all. Its `xim:android-platform` pin moves
+-- to 36-r2 (the recipe is in xim-pkgindex since openxlings/xim-pkgindex#834).
+-- mcpp-community/mcpp-plugins#21.
 --
 -- 0.9.0 requires **mcpp 2026.9.13.1**. `dist-apk` takes a project manifest
 -- template (`options::manifest_template`, six tokens, three required and
@@ -435,6 +443,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.9.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.9.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.9.1/mcpp-plugins-0.9.1.tar.gz",
+                },
+                sha256 = "de50556e8c3ea346298d2c3fd9ec2984c9ad3585118a38f0c4667b4b953554b0",
+            },
             ["0.9.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.9.0.tar.gz",
@@ -568,9 +583,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.9.0" },
+            ["latest"] = { ref = "0.9.1" },
         },
         macosx = {
+            ["0.9.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.9.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.9.1/mcpp-plugins-0.9.1.tar.gz",
+                },
+                sha256 = "de50556e8c3ea346298d2c3fd9ec2984c9ad3585118a38f0c4667b4b953554b0",
+            },
             ["0.9.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.9.0.tar.gz",
@@ -704,9 +726,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.9.0" },
+            ["latest"] = { ref = "0.9.1" },
         },
         windows = {
+            ["0.9.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.9.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.9.1/mcpp-plugins-0.9.1.tar.gz",
+                },
+                sha256 = "de50556e8c3ea346298d2c3fd9ec2984c9ad3585118a38f0c4667b4b953554b0",
+            },
             ["0.9.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.9.0.tar.gz",
@@ -840,7 +869,7 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.9.0" },
+            ["latest"] = { ref = "0.9.1" },
         },
     },
 
