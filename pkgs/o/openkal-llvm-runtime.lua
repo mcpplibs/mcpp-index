@@ -26,6 +26,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.9.4"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.9.4.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-llvm-runtime/releases/download/0.9.4/openkal-llvm-runtime-0.9.4.tar.gz",
+                },
+                sha256 = "8875ae13454a861d819408804d3badfb1a06da9d307184d020599d14bd4243b6",
+            },
             ["0.9.3"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.9.3.tar.gz",
@@ -140,6 +147,13 @@ package = {
             },
         },
         macosx = {
+            ["0.9.4"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.9.4.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-llvm-runtime/releases/download/0.9.4/openkal-llvm-runtime-0.9.4.tar.gz",
+                },
+                sha256 = "8875ae13454a861d819408804d3badfb1a06da9d307184d020599d14bd4243b6",
+            },
             ["0.9.3"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.9.3.tar.gz",
@@ -254,6 +268,13 @@ package = {
             },
         },
         windows = {
+            ["0.9.4"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.9.4.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-llvm-runtime/releases/download/0.9.4/openkal-llvm-runtime-0.9.4.tar.gz",
+                },
+                sha256 = "8875ae13454a861d819408804d3badfb1a06da9d307184d020599d14bd4243b6",
+            },
             ["0.9.3"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.9.3.tar.gz",
