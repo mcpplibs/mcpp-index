@@ -29,7 +29,8 @@
 -- segment, which must be written out in full: a bare requirement in mcpp is an
 -- EXACT PIN, not a caret.
 --
--- 22.1.8.3 ADDS THE APPLE ROWS. The official LLVM macOS payload builds
+-- 22.1.8.3 ADDS THE APPLE ROWS, AND 22.1.8.4 COMPLETES THEM with the five
+-- generic routines the M-profile rows supersede with assembly. The official LLVM macOS payload builds
 -- `libclang_rt.osx.a` and no `ios`/`iossim` archive, and clang's Darwin driver
 -- links nothing rather than failing when the file is absent; a program that
 -- reaches an availability check then fails at link on
@@ -47,6 +48,13 @@ package = {
 
     xpm = {
         linux = {
+            ["22.1.8.4"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/compiler-rt-builtins/archive/refs/tags/22.1.8.4.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/compiler-rt-builtins/releases/download/22.1.8.4/compiler-rt-builtins-22.1.8.4.tar.gz",
+                },
+                sha256 = "432d3bc7f0c42e4988e9a8638c440e3fac2817b658ee7af05329d191d0eefcb7",
+            },
             ["22.1.8.3"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/compiler-rt-builtins/archive/refs/tags/22.1.8.3.tar.gz",
@@ -63,6 +71,13 @@ package = {
             },
         },
         macosx = {
+            ["22.1.8.4"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/compiler-rt-builtins/archive/refs/tags/22.1.8.4.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/compiler-rt-builtins/releases/download/22.1.8.4/compiler-rt-builtins-22.1.8.4.tar.gz",
+                },
+                sha256 = "432d3bc7f0c42e4988e9a8638c440e3fac2817b658ee7af05329d191d0eefcb7",
+            },
             ["22.1.8.3"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/compiler-rt-builtins/archive/refs/tags/22.1.8.3.tar.gz",
@@ -79,6 +94,13 @@ package = {
             },
         },
         windows = {
+            ["22.1.8.4"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/compiler-rt-builtins/archive/refs/tags/22.1.8.4.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/compiler-rt-builtins/releases/download/22.1.8.4/compiler-rt-builtins-22.1.8.4.tar.gz",
+                },
+                sha256 = "432d3bc7f0c42e4988e9a8638c440e3fac2817b658ee7af05329d191d0eefcb7",
+            },
             ["22.1.8.3"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/compiler-rt-builtins/archive/refs/tags/22.1.8.3.tar.gz",
