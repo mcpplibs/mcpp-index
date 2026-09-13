@@ -599,7 +599,7 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.9.1" },
+            ["latest"] = { ref = "0.9.2" },
         },
         macosx = {
             ["0.9.2"] = {
@@ -749,7 +749,7 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.9.1" },
+            ["latest"] = { ref = "0.9.2" },
         },
         windows = {
             ["0.9.2"] = {
@@ -899,7 +899,7 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.9.1" },
+            ["latest"] = { ref = "0.9.2" },
         },
     },
 
