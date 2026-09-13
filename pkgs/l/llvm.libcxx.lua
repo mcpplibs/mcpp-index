@@ -31,6 +31,13 @@ package = {
 
     xpm = {
         linux = {
+            ["22.1.8.2"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/libcxx/archive/refs/tags/22.1.8.2.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/libcxx/releases/download/22.1.8.2/libcxx-22.1.8.2.tar.gz",
+                },
+                sha256 = "c4cdbeb0d44db9a261fd246e2d4b4247980fa958f17f8101f78bc4e419390bb7",
+            },
             ["22.1.8.1"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/libcxx/archive/refs/tags/22.1.8.1.tar.gz",
@@ -40,6 +47,13 @@ package = {
             },
         },
         macosx = {
+            ["22.1.8.2"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/libcxx/archive/refs/tags/22.1.8.2.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/libcxx/releases/download/22.1.8.2/libcxx-22.1.8.2.tar.gz",
+                },
+                sha256 = "c4cdbeb0d44db9a261fd246e2d4b4247980fa958f17f8101f78bc4e419390bb7",
+            },
             ["22.1.8.1"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/libcxx/archive/refs/tags/22.1.8.1.tar.gz",
@@ -49,6 +63,13 @@ package = {
             },
         },
         windows = {
+            ["22.1.8.2"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/libcxx/archive/refs/tags/22.1.8.2.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/libcxx/releases/download/22.1.8.2/libcxx-22.1.8.2.tar.gz",
+                },
+                sha256 = "c4cdbeb0d44db9a261fd246e2d4b4247980fa958f17f8101f78bc4e419390bb7",
+            },
             ["22.1.8.1"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/libcxx/archive/refs/tags/22.1.8.1.tar.gz",
