@@ -2,11 +2,20 @@
 -- each member selected by a feature.
 --
 --   [dependencies.mcpp]
---   plugins = { version = "0.10.0", features = ["rules-spirv"], host-module = true }
+--   plugins = { version = "0.10.1", features = ["rules-spirv"], host-module = true }
 --
 --   // build.mcpp
 --   import mcpp;
 --   import mcpp.rules.spirv;
+--
+-- 0.10.1 (same mcpp floor): `dist-wix` installs the staged tree, not the
+-- program alone. The files `mcpp pack` stages beside the program -- deployed
+-- data, resolved DLLs; for a PE program at the root of the tree -- are named
+-- file by file in a `StagedFiles` component group the generated definition
+-- references and a project's own `options::wxs` installs with
+-- `<ComponentGroupRef Id="StagedFiles" />`; `options::inputs` and
+-- `options::bundle_inputs` declare what a project's own definitions name
+-- beyond that. mcpp-community/mcpp-plugins#25.
 --
 -- 0.10.0 requires **mcpp 2026.9.14.2**, the release that stages the native
 -- closure of an Android or Mach-O program and names every library in the
@@ -485,6 +494,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.10.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.10.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.10.1/mcpp-plugins-0.10.1.tar.gz",
+                },
+                sha256 = "f5278f370e63179a32ffcef1145b90a7bbb3cac79c537eadc9014f6966ce2e01",
+            },
             ["0.10.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.10.0.tar.gz",
@@ -646,9 +662,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.10.0" },
+            ["latest"] = { ref = "0.10.1" },
         },
         macosx = {
+            ["0.10.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.10.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.10.1/mcpp-plugins-0.10.1.tar.gz",
+                },
+                sha256 = "f5278f370e63179a32ffcef1145b90a7bbb3cac79c537eadc9014f6966ce2e01",
+            },
             ["0.10.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.10.0.tar.gz",
@@ -810,9 +833,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.10.0" },
+            ["latest"] = { ref = "0.10.1" },
         },
         windows = {
+            ["0.10.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.10.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.10.1/mcpp-plugins-0.10.1.tar.gz",
+                },
+                sha256 = "f5278f370e63179a32ffcef1145b90a7bbb3cac79c537eadc9014f6966ce2e01",
+            },
             ["0.10.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.10.0.tar.gz",
@@ -974,7 +1004,7 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.10.0" },
+            ["latest"] = { ref = "0.10.1" },
         },
     },
 
