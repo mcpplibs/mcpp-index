@@ -2,11 +2,37 @@
 -- each member selected by a feature.
 --
 --   [dependencies.mcpp]
---   plugins = { version = "0.9.3", features = ["rules-spirv"], host-module = true }
+--   plugins = { version = "0.10.0", features = ["rules-spirv"], host-module = true }
 --
 --   // build.mcpp
 --   import mcpp;
 --   import mcpp.rules.spirv;
+--
+-- 0.10.0 requires **mcpp 2026.9.14.2**, the release that stages the native
+-- closure of an Android or Mach-O program and names every library in the
+-- stage manifest's `needs` lines (mcpp#634 A3), leaves an `@executable_path`
+-- rpath as written, and reaches the runner named after `mcpp run --format`.
+-- The plugin half of mcpp#634:
+--
+--   dist-apk     reads the staged closure (`lib/` for one `--target`,
+--                `lib/<abi>/` for several) in place of its own `NEEDED` walk,
+--                so a second pack keeps a dependency's library and one APK
+--                carries every ABI the tree was packed for. A stage without
+--                `needs` lines comes from an older engine and is refused
+--                naming 2026.9.14.2. `--format aab` writes an App Bundle with
+--                `xim:bundletool`.
+--   dist-apple   places the staged dylibs in `Contents/Frameworks/`
+--                (`Frameworks/` on iOS), links the program with the rpath that
+--                finds them there, signs a macOS bundle without an identity ad
+--                hoc (frameworks first), supplies the runner named `app` on
+--                macOS (`xim:macapp-run`, installed for `mcpp run` only), and
+--                gains `--format dmg`.
+--   dist-wix     `--format setup`: a Burn bundle chaining the MSI, with the
+--                stock bootstrapper application from `xim:wix` 5.0.2-1.
+--   rules-metal  new. `.metal` shaders become Metal libraries through the
+--                macOS host's Xcode toolchain, located rather than installed.
+--
+-- mcpp-community/mcpp-plugins#24.
 --
 -- 0.9.3 (same mcpp floor): `dist-apk` walks the app object's NEEDED at
 -- command time and copies every graph-built shared library it finds beside
@@ -459,6 +485,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.10.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.10.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.10.0/mcpp-plugins-0.10.0.tar.gz",
+                },
+                sha256 = "b7cfa4b5d011d72cbd75fb96a459889a37a80e61dd903bf9142f582482d34a30",
+            },
             ["0.9.3"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.9.3.tar.gz",
@@ -613,9 +646,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.9.3" },
+            ["latest"] = { ref = "0.10.0" },
         },
         macosx = {
+            ["0.10.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.10.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.10.0/mcpp-plugins-0.10.0.tar.gz",
+                },
+                sha256 = "b7cfa4b5d011d72cbd75fb96a459889a37a80e61dd903bf9142f582482d34a30",
+            },
             ["0.9.3"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.9.3.tar.gz",
@@ -770,9 +810,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.9.3" },
+            ["latest"] = { ref = "0.10.0" },
         },
         windows = {
+            ["0.10.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.10.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.10.0/mcpp-plugins-0.10.0.tar.gz",
+                },
+                sha256 = "b7cfa4b5d011d72cbd75fb96a459889a37a80e61dd903bf9142f582482d34a30",
+            },
             ["0.9.3"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.9.3.tar.gz",
@@ -927,7 +974,7 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.9.3" },
+            ["latest"] = { ref = "0.10.0" },
         },
     },
 
