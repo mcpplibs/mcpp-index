@@ -31,8 +31,49 @@ cp -a "$SRC/pkgs" "$TREE/"
 # index.toml carries the index→client version contract (min_mcpp floor);
 # it must travel with the tree so unpacked snapshots enforce it offline.
 [ -f "$SRC/index.toml" ] && cp "$SRC/index.toml" "$TREE/" || true
-tar --sort=name --owner=0 --group=0 --numeric-owner -czf "$OUT/$BASE.tar.gz" -C "$TREE" . 2>/dev/null \
-  || tar -czf "$OUT/$BASE.tar.gz" -C "$TREE" .
+# THE BYTES FOR AN INDEX COMMIT ARE DECIDED ONCE.
+#
+# The artifact name carries the index commit, and the nightly cron reruns this
+# script on an unchanged HEAD. The pack was not byte-reproducible (entry times
+# came from the checkout), so a rerun built different bytes under the same name:
+# GitHub's `--clobber` replaced its asset, GitCode cannot replace one and kept
+# the first, and both pointers moved to the second digest. Measured 2026-09-16
+# on v7649883: GitHub 78535f36... (553573 bytes, entries dated 04:41), GitCode
+# d89135a3... (553557 bytes, entries dated 03:00), identical trees. A CN client
+# rejected GitCode's bytes and fell back to GitHub (mcpp-community/mcpp#648).
+# xim-pkgindex settled the same defect on 2026-09-05
+# (tools/build_xim_index_artifact.sh); this script is the copy it did not reach.
+#
+# Two measures, each sufficient for the case the other cannot cover:
+#   1. an already published copy of this version IS the artifact. GitCode is
+#      asked first, because it is the forge that cannot replace an asset, so a
+#      republish converges on the bytes that are already immovable there;
+#   2. a fresh pack is reproducible: sorted names, fixed owner, mode and entry
+#      time (the source commit's), and a gzip header without a name or time.
+# MCPP_INDEX_NO_REUSE=1 forces a fresh pack.
+SRCTIME="$(git -C "$SRC" log -1 --format=%ct 2>/dev/null || echo 0)"
+reused=""
+if [ "${MCPP_INDEX_NO_REUSE:-0}" != 1 ]; then
+  for base_url in "https://gitcode.com/${REPO}/releases/download" \
+                  "https://github.com/${REPO}/releases/download"; do
+    if curl -fsSL --retry 3 --retry-all-errors -o "$OUT/$BASE.tar.gz.reuse" \
+         "${base_url}/v${VER}/${BASE}.tar.gz" 2>/dev/null \
+       && gzip -t "$OUT/$BASE.tar.gz.reuse" 2>/dev/null \
+       && tar -tzf "$OUT/$BASE.tar.gz.reuse" ./pkgs >/dev/null 2>&1; then
+      mv -f "$OUT/$BASE.tar.gz.reuse" "$OUT/$BASE.tar.gz"
+      reused="$base_url"
+      break
+    fi
+    rm -f "$OUT/$BASE.tar.gz.reuse"
+  done
+fi
+if [ -n "$reused" ]; then
+  info "reusing the published artifact for $VER from $reused"
+else
+  tar --sort=name --owner=0 --group=0 --numeric-owner --mode='u+rwX,go+rX,go-w' \
+      --mtime="@${SRCTIME}" --format=gnu -cf - -C "$TREE" . \
+    | gzip -n -9 > "$OUT/$BASE.tar.gz"
+fi
 SHA="$(sha256sum "$OUT/$BASE.tar.gz" | awk '{print $1}')"
 SIZE="$(wc -c < "$OUT/$BASE.tar.gz" | tr -d ' ')"
 cat > "$OUT/manifest.json" <<JSON
@@ -57,6 +98,14 @@ publish_gh() {  # <tag>
 }
 publish_gtc() {  # <tag>
   gtc release create "$REPO" --tag "$1" --name "$1" 2>/dev/null || true
+  # An asset GitCode already holds under this name cannot be replaced; when its
+  # bytes are the artifact's (the reuse above makes that the case), a second
+  # upload would only add a duplicate record.
+  if curl -fsSL -o "$OUT/gtc.check" "https://gitcode.com/${REPO}/releases/download/$1/$BASE.tar.gz" 2>/dev/null \
+     && [ "$(sha256sum "$OUT/gtc.check" | awk '{print $1}')" = "$SHA" ]; then
+    info "GitCode $1: $BASE.tar.gz already holds these bytes"
+    return 0
+  fi
   local try
   for try in 1 2 3; do
     gtc release upload "$REPO" "$OUT/$BASE.tar.gz" --tag "$1" 2>&1 | tail -1 | grep -q uploaded && return 0
@@ -87,5 +136,35 @@ push_pointer() {  # <auth-url> <label>
 }
 [ -n "${XLINGS_RES_TOKEN:-}" ] && push_pointer "https://x-access-token:${XLINGS_RES_TOKEN}@github.com/${REPO}.git" github
 [ -n "${GITCODE_TOKEN:-}" ]    && push_pointer "https://oauth2:${GITCODE_TOKEN}@gitcode.com/${REPO}.git" gitcode
+
+# ── 4. every forge serves the bytes the pointer names ──
+# A pointer that names a digest one forge does not serve is the failure this
+# script exists to prevent, and nothing downstream reports it except a client's
+# fallback. Read each copy back and compare.
+verify_copy() {  # <label> <url>
+  # A replaced GitHub asset reaches its CDN after a delay, so a stale read is
+  # retried; a copy that stays different after the last attempt is a failure.
+  local attempt got=""
+  for attempt in 1 2 3 4 5 6; do
+    if curl -fsSL --retry 3 --retry-all-errors -o "$OUT/verify.tgz" "$2" 2>/dev/null; then
+      got="$(sha256sum "$OUT/verify.tgz" | awk '{print $1}')"
+      if [ "$got" = "$SHA" ]; then
+        info "$1 serves $BASE.tar.gz with the pointer's digest"
+        return 0
+      fi
+    fi
+    sleep 10
+  done
+  echo "[mcpp-index] FAIL: $1 serves '${got:-nothing}' for $BASE.tar.gz, the pointer names $SHA" >&2
+  return 1
+}
+verify_failed=0
+if [ -n "${GH_TOKEN:-${XLINGS_RES_TOKEN:-}}" ]; then
+  verify_copy github "https://github.com/${REPO}/releases/download/v${VER}/${BASE}.tar.gz" || verify_failed=1
+fi
+if [ -n "${GITCODE_TOKEN:-}" ] && command -v gtc >/dev/null 2>&1; then
+  verify_copy gitcode "https://gitcode.com/${REPO}/releases/download/v${VER}/${BASE}.tar.gz" || verify_failed=1
+fi
+[ "$verify_failed" = 0 ] || exit 1
 
 info "published mcpp-index $VER -> $REPO (pointer key 'mcpp')"
