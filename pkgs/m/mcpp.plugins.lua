@@ -2,11 +2,18 @@
 -- each member selected by a feature.
 --
 --   [dependencies.mcpp]
---   plugins = { version = "0.11.0", features = ["rules-spirv"], host-module = true }
+--   plugins = { version = "0.11.1", features = ["rules-spirv"], host-module = true }
 --
 --   // build.mcpp
 --   import mcpp;
 --   import mcpp.rules.spirv;
+--
+-- 0.11.1 (same mcpp floor): `dist-apk` strips each native library with the
+-- build's own `llvm-strip --strip-unneeded` (`options::keep_debug_symbols`
+-- keeps them as staged) and, when the manifest states
+-- `android:extractNativeLibs="false"`, stores them uncompressed on a 16 KB
+-- page, as the Android Gradle plugin packages them. `dist-appimage` takes an
+-- SVG icon as well as a PNG. mcpp-community/mcpp-plugins#27.
 --
 -- 0.11.0 (same mcpp floor): `dist-apk` compiles Kotlin beside Java
 -- (`options::kotlin_sources`; `xim:kotlin` comes with the `dist-apk-kotlin`
@@ -508,6 +515,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.11.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.11.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.11.1/mcpp-plugins-0.11.1.tar.gz",
+                },
+                sha256 = "8b6f009d747b90789e4d50adfcd45df64962d880c3f96387a1637c04c9239b67",
+            },
             ["0.11.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.11.0.tar.gz",
@@ -683,9 +697,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.11.0" },
+            ["latest"] = { ref = "0.11.1" },
         },
         macosx = {
+            ["0.11.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.11.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.11.1/mcpp-plugins-0.11.1.tar.gz",
+                },
+                sha256 = "8b6f009d747b90789e4d50adfcd45df64962d880c3f96387a1637c04c9239b67",
+            },
             ["0.11.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.11.0.tar.gz",
@@ -861,9 +882,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.11.0" },
+            ["latest"] = { ref = "0.11.1" },
         },
         windows = {
+            ["0.11.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.11.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.11.1/mcpp-plugins-0.11.1.tar.gz",
+                },
+                sha256 = "8b6f009d747b90789e4d50adfcd45df64962d880c3f96387a1637c04c9239b67",
+            },
             ["0.11.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.11.0.tar.gz",
@@ -1039,7 +1067,7 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.11.0" },
+            ["latest"] = { ref = "0.11.1" },
         },
     },
 
