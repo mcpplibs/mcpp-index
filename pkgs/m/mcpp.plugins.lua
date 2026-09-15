@@ -2,11 +2,25 @@
 -- each member selected by a feature.
 --
 --   [dependencies.mcpp]
---   plugins = { version = "0.10.1", features = ["rules-spirv"], host-module = true }
+--   plugins = { version = "0.11.0", features = ["rules-spirv"], host-module = true }
 --
 --   // build.mcpp
 --   import mcpp;
 --   import mcpp.rules.spirv;
+--
+-- 0.11.0 (same mcpp floor): `dist-apk` compiles Kotlin beside Java
+-- (`options::kotlin_sources`; `xim:kotlin` comes with the `dist-apk-kotlin`
+-- feature), links the R classes a project's code reads, and takes Android
+-- libraries from source (`options::libraries`), local archives
+-- (`options::aars`, `options::jars`) and Maven coordinates resolved into a lock
+-- file by `xim:coursier` (the `dist-apk-maven` feature; only
+-- `MCPP_DIST_APK_MAVEN=update` and `=fetch` reach the network). Library
+-- manifests are merged by a stated subset, and `options::sign = false` writes
+-- an unsigned package. `dist-apple` adds a project's Info.plist entries
+-- (`options::info_plist`), embeds a provisioning profile on the iOS device row,
+-- and runs a device bundle through `devicectl-run` (`xim:apple-device-tools`).
+-- The Android build host is Linux: mcpp does not link an Android row on a
+-- macOS host yet (mcpp#647). mcpp-community/mcpp-plugins#26.
 --
 -- 0.10.1 (same mcpp floor): `dist-wix` installs the staged tree, not the
 -- program alone. The files `mcpp pack` stages beside the program -- deployed
@@ -494,6 +508,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.11.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.11.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.11.0/mcpp-plugins-0.11.0.tar.gz",
+                },
+                sha256 = "bb58b43b7161bdc77e750124f9d676aad342a4f2299e4f165c508ffae6be5cd2",
+            },
             ["0.10.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.10.1.tar.gz",
@@ -662,9 +683,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.10.1" },
+            ["latest"] = { ref = "0.11.0" },
         },
         macosx = {
+            ["0.11.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.11.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.11.0/mcpp-plugins-0.11.0.tar.gz",
+                },
+                sha256 = "bb58b43b7161bdc77e750124f9d676aad342a4f2299e4f165c508ffae6be5cd2",
+            },
             ["0.10.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.10.1.tar.gz",
@@ -833,9 +861,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.10.1" },
+            ["latest"] = { ref = "0.11.0" },
         },
         windows = {
+            ["0.11.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.11.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.11.0/mcpp-plugins-0.11.0.tar.gz",
+                },
+                sha256 = "bb58b43b7161bdc77e750124f9d676aad342a4f2299e4f165c508ffae6be5cd2",
+            },
             ["0.10.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.10.1.tar.gz",
@@ -1004,7 +1039,7 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.10.1" },
+            ["latest"] = { ref = "0.11.0" },
         },
     },
 
