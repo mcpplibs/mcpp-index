@@ -228,7 +228,20 @@ env:
   # `index.toml` min_mcpp still does NOT move: the floor is about descriptor
   # GRAMMAR, and `mcpp xpkg parse` accepts pkgs/h/huxerui.huxerui.lua under
   # 2026.8.27.2, 2026.9.6.3, 2026.9.7.1 and 2026.9.11.2 alike.
-  MCPP_VERSION: "2026.9.12.3"
+  # ── 2026-09-15: raised 2026.9.12.3 -> 2026.9.15.2 ─────────────────────────
+  #
+  # `llvm.libcxx` 22.1.8.3 and `openkal-llvm-runtime` 0.9.7 state
+  # `[package] standard = "c++23"`, which from mcpp 2026.9.15.2 compiles a
+  # C++-layer provider's own sources at that level whatever the consumer's
+  # (mcpp-community/mcpp#641). Neither needs the newer engine to build here --
+  # an older engine reads a dependency's `standard` as it always did -- but the
+  # same release moves the object addresses of sources outside their declaring
+  # package, the host-tool scratch directory, and when a dependency's link form
+  # is decided, and this index is where those meet five hundred real
+  # manifests. One pin move, batched with the two descriptors.
+  #
+  # `index.toml` min_mcpp does not move: no descriptor grammar changed.
+  MCPP_VERSION: "2026.9.15.2"
 
 jobs:
   lint:
