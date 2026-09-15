@@ -70,12 +70,18 @@ package = {
     xpm = {
         linux = {
             ["2.3.14"] = {
-                -- Plain-string form: no gitcode mcpp-res mirror yet (no write
-                -- access from this contributor); lint allows it and CN users
-                -- fall back to the upstream source. The dist tarball (not the
-                -- github archive) is required: only it carries the
-                -- pre-bootstrapped libltdl/.
-                url    = "https://www.unixodbc.org/unixODBC-2.3.14.tar.gz",
+                -- The dist tarball (not the github archive) is required: only
+                -- it carries the pre-bootstrapped libltdl/. Upstream publishes
+                -- the same bytes on www.unixodbc.org and as the asset of its
+                -- GitHub release; the GitHub asset is the GLOBAL source, and
+                -- mcpp-res/unixodbc on GitCode mirrors it for CN. The first
+                -- form named only www.unixodbc.org, which stopped answering on
+                -- 2026-09-15 and failed nanodbc on both Linux legs of the full
+                -- sweep.
+                url    = {
+                    GLOBAL = "https://github.com/lurcher/unixODBC/releases/download/v2.3.14/unixODBC-2.3.14.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/unixodbc/releases/download/2.3.14/unixODBC-2.3.14.tar.gz",
+                },
                 sha256 = "4e2814de3e01fc30b0b9f75e83bb5aba91ab0384ee951286504bb70205524771",
             },
         },
