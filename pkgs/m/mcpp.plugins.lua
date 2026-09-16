@@ -2,11 +2,32 @@
 -- each member selected by a feature.
 --
 --   [dependencies.mcpp]
---   plugins = { version = "0.11.1", features = ["rules-spirv"], host-module = true }
+--   plugins = { version = "0.12.0", features = ["rules-spirv"], host-module = true }
 --
 --   // build.mcpp
 --   import mcpp;
 --   import mcpp.rules.spirv;
+--
+-- 0.12.0 requires **mcpp 2026.9.16.1** for the members that read the resolved
+-- graph, and nothing newer for the rest. A package states what it contributes
+-- to an application in its own manifest -- `[package.metadata.dist-apk]`
+-- (Android source roots, resources, assets, a manifest, jars and aars) and
+-- `[package.metadata.dist-apple]` (an Info.plist fragment) -- and the root
+-- build program reads them from the graph mcpp hands it, applying each package
+-- above the packages it depends on, with the application's own options above
+-- all of them. `options::graph_libraries` and `options::graph_info_plist` turn
+-- the collection off. Under an older engine there is no graph, the variable is
+-- absent, and a package is built without the contribution exactly as before.
+--
+-- `dist-apk` also follows the engine's strip decision from that release
+-- (`MCPP_PACK_STRIP`, `MCPP_PACK_DEBUG_SYMBOLS_DIR`): a library the engine
+-- staged is packed as staged, because the engine has already applied
+-- `--no-strip` or `--debug-symbols` to it, and the member strips only what it
+-- stages itself. `dist-apple` gains `options::omit_keys`, which leaves out a
+-- key the member only defaults; `dist-web` gains `options::page`, which names
+-- the page (`index.html` by default). `rules-swift` compiles a package's
+-- `.swift` sources in one whole-module `swiftc` action on macOS, the iOS
+-- simulator and the iOS device row, refusing every other row by name.
 --
 -- 0.11.1 (same mcpp floor): `dist-apk` strips each native library with the
 -- build's own `llvm-strip --strip-unneeded` (`options::keep_debug_symbols`
@@ -515,6 +536,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.12.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.12.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.12.0/mcpp-plugins-0.12.0.tar.gz",
+                },
+                sha256 = "90a70689b090be7208c1f1f35487e148ed353a1bef0cec33d391bd46d67ba13f",
+            },
             ["0.11.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.11.1.tar.gz",
@@ -697,9 +725,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.11.1" },
+            ["latest"] = { ref = "0.12.0" },
         },
         macosx = {
+            ["0.12.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.12.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.12.0/mcpp-plugins-0.12.0.tar.gz",
+                },
+                sha256 = "90a70689b090be7208c1f1f35487e148ed353a1bef0cec33d391bd46d67ba13f",
+            },
             ["0.11.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.11.1.tar.gz",
@@ -882,9 +917,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.11.1" },
+            ["latest"] = { ref = "0.12.0" },
         },
         windows = {
+            ["0.12.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.12.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.12.0/mcpp-plugins-0.12.0.tar.gz",
+                },
+                sha256 = "90a70689b090be7208c1f1f35487e148ed353a1bef0cec33d391bd46d67ba13f",
+            },
             ["0.11.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.11.1.tar.gz",
@@ -1067,7 +1109,7 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.11.1" },
+            ["latest"] = { ref = "0.12.0" },
         },
     },
 

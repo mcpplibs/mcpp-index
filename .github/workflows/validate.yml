@@ -241,7 +241,27 @@ env:
   # manifests. One pin move, batched with the two descriptors.
   #
   # `index.toml` min_mcpp does not move: no descriptor grammar changed.
-  MCPP_VERSION: "2026.9.15.2"
+  # ── 2026-09-16: raised 2026.9.15.2 -> 2026.9.16.1 ─────────────────────────
+  #
+  # `mcpp.plugins` 0.12.0 is added below, and it reads the resolved graph the
+  # root build program receives from mcpp 2026.9.16.1 (`MCPP_GRAPH_FILE`). It
+  # does not need that engine to build here -- a member reads the variable and
+  # finds it absent under an older one, which is the pre-0.12.0 behaviour -- so
+  # the descriptor is not what moves the pin.
+  #
+  # What moves it is that 2026.9.16.1 changes how images and runtimes are
+  # decided, and this index is where that meets five hundred real manifests.
+  # On ELF every C++ image a plan loads into one process now shares one C++
+  # runtime, so a program over a plan-built C++ shared library takes the
+  # library's contract instead of a static one (mcpp-community/mcpp#646 F3a); a
+  # static package reached from several shared images is refused where the link
+  # or the load cannot succeed (F1); and a package whose targets are all
+  # programs no longer contributes its dependencies to a consumer's target
+  # graph (#649 E6). Each of those decides what a real manifest links, and the
+  # only place they are exercised at this scale is here.
+  #
+  # `index.toml` min_mcpp does not move: no descriptor grammar changed.
+  MCPP_VERSION: "2026.9.16.1"
 
 jobs:
   lint:
