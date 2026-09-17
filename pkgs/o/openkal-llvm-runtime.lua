@@ -26,6 +26,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.10.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.10.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-llvm-runtime/releases/download/0.10.0/openkal-llvm-runtime-0.10.0.tar.gz",
+                },
+                sha256 = "3fbb5dcee3c62c74a07e76a7486d5e76d49af7c9ee5806ae4ee0545dfd47dd0e",
+            },
             ["0.9.7"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.9.7.tar.gz",
@@ -168,6 +175,13 @@ package = {
             },
         },
         macosx = {
+            ["0.10.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.10.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-llvm-runtime/releases/download/0.10.0/openkal-llvm-runtime-0.10.0.tar.gz",
+                },
+                sha256 = "3fbb5dcee3c62c74a07e76a7486d5e76d49af7c9ee5806ae4ee0545dfd47dd0e",
+            },
             ["0.9.7"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.9.7.tar.gz",
@@ -310,6 +324,13 @@ package = {
             },
         },
         windows = {
+            ["0.10.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.10.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-llvm-runtime/releases/download/0.10.0/openkal-llvm-runtime-0.10.0.tar.gz",
+                },
+                sha256 = "3fbb5dcee3c62c74a07e76a7486d5e76d49af7c9ee5806ae4ee0545dfd47dd0e",
+            },
             ["0.9.7"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.9.7.tar.gz",
