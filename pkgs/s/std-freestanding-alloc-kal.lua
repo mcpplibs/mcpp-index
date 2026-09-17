@@ -22,6 +22,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.1.6"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/std-freestanding-alloc-kal/archive/refs/tags/0.1.6.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/std-freestanding-alloc-kal/releases/download/0.1.6/std-freestanding-alloc-kal-0.1.6.tar.gz",
+                },
+                sha256 = "c4d84ab4d9a4ed15ba440bfb1f97eda1c5ec82d2eae4ddfa6febf88e665252b6",
+            },
             ["0.1.5"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/std-freestanding-alloc-kal/archive/refs/tags/0.1.5.tar.gz",
@@ -66,6 +73,13 @@ package = {
             },
         },
         macosx = {
+            ["0.1.6"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/std-freestanding-alloc-kal/archive/refs/tags/0.1.6.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/std-freestanding-alloc-kal/releases/download/0.1.6/std-freestanding-alloc-kal-0.1.6.tar.gz",
+                },
+                sha256 = "c4d84ab4d9a4ed15ba440bfb1f97eda1c5ec82d2eae4ddfa6febf88e665252b6",
+            },
             ["0.1.5"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/std-freestanding-alloc-kal/archive/refs/tags/0.1.5.tar.gz",
@@ -110,6 +124,13 @@ package = {
             },
         },
         windows = {
+            ["0.1.6"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/std-freestanding-alloc-kal/archive/refs/tags/0.1.6.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/std-freestanding-alloc-kal/releases/download/0.1.6/std-freestanding-alloc-kal-0.1.6.tar.gz",
+                },
+                sha256 = "c4d84ab4d9a4ed15ba440bfb1f97eda1c5ec82d2eae4ddfa6febf88e665252b6",
+            },
             ["0.1.5"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/std-freestanding-alloc-kal/archive/refs/tags/0.1.5.tar.gz",
