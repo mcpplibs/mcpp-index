@@ -261,7 +261,19 @@ env:
   # only place they are exercised at this scale is here.
   #
   # `index.toml` min_mcpp does not move: no descriptor grammar changed.
-  MCPP_VERSION: "2026.9.16.1"
+  # ── 2026-09-17: raised 2026.9.16.1 -> 2026.9.17.2 ─────────────────────────
+  #
+  # 2026.9.17.2 installs the C runtime the default SubOS declares before the
+  # toolchain fixup consumes it, and looks the payload up by its exact version
+  # (mcpp-community/mcpp#660). Before it, the declared glibc was present only
+  # when xlings had installed it as a toolchain dependency, so a runner whose
+  # cache restored a toolchain beside another glibc revision failed at the
+  # fixup once xim-pkgindex moved glibc to 2.44.3. Every Linux member here goes
+  # through that fixup, and this index is where it meets the most manifests.
+  # The release in between (2026.9.17.1, compile-flag words, #655) is included.
+  #
+  # `index.toml` min_mcpp does not move: no descriptor grammar changed.
+  MCPP_VERSION: "2026.9.17.2"
 
 jobs:
   lint:
