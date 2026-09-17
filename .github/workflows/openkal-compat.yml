@@ -25,8 +25,7 @@ on:
       - ".github/workflows/openkal-compat.yml"
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
 
 env:
   MCPP_VERSION: "2026.9.17.2"
@@ -37,6 +36,8 @@ jobs:
     name: measure (linux, windows through wine)
     runs-on: ubuntu-24.04
     timeout-minutes: 240
+    outputs:
+      members: ${{ steps.select.outputs.members }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -117,11 +118,40 @@ jobs:
           python3 tests/openkal/compat.py check \
             --results openkal-compat.json --baseline .xpkgindex/openkal-compat.json
 
+      - name: Summary
+        if: always() && steps.select.outputs.members != ''
+        shell: bash
+        run: |
+          [ -f openkal-compat.json ] || exit 0
+          python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          r = json.load(open("openkal-compat.json"))
+          print("| member | target | result | first diagnostic |")
+          print("| --- | --- | --- | --- |")
+          for m, e in sorted(r["members"].items()):
+              for t, rec in sorted(e["targets"].items()):
+                  d = rec.get("diagnostic", "").replace("|", "\\|")
+                  print(f"| {m} | {t} | {rec['status']} | {d} |")
+          PY
+
+  # Only this job may write, and it does not run for a pull request.
+  propose:
+    name: propose the measurement
+    needs: measure
+    if: needs.measure.outputs.members != '' && github.event_name != 'pull_request' && github.event.inputs.members == ''
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: openkal-compat
       # A scheduled or requested measurement that differs from the published file
       # is proposed as a pull request rather than committed, so that a label
       # changes only through review.
       - name: Propose the new measurement
-        if: steps.select.outputs.members != '' && github.event_name != 'pull_request' && github.event.inputs.members == ''
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
@@ -148,18 +178,3 @@ jobs:
             --body "Measured by .github/workflows/openkal-compat.yml run ${{ github.run_id }}. See the run summary for every member and target." \
             || echo "a pull request for $branch already exists"
 
-      - name: Summary
-        if: always() && steps.select.outputs.members != ''
-        shell: bash
-        run: |
-          [ -f openkal-compat.json ] || exit 0
-          python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
-          import json
-          r = json.load(open("openkal-compat.json"))
-          print("| member | target | result | first diagnostic |")
-          print("| --- | --- | --- | --- |")
-          for m, e in sorted(r["members"].items()):
-              for t, rec in sorted(e["targets"].items()):
-                  d = rec.get("diagnostic", "").replace("|", "\\|")
-                  print(f"| {m} | {t} | {rec['status']} | {d} |")
-          PY
