@@ -1,0 +1,25 @@
+# compat.vulkan-validation-layers test project.
+#
+# What this member proves is the seam, not a link: the package compiles
+# nothing a consumer calls. It pulls the ecosystem's layer payload into the
+# project environment, whose declarations (the manifest in the subos, the
+# subos share on XDG_DATA_DIRS) mcpp carries into the test process. So the
+# assertions are answered by the LOADER: it enumerates the layer, and it can
+# load the layer's library to ask it for its extensions. Both hold on a CI
+# runner with no GPU -- no instance is created and no driver is involved.
+#
+# Linux only, like the payload: elsewhere the test compiles to a no-op main().
+[package]
+name = "vulkan-validation-layers-tests"
+version = "0.1.0"
+
+[target.'cfg(linux)'.dependencies.compat]
+vulkan = "1.4.357.3"
+
+# [dev-dependencies], the intended spelling for a consumer: the layer is for
+# the developer's runs and is not part of the artifact.
+[target.'cfg(linux)'.dev-dependencies.compat]
+vulkan-validation-layers = "1.4.357.0"
+
+[target.'cfg(linux)'.build]
+cxxflags = ["-DHAVE_VULKAN_LOADER=1"]
