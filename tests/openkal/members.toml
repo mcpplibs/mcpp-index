@@ -1,0 +1,48 @@
+# The test projects measured on openkal, and the ones deliberately not measured.
+#
+# A member is listed here, rather than every member being measured, because a
+# measurement takes minutes per target. The list grows by adding a line; a
+# member's label on the site comes from its measurement and not from this file.
+
+[members]
+cjson          = "JSON parsing, C"
+yyjson         = "JSON parsing, C"
+"nlohmann.json" = "JSON, header-only C++"
+expat          = "XML parsing, C"
+pcre2          = "regular expressions, C"
+re2            = "regular expressions, C++"
+md4c           = "Markdown parsing, C"
+xxhash         = "hashing, C"
+brotli         = "compression, C"
+zlib           = "compression, C; its configuration differs on Windows with musl"
+gzip-hpp       = "compression, C++ over compat.zlib"
+archive        = "archive formats, C (libarchive)"
+"fmtlib.fmt"   = "formatting, C++"
+spdlog         = "logging, C++, threads and files"
+cli11          = "command lines, C++"
+argparse       = "command lines, C++"
+cmdline        = "command lines, C++ modules"
+"magic_enum"   = "reflection, header-only C++"
+glm            = "mathematics, header-only C++"
+eigen          = "linear algebra, header-only C++"
+catch2         = "testing framework, C++"
+doctest        = "testing framework, C++"
+sqlite3        = "database, C, file locks"
+capi-lua       = "interpreter, C"
+mimalloc       = "allocator, C, address space"
+libpng         = "image codec, C over zlib"
+c-ares         = "name resolution, C, sockets"
+curl           = "HTTP client, C, sockets"
+tinyhttps      = "HTTPS client, C++ modules, sockets"
+cmp-module     = "coroutines, C++ modules"
+
+# Members that are not measured, each with the reason. A member belongs here
+# when it cannot be built in any openkal graph, not when it fails: a failure is
+# measured and published.
+[excluded]
+build-mcpp     = "builds the build tool itself, a host program"
+grpc-codegen   = "runs host code generators"
+protobuf-protoc = "runs a host code generator"
+cuda-curand    = "a GPU vendor runtime distributed as binaries for the platform C runtime"
+cuda-driver    = "a GPU vendor runtime distributed as binaries for the platform C runtime"
+sycl-runtime   = "a vendor runtime distributed as binaries for the platform C runtime"

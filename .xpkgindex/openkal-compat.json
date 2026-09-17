@@ -1,0 +1,48 @@
+{
+  "excluded": {
+    "build-mcpp": "builds the build tool itself, a host program",
+    "cuda-curand": "a GPU vendor runtime distributed as binaries for the platform C runtime",
+    "cuda-driver": "a GPU vendor runtime distributed as binaries for the platform C runtime",
+    "grpc-codegen": "runs host code generators",
+    "protobuf-protoc": "runs a host code generator",
+    "sycl-runtime": "a vendor runtime distributed as binaries for the platform C runtime"
+  },
+  "measured": "2026-09-17",
+  "members": {
+    "cmdline": {
+      "packages": [
+        "mcpplibs.cmdline"
+      ],
+      "portable": true,
+      "targets": {
+        "x86_64-linux-gnu": {
+          "status": "runs"
+        },
+        "x86_64-windows-gnu": {
+          "status": "runs"
+        }
+      }
+    },
+    "gzip-hpp": {
+      "packages": [
+        "compat.gzip-hpp"
+      ],
+      "portable": true,
+      "targets": {
+        "x86_64-linux-gnu": {
+          "status": "runs"
+        },
+        "x86_64-windows-gnu": {
+          "diagnostic": "error: build failed",
+          "status": "fails"
+        }
+      }
+    }
+  },
+  "pins": {
+    "mcpp": "2026.9.17.2",
+    "runtime": "0.9.7",
+    "toolchain": "llvm@22.1.8"
+  },
+  "schema": 1
+}

@@ -46,6 +46,28 @@ SURFACES = [
     ("external", _t("upstream mcpp.toml", "上游 mcpp.toml", "上游 mcpp.toml"), "neutral"),
 ]
 
+# Whether a package's test project builds and runs on openkal, measured by
+# tests/openkal/compat.py and recorded in .xpkgindex/openkal-compat.json. The
+# label is a measurement, never a declaration: a descriptor carries no field for
+# it. Ordered from the strongest statement to the weakest.
+OPENKAL_LEVELS = [
+    ("family", _t("openkal itself", "openkal 本身", "openkal 本身"), "module"),
+    ("runs", _t("runs on openkal", "在 openkal 上运行", "在 openkal 上執行"), "module"),
+    ("builds", _t("builds on openkal", "在 openkal 上构建", "在 openkal 上建置"), "header"),
+    ("fails", _t("fails on openkal", "在 openkal 上失败", "在 openkal 上失敗"), "neutral"),
+    ("n/a", _t("not applicable", "不适用", "不適用"), "neutral"),
+]
+_OPENKAL_RANK = {"fails": 0, "builds": 1, "runs": 2}
+# The packages that make up openkal: the specification, its implementations, and
+# the layers built directly on it. Named once, here.
+OPENKAL_FAMILY = {
+    "mcpplibs.openkal", "mcpplibs.openkal-kit", "mcpplibs.openkal-linux",
+    "mcpplibs.openkal-macos", "mcpplibs.openkal-windows", "mcpplibs.openkal-uefi",
+    "mcpplibs.openkal-opensbi", "mcpplibs.openkal-emscripten", "mcpplibs.openkal-libc",
+    "mcpplibs.openkal-musl", "mcpplibs.openkal-llvm-runtime",
+    "mcpplibs.std-freestanding-alloc-kal",
+}
+
 _IMPORT_RE = re.compile(r"^\s*import\s+([A-Za-z_][\w.]*)\s*;", re.M)
 _INCLUDE_RE = re.compile(r"^\s*#include\s+([<\"][^>\"]+[>\"])", re.M)
 _TAG_RE = re.compile(r"/archive/refs/tags/(.+?)\.(?:tar\.gz|zip|tgz)$")
@@ -275,6 +297,8 @@ class McppPlugin(Plugin):
         self.root = ""
         self.examples: Dict[str, List[Dict[str, str]]] = {}
         self.overrides: Dict[str, Any] = {}
+        self.openkal: Dict[str, Any] = {}
+        self.openkal_by_package: Dict[str, Dict[str, Any]] = {}
 
     # ------------------------------------------------------------ index --
     def on_index(self, ctx) -> None:
@@ -298,6 +322,7 @@ class McppPlugin(Plugin):
         self.overrides = curated.get("interfaces", curated)
 
         self._scan_examples(ctx)
+        self._load_openkal(ctx)
         if self.examples:
             ctx.meta.set("hero_stats", [
                 {"label": _t("with examples", "带示例", "附範例"), "value": len(self.examples)},
@@ -344,6 +369,38 @@ class McppPlugin(Plugin):
                     }
                     for pkg_id in ids:
                         self.examples.setdefault(pkg_id, []).append(entry)
+
+    def _load_openkal(self, ctx) -> None:
+        """Index the openkal measurement by package.
+
+        A test project covers every package it depends on, and a package covered
+        by several projects takes, per target, the best result any of them
+        recorded: a package that runs in one project and was only built in
+        another does run."""
+        data = _read_json(ctx.path(".xpkgindex", "openkal-compat.json"))
+        if not data:
+            return
+        self.openkal = data
+        for member, entry in (data.get("members") or {}).items():
+            for pkg_id in entry.get("packages") or []:
+                rec = self.openkal_by_package.setdefault(
+                    pkg_id, {"targets": {}, "members": [], "portable": True})
+                rec["members"].append(member)
+                rec["portable"] = rec["portable"] and bool(entry.get("portable", True))
+                for target, result in (entry.get("targets") or {}).items():
+                    have = rec["targets"].get(target)
+                    if have is None or _OPENKAL_RANK.get(result.get("status"), 0) > \
+                            _OPENKAL_RANK.get(have.get("status"), 0):
+                        rec["targets"][target] = dict(result, member=member)
+
+    def _openkal_level(self, slug: str) -> str:
+        if slug in OPENKAL_FAMILY:
+            return "family"
+        rec = self.openkal_by_package.get(slug)
+        if not rec or not rec["targets"]:
+            return ""
+        best = max(_OPENKAL_RANK.get(r.get("status"), 0) for r in rec["targets"].values())
+        return {2: "runs", 1: "builds", 0: "fails"}[best]
 
     # --------------------------------------------------------- identity --
     def identity(self, raw: Dict[str, Any], path: str) -> Optional[Identity]:
@@ -404,6 +461,15 @@ class McppPlugin(Plugin):
         mirrors = {m for v in pkg.versions for m in v.mirrors}
         if "CN" in mirrors:
             pkg.extensions.setdefault("_badges", []).append(_t("CN mirror", "国内镜像", "中國鏡像"))
+
+        level = self._openkal_level(pkg.identity.slug)
+        if level:
+            pkg.facets["openkal"] = level
+            ext["openkal"] = {"level": level,
+                              **(self.openkal_by_package.get(pkg.identity.slug) or {})}
+            if level in ("runs", "builds", "family"):
+                label = {k: lbl for k, lbl, _ in OPENKAL_LEVELS}[level]
+                pkg.extensions.setdefault("_badges", []).append(label)
 
         pkg.extensions["mcpp"] = ext
         # After the examples are attached: the surfaces depend on which
@@ -571,9 +637,14 @@ class McppPlugin(Plugin):
 
     # ------------------------------------------------------------ facets --
     def facets(self) -> List[Facet]:
-        return [Facet(key="surface", label=_t("how you use it", "怎么用", "怎麼用"), weight=10, values=[
-            FacetValue(key=key, label=label, tone=tone) for key, label, tone in SURFACES
-        ])]
+        return [
+            Facet(key="surface", label=_t("how you use it", "怎么用", "怎麼用"), weight=10, values=[
+                FacetValue(key=key, label=label, tone=tone) for key, label, tone in SURFACES
+            ]),
+            Facet(key="openkal", label=_t("openkal", "openkal", "openkal"), weight=20, values=[
+                FacetValue(key=key, label=label, tone=tone) for key, label, tone in OPENKAL_LEVELS
+            ]),
+        ]
 
     # -------------------------------------------------------------- row --
     # Line 2 of every row answers one question — how do I consume this — and
@@ -654,6 +725,8 @@ class McppPlugin(Plugin):
                             f"{example['path']} · 项目 tests/examples/{example['project']}",
                             f"{example['path']} · 專案 tests/examples/{example['project']}"),
                     }))
+
+        blocks.extend(self._openkal_blocks(pkg, ext))
 
         if ext.get("form") == "B":
             items = []
@@ -738,6 +811,42 @@ class McppPlugin(Plugin):
                         "A 型套件:上游壓縮檔自帶 mcpp.toml" + at_zh
                         + "。本次建置沒有抓取它的內容 —— 執行一次索引的重新整理動作就能拉進來。")}))
         return blocks
+
+    def _openkal_blocks(self, pkg, ext: Dict[str, Any]) -> List[Block]:
+        info = ext.get("openkal") or {}
+        if info.get("level") in (None, "", "family"):
+            return []
+        rows = []
+        for target, rec in sorted((info.get("targets") or {}).items()):
+            rows.append([target, rec.get("status", ""), rec.get("member", ""),
+                         rec.get("diagnostic", "")])
+        pins = self.openkal.get("pins") or {}
+        caption = _t(
+            f"Measured {self.openkal.get('measured', '')} by tests/openkal/compat.py with "
+            f"openkal-llvm-runtime {pins.get('runtime', '')}, {pins.get('toolchain', '')}, "
+            f"mcpp {pins.get('mcpp', '')}. "
+            + ("The test project selects no platform dependency of its own."
+               if info.get("portable", True) else
+               "The test project selects platform dependencies of its own."),
+            f"{self.openkal.get('measured', '')} 由 tests/openkal/compat.py 测得,使用 "
+            f"openkal-llvm-runtime {pins.get('runtime', '')}、{pins.get('toolchain', '')}、"
+            f"mcpp {pins.get('mcpp', '')}。"
+            + ("测试项目没有自行选择平台依赖。" if info.get("portable", True)
+               else "测试项目自行选择了平台依赖。"),
+            f"{self.openkal.get('measured', '')} 由 tests/openkal/compat.py 測得,使用 "
+            f"openkal-llvm-runtime {pins.get('runtime', '')}、{pins.get('toolchain', '')}、"
+            f"mcpp {pins.get('mcpp', '')}。"
+            + ("測試專案沒有自行選擇平台相依。" if info.get("portable", True)
+               else "測試專案自行選擇了平台相依。"))
+        return [
+            Block(kind="table", title=_t("openkal", "openkal", "openkal"), weight=25,
+                  data={"head": [_t("target", "目标", "目標"), _t("result", "结果", "結果"),
+                                 _t("test project", "测试项目", "測試專案"),
+                                 _t("first diagnostic", "首条诊断", "首條診斷")],
+                        "rows": rows}),
+            Block(kind="callout", title=_t("How this was measured", "测量方式", "測量方式"),
+                  weight=26, data={"text": caption}),
+        ]
 
     def _interface_lines(self, pkg, ext: Dict[str, Any]) -> List[Dict[str, str]]:
         """Every way this package can be consumed, most idiomatic first.

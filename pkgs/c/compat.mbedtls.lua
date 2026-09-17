@@ -59,5 +59,18 @@ package = {
         windows = {
             ldflags = { "-lbcrypt" },
         },
+        target_cfg = {
+            -- Windows with musl as the C library. mbedtls selects its entropy,
+            -- timing and socket code by asking whether the environment is
+            -- Windows (_WIN32) or Unix (__unix__); the triple answers Windows,
+            -- and the C library these units compile against is POSIX-shaped
+            -- (openkal-musl: getrandom, clock_gettime, BSD sockets). Both
+            -- flags are confined to mbedtls's own translation units, and no
+            -- public header of mbedtls tests either macro, so its consumers
+            -- read the same declarations.
+            ["cfg(all(windows, c-abi = \"musl\"))"] = {
+                cflags = { "-U_WIN32", "-D__unix__" },
+            },
+        },
     },
 }
