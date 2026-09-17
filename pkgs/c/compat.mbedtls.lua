@@ -56,13 +56,10 @@ package = {
         c_standard   = "c11",
         targets      = { ["mbedtls"] = { kind = "lib" } },
         deps         = { },
-        -- Windows with the platform's C runtime: the entropy source is
-        -- BCryptGenRandom. Not on Windows with musl (an openkal graph), where
-        -- no platform import library is in the graph.
+        windows = {
+            ldflags = { "-lbcrypt" },
+        },
         target_cfg = {
-            ["cfg(all(windows, not(c-abi = \"musl\")))"] = {
-                ldflags = { "-lbcrypt" },
-            },
             -- Windows with musl as the C library. mbedtls selects its entropy,
             -- timing and socket code by asking whether the environment is
             -- Windows (_WIN32) or Unix (__unix__); the triple answers Windows,
