@@ -1,0 +1,165 @@
+name: openkal-compat
+
+# Measures the members listed in tests/openkal/members.toml in an openkal graph
+# and records the result the site labels packages by. See docs/openkal-compat.md.
+#
+# It does not gate pull requests that touch other descriptors: openkal is still
+# moving, and a label is a statement about a measurement rather than a condition
+# of merging. The regression comparison below becomes a required check only when
+# the repository variable OPENKAL_RATCHET is `on`.
+
+on:
+  schedule:
+    - cron: "0 7 * * 0"
+  workflow_dispatch:
+    inputs:
+      members:
+        description: "Space-separated members to measure (empty = every listed member)"
+        required: false
+        default: ""
+  pull_request:
+    paths:
+      - "pkgs/**/*.lua"
+      - "tests/openkal/**"
+      - ".xpkgindex/openkal-compat.json"
+      - ".github/workflows/openkal-compat.yml"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  MCPP_VERSION: "2026.9.17.2"
+  XLINGS_NON_INTERACTIVE: "1"
+
+jobs:
+  measure:
+    name: measure (linux, windows through wine)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # A pull request measures the members its change can affect; the schedule
+      # and a request with no members measure every listed member.
+      - name: Select the members
+        id: select
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            files=$(git diff --name-only "origin/${{ github.base_ref }}...HEAD")
+            members=$(python3 tests/openkal/compat.py select $files)
+          else
+            members="${{ github.event.inputs.members }}"
+            [ -n "$members" ] || members=$(python3 tests/openkal/compat.py select tests/openkal/)
+          fi
+          echo "members=$members" >> "$GITHUB_OUTPUT"
+          echo "measuring: ${members:-nothing}"
+
+      - name: Download mcpp
+        if: steps.select.outputs.members != ''
+        shell: bash
+        run: |
+          archive="mcpp-${MCPP_VERSION}-linux-x86_64.tar.gz"
+          curl -L -fsS -o "$archive" \
+            "https://github.com/mcpp-community/mcpp/releases/download/v${MCPP_VERSION}/${archive}"
+          tar -xzf "$archive"
+          root="$PWD/mcpp-${MCPP_VERSION}-linux-x86_64"
+          echo "$root/bin" >> "$GITHUB_PATH"
+          echo "MCPP_HOME=$root" >> "$GITHUB_ENV"
+
+      # The Windows cross headers of the host are installed deliberately. A
+      # graph that reached them would build differently with them present, so a
+      # result that is the same here and on a runner without them is evidence
+      # that the graph is closed. Wine runs the Windows members' tests.
+      - name: Host headers the graph must not reach, and a runner for Windows
+        if: steps.select.outputs.members != ''
+        shell: bash
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq mingw-w64 wine64 > /dev/null
+          ls /usr/x86_64-w64-mingw32/include/windows.h
+          command -v wine || sudo ln -s "$(command -v wine64)" /usr/local/bin/wine
+          wine --version
+
+      - name: The pins agree with this workflow
+        if: steps.select.outputs.members != ''
+        shell: bash
+        run: |
+          pinned=$(sed -n 's/^mcpp *= *"\(.*\)"/\1/p' tests/openkal/pins.toml)
+          if [ "$pinned" != "$MCPP_VERSION" ]; then
+            echo "::error::tests/openkal/pins.toml names mcpp $pinned and this workflow installs $MCPP_VERSION"
+            exit 1
+          fi
+
+      - name: Measure
+        if: steps.select.outputs.members != ''
+        shell: bash
+        run: |
+          mcpp self config --mirror GLOBAL
+          args=()
+          for m in ${{ steps.select.outputs.members }}; do args+=(--member "$m"); done
+          python3 tests/openkal/compat.py run "${args[@]}" --out openkal-compat.json
+
+      - uses: actions/upload-artifact@v4
+        if: steps.select.outputs.members != ''
+        with:
+          name: openkal-compat
+          path: openkal-compat.json
+
+      - name: No published label regressed
+        if: steps.select.outputs.members != ''
+        shell: bash
+        continue-on-error: ${{ vars.OPENKAL_RATCHET != 'on' }}
+        run: |
+          python3 tests/openkal/compat.py check \
+            --results openkal-compat.json --baseline .xpkgindex/openkal-compat.json
+
+      # A scheduled or requested measurement that differs from the published file
+      # is proposed as a pull request rather than committed, so that a label
+      # changes only through review.
+      - name: Propose the new measurement
+        if: steps.select.outputs.members != '' && github.event_name != 'pull_request' && github.event.inputs.members == ''
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import json
+          new = json.load(open("openkal-compat.json"))
+          old = json.load(open(".xpkgindex/openkal-compat.json"))
+          same = {k: v for k, v in new.items() if k != "measured"} == \
+                 {k: v for k, v in old.items() if k != "measured"}
+          open("same.txt", "w").write("1" if same else "0")
+          PY
+          if [ "$(cat same.txt)" = "1" ]; then echo "the measurement is unchanged"; exit 0; fi
+          branch="bot/openkal-compat-$(date +%Y%m%d)"
+          cp openkal-compat.json .xpkgindex/openkal-compat.json
+          git config user.name "mcpp-index-bot"
+          git config user.email "bot@mcpplibs.invalid"
+          git checkout -b "$branch"
+          git add .xpkgindex/openkal-compat.json
+          git commit -m "openkal compatibility: the measurement of $(date +%F)"
+          git push -f origin "$branch"
+          gh pr create --base main --head "$branch" \
+            --title "openkal compatibility: the measurement of $(date +%F)" \
+            --body "Measured by .github/workflows/openkal-compat.yml run ${{ github.run_id }}. See the run summary for every member and target." \
+            || echo "a pull request for $branch already exists"
+
+      - name: Summary
+        if: always() && steps.select.outputs.members != ''
+        shell: bash
+        run: |
+          [ -f openkal-compat.json ] || exit 0
+          python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          r = json.load(open("openkal-compat.json"))
+          print("| member | target | result | first diagnostic |")
+          print("| --- | --- | --- | --- |")
+          for m, e in sorted(r["members"].items()):
+              for t, rec in sorted(e["targets"].items()):
+                  d = rec.get("diagnostic", "").replace("|", "\\|")
+                  print(f"| {m} | {t} | {rec['status']} | {d} |")
+          PY

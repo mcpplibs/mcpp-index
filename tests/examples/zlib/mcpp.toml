@@ -1,0 +1,11 @@
+# compat.zlib test project. It asserts behaviour (a deflate round trip and a gz
+# file written and read back) and the one agreement a configuration that differs
+# per target can break silently: the width of z_off_t as the compiled library
+# reports it and as this consumer computes it from zconf.h.
+# `compat` redirect inherited from the workspace root.
+[package]
+name = "zlib-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+zlib = "1.3.2"

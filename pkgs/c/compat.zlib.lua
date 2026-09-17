@@ -53,6 +53,21 @@ package = {
         macosx = {
             cflags = { "-include", "mcpp_zlib_config.h" },
         },
+        -- Windows with musl as the C library (an openkal graph). The triple
+        -- defines _WIN32, and zlib reads _WIN32 as "the Windows C runtime is
+        -- present" (<io.h>, _lseeki64, _wopen), which is false here. The flag is
+        -- confined to zlib's own translation units and reaches no public
+        -- header in a way that changes a declaration: zconf.h computes z_off_t
+        -- and z_off64_t as `long long` on both sides, because Z_HAVE_UNISTD_H
+        -- is deliberately not defined (unistd.h is included directly instead).
+        -- tests/examples/zlib asserts that agreement with zlibCompileFlags().
+        -- gzopen_w stays declared for a consumer and is not defined: a call to
+        -- it fails at the link rather than at run time.
+        target_cfg = {
+            ["cfg(all(windows, c-abi = \"musl\"))"] = {
+                cflags = { "-U_WIN32", "-include", "unistd.h" },
+            },
+        },
         generated_files = {
             ["mcpp_generated/include/mcpp_zlib_config.h"] = "#ifndef MCPP_ZLIB_CONFIG_H\n#define MCPP_ZLIB_CONFIG_H\n#if !defined(_WIN32)\n#define Z_HAVE_UNISTD_H 1\n#endif\n#endif\n",
         },

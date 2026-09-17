@@ -14,3 +14,4 @@ tests/examples/*/imgui.ini
 
 # plugin bytecode
 .xpkgindex/plugins/__pycache__/
+tests/openkal-work/

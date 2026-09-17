@@ -152,6 +152,7 @@ members = [
     "tests/examples/tray",
     "tests/examples/xxhash",
     "tests/examples/yyjson",
+    "tests/examples/zlib",
     "tests/examples/magic_enum",
     "tests/examples/mimalloc",
     "tests/examples/harfbuzz",

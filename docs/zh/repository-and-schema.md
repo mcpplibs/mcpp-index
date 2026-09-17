@@ -51,9 +51,9 @@ tools/compat-ffmpeg/ 等      compat 大包的描述符再生成流水线
 身份是二元组 —— **`namespace` 是点分层级路径,`name` 是单一原子段**。层级一律放 `namespace`(mcpp SPEC-001 §3.2,见 mcpp 仓的 [`docs/spec/package-identity.md`](https://github.com/mcpp-community/mcpp/blob/main/docs/spec/package-identity.md)):
 
 ```lua
-namespace = "compat",        name = "zlib"      -- ✅
-namespace = "mcpplibs.capi", name = "lua"       -- ✅ 多级命名空间
-namespace = "mcpplibs",      name = "capi.lua"  -- ❌ 短名仍带点
+namespace = "compat",        name = "zlib"      -- 
+namespace = "mcpplibs.capi", name = "lua"       -- 多级命名空间
+namespace = "mcpplibs",      name = "capi.lua"  -- 短名仍带点
 ```
 
 最后一种被拒绝而非重新解读:`name` 里多出的点描述的是一个**没人声明过的命名空间**。mcpp 曾按最后一个点切分、静默造出 `(mcpplibs.capi, lua)`,0.0.106 起改为拒绝。
@@ -201,6 +201,13 @@ bash tests/run_members.sh --all --cache local               # 绕过包构建缓
 
 `MCPP` 指定所用二进制(缺省为 `PATH` 上的 `mcpp`);`MCPP_TIMINGS` 指定追加 `<秒>\t<成员>\t<ok|FAIL>` 行的
 文件。任一成员失败则退出码非零,而耗时表两种情况下均会打印 —— 值得诊断的运行恰恰就是耗时重要的那一次。
+
+## openkal 兼容性(openkal-compat.yml)
+
+`tests/openkal/compat.py` 在 openkal 依赖图中测量 `tests/openkal/members.toml` 列出的成员,结果写入
+`.xpkgindex/openkal-compat.json`,站点据此给包打标签;描述符中没有对应字段。`.github/workflows/openkal-compat.yml`
+每周运行、可手动触发,并在 PR 修改了被列出成员所依赖的描述符时运行;它不阻塞其他 PR。包在 openkal 上失败时的适配规则
+(按 `c-abi` 选择、不取消定义平台宏、公共头只有一种读法、跨边界断言变化了的配置)见 [openkal 兼容性](openkal-compat.md)。
 
 ## 合并后
 

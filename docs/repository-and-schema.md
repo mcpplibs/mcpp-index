@@ -59,9 +59,9 @@ goes in `namespace` (mcpp SPEC-001 §3.2, see
 the mcpp repository):
 
 ```lua
-namespace = "compat",        name = "zlib"      -- ✅
-namespace = "mcpplibs.capi", name = "lua"       -- ✅ multi-level namespace
-namespace = "mcpplibs",      name = "capi.lua"  -- ❌ the short name still carries a dot
+namespace = "compat",        name = "zlib"      -- 
+namespace = "mcpplibs.capi", name = "lua"       -- multi-level namespace
+namespace = "mcpplibs",      name = "capi.lua"  -- the short name still carries a dot
 ```
 
 The last one is rejected rather than reinterpreted: the extra dot inside `name` describes a namespace **nobody ever
@@ -250,6 +250,15 @@ says so. `--platform` chooses which column of `tests/member-timings.tsv` to read
 `MCPP` selects the binary (default: `mcpp` on `PATH`); `MCPP_TIMINGS` names a file to append
 `<seconds>\t<member>\t<ok|FAIL>` rows to. The exit status is non-zero if any member failed, and the timing table
 prints either way — a run worth diagnosing is exactly the one where the times matter.
+
+## openkal compatibility (openkal-compat.yml)
+
+`tests/openkal/compat.py` measures the members listed in `tests/openkal/members.toml` in an openkal graph, and
+`.xpkgindex/openkal-compat.json` records the result the site labels packages by. A descriptor has no field for it.
+`.github/workflows/openkal-compat.yml` runs weekly, on demand, and for a pull request that changes a descriptor a listed
+member depends on; it does not gate other pull requests. How to adapt a package that fails there (select on `c-abi`, do
+not undefine a platform macro, keep a public header read one way, assert a changed configuration across the boundary)
+is stated in [openkal compatibility](openkal-compat.md).
 
 ## After the merge
 

@@ -74,6 +74,8 @@ Detailed documentation lives in [`docs/`](docs/), written for humans and agents 
   why each descriptor is written the way it is.
 - [The CN mirror loop](docs/cn-mirror.md): `gtc` and gitcode operations, plus the fallback when you have no
   `mcpp-res` access.
+- [openkal compatibility](docs/openkal-compat.md): what the `openkal` label on the site means, how it is measured, and
+  how a package is adapted to an openkal graph.
 - [Repository layout, schema and CI](docs/repository-and-schema.md): field cheat-sheet, selective-run mechanics and
   local lint.
 - The **authoritative** judge of a field is `mcpp xpkg parse` (exactly what CI runs: an unknown mcpp-segment field

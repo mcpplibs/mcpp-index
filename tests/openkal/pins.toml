@@ -1,0 +1,16 @@
+# The openkal graph every member is measured in. A result is meaningful only
+# together with these values, and the results file records them.
+#
+# `runtime` is the C++ runtime for openkal; it pins openkal-musl exactly, and
+# openkal-musl selects the openkal implementation for each target, so this one
+# version names the whole graph.
+runtime   = "0.9.7"
+toolchain = "llvm@22.1.8"
+mcpp      = "2026.9.17.2"
+
+targets = ["x86_64-linux-gnu", "x86_64-windows-gnu"]
+
+# A target that is not the host is tested through its runner when the runner is
+# on PATH, and built otherwise.
+[runners]
+x86_64-windows-gnu = ["wine"]
