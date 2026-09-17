@@ -134,11 +134,12 @@ jobs:
                   print(f"| {m} | {t} | {rec['status']} | {d} |")
           PY
 
-  # Only this job may write, and it does not run for a pull request.
+  # Only this job may write. It runs for the default branch only, never for a
+  # pull request or a measurement requested on another branch.
   propose:
     name: propose the measurement
     needs: measure
-    if: needs.measure.outputs.members != '' && github.event_name != 'pull_request' && github.event.inputs.members == ''
+    if: needs.measure.outputs.members != '' && github.event_name != 'pull_request' && github.event.inputs.members == '' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     permissions:
       contents: write
