@@ -121,6 +121,11 @@ def prepare(member: str, pins: dict) -> str:
                       text, count=1, flags=re.M)
     else:
         text = text.rstrip("\n") + "\n\n[dependencies]\n" + runtime
+    # A copy is not a member of this workspace and does not inherit its
+    # `[indices]`; without this line `compat` would resolve from the published
+    # index and a changed descriptor in this checkout would not be measured.
+    if not re.search(r"^\[indices\]\s*$", text, re.M):
+        text += f'\n[indices]\ncompat = {{ path = {json.dumps(ROOT)} }}\n'
     for triple, runner in (pins.get("runners") or {}).items():
         if f"[target.{triple}]" not in text and f"[target.'{triple}']" not in text:
             text += f"\n[target.{triple}]\nrunner = {json.dumps(runner)}\n"

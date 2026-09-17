@@ -273,7 +273,16 @@ env:
   # The release in between (2026.9.17.1, compile-flag words, #655) is included.
   #
   # `index.toml` min_mcpp does not move: no descriptor grammar changed.
-  MCPP_VERSION: "2026.9.17.2"
+  # ── 2026-09-17: raised 2026.9.17.2 -> 2026.9.17.3 ─────────────────────────
+  #
+  # 2026.9.17.3 closes the compiler's own search of the host's C library when
+  # the dependency graph supplies it (mcpp-community/mcpp#662): an openkal
+  # graph compiled for Windows on a host with mingw headers mixed them with
+  # musl's. compat.zlib and compat.mbedtls adapt to that graph by c-abi, and
+  # tests/openkal measures it with the host's mingw headers installed.
+  #
+  # `index.toml` min_mcpp does not move: no descriptor grammar changed.
+  MCPP_VERSION: "2026.9.17.3"
 
 jobs:
   lint:
