@@ -15,6 +15,18 @@
 -- does NOT carry is a prebuilt binary for any target: the runtime is compiled
 -- for the target being built, by whichever compiler is running, which is the
 -- property that makes one source reach four object formats.
+--
+-- 0.11.0 is pending, not listed below. It is the recompile that follows
+-- openkal-musl 0.15.0's `[c-abi] presents = "posix"` declaration (design:
+-- openkal/.agents/docs/2026-09-18-openkal-c-environment-and-personalities-
+-- design.md §10) and drops the `_WIN32`-selected libunwind patches
+-- (RWMutex.hpp, UnwindCursor.hpp, AddressSpace.hpp) and the
+-- `_WIN64`-vs-SysV register-save mismatch in UnwindRegistersSave.S /
+-- UnwindRegistersRestore.S / __libunwind_config.h that the same design's
+-- plan document records (2026-09-18-c-environment-execution-plan.md §4) in
+-- favour of definitions the package's own manifest now gives per target
+-- (design §3.4). Neither the release nor its sha256 exist yet -- this
+-- comment marks the entry as prepared and blocked, not as data to invent.
 package = {
     spec        = "1",
     namespace   = "mcpplibs",

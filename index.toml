@@ -38,6 +38,28 @@
 # refusal at the index-open choke point instead of an undefined reference or a
 # missing payload three layers down. 2026.8.27.2 is the version this index is
 # actually tested against, and now the contract says so.
+#
+# ── 2026-09-18: a pending raise, blocked on release ────────────────────────
+#
+# openkal-musl 0.15.0 and openkal-llvm-runtime 0.11.0 will declare `[c-abi]`
+# (design: openkal/.agents/docs/2026-09-18-openkal-c-environment-and-
+# personalities-design.md §3.2; plan: the sibling
+# 2026-09-18-c-environment-execution-plan.md §5), and reading that table needs
+# an mcpp that understands it. Per the rule at the top of this file, `min_mcpp`
+# and the CI `MCPP_VERSION` pin move together, only once, to that mcpp release
+# -- not before it exists, and not separately from each other.
+#
+# Neither the mcpp release nor the two package versions above are published
+# yet, so this entry is NOT raised here: this index has no version number to
+# put in `min_mcpp` for a grammar that has not shipped, and no sha256 to put
+# in a descriptor for a tarball that does not exist. Raising it early would
+# advertise support nobody tested, which is the exact failure the 2026-08-30
+# entry above describes. `pkgs/o/openkal-musl.lua` and
+# `pkgs/o/openkal-llvm-runtime.lua` carry a matching note next to their
+# version tables. Landing order: mcpp releases and enters xim-pkgindex, then
+# the two packages, then this file's `min_mcpp`/`latest_mcpp` and
+# `.github/workflows/validate.yml`'s `MCPP_VERSION` move together in the same
+# PR that adds the two versions below.
 [index]
 spec        = "1"
 min_mcpp    = "2026.8.27.2"

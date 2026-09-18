@@ -13,6 +13,15 @@
 -- implementation's `standalone' feature.
 --
 -- The consequence for a program is that it names this package and nothing else.
+--
+-- 0.15.0 is pending, not listed below. It declares `[c-abi] presents = "posix"`
+-- (design: openkal/.agents/docs/2026-09-18-openkal-c-environment-and-
+-- personalities-design.md §3.2) and removes the LLP64/16-bit-wchar_t patches
+-- to musl's generated Windows headers, in favour of the Cygwin-shaped LP64
+-- target that declaration realises (same design, §4); this repository's
+-- `index.toml` carries a matching note about the `min_mcpp` this needs.
+-- Neither the release nor its sha256 exist yet -- this comment marks the
+-- entry as prepared and blocked, not as data to invent.
 package = {
     spec        = "1",
     namespace   = "mcpplibs",
