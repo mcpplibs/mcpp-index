@@ -6,7 +6,28 @@
 # version names the whole graph.
 runtime   = "0.10.0"
 toolchain = "llvm@22.1.8"
-mcpp      = "2026.9.17.3"
+# `mcpp` here moves together with index.toml's `min_mcpp` and
+# .github/workflows/openkal-compat.yml's own MCPP_VERSION (that workflow
+# checks the two agree, and fails loudly if they do not) -- not because this
+# is the same pin as validate.yml's, but because compat.py's `prepare()`
+# opens THIS repository as a live index (`[indices] compat = { path = ... }`)
+# to measure against uncommitted descriptor changes, so index.toml's
+# min_mcpp gates this measurement exactly as it gates every other client.
+# Confirmed: with this pin left at 2026.9.17.3 after index.toml's min_mcpp
+# moved to 2026.9.18.1, every member here fails immediately with "error:
+# index requires mcpp >= 2026.9.18.1 but this is mcpp 2026.9.17.3 [E0006]"
+# before a single line of the member's own source is read.
+#
+# `runtime` does NOT move here: openkal-llvm-runtime 0.11.0 (the version that
+# actually declares/consumes `[c-abi]`) is not published yet -- see the note
+# in pkgs/o/openkal-llvm-runtime.lua. Bumping `mcpp` alone, ahead of it,
+# changes nothing observable today: no package this pin resolves declares
+# `[c-abi]`. Verified locally (not merely asserted): a full run of every
+# member listed below against x86_64-linux-gnu, under 2026.9.18.1, reproduces
+# the checked-in baseline exactly -- same 27 runs / 3 fails, same three
+# members (expat, curl, cmp-module), same diagnostics character-for-character
+# past the local path prefix.
+mcpp      = "2026.9.18.1"
 
 targets = ["x86_64-linux-gnu", "x86_64-windows-gnu"]
 

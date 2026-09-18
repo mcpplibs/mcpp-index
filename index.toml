@@ -39,28 +39,33 @@
 # missing payload three layers down. 2026.8.27.2 is the version this index is
 # actually tested against, and now the contract says so.
 #
-# ── 2026-09-18: a pending raise, blocked on release ────────────────────────
+# ── 2026-09-18: raised 2026.8.27.2 -> 2026.9.18.1, with the CI pin ─────────
 #
-# openkal-musl 0.15.0 and openkal-llvm-runtime 0.11.0 will declare `[c-abi]`
-# (design: openkal/.agents/docs/2026-09-18-openkal-c-environment-and-
-# personalities-design.md §3.2; plan: the sibling
-# 2026-09-18-c-environment-execution-plan.md §5), and reading that table needs
-# an mcpp that understands it. Per the rule at the top of this file, `min_mcpp`
-# and the CI `MCPP_VERSION` pin move together, only once, to that mcpp release
-# -- not before it exists, and not separately from each other.
+# 2026.9.18.1 is the mcpp release that understands `[c-abi]` (design:
+# openkal/.agents/docs/2026-09-18-openkal-c-environment-and-personalities-
+# design.md §3.2; plan: the sibling 2026-09-18-c-environment-execution-plan.md
+# §5, step 1) and has entered xim-pkgindex (step 2). Per the rule at the top
+# of this file, this moves together with `.github/workflows/validate.yml`'s
+# `MCPP_VERSION`, in this same commit.
 #
-# Neither the mcpp release nor the two package versions above are published
-# yet, so this entry is NOT raised here: this index has no version number to
-# put in `min_mcpp` for a grammar that has not shipped, and no sha256 to put
-# in a descriptor for a tarball that does not exist. Raising it early would
-# advertise support nobody tested, which is the exact failure the 2026-08-30
-# entry above describes. `pkgs/o/openkal-musl.lua` and
-# `pkgs/o/openkal-llvm-runtime.lua` carry a matching note next to their
-# version tables. Landing order: mcpp releases and enters xim-pkgindex, then
-# the two packages, then this file's `min_mcpp`/`latest_mcpp` and
-# `.github/workflows/validate.yml`'s `MCPP_VERSION` move together in the same
-# PR that adds the two versions below.
+# This raise on its own changes nothing observable: no descriptor in this
+# index declares `[c-abi]` yet, and mcpp's own release notes state that a
+# package which does not declare the block gets the same command line, byte
+# for byte, as before. Verified here, not merely asserted: every descriptor
+# in pkgs/*/*.lua still parses with `mcpp xpkg parse` under 2026.9.18.1.
+#
+# openkal-musl 0.15.0 and openkal-llvm-runtime 0.11.0 (plan step 3) -- the two
+# packages that will actually declare and consume `[c-abi] presents =
+# "posix"` -- are NOT registered by this raise. Neither has a version number
+# or a sha256 yet; `pkgs/o/openkal-musl.lua` and
+# `pkgs/o/openkal-llvm-runtime.lua` carry a note beside their version tables
+# marking exactly that, and this index has no data to put in an xpm entry for
+# either until the other agent handling their release reports the tag and
+# hash. Registering them is plan step 4, a separate change from this one:
+# raising the floor was gated on the engine, not on those two packages, and
+# gating on both at once would have held this raise hostage to something it
+# does not need.
 [index]
 spec        = "1"
-min_mcpp    = "2026.8.27.2"
-latest_mcpp = "2026.8.27.2"
+min_mcpp    = "2026.9.18.1"
+latest_mcpp = "2026.9.18.1"
