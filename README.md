@@ -9,6 +9,18 @@ This repository hosts the C++23 packages that `mcpp` can `add` directly — both
 `import`, and third-party C/C++ libraries built from upstream sources or headers in `compat` form. Every package maps
 to one `pkgs/<initial>/<name>.lua` descriptor file.
 
+> **Engine floor (mcpp 2026.9.18.3):** `openkal-musl 0.15.0` and any future
+> `[c-abi]` package require the engine that ships with `mcpp 2026.9.18.3`
+> or later — the host-macro strip on Windows hosts and the freestanding
+> wchar realisation are what let the c-abi probe verify a declaration
+> without host contamination. The `min_mcpp` floor on `[indices]`,
+> `MCPP_VERSION`, and the per-package pins under `tests/openkal/pins.toml`
+> all gate this together (raising only the index floor would still let
+> 30 members E0006 before reading any source line). Older engines
+> silently misbuild `[c-abi]` packages: the build succeeds, the probe
+> fails, the program compiles against the wrong environment. Upgrade:
+> `xlings install mcpp --force`.
+
 ## Usage
 
 ```bash
