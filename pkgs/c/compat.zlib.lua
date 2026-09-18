@@ -58,11 +58,32 @@ package = {
         -- everywhere, now reaches openkal-Windows exactly as it already
         -- reaches Linux and macOS, and the `target_cfg` is withdrawn rather
         -- than reproduced. zconf.h computes z_off_t and z_off64_t as `off_t`
-        -- wherever this header's guard is open (LP64 on openkal-Windows, so
-        -- still 8 bytes); tests/examples/zlib asserts the library and its
-        -- consumer agree on that width via zlibCompileFlags(), not a fixed
-        -- type. gzopen_w stays declared for a consumer and is not defined: a
-        -- call to it fails at the link rather than at run time.
+        -- wherever this header's guard is open, `long long` where it is not.
+        --
+        -- This `cflags` is package-private: it reaches zlib's own
+        -- translation units (gzlib.c, zutil.c, ...) but not a consumer
+        -- compiling zlib.h (verified against tests/examples/zlib's
+        -- compile_commands.json -- the flag is absent from tests/zlib.cpp's
+        -- own command line). So the library computes z_off_t with
+        -- Z_HAVE_UNISTD_H set (= off_t) while an openkal-Windows consumer,
+        -- which never sees this header, computes it with Z_HAVE_UNISTD_H
+        -- unset (= long long, zconf.h's own unconditional fallback). off_t
+        -- and long long agree in size on every target this index measures --
+        -- all of them LP64 (x86_64-linux-gnu, x86_64-windows-gnu; see
+        -- tests/openkal/pins.toml and the platforms xpm above) -- which is
+        -- why this is safe today rather than merely untested. On an ILP32
+        -- target without _LARGEFILE64_SOURCE, off_t is 4 bytes and long long
+        -- is 8: the two sides of this same split would disagree, silently,
+        -- in the type gzseek/gztell pass across the package boundary. Rule 3
+        -- of docs/openkal-compat.md is exactly this situation (a macro that
+        -- changes a public header's declaration and cannot reach the
+        -- consumer), and rule 4 is why tests/examples/zlib already asserts
+        -- the agreement at run time via zlibCompileFlags() against the
+        -- consumer's own sizeof(z_off_t) -- add an ILP32 target to this
+        -- descriptor only once that assertion has actually been run there,
+        -- not on the strength of this comment. gzopen_w stays declared for a
+        -- consumer and is not defined: a call to it fails at the link rather
+        -- than at run time.
         cflags = { "-include", "mcpp_zlib_config.h" },
         linux = {
             cflags = { "-D_GNU_SOURCE" },
