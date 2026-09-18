@@ -54,15 +54,15 @@
 # for byte, as before. Verified here, not merely asserted: every descriptor
 # in pkgs/*/*.lua still parses with `mcpp xpkg parse` under 2026.9.18.1.
 #
-# ── 2026-09-18: raised 2026.9.18.1 -> 2026.9.18.2, with both CI pins ────────
+# ── 2026-09-18: raised 2026.9.18.2 -> 2026.9.18.3, with both CI pins ────────
 #
-# 2026.9.18.2 is the release whose refusals match the feature it ships: a
-# [c-abi] declaration whose realisation needs no tokens (Linux) is accepted
-# under GCC instead of refused, `presents = "posix"` is realised on macOS
-# (one token, -D__unix__; Apple's clang never predefines it) and on a
-# freestanding target (the same token) instead of refused. openkal-musl
-# 0.15.0 and openkal-llvm-runtime 0.11.0 pin this release in their own CI;
-# a floor at 2026.9.18.1 would let a 2026.9.18.1 user be refused builds the
+# 2026.9.18.3 is the release whose c-abi probe on a Windows host × freestanding
+# target stops mismatching on _WIN32 (host strip) and __SIZEOF_WCHAR_T__
+# (realisation always emits -fno-short-wchar on freestanding). The probe's
+# measurement contract is unchanged (design §3.2: a declaration is checked,
+# never trusted); the realisation's previous "freestanding skips the wchar
+# flag" rule was the actual bug, the wave's measurement is what caught it.
+# A floor at 2026.9.18.2 would let a 2026.9.18.2 user be refused builds the
 # next release accepts. Per the rule at the top of this file, this moves in
 # the same commit as validate.yml's `MCPP_VERSION`; openkal-compat.yml's
 # `MCPP_VERSION` moves with tests/openkal/pins.toml's `mcpp`, which that
@@ -81,5 +81,5 @@
 # does not need.
 [index]
 spec        = "1"
-min_mcpp    = "2026.9.18.2"
-latest_mcpp = "2026.9.18.2"
+min_mcpp    = "2026.9.18.3"
+latest_mcpp = "2026.9.18.3"
