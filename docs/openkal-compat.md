@@ -36,16 +36,35 @@ recorded per target:
 | `builds` | the member built, and its tests were not run or did not pass; the first diagnostic is kept |
 | `fails` | the member did not build; the first diagnostic is kept |
 
+Beside `status`, and derived from the same measurement, `compat.py` records a
+second, orthogonal `kind`: not whether the member worked, but what it needed
+in order to:
+
+| Kind | Meaning | Derived from |
+| --- | --- | --- |
+| `posix` | built and ran using only the C environment the graph's C library presents | `status == "runs"` and the member declares no platform dependency of its own |
+| `platform` | needs the platform's own interfaces | the member declares a platform dependency of its own (a per-target `dependencies` table — see rule 1 below), and `status` is `runs` or `builds` |
+
+`kind` is omitted for `status == "fails"`: an unmeasured member states nothing
+about its relation to the platform. A third kind, `native` — built in a reduced
+ISO C form with no POSIX-shaped package anywhere in the graph — is deliberately
+deferred, because that form does not exist yet; it is not computed or shown
+anywhere in this pipeline.
+
+Selecting a platform dependency is permitted: a package on openkal may use a
+platform's system interfaces, provided they come from the dependency graph.
+The distinction is shown and does not lower the `status` label — it only
+decides `kind`. See `tests/openkal/compat.py`'s module docstring for the exact
+derivation, stated next to the code that computes it.
+
 The results are written to `.xpkgindex/openkal-compat.json` together with the
 pins and the date. The site gives every package a test project covers the best
 result any covering project recorded for each target, and files the package
-under the `openkal` facet by its best target. The packages of openkal itself are
-filed as `openkal itself`.
-
-A member is also recorded as selecting platform dependencies of its own or not.
-Selecting them is permitted: a package on openkal may use a platform's system
-interfaces, provided they come from the dependency graph. The distinction is
-shown and does not lower the label.
+under the `openkal` facet by its best target and under the `openkal_kind`
+facet by `platform` if any measured target recorded it, else `posix` if any
+did. The packages of openkal itself are filed as `openkal itself` and carry
+neither `kind` nor `openkal_kind`: they answer what openkal is, not what a
+package built on it needs.
 
 `tests/openkal/members.toml` lists what is measured. `[excluded]` lists members
 that cannot be built in any openkal graph, each with its reason; a member that

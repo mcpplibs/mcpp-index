@@ -58,6 +58,29 @@ OPENKAL_LEVELS = [
     ("n/a", _t("not applicable", "不适用", "不適用"), "neutral"),
 ]
 _OPENKAL_RANK = {"fails": 0, "builds": 1, "runs": 2}
+
+# How a package's best-measured target relates to the platform, orthogonal to
+# OPENKAL_LEVELS above: whether the graph worked is one axis, what it needed
+# to work is another. Measured by the same tool and recorded beside `status`
+# in the same file -- see the `posix`/`platform` table in
+# tests/openkal/compat.py's module docstring, which is the derivation this
+# reads. `native` (the reduced ISO C form, no POSIX package in the graph) is
+# deliberately deferred there and has no entry here to match: a form that
+# cannot be measured gets no facet value to claim it.
+OPENKAL_KINDS = [
+    ("posix", _t("posix on openkal", "posix 环境", "posix 環境"), "module"),
+    ("platform", _t("uses platform interfaces", "使用平台接口", "使用平台介面"), "header"),
+]
+# Not ordered strongest-to-weakest like _OPENKAL_RANK: `platform` is not a
+# worse outcome than `posix`, it is a different fact about the same package,
+# and a package can be genuinely one on one target and the other on another
+# (glfw needs a window-system SDK everywhere; tinyhttps needs one only where
+# it falls back from epoll to Winsock). The package-level facet below still
+# has to pick one value, so it takes `platform` if the package is that on ANY
+# measured target -- the fact that it needs the platform somewhere does not
+# stop being true because another target does not need it.
+_OPENKAL_KIND_PRIORITY = ("platform", "posix")
+
 # The packages that make up openkal: the specification, its implementations, and
 # the layers built directly on it. Named once, here.
 OPENKAL_FAMILY = {
@@ -402,6 +425,22 @@ class McppPlugin(Plugin):
         best = max(_OPENKAL_RANK.get(r.get("status"), 0) for r in rec["targets"].values())
         return {2: "runs", 1: "builds", 0: "fails"}[best]
 
+    def _openkal_kind(self, slug: str) -> str:
+        """The package-level `kind` facet value: `platform` if any measured
+        target recorded it, else `posix` if any did, else empty (openkal's
+        own packages, and any package with no `kind` on any target, carry
+        none). See OPENKAL_KINDS above for why `platform` wins ties."""
+        if slug in OPENKAL_FAMILY:
+            return ""
+        rec = self.openkal_by_package.get(slug)
+        if not rec:
+            return ""
+        present = {r.get("kind") for r in rec["targets"].values() if r.get("kind")}
+        for kind in _OPENKAL_KIND_PRIORITY:
+            if kind in present:
+                return kind
+        return ""
+
     # --------------------------------------------------------- identity --
     def identity(self, raw: Dict[str, Any], path: str) -> Optional[Identity]:
         """mcpp resolves `namespace.name`, so the namespace IS the identity.
@@ -469,6 +508,16 @@ class McppPlugin(Plugin):
                               **(self.openkal_by_package.get(pkg.identity.slug) or {})}
             if level in ("runs", "builds", "family"):
                 label = {k: lbl for k, lbl, _ in OPENKAL_LEVELS}[level]
+                pkg.extensions.setdefault("_badges", []).append(label)
+
+            # Wired the same way as `level` just above: a measurement, not a
+            # declaration, turned into a facet and a badge on the package it
+            # was measured on -- see OPENKAL_KINDS.
+            kind = self._openkal_kind(pkg.identity.slug)
+            if kind:
+                pkg.facets["openkal_kind"] = kind
+                ext["openkal"]["kind"] = kind
+                label = {k: lbl for k, lbl, _ in OPENKAL_KINDS}[kind]
                 pkg.extensions.setdefault("_badges", []).append(label)
 
         pkg.extensions["mcpp"] = ext
@@ -644,6 +693,10 @@ class McppPlugin(Plugin):
             Facet(key="openkal", label=_t("openkal", "openkal", "openkal"), weight=20, values=[
                 FacetValue(key=key, label=label, tone=tone) for key, label, tone in OPENKAL_LEVELS
             ]),
+            Facet(key="openkal_kind", label=_t("openkal environment", "openkal 环境",
+                                               "openkal 環境"), weight=21, values=[
+                FacetValue(key=key, label=label, tone=tone) for key, label, tone in OPENKAL_KINDS
+            ]),
         ]
 
     # -------------------------------------------------------------- row --
@@ -818,8 +871,8 @@ class McppPlugin(Plugin):
             return []
         rows = []
         for target, rec in sorted((info.get("targets") or {}).items()):
-            rows.append([target, rec.get("status", ""), rec.get("member", ""),
-                         rec.get("diagnostic", "")])
+            rows.append([target, rec.get("status", ""), rec.get("kind", ""),
+                         rec.get("member", ""), rec.get("diagnostic", "")])
         pins = self.openkal.get("pins") or {}
         caption = _t(
             f"Measured {self.openkal.get('measured', '')} by tests/openkal/compat.py with "
@@ -841,6 +894,7 @@ class McppPlugin(Plugin):
         return [
             Block(kind="table", title=_t("openkal", "openkal", "openkal"), weight=25,
                   data={"head": [_t("target", "目标", "目標"), _t("result", "结果", "結果"),
+                                 _t("environment", "环境", "環境"),
                                  _t("test project", "测试项目", "測試專案"),
                                  _t("first diagnostic", "首条诊断", "首條診斷")],
                         "rows": rows}),
