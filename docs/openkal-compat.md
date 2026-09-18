@@ -66,6 +66,18 @@ did. The packages of openkal itself are filed as `openkal itself` and carry
 neither `kind` nor `openkal_kind`: they answer what openkal is, not what a
 package built on it needs.
 
+The `openkal_kind` facet and the badge it drives are a package-level
+**summary**: they take the strictest target, the way `platform` above is
+chosen over `posix` whenever both were measured. A package can genuinely be
+`posix` on one target and `platform` on another — glfw needs a
+window-system SDK everywhere it is measured, tinyhttps needs one only where
+it falls back from epoll to Winsock — and the summary does not distinguish
+those two shapes; it says `platform` either way, because that is true of at
+least one target. The package's detail page's per-target `openkal` table (the
+`environment` column, beside `result`) is the authority for what one
+particular target actually needed; read that, not the badge, when the
+question is about a target rather than the package as a whole.
+
 `tests/openkal/members.toml` lists what is measured. `[excluded]` lists members
 that cannot be built in any openkal graph, each with its reason; a member that
 fails is measured and published, not excluded.

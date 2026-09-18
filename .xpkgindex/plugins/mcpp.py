@@ -79,6 +79,14 @@ OPENKAL_KINDS = [
 # has to pick one value, so it takes `platform` if the package is that on ANY
 # measured target -- the fact that it needs the platform somewhere does not
 # stop being true because another target does not need it.
+#
+# This makes the package-level value a SUMMARY, specifically the strictest
+# target's answer, not a per-target fact -- a package that is `posix` on
+# Linux and `platform` only on Windows is filed under `platform` here, the
+# same way it would be if every target needed the platform. A reader who
+# wants to know about one target, rather than the worst case across all of
+# them, wants `_openkal_blocks`'s per-target table (the `environment`
+# column), not this facet or the badge it drives -- both say so.
 _OPENKAL_KIND_PRIORITY = ("platform", "posix")
 
 # The packages that make up openkal: the specification, its implementations, and
@@ -426,10 +434,13 @@ class McppPlugin(Plugin):
         return {2: "runs", 1: "builds", 0: "fails"}[best]
 
     def _openkal_kind(self, slug: str) -> str:
-        """The package-level `kind` facet value: `platform` if any measured
-        target recorded it, else `posix` if any did, else empty (openkal's
-        own packages, and any package with no `kind` on any target, carry
-        none). See OPENKAL_KINDS above for why `platform` wins ties."""
+        """The package-level `kind` facet value -- a SUMMARY that takes the
+        strictest measured target, not a claim about every target: `platform`
+        if any measured target recorded it, else `posix` if any did, else
+        empty (openkal's own packages, and any package with no `kind` on any
+        target, carry none). See OPENKAL_KINDS above for why `platform` wins
+        ties, and `_openkal_blocks`'s per-target table for the authoritative,
+        target-by-target picture this reduces."""
         if slug in OPENKAL_FAMILY:
             return ""
         rec = self.openkal_by_package.get(slug)
@@ -874,23 +885,35 @@ class McppPlugin(Plugin):
             rows.append([target, rec.get("status", ""), rec.get("kind", ""),
                          rec.get("member", ""), rec.get("diagnostic", "")])
         pins = self.openkal.get("pins") or {}
+        # Shown only when there is a package-level `kind` badge for it to
+        # qualify: that badge is the strictest measured target's answer, not
+        # every target's, and the table above it is the one that is.
+        kind_note = (" The badge above is a summary of the strictest "
+                     "measured target -- the table above states each "
+                     "target's own environment.",
+                     " 上方徽章是所有已测目标里最严格那个的结果 —— 上表列出每个目标各自的环境。",
+                     " 上方徽章是所有已測目標裡最嚴格那個的結果 —— 上表列出每個目標各自的環境。") \
+            if info.get("kind") else ("", "", "")
         caption = _t(
             f"Measured {self.openkal.get('measured', '')} by tests/openkal/compat.py with "
             f"openkal-llvm-runtime {pins.get('runtime', '')}, {pins.get('toolchain', '')}, "
             f"mcpp {pins.get('mcpp', '')}. "
             + ("The test project selects no platform dependency of its own."
                if info.get("portable", True) else
-               "The test project selects platform dependencies of its own."),
+               "The test project selects platform dependencies of its own.")
+            + kind_note[0],
             f"{self.openkal.get('measured', '')} 由 tests/openkal/compat.py 测得,使用 "
             f"openkal-llvm-runtime {pins.get('runtime', '')}、{pins.get('toolchain', '')}、"
             f"mcpp {pins.get('mcpp', '')}。"
             + ("测试项目没有自行选择平台依赖。" if info.get("portable", True)
-               else "测试项目自行选择了平台依赖。"),
+               else "测试项目自行选择了平台依赖。")
+            + kind_note[1],
             f"{self.openkal.get('measured', '')} 由 tests/openkal/compat.py 測得,使用 "
             f"openkal-llvm-runtime {pins.get('runtime', '')}、{pins.get('toolchain', '')}、"
             f"mcpp {pins.get('mcpp', '')}。"
             + ("測試專案沒有自行選擇平台相依。" if info.get("portable", True)
-               else "測試專案自行選擇了平台相依。"))
+               else "測試專案自行選擇了平台相依。")
+            + kind_note[2])
         return [
             Block(kind="table", title=_t("openkal", "openkal", "openkal"), weight=25,
                   data={"head": [_t("target", "目标", "目標"), _t("result", "结果", "結果"),
