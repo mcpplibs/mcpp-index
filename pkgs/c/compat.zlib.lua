@@ -71,8 +71,15 @@ package = {
         -- and long long agree in size on every target this index measures --
         -- all of them LP64 (x86_64-linux-gnu, x86_64-windows-gnu; see
         -- tests/openkal/pins.toml and the platforms xpm above) -- which is
-        -- why this is safe today rather than merely untested. On an ILP32
-        -- target without _LARGEFILE64_SOURCE, off_t is 4 bytes and long long
+        -- why this is safe today rather than merely untested. This is not a
+        -- new asymmetry introduced by hoisting the `-include`: the withdrawn
+        -- `-include unistd.h` it replaced was package-private in exactly the
+        -- same way, so the library and the consumer already reached z_off_t
+        -- by two different routes before this change, and already agreed
+        -- only because every measured target is LP64. This comment preserves
+        -- that property, and the note about it, rather than introducing
+        -- either. On an ILP32 target without _LARGEFILE64_SOURCE, off_t is
+        -- 4 bytes and long long
         -- is 8: the two sides of this same split would disagree, silently,
         -- in the type gzseek/gztell pass across the package boundary. Rule 3
         -- of docs/openkal-compat.md is exactly this situation (a macro that
