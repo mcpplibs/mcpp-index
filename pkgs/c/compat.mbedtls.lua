@@ -56,21 +56,22 @@ package = {
         c_standard   = "c11",
         targets      = { ["mbedtls"] = { kind = "lib" } },
         deps         = { },
+        -- Windows with musl as the C library (an openkal graph) used to carry a
+        -- `target_cfg` here (`-U_WIN32 -D__unix__`): mbedtls selects its
+        -- entropy, timing and socket code by asking whether the environment is
+        -- Windows (_WIN32) or Unix (__unix__), the triple answered Windows, and
+        -- the C library these units actually compile against is POSIX-shaped
+        -- (openkal-musl: getrandom, clock_gettime, BSD sockets), so the flags
+        -- corrected what the triple implied for mbedtls's own translation
+        -- units. openkal-musl now declares `[c-abi] presents = "posix"`
+        -- (design:
+        -- openkal/.agents/docs/2026-09-18-openkal-c-environment-and-personalities-design.md
+        -- §3.2), and mcpp realises that declaration for the whole target
+        -- rather than one package at a time, so _WIN32 is simply absent and
+        -- __unix__ is simply present there to begin with; the `target_cfg` is
+        -- withdrawn rather than reproduced.
         windows = {
             ldflags = { "-lbcrypt" },
-        },
-        target_cfg = {
-            -- Windows with musl as the C library. mbedtls selects its entropy,
-            -- timing and socket code by asking whether the environment is
-            -- Windows (_WIN32) or Unix (__unix__); the triple answers Windows,
-            -- and the C library these units compile against is POSIX-shaped
-            -- (openkal-musl: getrandom, clock_gettime, BSD sockets). Both
-            -- flags are confined to mbedtls's own translation units, and no
-            -- public header of mbedtls tests either macro, so its consumers
-            -- read the same declarations.
-            ["cfg(all(windows, c-abi = \"musl\"))"] = {
-                cflags = { "-U_WIN32", "-D__unix__" },
-            },
         },
     },
 }
