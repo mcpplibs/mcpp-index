@@ -38,7 +38,48 @@
 # refusal at the index-open choke point instead of an undefined reference or a
 # missing payload three layers down. 2026.8.27.2 is the version this index is
 # actually tested against, and now the contract says so.
+#
+# ── 2026-09-18: raised 2026.8.27.2 -> 2026.9.18.1, with the CI pin ─────────
+#
+# 2026.9.18.1 is the mcpp release that understands `[c-abi]` (design:
+# openkal/.agents/docs/2026-09-18-openkal-c-environment-and-personalities-
+# design.md §3.2; plan: the sibling 2026-09-18-c-environment-execution-plan.md
+# §5, step 1) and has entered xim-pkgindex (step 2). Per the rule at the top
+# of this file, this moves together with `.github/workflows/validate.yml`'s
+# `MCPP_VERSION`, in this same commit.
+#
+# This raise on its own changes nothing observable: no descriptor in this
+# index declares `[c-abi]` yet, and mcpp's own release notes state that a
+# package which does not declare the block gets the same command line, byte
+# for byte, as before. Verified here, not merely asserted: every descriptor
+# in pkgs/*/*.lua still parses with `mcpp xpkg parse` under 2026.9.18.1.
+#
+# ── 2026-09-18: raised 2026.9.18.2 -> 2026.9.18.3, with both CI pins ────────
+#
+# 2026.9.18.3 is the release whose c-abi probe on a Windows host × freestanding
+# target stops mismatching on _WIN32 (host strip) and __SIZEOF_WCHAR_T__
+# (realisation always emits -fno-short-wchar on freestanding). The probe's
+# measurement contract is unchanged (design §3.2: a declaration is checked,
+# never trusted); the realisation's previous "freestanding skips the wchar
+# flag" rule was the actual bug, the wave's measurement is what caught it.
+# A floor at 2026.9.18.2 would let a 2026.9.18.2 user be refused builds the
+# next release accepts. Per the rule at the top of this file, this moves in
+# the same commit as validate.yml's `MCPP_VERSION`; openkal-compat.yml's
+# `MCPP_VERSION` moves with tests/openkal/pins.toml's `mcpp`, which that
+# workflow checks for agreement.
+#
+# openkal-musl 0.15.0 and openkal-llvm-runtime 0.11.0 (plan step 3) -- the two
+# packages that will actually declare and consume `[c-abi] presents =
+# "posix"` -- are NOT registered by this raise. Neither has a version number
+# or a sha256 yet; `pkgs/o/openkal-musl.lua` and
+# `pkgs/o/openkal-llvm-runtime.lua` carry a note beside their version tables
+# marking exactly that, and this index has no data to put in an xpm entry for
+# either until the other agent handling their release reports the tag and
+# hash. Registering them is plan step 4, a separate change from this one:
+# raising the floor was gated on the engine, not on those two packages, and
+# gating on both at once would have held this raise hostage to something it
+# does not need.
 [index]
 spec        = "1"
-min_mcpp    = "2026.8.27.2"
-latest_mcpp = "2026.8.27.2"
+min_mcpp    = "2026.9.18.3"
+latest_mcpp = "2026.9.18.3"

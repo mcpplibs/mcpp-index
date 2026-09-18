@@ -42,31 +42,58 @@ package = {
         import_std   = false,
         c_standard   = "c11",
         include_dirs = {"*", "mcpp_generated/include"},
-        -- Both of these are GCC/Clang-only and used to be unconditional.
-        -- `-include` is the worse of the two on MSVC: cl does not reject it, it
-        -- warns (`D9002 ignoring unknown option`) and carries on, so the config
-        -- header was silently never included. The header only defines anything
-        -- when _WIN32 is absent, so Windows needs neither.
+        -- GCC/Clang-only, safe unconditionally: the header's own guard
+        -- (`#if !defined(_WIN32)`) is the real platform test, this placement
+        -- is not. It used to sit only in the linux/macosx blocks below,
+        -- because on native Windows _WIN32 is always true and the header
+        -- defines nothing there -- and on Windows with musl as the C library
+        -- (an openkal graph) _WIN32 used to be true too, so a `target_cfg`
+        -- carried a hand-written `-U_WIN32 -include unistd.h` to reach the
+        -- same POSIX-shaped compile that Linux and macOS already got from
+        -- this same header. openkal-musl now declares `[c-abi] presents =
+        -- "posix"` (design:
+        -- openkal/.agents/docs/2026-09-18-openkal-c-environment-and-personalities-design.md
+        -- §3.2), and mcpp realises that declaration for the whole target, so
+        -- _WIN32 is simply absent there to begin with; this one line, applied
+        -- everywhere, now reaches openkal-Windows exactly as it already
+        -- reaches Linux and macOS, and the `target_cfg` is withdrawn rather
+        -- than reproduced. zconf.h computes z_off_t and z_off64_t as `off_t`
+        -- wherever this header's guard is open, `long long` where it is not.
+        --
+        -- This `cflags` is package-private: it reaches zlib's own
+        -- translation units (gzlib.c, zutil.c, ...) but not a consumer
+        -- compiling zlib.h (verified against tests/examples/zlib's
+        -- compile_commands.json -- the flag is absent from tests/zlib.cpp's
+        -- own command line). So the library computes z_off_t with
+        -- Z_HAVE_UNISTD_H set (= off_t) while an openkal-Windows consumer,
+        -- which never sees this header, computes it with Z_HAVE_UNISTD_H
+        -- unset (= long long, zconf.h's own unconditional fallback). off_t
+        -- and long long agree in size on every target this index measures --
+        -- all of them LP64 (x86_64-linux-gnu, x86_64-windows-gnu; see
+        -- tests/openkal/pins.toml and the platforms xpm above) -- which is
+        -- why this is safe today rather than merely untested. This is not a
+        -- new asymmetry introduced by hoisting the `-include`: the withdrawn
+        -- `-include unistd.h` it replaced was package-private in exactly the
+        -- same way, so the library and the consumer already reached z_off_t
+        -- by two different routes before this change, and already agreed
+        -- only because every measured target is LP64. This comment preserves
+        -- that property, and the note about it, rather than introducing
+        -- either. On an ILP32 target without _LARGEFILE64_SOURCE, off_t is
+        -- 4 bytes and long long
+        -- is 8: the two sides of this same split would disagree, silently,
+        -- in the type gzseek/gztell pass across the package boundary. Rule 3
+        -- of docs/openkal-compat.md is exactly this situation (a macro that
+        -- changes a public header's declaration and cannot reach the
+        -- consumer), and rule 4 is why tests/examples/zlib already asserts
+        -- the agreement at run time via zlibCompileFlags() against the
+        -- consumer's own sizeof(z_off_t) -- add an ILP32 target to this
+        -- descriptor only once that assertion has actually been run there,
+        -- not on the strength of this comment. gzopen_w stays declared for a
+        -- consumer and is not defined: a call to it fails at the link rather
+        -- than at run time.
+        cflags = { "-include", "mcpp_zlib_config.h" },
         linux = {
-            cflags = { "-D_GNU_SOURCE", "-include", "mcpp_zlib_config.h" },
-        },
-        macosx = {
-            cflags = { "-include", "mcpp_zlib_config.h" },
-        },
-        -- Windows with musl as the C library (an openkal graph). The triple
-        -- defines _WIN32, and zlib reads _WIN32 as "the Windows C runtime is
-        -- present" (<io.h>, _lseeki64, _wopen), which is false here. The flag is
-        -- confined to zlib's own translation units and reaches no public
-        -- header in a way that changes a declaration: zconf.h computes z_off_t
-        -- and z_off64_t as `long long` on both sides, because Z_HAVE_UNISTD_H
-        -- is deliberately not defined (unistd.h is included directly instead).
-        -- tests/examples/zlib asserts that agreement with zlibCompileFlags().
-        -- gzopen_w stays declared for a consumer and is not defined: a call to
-        -- it fails at the link rather than at run time.
-        target_cfg = {
-            ["cfg(all(windows, c-abi = \"musl\"))"] = {
-                cflags = { "-U_WIN32", "-include", "unistd.h" },
-            },
+            cflags = { "-D_GNU_SOURCE" },
         },
         generated_files = {
             ["mcpp_generated/include/mcpp_zlib_config.h"] = "#ifndef MCPP_ZLIB_CONFIG_H\n#define MCPP_ZLIB_CONFIG_H\n#if !defined(_WIN32)\n#define Z_HAVE_UNISTD_H 1\n#endif\n#endif\n",

@@ -19,6 +19,26 @@ PATH, and built otherwise. Each member is reported per target as one of
     builds    the member built; its tests were not run on this host
     fails     the build or the tests failed; the first diagnostic is kept
 
+and, alongside `status`, a second and orthogonal `kind` records how the
+member relates to the platform rather than whether it worked:
+
+    posix     built and ran using only the C environment the graph's C
+              library presents -- `status == "runs"` and the member declares
+              no platform dependency of its own (see `platform_bound` below)
+    platform  needs the platform's own interfaces -- the member declares a
+              platform dependency of its own (a per-target `dependencies`
+              table, the same fact `platform_bound` already reports as
+              "not portable" -- see docs/openkal-compat.md #4 rule 1, where a
+              feature's `feature-deps` reaches a platform SDK shim) -- and
+              `status` is "runs" or "builds"
+
+`kind` is omitted, not guessed, when `status == "fails"`: an unmeasured member
+states nothing about its relation to the platform. A third label, `native`
+(built in the reduced ISO C form, with no POSIX-shaped package anywhere in
+the graph), is deliberately deferred -- that form does not exist yet (design:
+openkal/.agents/docs/2026-09-18-openkal-c-environment-and-personalities-
+design.md §7, §12 decision 5) -- and is not computed here.
+
 `select` reads changed file paths and prints the members to measure: every
 listed member when the openkal family or this directory changed, otherwise the
 members whose test projects depend on a changed descriptor.
@@ -99,6 +119,23 @@ def platform_bound(manifest: dict) -> bool:
         if isinstance(cfg, dict) and cfg.get("dependencies"):
             return True
     return False
+
+
+def kind_of(manifest: dict, status: str) -> str | None:
+    """The platform-relation label for one (member, target) result -- see the
+    `posix` / `platform` table in this module's docstring, which this
+    function is the whole of the implementation of. `platform_bound` is the
+    one signal used for "declares a platform dependency"; there is
+    deliberately no second, separate heuristic guessing at a package's
+    internals -- a label not backed by a declared or measured fact is worse
+    than no label, so an ambiguous case returns None rather than a guess."""
+    if status == "fails":
+        return None
+    if platform_bound(manifest):
+        return "platform"
+    if status == "runs":
+        return "posix"
+    return None
 
 
 def prepare(member: str, pins: dict) -> str:
@@ -194,7 +231,11 @@ def cmd_run(args: argparse.Namespace) -> int:
                 entry["targets"][target] = measure(member, target, pins)
             except subprocess.TimeoutExpired:
                 entry["targets"][target] = {"status": "fails", "diagnostic": "timed out"}
+            kind = kind_of(manifest, entry["targets"][target]["status"])
+            if kind:
+                entry["targets"][target]["kind"] = kind
             print(f"   {entry['targets'][target]['status']}"
+                  + (f" ({kind})" if kind else "")
                   + (f": {entry['targets'][target].get('diagnostic', '')}"
                      if entry['targets'][target]['status'] == 'fails' else ""), flush=True)
         results["members"][member] = entry

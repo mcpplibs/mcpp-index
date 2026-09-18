@@ -282,7 +282,26 @@ env:
   # tests/openkal measures it with the host's mingw headers installed.
   #
   # `index.toml` min_mcpp does not move: no descriptor grammar changed.
-  MCPP_VERSION: "2026.9.17.3"
+  # ── 2026-09-18: raised 2026.9.17.3 -> 2026.9.18.1, WITH index.toml's floor ─
+  #
+  # This is the mcpp release that understands `[c-abi]` (design:
+  # openkal/.agents/docs/2026-09-18-openkal-c-environment-and-personalities-
+  # design.md §3.2; landing order: the sibling
+  # 2026-09-18-c-environment-execution-plan.md §5, step 1). It is the reason
+  # `index.toml`'s min_mcpp moves in the SAME commit as this line, unlike the
+  # two raises above it: this one is a grammar the index is about to gain a
+  # user of. openkal-musl 0.15.0 and openkal-llvm-runtime 0.11.0, the two
+  # packages that will declare and consume `[c-abi] presents = "posix"`, are
+  # not registered yet (no version, no sha256 exist) — see the versions in
+  # pkgs/o/openkal-musl.lua and pkgs/o/openkal-llvm-runtime.lua and the note
+  # beside them — so this raise alone changes nothing observable: no
+  # descriptor in this index writes `[c-abi]` today, and mcpp's own release
+  # notes state that a package which does not declare the block gets the same
+  # command line, byte for byte, as before. The first build after this bump
+  # is a cold one (mcpp's build-cache epoch moved from 2 to 3 in this same
+  # release, because the old cache key did not cover the realised [c-abi]
+  # environment).
+  MCPP_VERSION: "2026.9.18.3"
 
 jobs:
   lint:
