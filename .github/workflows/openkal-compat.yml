@@ -33,7 +33,7 @@ env:
   # run if this drifts from pins.toml. See the comment beside `mcpp` in
   # pins.toml for why this pin, not just validate.yml's, is gated by the
   # index floor.
-  MCPP_VERSION: "2026.9.18.1"
+  MCPP_VERSION: "2026.9.18.2"
   XLINGS_NON_INTERACTIVE: "1"
 
 jobs:

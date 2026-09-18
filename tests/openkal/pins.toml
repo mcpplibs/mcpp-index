@@ -27,7 +27,7 @@ toolchain = "llvm@22.1.8"
 # the checked-in baseline exactly -- same 27 runs / 3 fails, same three
 # members (expat, curl, cmp-module), same diagnostics character-for-character
 # past the local path prefix.
-mcpp      = "2026.9.18.1"
+mcpp      = "2026.9.18.2"
 
 targets = ["x86_64-linux-gnu", "x86_64-windows-gnu"]
 
