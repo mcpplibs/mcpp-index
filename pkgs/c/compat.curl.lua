@@ -248,56 +248,20 @@ package = {
 #if defined(__linux__)
 
 #define CURL_OS "Linux"
-
-/* `__linux__` ANSWERS "WHICH KERNEL", NOT "WHICH USERSPACE IS INSTALLED", and
- * this block used to read it as the second. Every entry below that names a
- * HEADER now asks whether that header is reachable, which is the question
- * being asked and is standard C; every entry that names a GLIBC extension
- * asks for glibc.
- *
- * Measured: over openkal-musl on x86_64-linux-gnu the kernel is Linux, so
- * `__linux__` is correct, and `#define HAVE_LINUX_TCP_H 1` then sent
- * `lib/setopt.c:31` to a uapi header that C library does not carry ---
- * `fatal error: 'linux/tcp.h' file not found`, one of the failures in this
- * repository's own compatibility measurement. */
-#if __has_include(<linux/tcp.h>)
-#define HAVE_LINUX_TCP_H 1
-#endif
-/* `__has_include` ANSWERS ABOUT THE HEADER, NOT ABOUT THE FUNCTION, and those
- * two come apart here. openkal-musl CARRIES `sys/eventfd.h` and declares
- * `eventfd` absent in its `[c-abi-absent]` table, so defining `HAVE_EVENTFD`
- * from the header's presence produced a link that mcpp explained by name:
- *
- *     the C library in this graph (musl) declares that it does not supply
- *     the following, and the link has just asked for it:
- *       eventfd              as timerfd_create
- *
- * Neither is declared: curl has a poll-based path and takes it. A header
- * test cannot stand in for a symbol test. */
-#if __has_include(<termio.h>)
-#define HAVE_TERMIO_H 1
-#endif
-#if __has_include(<sys/xattr.h>)
-#define HAVE_FSETXATTR 1
-#define HAVE_FSETXATTR_5 1
-#endif
-
-/* WHICH `strerror_r`, AND EXACTLY ONE OF THEM. glibc's returns `char*`,
- * POSIX's returns `int`, and `strerr.c:30` refuses a configuration that names
- * neither or both. Asking `__linux__` answered "glibc" for musl, which is the
- * wrong one; leaving it out answered "neither", which is also refused. */
-#if defined(__GLIBC__)
+/* glibc's strerror_r returns char*, not int — curl needs to know which */
 #define HAVE_GLIBC_STRERROR_R 1
-#else
-#define HAVE_POSIX_STRERROR_R 1
-#endif
-
 #define HAVE_GETHOSTBYNAME_R 1
 #define HAVE_GETHOSTBYNAME_R_6 1
 #define HAVE_ACCEPT4 1
 #define HAVE_PIPE2 1
+#define HAVE_EVENTFD 1
+#define HAVE_SYS_EVENTFD_H 1
 #define HAVE_SENDMMSG 1
 #define HAVE_MEMRCHR 1
+#define HAVE_FSETXATTR 1
+#define HAVE_FSETXATTR_5 1
+#define HAVE_LINUX_TCP_H 1
+#define HAVE_TERMIO_H 1
 #define HAVE_CLOCK_GETTIME_MONOTONIC_RAW 1
 /* Debian/Fedora layout; overridable at runtime with CURLOPT_CAINFO or the
  * SSL_CERT_FILE environment variable. */

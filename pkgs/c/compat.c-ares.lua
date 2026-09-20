@@ -1030,9 +1030,7 @@ package = {
 #define HAVE_BOOL_T
 
 /* Define to 1 if you have the clock_gettime function and monotonic timer. */
-#if __has_include(<time.h>) && !defined(_WIN32)
-#define HAVE_CLOCK_GETTIME_MONOTONIC 1
-#endif
+/* #undef HAVE_CLOCK_GETTIME_MONOTONIC */
 
 /* Define to 1 if you have the closesocket function. */
 #define HAVE_CLOSESOCKET
@@ -1089,12 +1087,7 @@ package = {
 /* #undef HAVE_GETSERVBYPORT_R */
 
 /* Define to 1 if you have the `gettimeofday' function. */
-/* SUB-SECOND TIME. `ares_timeval.c:93` refuses a configuration that names no
- * source of it, and the Win32 one (`GetTickCount64`) needs `windows.h`. A
- * POSIX-presenting target has `clock_gettime`, which `time.h` declares. */
-#if __has_include(<time.h>) && !defined(_WIN32)
-#define HAVE_GETTIMEOFDAY 1
-#endif
+/* #undef HAVE_GETTIMEOFDAY */
 
 /* Define to 1 if you have the `if_indextoname' function. */
 /* #undef HAVE_IF_INDEXTONAME */
@@ -1212,22 +1205,10 @@ package = {
 #define HAVE_STDLIB_H
 
 /* Define to 1 if you have the strcasecmp function. */
-/* WIN32 CRT NAMES vs POSIX NAMES, decided by what the C environment
- * presents rather than by the platform. This block is the Windows branch of a
- * recipe that branches on the PLATFORM; over openkal the target is PE and the
- * C environment is POSIX, so the CRT spellings are the ones that are absent.
- * `__has_builtin` cannot answer for library functions, so these ask the same
- * question the headers do: `strings.h` carries the POSIX pair. */
-#if __has_include(<strings.h>)
-#define HAVE_STRCASECMP 1
-#define HAVE_STRNCASECMP 1
-#endif
-/* #undef HAVE_STRCASECMP_ORIGINAL */
+/* #undef HAVE_STRCASECMP */
 
 /* Define to 1 if you have the strcmpi function. */
-#if !__has_include(<strings.h>)
 #define HAVE_STRCMPI
-#endif
 
 /* Define to 1 if you have the strdup function. */
 #define HAVE_STRDUP
@@ -1248,9 +1229,7 @@ package = {
 /* #undef HAVE_STRNCMPI */
 
 /* Define to 1 if you have the strnicmp function. */
-#if !__has_include(<strings.h>)
 #define HAVE_STRNICMP
-#endif
 
 /* Define to 1 if you have the <stropts.h> header file. */
 /* #undef HAVE_STROPTS_H */
@@ -1297,42 +1276,23 @@ package = {
 /* Define to 1 if you have the <time.h> header file. */
 #define HAVE_TIME_H
 
-/* THESE ASK WHETHER A HEADER IS THERE, SO THEY ASK THE COMPILER.
- *
- * This block is the Windows branch of a recipe that branches on the PLATFORM,
- * and it used to define all four unconditionally. That was true of every
- * Windows target this index had until a C library began presenting POSIX on
- * one: over openkal the target is still PE, still Win64, and there is no
- * `windows.h` --- `ares_setup.h:81` then reached for it and this repository's
- * own compatibility measurement recorded
- *
- *     ares_setup.h:81:12: fatal error: 'windows.h' file not found
- *
- * `__has_include` is standard C and asks the question actually being asked.
- * `HAVE_UNISTD_H` gets the same treatment for the same reason, from the other
- * side: a POSIX-presenting Windows target HAS it. */
-#if __has_include(<unistd.h>)
-#define HAVE_UNISTD_H 1
-#endif
+/* Define to 1 if you have the <unistd.h> header file. */
+/* #undef HAVE_UNISTD_H */
 
-#if __has_include(<windows.h>)
+/* Define to 1 if you have the windows.h header file. */
 #define HAVE_WINDOWS_H
-#endif
 
-#if __has_include(<winsock2.h>)
+/* Define to 1 if you have the winsock2.h header file. */
 #define HAVE_WINSOCK2_H
-#endif
 
-#if __has_include(<winsock.h>)
+/* Define to 1 if you have the winsock.h header file. */
 #define HAVE_WINSOCK_H
-#endif
 
 /* Define to 1 if you have the writev function. */
 /* #undef HAVE_WRITEV */
 
-#if __has_include(<ws2tcpip.h>)
+/* Define to 1 if you have the ws2tcpip.h header file. */
 #define HAVE_WS2TCPIP_H
-#endif
 
 /* Define if __system_property_get exists. */
 /* #undef HAVE___SYSTEM_PROPERTY_GET */
