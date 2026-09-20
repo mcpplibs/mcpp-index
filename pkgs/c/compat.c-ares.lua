@@ -76,14 +76,40 @@ package = {
         -- fail with implicit-declaration errors.
         cflags = { "-DCARES_STATICLIB", "-DHAVE_CONFIG_H", "-D_GNU_SOURCE", "-D_HAS_EXCEPTIONS=0" },
 
-        linux = {
-            -- Frozen configure snapshot, taken verbatim from gRPC 1.83.0's
-            -- third_party/cares/config_linux/ares_config.h. gRPC pins c-ares at this
-            -- exact release (submodule d3a507e == tag v1.34.5) and ships these files
-            -- precisely so the library can be built without running c-ares'
-            -- configure/CMake, which is the same thing this package needs.
-            generated_files = {
-                ["mcpp_generated/ares_config.h"] = [==[
+        -- ONE SNAPSHOT PER C ENVIRONMENT, AND THE PREPROCESSOR PICKS.
+        --
+        -- These are gRPC 1.83.0's three frozen `ares_config.h` files, verbatim,
+        -- from third_party/cares/config_{windows,darwin,linux}. gRPC pins c-ares
+        -- at this exact release (submodule d3a507e == tag v1.34.5) and ships
+        -- them precisely so the library can be built without running configure
+        -- or CMake, which is what this package needs too.
+        --
+        -- THEY USED TO BE SELECTED BY THE OPERATING SYSTEM, and a configure
+        -- snapshot describes a C ENVIRONMENT. Those were the same question
+        -- until a C library began presenting POSIX on Windows: over openkal the
+        -- target is still PE and still Win64, and `config_windows` then
+        -- describes nothing that is there. Of the sixteen headers it declares
+        -- absent, fifteen are present in that graph, and the first three
+        -- diagnostics a build produced -- `windows.h` not found, then
+        -- `gettimeofday` undeclared, then `struct hostent` incomplete -- were
+        -- each one macro of the sixteen, with thirteen more behind them.
+        --
+        -- `_WIN32` AND `__APPLE__` ARE THE ENGINE'S ANSWER TO EXACTLY THIS
+        -- QUESTION, so the selection needs no new key in this descriptor and no
+        -- new axis in the engine. mcpp defines `_WIN32` for a Win32 environment
+        -- and suppresses it for a POSIX-presenting one; the file asks the
+        -- preprocessor which environment it is being compiled in, which is the
+        -- question it was always answering.
+        --
+        -- Measured: x86_64-windows-gnu over openkal goes from `fails` to `runs`.
+        -- Linux and macOS select the same snapshot they selected before, byte
+        -- for byte, so neither reading moves.
+        --
+        -- `cflags`/`ldflags` stay per-OS below: a real Windows target still
+        -- needs ws2_32, and a POSIX-presenting one asks for nothing in it.
+        generated_files = {
+            ["mcpp_generated/ares_config.h"] = [==[
+#if defined(_WIN32)
 /* Generated from ares_config.h.cmake*/
 
 /* Define if building universal (internal helper macro) */
@@ -111,7 +137,7 @@ package = {
 #undef ETC_INET
 
 /* Define to the type of arg 2 for gethostname. */
-#define GETHOSTNAME_TYPE_ARG2 size_t
+#define GETHOSTNAME_TYPE_ARG2 int
 
 /* Define to the type qualifier of arg 1 for getnameinfo. */
 #define GETNAMEINFO_QUAL_ARG1 
@@ -129,19 +155,19 @@ package = {
 #define GETNAMEINFO_TYPE_ARG7 int
 
 /* Specifies the number of arguments to getservbyport_r */
-#define GETSERVBYPORT_R_ARGS 6
+#define GETSERVBYPORT_R_ARGS 
 
 /* Define to 1 if you have AF_INET6. */
 #define HAVE_AF_INET6
 
 /* Define to 1 if you have the <arpa/inet.h> header file. */
-#define HAVE_ARPA_INET_H
+/* #undef HAVE_ARPA_INET_H */
 
 /* Define to 1 if you have the <arpa/nameser_compat.h> header file. */
-#define HAVE_ARPA_NAMESER_COMPAT_H
+/* #undef HAVE_ARPA_NAMESER_COMPAT_H */
 
 /* Define to 1 if you have the <arpa/nameser.h> header file. */
-#define HAVE_ARPA_NAMESER_H
+/* #undef HAVE_ARPA_NAMESER_H */
 
 /* Define to 1 if you have the <assert.h> header file. */
 #define HAVE_ASSERT_H
@@ -153,10 +179,12 @@ package = {
 #define HAVE_BOOL_T
 
 /* Define to 1 if you have the clock_gettime function and monotonic timer. */
+#if __has_include(<time.h>) && !defined(_WIN32)
 #define HAVE_CLOCK_GETTIME_MONOTONIC 1
+#endif
 
 /* Define to 1 if you have the closesocket function. */
-/* #undef HAVE_CLOSESOCKET */
+#define HAVE_CLOSESOCKET
 
 /* Define to 1 if you have the CloseSocket camel case function. */
 /* #undef HAVE_CLOSESOCKET_CAMEL */
@@ -168,19 +196,19 @@ package = {
 /* #undef HAVE_CXX11 */
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
-#define HAVE_DLFCN_H
+/* #undef HAVE_DLFCN_H */
 
 /* Define to 1 if you have the <errno.h> header file. */
 #define HAVE_ERRNO_H
 
 /* Define to 1 if you have the fcntl function. */
-#define HAVE_FCNTL
+/* #undef HAVE_FCNTL */
 
 /* Define to 1 if you have the <fcntl.h> header file. */
 #define HAVE_FCNTL_H
 
 /* Define to 1 if you have a working fcntl O_NONBLOCK function. */
-#define HAVE_FCNTL_O_NONBLOCK
+/* #undef HAVE_FCNTL_O_NONBLOCK */
 
 /* Define to 1 if you have the freeaddrinfo function. */
 #define HAVE_FREEADDRINFO
@@ -189,7 +217,7 @@ package = {
 #define HAVE_GETADDRINFO
 
 /* Define to 1 if the getaddrinfo function is threadsafe. */
-/* #undef HAVE_GETADDRINFO_THREADSAFE */
+#define HAVE_GETADDRINFO_THREADSAFE
 
 /* Define to 1 if you have the getenv function. */
 #define HAVE_GETENV
@@ -207,31 +235,36 @@ package = {
 #define HAVE_GETNAMEINFO
 
 /* Define to 1 if you have the getservbyport_r function. */
-#define HAVE_GETSERVBYPORT_R
+/* #undef HAVE_GETSERVBYPORT_R */
 
 /* Define to 1 if you have the `gettimeofday' function. */
-#define HAVE_GETTIMEOFDAY
+/* SUB-SECOND TIME. `ares_timeval.c:93` refuses a configuration that names no
+ * source of it, and the Win32 one (`GetTickCount64`) needs `windows.h`. A
+ * POSIX-presenting target has `clock_gettime`, which `time.h` declares. */
+#if __has_include(<time.h>) && !defined(_WIN32)
+#define HAVE_GETTIMEOFDAY 1
+#endif
 
 /* Define to 1 if you have the `if_indextoname' function. */
-#define HAVE_IF_INDEXTONAME
+/* #undef HAVE_IF_INDEXTONAME */
 
 /* Define to 1 if you have a IPv6 capable working inet_net_pton function. */
 /* #undef HAVE_INET_NET_PTON */
 
 /* Define to 1 if you have a IPv6 capable working inet_ntop function. */
-#define HAVE_INET_NTOP
+/* #undef HAVE_INET_NTOP */
 
 /* Define to 1 if you have a IPv6 capable working inet_pton function. */
-#define HAVE_INET_PTON
+/* #undef HAVE_INET_PTON */
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #define HAVE_INTTYPES_H
 
 /* Define to 1 if you have the ioctl function. */
-#define HAVE_IOCTL
+/* #undef HAVE_IOCTL */
 
 /* Define to 1 if you have the ioctlsocket function. */
-/* #undef HAVE_IOCTLSOCKET */
+#define HAVE_IOCTLSOCKET
 
 /* Define to 1 if you have the IoctlSocket camel case function. */
 /* #undef HAVE_IOCTLSOCKET_CAMEL */
@@ -241,13 +274,13 @@ package = {
 /* #undef HAVE_IOCTLSOCKET_CAMEL_FIONBIO */
 
 /* Define to 1 if you have a working ioctlsocket FIONBIO function. */
-/* #undef HAVE_IOCTLSOCKET_FIONBIO */
+#define HAVE_IOCTLSOCKET_FIONBIO
 
 /* Define to 1 if you have a working ioctl FIONBIO function. */
-#define HAVE_IOCTL_FIONBIO
+/* #undef HAVE_IOCTL_FIONBIO */
 
 /* Define to 1 if you have a working ioctl SIOCGIFADDR function. */
-#define HAVE_IOCTL_SIOCGIFADDR
+/* #undef HAVE_IOCTL_SIOCGIFADDR */
 
 /* Define to 1 if you have the `resolve' library (-lresolve). */
 /* #undef HAVE_LIBRESOLV */
@@ -268,19 +301,19 @@ package = {
 #define HAVE_MEMORY_H
 
 /* Define to 1 if you have the MSG_NOSIGNAL flag. */
-#define HAVE_MSG_NOSIGNAL
+/* #undef HAVE_MSG_NOSIGNAL */
 
 /* Define to 1 if you have the <netdb.h> header file. */
-#define HAVE_NETDB_H
+/* #undef HAVE_NETDB_H */
 
 /* Define to 1 if you have the <netinet/in.h> header file. */
-#define HAVE_NETINET_IN_H
+/* #undef HAVE_NETINET_IN_H */
 
 /* Define to 1 if you have the <netinet/tcp.h> header file. */
-#define HAVE_NETINET_TCP_H
+/* #undef HAVE_NETINET_TCP_H */
 
 /* Define to 1 if you have the <net/if.h> header file. */
-#define HAVE_NET_IF_H
+/* #undef HAVE_NET_IF_H */
 
 /* Define to 1 if you have PF_INET6. */
 #define HAVE_PF_INET6
@@ -328,34 +361,48 @@ package = {
 #define HAVE_STDLIB_H
 
 /* Define to 1 if you have the strcasecmp function. */
-#define HAVE_STRCASECMP
+/* WIN32 CRT NAMES vs POSIX NAMES, decided by what the C environment
+ * presents rather than by the platform. This block is the Windows branch of a
+ * recipe that branches on the PLATFORM; over openkal the target is PE and the
+ * C environment is POSIX, so the CRT spellings are the ones that are absent.
+ * `__has_builtin` cannot answer for library functions, so these ask the same
+ * question the headers do: `strings.h` carries the POSIX pair. */
+#if __has_include(<strings.h>)
+#define HAVE_STRCASECMP 1
+#define HAVE_STRNCASECMP 1
+#endif
+/* #undef HAVE_STRCASECMP_ORIGINAL */
 
 /* Define to 1 if you have the strcmpi function. */
-/* #undef HAVE_STRCMPI */
+#if !__has_include(<strings.h>)
+#define HAVE_STRCMPI
+#endif
 
 /* Define to 1 if you have the strdup function. */
 #define HAVE_STRDUP
 
 /* Define to 1 if you have the stricmp function. */
-/* #undef HAVE_STRICMP */
+#define HAVE_STRICMP
 
 /* Define to 1 if you have the <strings.h> header file. */
-#define HAVE_STRINGS_H
+/* #undef HAVE_STRINGS_H */
 
 /* Define to 1 if you have the <string.h> header file. */
 #define HAVE_STRING_H
 
 /* Define to 1 if you have the strncasecmp function. */
-#define HAVE_STRNCASECMP
+/* #undef HAVE_STRNCASECMP */
 
 /* Define to 1 if you have the strncmpi function. */
 /* #undef HAVE_STRNCMPI */
 
 /* Define to 1 if you have the strnicmp function. */
-/* #undef HAVE_STRNICMP */
+#if !__has_include(<strings.h>)
+#define HAVE_STRNICMP
+#endif
 
 /* Define to 1 if you have the <stropts.h> header file. */
-#define HAVE_STROPTS_H
+/* #undef HAVE_STROPTS_H */
 
 /* Define to 1 if you have struct addrinfo. */
 #define HAVE_STRUCT_ADDRINFO
@@ -373,49 +420,82 @@ package = {
 #define HAVE_STRUCT_TIMEVAL
 
 /* Define to 1 if you have the <sys/ioctl.h> header file. */
-#define HAVE_SYS_IOCTL_H
+/* #undef HAVE_SYS_IOCTL_H */
 
 /* Define to 1 if you have the <sys/param.h> header file. */
-#define HAVE_SYS_PARAM_H
+/* #undef HAVE_SYS_PARAM_H */
 
 /* Define to 1 if you have the <sys/select.h> header file. */
-#define HAVE_SYS_SELECT_H
+/* #undef HAVE_SYS_SELECT_H */
 
 /* Define to 1 if you have the <sys/socket.h> header file. */
-#define HAVE_SYS_SOCKET_H
+/* #undef HAVE_SYS_SOCKET_H */
 
 /* Define to 1 if you have the <sys/stat.h> header file. */
 #define HAVE_SYS_STAT_H
 
-/* Define to 1 if you have the <sys/time.h> header file. */
+/* THE HEADER THAT DECLARES THE FALLBACK THIS BRANCH ALREADY TAKES.
+ *
+ * `HAVE_GETTIMEOFDAY` and `HAVE_CLOCK_GETTIME_MONOTONIC` are defined above
+ * for a target whose C library supplies them, and `ares_timeval.c` then
+ * compiles the `clock_gettime` branch --- whose failure path calls
+ * `gettimeofday` with no guard of its own, because upstream takes one to
+ * imply the other. Leaving this `#undef` while those two are defined states
+ * that the function exists and its header does not:
+ *
+ *     ares_timeval.c:70:11: error: call to undeclared function
+ *                           'gettimeofday'
+ *
+ * Asked rather than assumed, for the same reason as the four below. */
+#if __has_include(<sys/time.h>)
 #define HAVE_SYS_TIME_H
+#endif
 
 /* Define to 1 if you have the <sys/types.h> header file. */
 #define HAVE_SYS_TYPES_H
 
 /* Define to 1 if you have the <sys/uio.h> header file. */
-#define HAVE_SYS_UIO_H
+/* #undef HAVE_SYS_UIO_H */
 
 /* Define to 1 if you have the <time.h> header file. */
 #define HAVE_TIME_H
 
-/* Define to 1 if you have the <unistd.h> header file. */
-#define HAVE_UNISTD_H
+/* THESE ASK WHETHER A HEADER IS THERE, SO THEY ASK THE COMPILER.
+ *
+ * This block is the Windows branch of a recipe that branches on the PLATFORM,
+ * and it used to define all four unconditionally. That was true of every
+ * Windows target this index had until a C library began presenting POSIX on
+ * one: over openkal the target is still PE, still Win64, and there is no
+ * `windows.h` --- `ares_setup.h:81` then reached for it and this repository's
+ * own compatibility measurement recorded
+ *
+ *     ares_setup.h:81:12: fatal error: 'windows.h' file not found
+ *
+ * `__has_include` is standard C and asks the question actually being asked.
+ * `HAVE_UNISTD_H` gets the same treatment for the same reason, from the other
+ * side: a POSIX-presenting Windows target HAS it. */
+#if __has_include(<unistd.h>)
+#define HAVE_UNISTD_H 1
+#endif
 
-/* Define to 1 if you have the windows.h header file. */
-/* #undef HAVE_WINDOWS_H */
+#if __has_include(<windows.h>)
+#define HAVE_WINDOWS_H
+#endif
 
-/* Define to 1 if you have the winsock2.h header file. */
-/* #undef HAVE_WINSOCK2_H */
+#if __has_include(<winsock2.h>)
+#define HAVE_WINSOCK2_H
+#endif
 
-/* Define to 1 if you have the winsock.h header file. */
-/* #undef HAVE_WINSOCK_H */
+#if __has_include(<winsock.h>)
+#define HAVE_WINSOCK_H
+#endif
 
 /* Define to 1 if you have the writev function. */
-#define HAVE_WRITEV
+/* #undef HAVE_WRITEV */
 
-/* Define to 1 if you have the ws2tcpip.h header file. */
-/* #undef HAVE_WS2TCPIP_H */
+#if __has_include(<ws2tcpip.h>)
+#define HAVE_WS2TCPIP_H
+#endif
 
 /* Define if __system_property_get exists. */
 /* #undef HAVE___SYSTEM_PROPERTY_GET */
@@ -433,7 +513,7 @@ package = {
 #define RECVFROM_QUAL_ARG5 
 
 /* Define to the type of arg 1 for recvfrom. */
-#define RECVFROM_TYPE_ARG1 int
+#define RECVFROM_TYPE_ARG1 SOCKET
 
 /* Define to the type pointed by arg 2 for recvfrom. */
 #define RECVFROM_TYPE_ARG2 void *
@@ -442,7 +522,7 @@ package = {
 #define RECVFROM_TYPE_ARG2_IS_VOID 0
 
 /* Define to the type of arg 3 for recvfrom. */
-#define RECVFROM_TYPE_ARG3 size_t
+#define RECVFROM_TYPE_ARG3 int
 
 /* Define to the type of arg 4 for recvfrom. */
 #define RECVFROM_TYPE_ARG4 int
@@ -460,22 +540,22 @@ package = {
 #define RECVFROM_TYPE_ARG6_IS_VOID 0
 
 /* Define to the function return type for recvfrom. */
-#define RECVFROM_TYPE_RETV ssize_t
+#define RECVFROM_TYPE_RETV int
 
 /* Define to the type of arg 1 for recv. */
-#define RECV_TYPE_ARG1 int
+#define RECV_TYPE_ARG1 SOCKET
 
 /* Define to the type of arg 2 for recv. */
 #define RECV_TYPE_ARG2 void *
 
 /* Define to the type of arg 3 for recv. */
-#define RECV_TYPE_ARG3 size_t
+#define RECV_TYPE_ARG3 int
 
 /* Define to the type of arg 4 for recv. */
 #define RECV_TYPE_ARG4 int
 
 /* Define to the function return type for recv. */
-#define RECV_TYPE_RETV ssize_t
+#define RECV_TYPE_RETV int
 
 /* Define as the return type of signal handlers (`int' or `void'). */
 #define RETSIGTYPE 
@@ -484,22 +564,22 @@ package = {
 #define SEND_QUAL_ARG2 
 
 /* Define to the type of arg 1 for send. */
-#define SEND_TYPE_ARG1 int
+#define SEND_TYPE_ARG1 SOCKET
 
 /* Define to the type of arg 2 for send. */
 #define SEND_TYPE_ARG2 void *
 
 /* Define to the type of arg 3 for send. */
-#define SEND_TYPE_ARG3 size_t
+#define SEND_TYPE_ARG3 int
 
 /* Define to the type of arg 4 for send. */
 #define SEND_TYPE_ARG4 int
 
 /* Define to the function return type for send. */
-#define SEND_TYPE_RETV ssize_t
+#define SEND_TYPE_RETV int
 
 /* Define to 1 if you can safely include both <sys/time.h> and <time.h>. */
-#define TIME_WITH_SYS_TIME
+/* #undef TIME_WITH_SYS_TIME */
 
 /* Define to disable non-blocking sockets. */
 #undef USE_BLOCKING_SOCKETS
@@ -509,18 +589,11 @@ package = {
 
 /* Type to use in place of in_addr_t when system does not provide it. */
 #undef in_addr_t
-]==],
-            },
-            ldflags = { "-lpthread" },
-        },
-        macosx = {
-            -- Frozen configure snapshot, taken verbatim from gRPC 1.83.0's
-            -- third_party/cares/config_darwin/ares_config.h. gRPC pins c-ares at this
-            -- exact release (submodule d3a507e == tag v1.34.5) and ships these files
-            -- precisely so the library can be built without running c-ares'
-            -- configure/CMake, which is the same thing this package needs.
-            generated_files = {
-                ["mcpp_generated/ares_config.h"] = [==[
+
+/* gRPC manual edits here! */
+#define HAVE_IPHLPAPI_H
+#define HAVE_NETIOAPI_H
+#elif defined(__APPLE__)
 /* Generated from ares_config.h.cmake*/
 
 /* Define if building universal (internal helper macro) */
@@ -948,19 +1021,7 @@ package = {
 
 /* Type to use in place of in_addr_t when system does not provide it. */
 #undef in_addr_t
-]==],
-            },
-            -- config_darwin defines HAVE_LIBRESOLV, so res_* comes from libresolv.
-            ldflags = { "-lresolv" },
-        },
-        windows = {
-            -- Frozen configure snapshot, taken verbatim from gRPC 1.83.0's
-            -- third_party/cares/config_windows/ares_config.h. gRPC pins c-ares at this
-            -- exact release (submodule d3a507e == tag v1.34.5) and ships these files
-            -- precisely so the library can be built without running c-ares'
-            -- configure/CMake, which is the same thing this package needs.
-            generated_files = {
-                ["mcpp_generated/ares_config.h"] = [==[
+#else
 /* Generated from ares_config.h.cmake*/
 
 /* Define if building universal (internal helper macro) */
@@ -988,7 +1049,7 @@ package = {
 #undef ETC_INET
 
 /* Define to the type of arg 2 for gethostname. */
-#define GETHOSTNAME_TYPE_ARG2 int
+#define GETHOSTNAME_TYPE_ARG2 size_t
 
 /* Define to the type qualifier of arg 1 for getnameinfo. */
 #define GETNAMEINFO_QUAL_ARG1 
@@ -1006,19 +1067,19 @@ package = {
 #define GETNAMEINFO_TYPE_ARG7 int
 
 /* Specifies the number of arguments to getservbyport_r */
-#define GETSERVBYPORT_R_ARGS 
+#define GETSERVBYPORT_R_ARGS 6
 
 /* Define to 1 if you have AF_INET6. */
 #define HAVE_AF_INET6
 
 /* Define to 1 if you have the <arpa/inet.h> header file. */
-/* #undef HAVE_ARPA_INET_H */
+#define HAVE_ARPA_INET_H
 
 /* Define to 1 if you have the <arpa/nameser_compat.h> header file. */
-/* #undef HAVE_ARPA_NAMESER_COMPAT_H */
+#define HAVE_ARPA_NAMESER_COMPAT_H
 
 /* Define to 1 if you have the <arpa/nameser.h> header file. */
-/* #undef HAVE_ARPA_NAMESER_H */
+#define HAVE_ARPA_NAMESER_H
 
 /* Define to 1 if you have the <assert.h> header file. */
 #define HAVE_ASSERT_H
@@ -1030,12 +1091,10 @@ package = {
 #define HAVE_BOOL_T
 
 /* Define to 1 if you have the clock_gettime function and monotonic timer. */
-#if __has_include(<time.h>) && !defined(_WIN32)
 #define HAVE_CLOCK_GETTIME_MONOTONIC 1
-#endif
 
 /* Define to 1 if you have the closesocket function. */
-#define HAVE_CLOSESOCKET
+/* #undef HAVE_CLOSESOCKET */
 
 /* Define to 1 if you have the CloseSocket camel case function. */
 /* #undef HAVE_CLOSESOCKET_CAMEL */
@@ -1047,19 +1106,19 @@ package = {
 /* #undef HAVE_CXX11 */
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
-/* #undef HAVE_DLFCN_H */
+#define HAVE_DLFCN_H
 
 /* Define to 1 if you have the <errno.h> header file. */
 #define HAVE_ERRNO_H
 
 /* Define to 1 if you have the fcntl function. */
-/* #undef HAVE_FCNTL */
+#define HAVE_FCNTL
 
 /* Define to 1 if you have the <fcntl.h> header file. */
 #define HAVE_FCNTL_H
 
 /* Define to 1 if you have a working fcntl O_NONBLOCK function. */
-/* #undef HAVE_FCNTL_O_NONBLOCK */
+#define HAVE_FCNTL_O_NONBLOCK
 
 /* Define to 1 if you have the freeaddrinfo function. */
 #define HAVE_FREEADDRINFO
@@ -1068,7 +1127,7 @@ package = {
 #define HAVE_GETADDRINFO
 
 /* Define to 1 if the getaddrinfo function is threadsafe. */
-#define HAVE_GETADDRINFO_THREADSAFE
+/* #undef HAVE_GETADDRINFO_THREADSAFE */
 
 /* Define to 1 if you have the getenv function. */
 #define HAVE_GETENV
@@ -1086,36 +1145,31 @@ package = {
 #define HAVE_GETNAMEINFO
 
 /* Define to 1 if you have the getservbyport_r function. */
-/* #undef HAVE_GETSERVBYPORT_R */
+#define HAVE_GETSERVBYPORT_R
 
 /* Define to 1 if you have the `gettimeofday' function. */
-/* SUB-SECOND TIME. `ares_timeval.c:93` refuses a configuration that names no
- * source of it, and the Win32 one (`GetTickCount64`) needs `windows.h`. A
- * POSIX-presenting target has `clock_gettime`, which `time.h` declares. */
-#if __has_include(<time.h>) && !defined(_WIN32)
-#define HAVE_GETTIMEOFDAY 1
-#endif
+#define HAVE_GETTIMEOFDAY
 
 /* Define to 1 if you have the `if_indextoname' function. */
-/* #undef HAVE_IF_INDEXTONAME */
+#define HAVE_IF_INDEXTONAME
 
 /* Define to 1 if you have a IPv6 capable working inet_net_pton function. */
 /* #undef HAVE_INET_NET_PTON */
 
 /* Define to 1 if you have a IPv6 capable working inet_ntop function. */
-/* #undef HAVE_INET_NTOP */
+#define HAVE_INET_NTOP
 
 /* Define to 1 if you have a IPv6 capable working inet_pton function. */
-/* #undef HAVE_INET_PTON */
+#define HAVE_INET_PTON
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #define HAVE_INTTYPES_H
 
 /* Define to 1 if you have the ioctl function. */
-/* #undef HAVE_IOCTL */
+#define HAVE_IOCTL
 
 /* Define to 1 if you have the ioctlsocket function. */
-#define HAVE_IOCTLSOCKET
+/* #undef HAVE_IOCTLSOCKET */
 
 /* Define to 1 if you have the IoctlSocket camel case function. */
 /* #undef HAVE_IOCTLSOCKET_CAMEL */
@@ -1125,13 +1179,13 @@ package = {
 /* #undef HAVE_IOCTLSOCKET_CAMEL_FIONBIO */
 
 /* Define to 1 if you have a working ioctlsocket FIONBIO function. */
-#define HAVE_IOCTLSOCKET_FIONBIO
+/* #undef HAVE_IOCTLSOCKET_FIONBIO */
 
 /* Define to 1 if you have a working ioctl FIONBIO function. */
-/* #undef HAVE_IOCTL_FIONBIO */
+#define HAVE_IOCTL_FIONBIO
 
 /* Define to 1 if you have a working ioctl SIOCGIFADDR function. */
-/* #undef HAVE_IOCTL_SIOCGIFADDR */
+#define HAVE_IOCTL_SIOCGIFADDR
 
 /* Define to 1 if you have the `resolve' library (-lresolve). */
 /* #undef HAVE_LIBRESOLV */
@@ -1152,19 +1206,19 @@ package = {
 #define HAVE_MEMORY_H
 
 /* Define to 1 if you have the MSG_NOSIGNAL flag. */
-/* #undef HAVE_MSG_NOSIGNAL */
+#define HAVE_MSG_NOSIGNAL
 
 /* Define to 1 if you have the <netdb.h> header file. */
-/* #undef HAVE_NETDB_H */
+#define HAVE_NETDB_H
 
 /* Define to 1 if you have the <netinet/in.h> header file. */
-/* #undef HAVE_NETINET_IN_H */
+#define HAVE_NETINET_IN_H
 
 /* Define to 1 if you have the <netinet/tcp.h> header file. */
-/* #undef HAVE_NETINET_TCP_H */
+#define HAVE_NETINET_TCP_H
 
 /* Define to 1 if you have the <net/if.h> header file. */
-/* #undef HAVE_NET_IF_H */
+#define HAVE_NET_IF_H
 
 /* Define to 1 if you have PF_INET6. */
 #define HAVE_PF_INET6
@@ -1212,48 +1266,34 @@ package = {
 #define HAVE_STDLIB_H
 
 /* Define to 1 if you have the strcasecmp function. */
-/* WIN32 CRT NAMES vs POSIX NAMES, decided by what the C environment
- * presents rather than by the platform. This block is the Windows branch of a
- * recipe that branches on the PLATFORM; over openkal the target is PE and the
- * C environment is POSIX, so the CRT spellings are the ones that are absent.
- * `__has_builtin` cannot answer for library functions, so these ask the same
- * question the headers do: `strings.h` carries the POSIX pair. */
-#if __has_include(<strings.h>)
-#define HAVE_STRCASECMP 1
-#define HAVE_STRNCASECMP 1
-#endif
-/* #undef HAVE_STRCASECMP_ORIGINAL */
+#define HAVE_STRCASECMP
 
 /* Define to 1 if you have the strcmpi function. */
-#if !__has_include(<strings.h>)
-#define HAVE_STRCMPI
-#endif
+/* #undef HAVE_STRCMPI */
 
 /* Define to 1 if you have the strdup function. */
 #define HAVE_STRDUP
 
 /* Define to 1 if you have the stricmp function. */
-#define HAVE_STRICMP
+/* #undef HAVE_STRICMP */
 
 /* Define to 1 if you have the <strings.h> header file. */
-/* #undef HAVE_STRINGS_H */
+#define HAVE_STRINGS_H
 
 /* Define to 1 if you have the <string.h> header file. */
 #define HAVE_STRING_H
 
 /* Define to 1 if you have the strncasecmp function. */
-/* #undef HAVE_STRNCASECMP */
+#define HAVE_STRNCASECMP
 
 /* Define to 1 if you have the strncmpi function. */
 /* #undef HAVE_STRNCMPI */
 
 /* Define to 1 if you have the strnicmp function. */
-#if !__has_include(<strings.h>)
-#define HAVE_STRNICMP
-#endif
+/* #undef HAVE_STRNICMP */
 
 /* Define to 1 if you have the <stropts.h> header file. */
-/* #undef HAVE_STROPTS_H */
+#define HAVE_STROPTS_H
 
 /* Define to 1 if you have struct addrinfo. */
 #define HAVE_STRUCT_ADDRINFO
@@ -1271,68 +1311,49 @@ package = {
 #define HAVE_STRUCT_TIMEVAL
 
 /* Define to 1 if you have the <sys/ioctl.h> header file. */
-/* #undef HAVE_SYS_IOCTL_H */
+#define HAVE_SYS_IOCTL_H
 
 /* Define to 1 if you have the <sys/param.h> header file. */
-/* #undef HAVE_SYS_PARAM_H */
+#define HAVE_SYS_PARAM_H
 
 /* Define to 1 if you have the <sys/select.h> header file. */
-/* #undef HAVE_SYS_SELECT_H */
+#define HAVE_SYS_SELECT_H
 
 /* Define to 1 if you have the <sys/socket.h> header file. */
-/* #undef HAVE_SYS_SOCKET_H */
+#define HAVE_SYS_SOCKET_H
 
 /* Define to 1 if you have the <sys/stat.h> header file. */
 #define HAVE_SYS_STAT_H
 
 /* Define to 1 if you have the <sys/time.h> header file. */
-/* #undef HAVE_SYS_TIME_H */
+#define HAVE_SYS_TIME_H
 
 /* Define to 1 if you have the <sys/types.h> header file. */
 #define HAVE_SYS_TYPES_H
 
 /* Define to 1 if you have the <sys/uio.h> header file. */
-/* #undef HAVE_SYS_UIO_H */
+#define HAVE_SYS_UIO_H
 
 /* Define to 1 if you have the <time.h> header file. */
 #define HAVE_TIME_H
 
-/* THESE ASK WHETHER A HEADER IS THERE, SO THEY ASK THE COMPILER.
- *
- * This block is the Windows branch of a recipe that branches on the PLATFORM,
- * and it used to define all four unconditionally. That was true of every
- * Windows target this index had until a C library began presenting POSIX on
- * one: over openkal the target is still PE, still Win64, and there is no
- * `windows.h` --- `ares_setup.h:81` then reached for it and this repository's
- * own compatibility measurement recorded
- *
- *     ares_setup.h:81:12: fatal error: 'windows.h' file not found
- *
- * `__has_include` is standard C and asks the question actually being asked.
- * `HAVE_UNISTD_H` gets the same treatment for the same reason, from the other
- * side: a POSIX-presenting Windows target HAS it. */
-#if __has_include(<unistd.h>)
-#define HAVE_UNISTD_H 1
-#endif
+/* Define to 1 if you have the <unistd.h> header file. */
+#define HAVE_UNISTD_H
 
-#if __has_include(<windows.h>)
-#define HAVE_WINDOWS_H
-#endif
+/* Define to 1 if you have the windows.h header file. */
+/* #undef HAVE_WINDOWS_H */
 
-#if __has_include(<winsock2.h>)
-#define HAVE_WINSOCK2_H
-#endif
+/* Define to 1 if you have the winsock2.h header file. */
+/* #undef HAVE_WINSOCK2_H */
 
-#if __has_include(<winsock.h>)
-#define HAVE_WINSOCK_H
-#endif
+/* Define to 1 if you have the winsock.h header file. */
+/* #undef HAVE_WINSOCK_H */
 
 /* Define to 1 if you have the writev function. */
-/* #undef HAVE_WRITEV */
+#define HAVE_WRITEV
 
-#if __has_include(<ws2tcpip.h>)
-#define HAVE_WS2TCPIP_H
-#endif
+/* Define to 1 if you have the ws2tcpip.h header file. */
+/* #undef HAVE_WS2TCPIP_H */
 
 /* Define if __system_property_get exists. */
 /* #undef HAVE___SYSTEM_PROPERTY_GET */
@@ -1350,7 +1371,7 @@ package = {
 #define RECVFROM_QUAL_ARG5 
 
 /* Define to the type of arg 1 for recvfrom. */
-#define RECVFROM_TYPE_ARG1 SOCKET
+#define RECVFROM_TYPE_ARG1 int
 
 /* Define to the type pointed by arg 2 for recvfrom. */
 #define RECVFROM_TYPE_ARG2 void *
@@ -1359,7 +1380,7 @@ package = {
 #define RECVFROM_TYPE_ARG2_IS_VOID 0
 
 /* Define to the type of arg 3 for recvfrom. */
-#define RECVFROM_TYPE_ARG3 int
+#define RECVFROM_TYPE_ARG3 size_t
 
 /* Define to the type of arg 4 for recvfrom. */
 #define RECVFROM_TYPE_ARG4 int
@@ -1377,22 +1398,22 @@ package = {
 #define RECVFROM_TYPE_ARG6_IS_VOID 0
 
 /* Define to the function return type for recvfrom. */
-#define RECVFROM_TYPE_RETV int
+#define RECVFROM_TYPE_RETV ssize_t
 
 /* Define to the type of arg 1 for recv. */
-#define RECV_TYPE_ARG1 SOCKET
+#define RECV_TYPE_ARG1 int
 
 /* Define to the type of arg 2 for recv. */
 #define RECV_TYPE_ARG2 void *
 
 /* Define to the type of arg 3 for recv. */
-#define RECV_TYPE_ARG3 int
+#define RECV_TYPE_ARG3 size_t
 
 /* Define to the type of arg 4 for recv. */
 #define RECV_TYPE_ARG4 int
 
 /* Define to the function return type for recv. */
-#define RECV_TYPE_RETV int
+#define RECV_TYPE_RETV ssize_t
 
 /* Define as the return type of signal handlers (`int' or `void'). */
 #define RETSIGTYPE 
@@ -1401,22 +1422,22 @@ package = {
 #define SEND_QUAL_ARG2 
 
 /* Define to the type of arg 1 for send. */
-#define SEND_TYPE_ARG1 SOCKET
+#define SEND_TYPE_ARG1 int
 
 /* Define to the type of arg 2 for send. */
 #define SEND_TYPE_ARG2 void *
 
 /* Define to the type of arg 3 for send. */
-#define SEND_TYPE_ARG3 int
+#define SEND_TYPE_ARG3 size_t
 
 /* Define to the type of arg 4 for send. */
 #define SEND_TYPE_ARG4 int
 
 /* Define to the function return type for send. */
-#define SEND_TYPE_RETV int
+#define SEND_TYPE_RETV ssize_t
 
 /* Define to 1 if you can safely include both <sys/time.h> and <time.h>. */
-/* #undef TIME_WITH_SYS_TIME */
+#define TIME_WITH_SYS_TIME
 
 /* Define to disable non-blocking sockets. */
 #undef USE_BLOCKING_SOCKETS
@@ -1426,12 +1447,33 @@ package = {
 
 /* Type to use in place of in_addr_t when system does not provide it. */
 #undef in_addr_t
-
-/* gRPC manual edits here! */
-#define HAVE_IPHLPAPI_H
-#define HAVE_NETIOAPI_H
+#endif
 ]==],
-            },
+        },
+
+        linux = {
+            -- Frozen configure snapshot, taken verbatim from gRPC 1.83.0's
+            -- third_party/cares/config_linux/ares_config.h. gRPC pins c-ares at this
+            -- exact release (submodule d3a507e == tag v1.34.5) and ships these files
+            -- precisely so the library can be built without running c-ares'
+            -- configure/CMake, which is the same thing this package needs.
+            ldflags = { "-lpthread" },
+        },
+        macosx = {
+            -- Frozen configure snapshot, taken verbatim from gRPC 1.83.0's
+            -- third_party/cares/config_darwin/ares_config.h. gRPC pins c-ares at this
+            -- exact release (submodule d3a507e == tag v1.34.5) and ships these files
+            -- precisely so the library can be built without running c-ares'
+            -- configure/CMake, which is the same thing this package needs.
+            -- config_darwin defines HAVE_LIBRESOLV, so res_* comes from libresolv.
+            ldflags = { "-lresolv" },
+        },
+        windows = {
+            -- Frozen configure snapshot, taken verbatim from gRPC 1.83.0's
+            -- third_party/cares/config_windows/ares_config.h. gRPC pins c-ares at this
+            -- exact release (submodule d3a507e == tag v1.34.5) and ships these files
+            -- precisely so the library can be built without running c-ares'
+            -- configure/CMake, which is the same thing this package needs.
             cflags  = { "-DNOMINMAX", "-D_CRT_SECURE_NO_DEPRECATE", "-D_CRT_NONSTDC_NO_DEPRECATE", "-D_WIN32_WINNT=0x0600" },
             ldflags = { "-lws2_32", "-liphlpapi" },
         },
