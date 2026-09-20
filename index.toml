@@ -79,7 +79,26 @@
 # raising the floor was gated on the engine, not on those two packages, and
 # gating on both at once would have held this raise hostage to something it
 # does not need.
+# ── 2026-09-20: latest_mcpp -> 2026.9.20.1, min_mcpp DELIBERATELY UNCHANGED ──
+#
+# That release adds two manifest keys, `[kernel-abi]` and `[c-abi-absent]`, and
+# neither asks anything of this floor. mcpp IGNORES a top-level table it does
+# not know and REFUSES an unknown MEMBER of a table it does know; both keys are
+# top-level, so a client stopped at 2026.9.18.3 loads the manifests carrying
+# them and loses only the check.
+#
+# Measured, not assumed. The absence table was first written as
+# `[c-abi].absent`, and the published 2026.9.18.3 archive refused openkal-musl's
+# whole manifest on every target with `[c-abi] has no member 'absent'`; moved to
+# the top level, that same published binary builds it, and openkal-musl's own CI
+# pins 2026.9.18.3 and is green on 0.17.0 and 0.18.0. All 231 descriptors parse
+# with 2026.9.18.3 as well, so the DESCRIPTOR grammar --- what this floor
+# actually governs --- did not change either.
+#
+# Raising it would cost every client below the floor the WHOLE index (E0006 at
+# the index-open choke point) for a diagnostic note they merely would not have
+# received.
 [index]
 spec        = "1"
 min_mcpp    = "2026.9.18.3"
-latest_mcpp = "2026.9.18.3"
+latest_mcpp = "2026.9.20.1"
