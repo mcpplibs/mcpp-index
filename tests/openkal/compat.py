@@ -208,6 +208,17 @@ def measure(member: str, target: str, pins: dict) -> dict:
     if proc.returncode == 0:
         status = "runs" if can_run else "builds"
         return {"status": status}
+    return classify_failure(out, can_run)
+
+
+def classify_failure(out: str, can_run: bool) -> dict:
+    """Classify a member whose build or test command exited non-zero.
+
+    Separated from `measure` so the rule below has a criterion that runs
+    without a toolchain, a network or a member: `compat.py selftest`. The
+    distinction it draws decides a published figure, and until this split
+    the only way to exercise it was a four-hour matrix.
+    """
     built = can_run and re.search(r"^\s*Running bin/", out, re.M) is not None
     if built:
         return {"status": "builds", "diagnostic": first_diagnostic(out)}
@@ -221,21 +232,30 @@ def measure(member: str, target: str, pins: dict) -> dict:
     # not have --- which is how a build tool ends up simulating an operating
     # system it is not running on.
     #
-    # THE JUDGE IS THE ENGINE'S OWN REFUSAL CODE AND NOT A STRING IN THE
-    # DIAGNOSTIC. mcpp emits `interface-not-provided` when a package's
-    # `[kernel-abi] requires-interfaces` names something the resolved
-    # implementation does not provide; the member DECLARED the requirement and
-    # the graph answered. Matching prose instead would let a member fall into
-    # this status for saying the right words in an ordinary compile error.
+    # THE JUDGE IS A REASON TOKEN, AND THE BRACKETS ARE WHAT MAKE IT ONE.
+    # mcpp prints `[interface-not-provided]` in the refusal's own message, in
+    # brackets, the way `E0006` does (docs/50 §"One token is also printed by
+    # `mcpp build` itself"); the token is an entry in that page's table, which
+    # is to say a machine interface this index may read, rather than a
+    # sentence that may be rewritten.
+    #
+    # THE BRACKETS ARE PART OF THE MATCH AND NOT DECORATION. Read as a bare
+    # word, `interface-not-provided` is a hyphenated phrase an ordinary
+    # compile error could contain --- a member whose own diagnostic quoted a
+    # manifest key, or an upstream error message using the same words, would
+    # be recorded as correctly refused when it had simply failed. Requiring
+    # the brackets is what distinguishes "the graph answered this member's
+    # declared requirement" from "the output happened to say so".
     #
     # No member carries this status today: `requires-interfaces` reaches the
     # index with mcpp 2026.9.20.1 and no third-party descriptor states it yet.
     # The path is here rather than added later because the figure it changes is
     # the one this file publishes, and a member that starts declaring its
     # requirements should not have to wait for this file to catch up.
-    if re.search(r"\binterface-not-provided\b", out):
+    if "[interface-not-provided]" in out:
         return {"status": "refused", "diagnostic": first_diagnostic(out)}
     return {"status": "fails", "diagnostic": first_diagnostic(out)}
+
 
 
 def cmd_run(args: argparse.Namespace) -> int:
@@ -330,6 +350,48 @@ def cmd_select(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_selftest(_args: argparse.Namespace) -> int:
+    """Exercise `classify_failure`, whose distinctions decide a published
+    figure and which no other check reaches.
+
+    Each case is one sentence about the rule, and each would have passed
+    before the rule it pins was written the way it is now.
+    """
+    refusal = (
+        "error: package 'x' requires the kernel-abi interface 'openkal.space',\n"
+        "       which openkal-windows (14 interfaces) does not provide. "
+        "[interface-not-provided]\n")
+    # The same words, as prose, with no brackets: an upstream error quoting a
+    # manifest key, or a member's own diagnostic naming the condition. Before
+    # the brackets were part of the match this was recorded as a correct
+    # refusal, which is to say a member that merely failed improved the figure.
+    prose = ("error: no member named 'interface_not_provided'\n"
+             "note: the interface-not-provided condition is described in "
+             "the README\n")
+    ran = "   Compiling x v0.1.0\n   Running bin/x\n  test failed\n"
+
+    cases = [
+        ("a bracketed token is a refusal",
+         classify_failure(refusal, False)["status"], "refused"),
+        ("the same token as prose is a failure",
+         classify_failure(prose, False)["status"], "fails"),
+        ("an ordinary compile error is a failure",
+         classify_failure("error: no such file\n", False)["status"], "fails"),
+        ("a member that ran and failed its tests still built",
+         classify_failure(ran, True)["status"], "builds"),
+        ("the same output without a runner is not evidence it built",
+         classify_failure(ran, False)["status"], "fails"),
+    ]
+    bad = 0
+    for name, got, want in cases:
+        ok = got == want
+        bad += not ok
+        print(f"{'ok  ' if ok else 'FAIL'}  {name}: {got}"
+              + ("" if ok else f" (expected {want})"))
+    print(f"\n{len(cases) - bad} passed, {bad} failed")
+    return 1 if bad else 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -344,8 +406,10 @@ def main() -> int:
     check.add_argument("--members", nargs="*")
     select = sub.add_parser("select")
     select.add_argument("files", nargs="*")
+    sub.add_parser("selftest")
     args = parser.parse_args()
-    return {"run": cmd_run, "check": cmd_check, "select": cmd_select}[args.command](args)
+    return {"run": cmd_run, "check": cmd_check, "select": cmd_select,
+            "selftest": cmd_selftest}[args.command](args)
 
 
 if __name__ == "__main__":
