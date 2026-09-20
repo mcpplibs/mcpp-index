@@ -21,6 +21,13 @@
 -- It also moves the implementation pins to openkal-linux 0.15.0 and
 -- openkal-windows 0.10.0. No source changed.
 --
+-- 0.19.0 reads `__MCPP_TARGET_WINDOWS__` in `bits/setjmp.h`, the INSTALLED
+-- header that sizes `jmp_buf` by the target's calling convention, keeping
+-- `|| defined(__CYGWIN__)` beside it. Two operands cover every engine and the
+-- order of releases does not matter: mcpp up to 2026.9.21.1 defines the
+-- borrowed name, the release that withdraws it defines mcpp's own, and no
+-- engine defines neither. No source of musl itself changed.
+--
 -- IT ASKS NOTHING OF `index.toml`'s `min_mcpp`, AND THAT WAS MEASURED. mcpp
 -- ignores a top-level table it does not know and refuses an unknown MEMBER of
 -- a table it does know, so the first spelling of this table --- `[c-abi]`.`absent`
@@ -45,6 +52,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.19.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-musl/archive/refs/tags/0.19.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-musl/releases/download/0.19.0/openkal-musl-0.19.0.tar.gz",
+                },
+                sha256 = "a7ff6615a9111ab829dfc175154384b6bc743b4b1f936c0fca22e6cabed4a516",
+            },
             ["0.18.0"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-musl/archive/refs/tags/0.18.0.tar.gz",
@@ -229,6 +243,13 @@ package = {
             },
         },
         macosx = {
+            ["0.19.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-musl/archive/refs/tags/0.19.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-musl/releases/download/0.19.0/openkal-musl-0.19.0.tar.gz",
+                },
+                sha256 = "a7ff6615a9111ab829dfc175154384b6bc743b4b1f936c0fca22e6cabed4a516",
+            },
             ["0.18.0"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-musl/archive/refs/tags/0.18.0.tar.gz",
@@ -413,6 +434,13 @@ package = {
             },
         },
         windows = {
+            ["0.19.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-musl/archive/refs/tags/0.19.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-musl/releases/download/0.19.0/openkal-musl-0.19.0.tar.gz",
+                },
+                sha256 = "a7ff6615a9111ab829dfc175154384b6bc743b4b1f936c0fca22e6cabed4a516",
+            },
             ["0.18.0"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-musl/archive/refs/tags/0.18.0.tar.gz",
