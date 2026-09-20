@@ -98,9 +98,20 @@ jobs:
 
           # The released engine above is the BOOTSTRAP when a ref is under
           # review: mcpp builds itself and there is no other compiler for it
-          # here. The build replaces it on PATH, and MCPP_HOME follows, because
-          # a PATH entry that does not win looks exactly like one that does
-          # until something has been measured with the wrong engine.
+          # here.
+          #
+          # THE BUILD REPLACES THE BINARY INSIDE THE RELEASED ROOT, rather than
+          # being prepended to PATH beside its own `target/` directory. An
+          # earlier revision did the latter and the measurement stopped at
+          #
+          #     error: xlings binary not found
+          #
+          # because a released archive carries a BUNDLED xlings that mcpp
+          # resolves relative to its own location, and a freshly built binary
+          # has no such neighbour. Overwriting `bin/mcpp` in place keeps that
+          # root --- its bundled xlings, its layout, `MCPP_HOME`, the PATH
+          # entry already exported above --- exactly as the released engine
+          # left it, and changes only the one file under review.
           if [ -n "${MCPP_SOURCE_REF:-}" ]; then
             src="$RUNNER_TEMP/mcpp-src"
             git clone --quiet --depth 1 --branch "$MCPP_SOURCE_REF" \
@@ -115,10 +126,12 @@ jobs:
             built=$(find "$src/target" -type f -name mcpp | head -1)
             [ -n "$built" ] \
               || { echo "::error::mcpp did not build from $MCPP_SOURCE_REF"; exit 1; }
-            bindir=$(cd "$(dirname "$built")" && pwd)
-            echo "$bindir" >> "$GITHUB_PATH"
-            echo "MCPP_HOME=$(dirname "$bindir")" >> "$GITHUB_ENV"
-            echo "under review: $("$built" --version)  (from $MCPP_SOURCE_REF)"
+            cp "$built" "$root/bin/mcpp"
+            # Reported from the path the measurement will actually run, not
+            # from the build directory: a copy that did not land looks exactly
+            # like one that did until something has been measured with the
+            # wrong engine.
+            echo "under review: $("$root/bin/mcpp" --version)  (from $MCPP_SOURCE_REF)"
           fi
 
       # The Windows cross headers of the host are installed deliberately. A
