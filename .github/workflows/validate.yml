@@ -397,6 +397,16 @@ jobs:
       # release that republished an old tag would leave no other trace.
       - name: Lint duplicate versions
         run: lua5.4 tests/check_duplicate_versions.lua pkgs/*/*.lua
+      # The compatibility measurement's classifier decides a PUBLISHED figure
+      # -- which members "run", which "build", and which were correctly
+      # "refused" -- and the only thing that exercised it was the four-hour
+      # openkal-compat matrix, on real members, where a misclassification is
+      # a number nobody can trace back to a rule. `classify_failure` is split
+      # out so it can be stated in a second, here, with no toolchain and no
+      # network. It runs in `lint` rather than in that workflow because its
+      # cases are about the rule and not about any member.
+      - name: The compatibility classifier agrees with its own rules
+        run: python3 tests/openkal/compat.py selftest
       # ── Single-source-of-truth grammar check ─────────────────────────
       # `mcpp xpkg parse` uses EXACTLY the resolver's parser, so what
       # passes here is what builds for users of the pinned MCPP_VERSION.

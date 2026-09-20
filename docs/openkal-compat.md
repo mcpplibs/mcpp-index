@@ -45,10 +45,13 @@ judged by, and a score of that shape asks the engine to supply what the
 environment does not have -- which is how a build tool ends up simulating an
 operating system it is not running on. The summary counts the two apart.
 
-The judge is mcpp's own refusal code (`interface-not-provided`) and not a
-string in the diagnostic: the member DECLARED the requirement and the graph
-answered. Matching prose would let a member fall into this status for saying
-the right words in an ordinary compile error. No member carries it today --
+The judge is mcpp's reason token `[interface-not-provided]`, matched WITH its
+brackets. mcpp prints it in the refusal's own message the way it prints
+`E0006`, and it is an entry in `docs/50`'s token table -- a machine interface
+this measurement may read, rather than a sentence that may be rewritten. The
+brackets are part of the match: read as a bare word, the token is a hyphenated
+phrase an ordinary compile error could contain, and a member that merely failed
+while quoting it would be recorded as correctly refused. No member carries it today --
 `requires-interfaces` reaches the index with mcpp 2026.9.20.1 and no
 third-party descriptor states it yet.
 
