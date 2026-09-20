@@ -131,6 +131,23 @@ jobs:
           python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
           import json
           r = json.load(open("openkal-compat.json"))
+          # Counted per target, and `refused` counted apart from `fails`: a
+          # member told before compilation that this graph does not supply a
+          # capability it asked for has been answered correctly, and adding it
+          # to a failure figure turns that figure into a score the build tool
+          # is judged by.
+          tally = {}
+          for e in r["members"].values():
+              for t, rec in e["targets"].items():
+                  tally.setdefault(t, {}).setdefault(rec["status"], 0)
+                  tally[t][rec["status"]] += 1
+          print("| target | runs | builds | fails | refused |")
+          print("| --- | --- | --- | --- | --- |")
+          for t in sorted(tally):
+              c = tally[t]
+              print(f"| {t} | {c.get('runs',0)} | {c.get('builds',0)} "
+                    f"| {c.get('fails',0)} | {c.get('refused',0)} |")
+          print()
           print("| member | target | result | first diagnostic |")
           print("| --- | --- | --- | --- |")
           for m, e in sorted(r["members"].items()):

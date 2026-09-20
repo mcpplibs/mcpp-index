@@ -68,7 +68,12 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
 EXAMPLES = os.path.join(ROOT, "tests", "examples")
 WORK = os.path.join(ROOT, "tests", "openkal-work")
-RANK = {"fails": 0, "builds": 1, "runs": 2}
+# The ordering a published label may not go backwards along. `refused` sits
+# beside `fails` and not above it: an interface the graph does not provide is
+# not a working member, and a member that used to run and is now refused has
+# had something taken away from it. What the two do NOT share is the count the
+# summary reports --- see `measure`.
+RANK = {"fails": 0, "refused": 0, "builds": 1, "runs": 2}
 
 
 def load_toml(path: str) -> dict:
@@ -129,7 +134,7 @@ def kind_of(manifest: dict, status: str) -> str | None:
     deliberately no second, separate heuristic guessing at a package's
     internals -- a label not backed by a declared or measured fact is worse
     than no label, so an ambiguous case returns None rather than a guess."""
-    if status == "fails":
+    if status in ("fails", "refused"):
         return None
     if platform_bound(manifest):
         return "platform"
@@ -204,8 +209,33 @@ def measure(member: str, target: str, pins: dict) -> dict:
         status = "runs" if can_run else "builds"
         return {"status": status}
     built = can_run and re.search(r"^\s*Running bin/", out, re.M) is not None
-    return {"status": "builds" if built else "fails",
-            "diagnostic": first_diagnostic(out)}
+    if built:
+        return {"status": "builds", "diagnostic": first_diagnostic(out)}
+    # A REFUSAL IS NOT A FAILURE, AND THE DIFFERENCE IS NOT A MATTER OF DEGREE.
+    #
+    # A member that asks this graph for a capability the graph does not supply
+    # is told so before anything is compiled, and being told so is the correct
+    # outcome rather than a smaller kind of failure. Counting it as one turns
+    # the compatibility figure into a score the build tool is judged by, and a
+    # score of that shape asks the engine to supply what the environment does
+    # not have --- which is how a build tool ends up simulating an operating
+    # system it is not running on.
+    #
+    # THE JUDGE IS THE ENGINE'S OWN REFUSAL CODE AND NOT A STRING IN THE
+    # DIAGNOSTIC. mcpp emits `interface-not-provided` when a package's
+    # `[kernel-abi] requires-interfaces` names something the resolved
+    # implementation does not provide; the member DECLARED the requirement and
+    # the graph answered. Matching prose instead would let a member fall into
+    # this status for saying the right words in an ordinary compile error.
+    #
+    # No member carries this status today: `requires-interfaces` reaches the
+    # index with mcpp 2026.9.20.1 and no third-party descriptor states it yet.
+    # The path is here rather than added later because the figure it changes is
+    # the one this file publishes, and a member that starts declaring its
+    # requirements should not have to wait for this file to catch up.
+    if re.search(r"\binterface-not-provided\b", out):
+        return {"status": "refused", "diagnostic": first_diagnostic(out)}
+    return {"status": "fails", "diagnostic": first_diagnostic(out)}
 
 
 def cmd_run(args: argparse.Namespace) -> int:

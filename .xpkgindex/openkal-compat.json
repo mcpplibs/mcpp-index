@@ -7,7 +7,7 @@
     "protobuf-protoc": "runs a host code generator",
     "sycl-runtime": "a vendor runtime distributed as binaries for the platform C runtime"
   },
-  "measured": "2026-09-17",
+  "measured": "2026-09-20",
   "members": {
     "archive": {
       "packages": [
@@ -21,10 +21,11 @@
       "portable": true,
       "targets": {
         "x86_64-linux-gnu": {
+          "kind": "posix",
           "status": "runs"
         },
         "x86_64-windows-gnu": {
-          "diagnostic": "/home/runner/work/mcpp-index/mcpp-index/tests/openkal-work/archive/.mcpp/.xlings/data/xpkgs/compat-x-xz/5.8.3/xz-5.8.3/src/common/sysdefs.h:44:11: fatal error: '_mingw.h' file not found",
+          "diagnostic": "/home/runner/work/mcpp-index/mcpp-index/tests/openkal-work/archive/.mcpp/.xlings/data/xpkgs/compat-x-xz/5.8.3/xz-5.8.3/src/common/tuklib_physmem.c:21:11: fatal error: 'windows.h' file not found",
           "status": "fails"
         }
       }
@@ -36,9 +37,11 @@
       "portable": true,
       "targets": {
         "x86_64-linux-gnu": {
+          "kind": "posix",
           "status": "runs"
         },
         "x86_64-windows-gnu": {
+          "kind": "posix",
           "status": "runs"
         }
       }
@@ -50,9 +53,11 @@
       "portable": true,
       "targets": {
         "x86_64-linux-gnu": {
+          "kind": "posix",
           "status": "runs"
         },
         "x86_64-windows-gnu": {
+          "kind": "posix",
           "status": "runs"
         }
       }
@@ -64,6 +69,7 @@
       "portable": true,
       "targets": {
         "x86_64-linux-gnu": {
+          "kind": "posix",
           "status": "runs"
         },
         "x86_64-windows-gnu": {
@@ -79,11 +85,12 @@
       "portable": true,
       "targets": {
         "x86_64-linux-gnu": {
+          "kind": "posix",
           "status": "runs"
         },
         "x86_64-windows-gnu": {
-          "diagnostic": "/home/runner/work/mcpp-index/mcpp-index/mcpp-2026.9.17.3-linux-x86_64/registry/data/xpkgs/compat-x-lua/5.4.7/lua-5.4.7/src/loadlib.c:150:10: fatal error: 'windows.h' file not found",
-          "status": "fails"
+          "kind": "posix",
+          "status": "runs"
         }
       }
     },
@@ -94,11 +101,12 @@
       "portable": true,
       "targets": {
         "x86_64-linux-gnu": {
+          "kind": "posix",
           "status": "runs"
         },
         "x86_64-windows-gnu": {
-          "diagnostic": "/home/runner/work/mcpp-index/mcpp-index/tests/openkal-work/catch2/.mcpp/.xlings/data/xpkgs/compat-x-catch2/3.15.2/Catch2-3.15.2/src/catch2/internal/catch_windows_h_proxy.hpp:24:10: fatal error: 'windows.h' file not found",
-          "status": "fails"
+          "kind": "posix",
+          "status": "runs"
         }
       }
     },
@@ -109,9 +117,11 @@
       "portable": true,
       "targets": {
         "x86_64-linux-gnu": {
+          "kind": "posix",
           "status": "runs"
         },
         "x86_64-windows-gnu": {
+          "kind": "posix",
           "status": "runs"
         }
       }
@@ -123,11 +133,12 @@
       "portable": true,
       "targets": {
         "x86_64-linux-gnu": {
+          "kind": "posix",
           "status": "runs"
         },
         "x86_64-windows-gnu": {
-          "diagnostic": "/home/runner/work/mcpp-index/mcpp-index/tests/openkal-work/cli11/.mcpp/.xlings/data/xpkgs/compat-x-CLI11/2.7.2/CLI11-2.7.2/include/CLI/impl/Argv_inl.hpp:44:10: fatal error: 'windef.h' file not found",
-          "status": "fails"
+          "kind": "posix",
+          "status": "runs"
         }
       }
     },
@@ -138,9 +149,11 @@
       "portable": true,
       "targets": {
         "x86_64-linux-gnu": {
+          "kind": "posix",
           "status": "runs"
         },
         "x86_64-windows-gnu": {
+          "kind": "posix",
           "status": "runs"
         }
       }
@@ -152,12 +165,12 @@
       "portable": true,
       "targets": {
         "x86_64-linux-gnu": {
-          "diagnostic": "/home/runner/work/mcpp-index/mcpp-index/mcpp-2026.9.17.3-linux-x86_64/registry/data/xpkgs/chriskohlhoff-x-asio/1.38.1/asio-asio-1-38-1/include/asio/detail/config.hpp:899:11: fatal error: 'linux/version.h' file not found",
+          "diagnostic": "/home/runner/work/mcpp-index/mcpp-index/mcpp-2026.9.18.3-linux-x86_64/registry/data/xpkgs/chriskohlhoff-x-asio/1.38.1/asio-asio-1-38-1/include/asio/detail/config.hpp:899:11: fatal error: 'linux/version.h' file not found",
           "status": "fails"
         },
         "x86_64-windows-gnu": {
-          "diagnostic": "/home/runner/work/mcpp-index/mcpp-index/mcpp-2026.9.17.3-linux-x86_64/registry/data/xpkgs/chriskohlhoff-x-asio/1.38.1/asio-asio-1-38-1/include/asio/detail/socket_types.hpp:33:11: fatal error: 'winsock2.h' file not found",
-          "status": "fails"
+          "kind": "posix",
+          "status": "runs"
         }
       }
     },
@@ -172,7 +185,7 @@
           "status": "fails"
         },
         "x86_64-windows-gnu": {
-          "diagnostic": "/home/runner/work/mcpp-index/mcpp-index/tests/openkal-work/curl/.mcpp/.xlings/data/xpkgs/compat-x-curl/8.21.0/curl-curl-8_21_0/lib/curl_setup.h:33:10: fatal error: '_mingw.h' file not found",
+          "diagnostic": "/home/runner/work/mcpp-index/mcpp-index/tests/openkal-work/curl/.mcpp/.xlings/data/xpkgs/compat-x-curl/8.21.0/curl-curl-8_21_0/lib/curl_setup.h:591:2: error: \"too small curl_off_t\"",
           "status": "fails"
         }
       }
@@ -184,10 +197,11 @@
       "portable": true,
       "targets": {
         "x86_64-linux-gnu": {
+          "kind": "posix",
           "status": "runs"
         },
         "x86_64-windows-gnu": {
-          "diagnostic": "/home/runner/work/mcpp-index/mcpp-index/tests/openkal-work/doctest/.mcpp/.xlings/data/xpkgs/compat-x-doctest/2.4.12/doctest-2.4.12/doctest/doctest.h:3215:10: fatal error: 'windows.h' file not found",
+          "diagnostic": "ld.lld: error: undefined symbol: __cxa_thread_atexit",
           "status": "fails"
         }
       }
@@ -199,11 +213,12 @@
       "portable": true,
       "targets": {
         "x86_64-linux-gnu": {
+          "kind": "posix",
           "status": "runs"
         },
         "x86_64-windows-gnu": {
-          "diagnostic": "/home/runner/work/mcpp-index/mcpp-index/mcpp-2026.9.17.3-linux-x86_64/registry/data/xpkgs/xim-x-llvm/22.1.8/lib/clang/22/include/mm_malloc.h:43:22: error: use of undeclared identifier '__mingw_aligned_malloc'",
-          "status": "fails"
+          "kind": "posix",
+          "status": "runs"
         }
       }
     },
@@ -218,6 +233,7 @@
           "status": "fails"
         },
         "x86_64-windows-gnu": {
+          "kind": "platform",
           "status": "runs"
         }
       }
@@ -229,11 +245,12 @@
       "portable": true,
       "targets": {
         "x86_64-linux-gnu": {
+          "kind": "posix",
           "status": "runs"
         },
         "x86_64-windows-gnu": {
-          "diagnostic": "/home/runner/work/mcpp-index/mcpp-index/mcpp-2026.9.17.3-linux-x86_64/registry/data/xpkgs/xim-x-llvm/22.1.8/lib/clang/22/include/intrin.h:12:15: fatal error: 'intrin.h' file not found",
-          "status": "fails"
+          "kind": "posix",
+          "status": "runs"
         }
       }
     },
@@ -244,9 +261,11 @@
       "portable": true,
       "targets": {
         "x86_64-linux-gnu": {
+          "kind": "posix",
           "status": "runs"
         },
         "x86_64-windows-gnu": {
+          "kind": "posix",
           "status": "runs"
         }
       }
@@ -258,9 +277,11 @@
       "portable": true,
       "targets": {
         "x86_64-linux-gnu": {
+          "kind": "posix",
           "status": "runs"
         },
         "x86_64-windows-gnu": {
+          "kind": "posix",
           "status": "runs"
         }
       }
@@ -272,11 +293,12 @@
       "portable": true,
       "targets": {
         "x86_64-linux-gnu": {
+          "kind": "posix",
           "status": "runs"
         },
         "x86_64-windows-gnu": {
-          "diagnostic": "/home/runner/work/mcpp-index/mcpp-index/tests/openkal-work/libpng/.mcpp/.xlings/data/xpkgs/compat-x-libpng/1.6.43/libpng-1.6.43/pngpriv.h:578:12: fatal error: 'windows.h' file not found",
-          "status": "fails"
+          "kind": "posix",
+          "status": "runs"
         }
       }
     },
@@ -287,9 +309,11 @@
       "portable": true,
       "targets": {
         "x86_64-linux-gnu": {
+          "kind": "posix",
           "status": "runs"
         },
         "x86_64-windows-gnu": {
+          "kind": "posix",
           "status": "runs"
         }
       }
@@ -301,9 +325,11 @@
       "portable": true,
       "targets": {
         "x86_64-linux-gnu": {
+          "kind": "posix",
           "status": "runs"
         },
         "x86_64-windows-gnu": {
+          "kind": "posix",
           "status": "runs"
         }
       }
@@ -315,6 +341,7 @@
       "portable": true,
       "targets": {
         "x86_64-linux-gnu": {
+          "kind": "posix",
           "status": "runs"
         },
         "x86_64-windows-gnu": {
@@ -330,9 +357,11 @@
       "portable": true,
       "targets": {
         "x86_64-linux-gnu": {
+          "kind": "posix",
           "status": "runs"
         },
         "x86_64-windows-gnu": {
+          "kind": "posix",
           "status": "runs"
         }
       }
@@ -344,9 +373,11 @@
       "portable": false,
       "targets": {
         "x86_64-linux-gnu": {
+          "kind": "platform",
           "status": "runs"
         },
         "x86_64-windows-gnu": {
+          "kind": "platform",
           "status": "runs"
         }
       }
@@ -358,11 +389,12 @@
       "portable": true,
       "targets": {
         "x86_64-linux-gnu": {
+          "kind": "posix",
           "status": "runs"
         },
         "x86_64-windows-gnu": {
-          "diagnostic": "/home/runner/work/mcpp-index/mcpp-index/tests/openkal-work/re2/.mcpp/.xlings/data/xpkgs/compat-x-re2/2022-04-01/re2-2022-04-01/util/mutex.h:15:10: fatal error: 'windows.h' file not found",
-          "status": "fails"
+          "kind": "posix",
+          "status": "runs"
         }
       }
     },
@@ -373,10 +405,11 @@
       "portable": true,
       "targets": {
         "x86_64-linux-gnu": {
+          "kind": "posix",
           "status": "runs"
         },
         "x86_64-windows-gnu": {
-          "diagnostic": "/home/runner/work/mcpp-index/mcpp-index/tests/openkal-work/spdlog/.mcpp/.xlings/data/xpkgs/compat-x-spdlog/1.17.0/spdlog-1.17.0/include/spdlog/fmt/bundled/format-inl.h:20:12: fatal error: 'io.h' file not found",
+          "diagnostic": "ld.lld: error: undefined symbol: __cxa_thread_atexit",
           "status": "fails"
         }
       }
@@ -388,6 +421,7 @@
       "portable": true,
       "targets": {
         "x86_64-linux-gnu": {
+          "kind": "posix",
           "status": "runs"
         },
         "x86_64-windows-gnu": {
@@ -403,9 +437,11 @@
       "portable": true,
       "targets": {
         "x86_64-linux-gnu": {
+          "kind": "posix",
           "status": "runs"
         },
         "x86_64-windows-gnu": {
+          "kind": "posix",
           "status": "runs"
         }
       }
@@ -417,9 +453,11 @@
       "portable": true,
       "targets": {
         "x86_64-linux-gnu": {
+          "kind": "posix",
           "status": "runs"
         },
         "x86_64-windows-gnu": {
+          "kind": "posix",
           "status": "runs"
         }
       }
@@ -431,9 +469,11 @@
       "portable": true,
       "targets": {
         "x86_64-linux-gnu": {
+          "kind": "posix",
           "status": "runs"
         },
         "x86_64-windows-gnu": {
+          "kind": "posix",
           "status": "runs"
         }
       }
@@ -445,17 +485,19 @@
       "portable": true,
       "targets": {
         "x86_64-linux-gnu": {
+          "kind": "posix",
           "status": "runs"
         },
         "x86_64-windows-gnu": {
+          "kind": "posix",
           "status": "runs"
         }
       }
     }
   },
   "pins": {
-    "mcpp": "2026.9.17.3",
-    "runtime": "0.10.0",
+    "mcpp": "2026.9.18.3",
+    "runtime": "0.12.0",
     "toolchain": "llvm@22.1.8"
   },
   "schema": 1

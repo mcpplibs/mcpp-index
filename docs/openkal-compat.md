@@ -35,6 +35,22 @@ recorded per target:
 | `runs` | the member's tests passed; on a target other than the host they ran through the pinned runner (Wine for Windows) |
 | `builds` | the member built, and its tests were not run or did not pass; the first diagnostic is kept |
 | `fails` | the member did not build; the first diagnostic is kept |
+| `refused` | the member asked this graph for a capability it does not supply, and was told so before anything was compiled |
+
+**A refusal is not a failure, and the difference is not a matter of degree.**
+A member that declares `[kernel-abi] requires-interfaces` naming something the
+resolved implementation does not provide has been answered correctly. Counting
+it as a failure turns the compatibility figure into a score the build tool is
+judged by, and a score of that shape asks the engine to supply what the
+environment does not have -- which is how a build tool ends up simulating an
+operating system it is not running on. The summary counts the two apart.
+
+The judge is mcpp's own refusal code (`interface-not-provided`) and not a
+string in the diagnostic: the member DECLARED the requirement and the graph
+answered. Matching prose would let a member fall into this status for saying
+the right words in an ordinary compile error. No member carries it today --
+`requires-interfaces` reaches the index with mcpp 2026.9.20.1 and no
+third-party descriptor states it yet.
 
 Beside `status`, and derived from the same measurement, `compat.py` records a
 second, orthogonal `kind`: not whether the member worked, but what it needed
@@ -155,3 +171,52 @@ python3 tests/openkal/compat.py check --results /tmp/r.json --baseline .xpkginde
 
 The members are copied into `tests/openkal-work/`, which is not tracked, and the
 directory is removed when the run ends.
+
+## The 2026-09-20 measurement, and what it settled
+
+The graph moved from `openkal-llvm-runtime 0.10.0` to `0.12.0`. Below that
+version no package the pin resolved declared a `[c-abi]` block, so mcpp
+realised nothing for the target side and the Windows leg compiled as
+`x86_64-w64-windows-gnu` with `_WIN32` defined. Every Windows result recorded
+before this move measured the behaviour the declaration exists to replace.
+
+| target | before | after |
+| --- | --- | --- |
+| `x86_64-linux-gnu` | 27 runs / 3 fails | 27 runs / 3 fails |
+| `x86_64-windows-gnu` | 15 runs / 15 fails | **23 runs / 7 fails** |
+
+Eight members that had failed on a missing Windows header now run unchanged:
+asio (through `cmp-module`), catch2, cli11, eigen, fmtlib.fmt, libpng, re2 and
+lua (through `capi-lua`). Each selected its Windows branch on `_WIN32` or
+`__MINGW32__`; with neither defined it takes the POSIX branch it takes on
+Linux, and needs no adaptation in its descriptor. This is what the declaration
+is for, and it is the first measurement in which it was in effect.
+
+**The seven that remain, and what each is waiting on.** They are not one
+residue but three, and only the first is about the C environment at all.
+
+| member | first diagnostic | what it is waiting on |
+| --- | --- | --- |
+| mimalloc | `atomic.h:16: 'windows.h' file not found` | `__CYGWIN__`. Its guard is `#if defined(_WIN32) \|\| defined(__CYGWIN__)`, with the comment "we use windows locks on cygwin, but otherwise treat it at unix" |
+| sqlite3 | `sqlite3.c:29506: 'windows.h' file not found` | `__CYGWIN__`. `SQLITE_OS_WIN` is selected by a list that includes it, and `os_win.h` then includes `windows.h` unconditionally |
+| archive (xz) | `tuklib_physmem.c:21: 'windows.h' file not found` | a generated configuration, as on every system |
+| c-ares | `ares_setup.h:81: 'windows.h' file not found` | a generated configuration |
+| curl | `curl_setup.h:591: "too small curl_off_t"` | a generated configuration, for LP64 |
+| doctest | `ld.lld: undefined symbol: __cxa_thread_atexit` | the C++ runtime, not the C environment |
+| spdlog | `ld.lld: undefined symbol: __cxa_thread_atexit` | the same |
+
+**The first two settle a trade-off that was left open.** `__CYGWIN__` is left
+defined by the Cygwin-flavoured realisation on the reasoning that portable
+third-party code needing to know the OBJECT FORMAT has no other name for "PE
+with a POSIX-presenting C environment", and mcpp's own documentation recorded
+that as "a trade-off for the 30-member measurement to settle, not a settled
+fact". The measurement has now settled half of it: two members read that name
+as "the Win32 API is available", which is a different question, and mimalloc's
+own comment says so in as many words. A name borrowed from another environment
+carries the meaning its lender gave it.
+
+**The last two are new, and they are progress.** doctest and spdlog previously
+stopped at a missing header; they now compile and stop at the link, naming
+`__cxa_thread_atexit` -- the hook libc++abi calls to register a `thread_local`
+destructor. It is a gap in the C++ runtime above openkal rather than in the C
+environment, and it was not reachable until the environment was right.
