@@ -122,6 +122,24 @@ has to stay falsifiable; one that nothing can contradict is a permanent
 excuse. The cost is a build that was already being paid for before the
 declaration existed.
 
+### curl's two failures have two different causes
+
+Both are recipe defects, and neither is the same defect:
+
+| target | first diagnostic | cause |
+| --- | --- | --- |
+| `x86_64-linux-gnu` | `lib/setopt.c:31: 'linux/tcp.h' file not found` | `#define HAVE_LINUX_TCP_H 1` inside `#if defined(__linux__)`. The kernel IS Linux, so the predicate is right; what is wrong is reading it as "glibc's userspace headers are installed". The honest test is `__has_include(<linux/tcp.h>)`. The same block also asserts `HAVE_GLIBC_STRERROR_R`, which is false over musl. |
+| `x86_64-windows-gnu` | `curl_setup.h:591: "too small curl_off_t"` | The recipe's `windows` branch omits `HAVE_CONFIG_H` so that `curl_setup.h` reaches the checked-in `lib/config-win32.h`, and links `-lws2_32` with Schannel. Over openkal that target presents POSIX and is **LP64**, while `config-win32.h` is written for LLP64 and the Win32 API. |
+
+**The second is the interesting one: the recipe branches on the PLATFORM where
+the question is about the C ENVIRONMENT.** Those two agreed on every target
+this index had until openkal presented POSIX on Windows, and mcpp has the
+predicate for the question actually being asked — `cfg(c-abi = "musl")`
+(mcpp docs/22, "Adaptation To The Resolved Target Side"). Selecting the
+generated POSIX configuration there, rather than the checked-in Win32 one, is
+the shape; it also needs this index's OpenSSL over the same environment, so
+it is a larger change than the first and is not folded into it.
+
 ## 3. When it runs
 
 `.github/workflows/openkal-compat.yml` runs weekly and on demand, measuring every
