@@ -38,6 +38,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.12.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.12.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-llvm-runtime/releases/download/0.12.0/openkal-llvm-runtime-0.12.0.tar.gz",
+                },
+                sha256 = "e009f6195ef517c40beaf5093cde59764fc870502aab5967f5a2817f8df47cff",
+            },
             ["0.11.0"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.11.0.tar.gz",
@@ -194,6 +201,20 @@ package = {
             },
         },
         macosx = {
+            ["0.12.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.12.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-llvm-runtime/releases/download/0.12.0/openkal-llvm-runtime-0.12.0.tar.gz",
+                },
+                sha256 = "e009f6195ef517c40beaf5093cde59764fc870502aab5967f5a2817f8df47cff",
+            },
+            ["0.11.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.11.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-llvm-runtime/releases/download/0.11.0/openkal-llvm-runtime-0.11.0.tar.gz",
+                },
+                sha256 = "2e26674d6698aa3c9cbc648fb4b692473e39e339fb52400a153b8a35c8208bf4",
+            },
             ["0.10.0"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.10.0.tar.gz",
@@ -343,6 +364,13 @@ package = {
             },
         },
         windows = {
+            ["0.12.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.12.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-llvm-runtime/releases/download/0.12.0/openkal-llvm-runtime-0.12.0.tar.gz",
+                },
+                sha256 = "e009f6195ef517c40beaf5093cde59764fc870502aab5967f5a2817f8df47cff",
+            },
             ["0.11.0"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.11.0.tar.gz",
