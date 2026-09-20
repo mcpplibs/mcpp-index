@@ -112,6 +112,30 @@ package = {
             runtime = {
                 libraries = { "psapi", "shell32", "user32", "advapi32", "bcrypt" },
             },
+
+            -- `__builtin_thread_pointer()` IS NOT AVAILABLE FOR EVERY OS THE
+            -- TRIPLE CAN NAME, AND THE FAILURE IS A BACKEND CRASH.
+            --
+            -- prim-tls.h:176 turns the builtin on for x86_64 with clang >= 14
+            -- unless `__APPLE__`, `__CYGWIN__` or `MI_LIBC_MUSL` says
+            -- otherwise. Two of those three would have excluded this target
+            -- and neither reaches it: mcpp suppresses `__CYGWIN__` on purpose,
+            -- because source must not read the realisation triple as a
+            -- statement about Cygwin, and `MI_LIBC_MUSL` is a build option
+            -- upstream expects the packager to set ("Enable this when linking
+            -- with musl libc", CMakeLists.txt:39) rather than something it
+            -- detects. So the guard passes, and LLVM has no lowering for the
+            -- builtin on this OS:
+            --
+            --     fatal error: error in backend: Target OS doesn't support
+            --                  __builtin_thread_pointer() yet.
+            --
+            -- prim-tls.h:176 opens with `#if !defined(...) /* allow user
+            -- override */`, so the answer is to give it one. This is the
+            -- Windows branch, and on a Win32 target the setting is not read at
+            -- all --- `_WIN32` selects `NtCurrentTeb()` three arms earlier ---
+            -- so it changes only the target that has no `_WIN32`.
+            cflags = { "-DMI_USE_BUILTIN_THREAD_POINTER=0" },
         },
     },
 }
