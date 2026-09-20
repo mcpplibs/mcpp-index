@@ -101,4 +101,4 @@
 [index]
 spec        = "1"
 min_mcpp    = "2026.9.18.3"
-latest_mcpp = "2026.9.20.1"
+latest_mcpp = "2026.9.21.2"
