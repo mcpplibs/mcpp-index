@@ -4,7 +4,7 @@
 # `runtime` is the C++ runtime for openkal; it pins openkal-musl exactly, and
 # openkal-musl selects the openkal implementation for each target, so this one
 # version names the whole graph.
-runtime   = "0.12.0"
+runtime   = "0.13.0"
 toolchain = "llvm@22.1.8"
 # `mcpp` here moves together with index.toml's `min_mcpp` and
 # .github/workflows/openkal-compat.yml's own MCPP_VERSION (that workflow
@@ -18,7 +18,18 @@ toolchain = "llvm@22.1.8"
 # index requires mcpp >= 2026.9.18.1 but this is mcpp 2026.9.17.3 [E0006]"
 # before a single line of the member's own source is read.
 #
-# `runtime` MOVES HERE NOW, AND UNTIL IT DID THE WINDOWS LEG MEASURED A GRAPH
+# 2026-09-20: `runtime` MOVES TO 0.13.0, WHICH IS THE FIRST GRAPH IN WHICH
+# EVERY IMPLEMENTATION DECLARES ITS INTERFACES. 0.13.0 pins openkal-musl
+# 0.18.0, which pins openkal-linux 0.15.0, openkal-windows 0.10.0 and
+# openkal-macos 0.12.0 --- the last of those is the release that closed the
+# gap. Below it a member's `[kernel-abi] requires-interfaces` was answered on
+# two of the three implementations and silently unanswered on the third, and
+# a measurement taken there would have recorded "builds" for a member nothing
+# had checked. `mcpp` moves with it because the set difference this measures
+# is what 2026.9.20.1 added.
+#
+# (the note below is from the previous move, and its reasoning still holds)
+# `runtime` MOVED, AND UNTIL IT DID THE WINDOWS LEG MEASURED A GRAPH
 # WITH NO `[c-abi]` IN IT. openkal-llvm-runtime 0.12.0 (openkal-musl 0.16.0,
 # openkal 0.14.0) is the first pinned graph in which a package declares the
 # block, so it is the first in which mcpp realises `presents = "posix"` at all:
@@ -33,7 +44,7 @@ toolchain = "llvm@22.1.8"
 # openkal-musl 0.16.0 and openkal-llvm-runtime 0.12.0), because a pin that
 # moves onto an unreachable or divergent asset fails every member at once and
 # reports it as a compatibility result.
-mcpp      = "2026.9.18.3"
+mcpp      = "2026.9.20.1"
 
 targets = ["x86_64-linux-gnu", "x86_64-windows-gnu"]
 

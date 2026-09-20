@@ -38,6 +38,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.13.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.13.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-llvm-runtime/releases/download/0.13.0/openkal-llvm-runtime-0.13.0.tar.gz",
+                },
+                sha256 = "56b9dc2b756d78aa2eafed2e2219b81931d12c29efdb68d6b1fc8730f62ff96d",
+            },
             ["0.12.0"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.12.0.tar.gz",
@@ -201,6 +208,13 @@ package = {
             },
         },
         macosx = {
+            ["0.13.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.13.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-llvm-runtime/releases/download/0.13.0/openkal-llvm-runtime-0.13.0.tar.gz",
+                },
+                sha256 = "56b9dc2b756d78aa2eafed2e2219b81931d12c29efdb68d6b1fc8730f62ff96d",
+            },
             ["0.12.0"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.12.0.tar.gz",
@@ -364,6 +378,13 @@ package = {
             },
         },
         windows = {
+            ["0.13.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.13.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-llvm-runtime/releases/download/0.13.0/openkal-llvm-runtime-0.13.0.tar.gz",
+                },
+                sha256 = "56b9dc2b756d78aa2eafed2e2219b81931d12c29efdb68d6b1fc8730f62ff96d",
+            },
             ["0.12.0"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.12.0.tar.gz",
