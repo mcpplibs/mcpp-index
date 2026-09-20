@@ -101,6 +101,27 @@ question is about a target rather than the package as a whole.
 that cannot be built in any openkal graph, each with its reason; a member that
 fails is measured and published, not excluded.
 
+`[not-portable.<member>]` declares one TARGET of one member unbuildable by
+construction, with the reason. It exists because `[excluded]` is whole-member
+and some members are neither: `cmp-module` runs on `x86_64-windows-gnu` and
+cannot build on `x86_64-linux-gnu`, because asio's `detail/config.hpp`
+includes `<linux/version.h>` whenever `__linux__` is defined, outside every
+`ASIO_DISABLE_*` guard. Excluding the member outright would discard a result
+that is true in order to hide one that is also true.
+
+**The bar is that no manifest key reaches it.** Upstream source asking in the
+preprocessor qualifies; a generated configuration header this index writes
+does not, and belongs in the recipe instead. `curl`'s `linux/tcp.h` is the
+second kind — `#define HAVE_LINUX_TCP_H 1` inside `#if defined(__linux__)` in
+`pkgs/c/compat.curl.lua`, which reads a correct fact about the kernel as a
+claim about which userspace headers are installed.
+
+**The cell is measured anyway, and `compat.py check` fails if it builds.** A
+declaration that takes a cell out of the figure on the strength of a sentence
+has to stay falsifiable; one that nothing can contradict is a permanent
+excuse. The cost is a build that was already being paid for before the
+declaration existed.
+
 ## 3. When it runs
 
 `.github/workflows/openkal-compat.yml` runs weekly and on demand, measuring every

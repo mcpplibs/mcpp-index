@@ -35,6 +35,12 @@
 
 `tests/openkal/members.toml` 列出测量对象。`[excluded]` 列出在任何 openkal 依赖图中都无法构建的成员,并逐条写明原因;失败的成员照常测量并公布,不列入排除。
 
+`[not-portable.<成员>]` 声明某个成员的**某一个目标**按构造无法构建,并写明理由。它存在是因为 `[excluded]` 是整成员级的,而有些成员两头都不是:`cmp-module` 在 `x86_64-windows-gnu` 上 runs,在 `x86_64-linux-gnu` 上建不起来——asio 的 `detail/config.hpp` 只要 `__linux__` 有定义就 include `<linux/version.h>`,而那行在所有 `ASIO_DISABLE_*` 守卫之外。整个排除掉这个成员,等于为了藏起一个真的结果而丢掉另一个同样真的结果。
+
+**门槛是「没有任何清单键伸得进去」。** 上游源码在预处理期发问,算;本索引自己生成的配置头,不算,那属于配方。`curl` 的 `linux/tcp.h` 就是后者——`pkgs/c/compat.curl.lua` 在 `#if defined(__linux__)` 里写了 `#define HAVE_LINUX_TCP_H 1`,把一个关于内核的正确事实读成了关于「装了哪些 userspace 头」的断言。
+
+**这个格子照常测量,而 `compat.py check` 在它构建成功时会红。** 一条凭一句话把格子移出统计的声明必须保持**可证伪**;没有任何东西能反驳的声明就是一张永久豁免。代价是一次在声明存在之前本来就要付的构建。
+
 ## 3. 何时运行
 
 `.github/workflows/openkal-compat.yml` 每周运行、可手动触发,测量全部列出的成员。对 PR,openkal 家族或 `tests/openkal` 变化时测量全部成员,否则测量依赖了被修改描述符的成员。除非启用下文的比较,它不阻止合并。

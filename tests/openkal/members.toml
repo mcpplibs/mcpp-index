@@ -36,6 +36,23 @@ curl           = "HTTP client, C, sockets"
 tinyhttps      = "HTTPS client, C++ modules, sockets"
 cmp-module     = "coroutines, C++ modules"
 
+# A member that cannot be built FOR ONE TARGET by construction, with the reason
+# and the evidence. It is measured anyway, and `compat.py check` FAILS if a
+# declared cell builds --- a declaration nothing can contradict is a permanent
+# excuse, and this project has shipped one of those before.
+#
+# DISTINCT FROM `[excluded]` BELOW, which is whole-member. `cmp-module` runs on
+# `x86_64-windows-gnu`; excluding it would discard a result that is true in
+# order to hide one that is also true.
+#
+# THE BAR IS "NO MANIFEST KEY REACHES IT". A generated configuration header
+# this index writes is a RECIPE DEFECT and belongs in the recipe, not here ---
+# `curl`'s `linux/tcp.h` is exactly that, `#define HAVE_LINUX_TCP_H 1` inside
+# `#if defined(__linux__)` in `pkgs/c/compat.curl.lua`. What qualifies is
+# upstream source that asks in the preprocessor where no key can answer.
+[not-portable.cmp-module]
+x86_64-linux-gnu = "asio's detail/config.hpp:899 includes <linux/version.h> whenever __linux__ is defined, OUTSIDE every ASIO_DISABLE_* guard, so no configuration macro prevents it. openkal runs on the Linux kernel, so __linux__ is correct; the uapi headers glibc's userspace installs beside it are not part of what openkal presents."
+
 # Members that are not measured, each with the reason. A member belongs here
 # when it cannot be built in any openkal graph, not when it fails: a failure is
 # measured and published.
