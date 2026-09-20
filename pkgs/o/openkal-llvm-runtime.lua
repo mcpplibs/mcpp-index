@@ -27,6 +27,19 @@
 -- favour of definitions the package's own manifest now gives per target
 -- (design §3.4). Neither the release nor its sha256 exist yet -- this
 -- comment marks the entry as prepared and blocked, not as data to invent.
+-- 0.14.0 reads `__MCPP_TARGET_WINDOWS__` in `__libunwind_config.h`, the
+-- INSTALLED header that sizes `unw_context_t` by the target's register save
+-- area, keeping `|| defined(__CYGWIN__)` beside it. Two operands cover every
+-- engine, so the order of releases does not matter.
+--
+-- IT ALSO CARRIES A SIXTH PATCH SITE, FOUND BY ENUMERATING RATHER THAN BY
+-- FAILING: `compiler-rt/lib/builtins/int_lib.h`. That file is NOT installed,
+-- so it takes a package-private define (`OPENKAL_TARGET_WINDOWS`) rather than
+-- the engine's name --- the distinction is whose compile reads the header.
+--
+-- It pins openkal-musl 0.19.0, which carries the matching change to
+-- `bits/setjmp.h`.
+--
 package = {
     spec        = "1",
     namespace   = "mcpplibs",
@@ -38,6 +51,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.14.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.14.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-llvm-runtime/releases/download/0.14.0/openkal-llvm-runtime-0.14.0.tar.gz",
+                },
+                sha256 = "689b753523b12b4c4a866193a28f557c502f98ef796396d541644e52de64fb68",
+            },
             ["0.13.0"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.13.0.tar.gz",
@@ -208,6 +228,13 @@ package = {
             },
         },
         macosx = {
+            ["0.14.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.14.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-llvm-runtime/releases/download/0.14.0/openkal-llvm-runtime-0.14.0.tar.gz",
+                },
+                sha256 = "689b753523b12b4c4a866193a28f557c502f98ef796396d541644e52de64fb68",
+            },
             ["0.13.0"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.13.0.tar.gz",
@@ -378,6 +405,13 @@ package = {
             },
         },
         windows = {
+            ["0.14.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.14.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-llvm-runtime/releases/download/0.14.0/openkal-llvm-runtime-0.14.0.tar.gz",
+                },
+                sha256 = "689b753523b12b4c4a866193a28f557c502f98ef796396d541644e52de64fb68",
+            },
             ["0.13.0"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.13.0.tar.gz",
