@@ -17,6 +17,10 @@ on:
         description: "Space-separated members to measure (empty = every listed member)"
         required: false
         default: ""
+      mcpp_ref:
+        description: "Branch of mcpp-community/mcpp to build and measure against (empty = the released pin)"
+        required: false
+        default: ""
   pull_request:
     paths:
       - "pkgs/**/*.lua"
@@ -34,6 +38,22 @@ env:
   # pins.toml for why this pin, not just validate.yml's, is gated by the
   # index floor.
   MCPP_VERSION: "2026.9.20.1"
+  # CROSS-VALIDATION BEFORE A RELEASE, NOT AFTER IT.
+  #
+  # Empty in an ordinary run, so this measurement keeps using the RELEASED
+  # engine the pin above names. Set it -- workflow_dispatch input, or the
+  # repository variable -- and the same measurement runs against mcpp built
+  # from that ref instead.
+  #
+  # THIS EXISTS BECAUSE AN ENGINE CHANGE'S REAL LOAD IS HERE. mcpp's own CI
+  # cannot see a defect that appears only in a real dependency graph; this
+  # repository holds thirty such graphs and could not see the engine until it
+  # had been published. 2026.9.20.1 shipped and, within a day, the four
+  # members that stop at `windows.h` through a borrowed `__CYGWIN__` made a
+  # second release necessary -- a reading this job could have produced before
+  # the first one merged. Every ecosystem repository that mcpp's changes reach
+  # already honours this variable; this workflow was the gap.
+  MCPP_SOURCE_REF: ${{ github.event.inputs.mcpp_ref || vars.MCPP_SOURCE_REF }}
   XLINGS_NON_INTERACTIVE: "1"
 
 jobs:
@@ -75,6 +95,31 @@ jobs:
           root="$PWD/mcpp-${MCPP_VERSION}-linux-x86_64"
           echo "$root/bin" >> "$GITHUB_PATH"
           echo "MCPP_HOME=$root" >> "$GITHUB_ENV"
+
+          # The released engine above is the BOOTSTRAP when a ref is under
+          # review: mcpp builds itself and there is no other compiler for it
+          # here. The build replaces it on PATH, and MCPP_HOME follows, because
+          # a PATH entry that does not win looks exactly like one that does
+          # until something has been measured with the wrong engine.
+          if [ -n "${MCPP_SOURCE_REF:-}" ]; then
+            src="$RUNNER_TEMP/mcpp-src"
+            git clone --quiet --depth 1 --branch "$MCPP_SOURCE_REF" \
+              https://github.com/mcpp-community/mcpp.git "$src"
+            # `.xlings.json` at mcpp's root pins the mcpp that compiles mcpp,
+            # and that pin does not move when mcpp is released, so a build
+            # inside the checkout would try to install a version the index may
+            # no longer carry. What is wanted is the source compiled by the
+            # engine installed above, which removing the file leaves.
+            rm -f "$src/.xlings.json"
+            ( cd "$src" && "$root/bin/mcpp" build --release )
+            built=$(find "$src/target" -type f -name mcpp | head -1)
+            [ -n "$built" ] \
+              || { echo "::error::mcpp did not build from $MCPP_SOURCE_REF"; exit 1; }
+            bindir=$(cd "$(dirname "$built")" && pwd)
+            echo "$bindir" >> "$GITHUB_PATH"
+            echo "MCPP_HOME=$(dirname "$bindir")" >> "$GITHUB_ENV"
+            echo "under review: $("$built" --version)  (from $MCPP_SOURCE_REF)"
+          fi
 
       # The Windows cross headers of the host are installed deliberately. A
       # graph that reached them would build differently with them present, so a
