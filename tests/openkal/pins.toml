@@ -4,7 +4,7 @@
 # `runtime` is the C++ runtime for openkal; it pins openkal-musl exactly, and
 # openkal-musl selects the openkal implementation for each target, so this one
 # version names the whole graph.
-runtime   = "0.13.0"
+runtime   = "0.15.0"
 toolchain = "llvm@22.1.8"
 # `mcpp` here moves together with index.toml's `min_mcpp` and
 # .github/workflows/openkal-compat.yml's own MCPP_VERSION (that workflow
@@ -18,6 +18,29 @@ toolchain = "llvm@22.1.8"
 # index requires mcpp >= 2026.9.18.1 but this is mcpp 2026.9.17.3 [E0006]"
 # before a single line of the member's own source is read.
 #
+# 2026-09-21: `runtime` -> 0.15.0 AND `mcpp` -> 2026.9.21.2, AND THE TWO MOVE
+# TOGETHER BECAUSE THE MEASUREMENT IS ABOUT WHAT THE PAIR DOES.
+#
+# The engine withdraws `__CYGWIN__`. Four members of this suite --- archive
+# (xz), sqlite3, mimalloc, c-ares --- stopped at `#include <windows.h>` reached
+# through `#if defined(_WIN32) || defined(__CYGWIN__)`, and upstream means
+# "Win32 is available" by that name. THIS MEASUREMENT IS THE CRITERION FOR
+# THAT CHANGE: the `windows.h` group should go to zero, and nothing that ran
+# before should stop running.
+#
+# `runtime` -> 0.15.0 is what keeps the withdrawal safe. 0.15.0 pins
+# openkal-musl 0.19.0, and both of those read `__MCPP_TARGET_WINDOWS__` in the
+# INSTALLED headers that size `jmp_buf` and `unw_context_t`, keeping
+# `|| defined(__CYGWIN__)` beside it. Measured on the engine branch before it
+# merged: against the PUBLISHED 0.13.0, an openkal program for
+# x86_64-windows-gnu fails on libunwind's two `static_assert`s. Registered and
+# published first, in #453, #455 and #456, before this line moved.
+#
+# 0.15.0 also makes `thread_local` destructors run, which `doctest` and
+# `spdlog` stop on today with `undefined symbol: __cxa_thread_atexit`. Those
+# two are the other half of what this measurement should report.
+#
+# (the note below is from the previous move, and its reasoning still holds)
 # 2026-09-20: `runtime` -> 0.13.0, THE FIRST GRAPH IN WHICH EVERY IMPLEMENTATION
 # DECLARES ITS INTERFACES. It pins openkal-musl 0.18.0, which pins
 # openkal-linux 0.15.0, openkal-windows 0.10.0 and openkal-macos 0.12.0 --- the
@@ -51,7 +74,7 @@ toolchain = "llvm@22.1.8"
 # openkal-musl 0.16.0 and openkal-llvm-runtime 0.12.0), because a pin that
 # moves onto an unreachable or divergent asset fails every member at once and
 # reports it as a compatibility result.
-mcpp      = "2026.9.20.1"
+mcpp      = "2026.9.21.2"
 
 targets = ["x86_64-linux-gnu", "x86_64-windows-gnu"]
 
