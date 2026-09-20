@@ -134,7 +134,17 @@ package = {
 /* #undef HAVE_ARC4RANDOM */
 
 /* Define to 1 if you have the `arc4random_buf' function. */
-#define HAVE_ARC4RANDOM_BUF 1
+/* NOT DEFINED, AND THIS HEADER IS SHARED BY EVERY TARGET. The value was
+   carried over from a glibc configure run. expat's selection is a chain that
+   `HAVE_ARC4RANDOM_BUF` SHORT-CIRCUITS -- `generate_hash_secret_salt` calls
+   `arc4random_buf` unconditionally under it and never reaches the getrandom
+   or /dev/urandom branches below. musl 1.2.5 has no arc4random at all (its
+   `src/prng/` is the rand48 family), so over openkal-musl the member stopped
+   at `call to undeclared function 'arc4random_buf'`.
+   Undefined, the chain falls to HAVE_GETRANDOM, which is defined below and
+   which musl and glibc both provide, and then to XML_DEV_URANDOM. No target
+   loses a high-quality entropy source. */
+/* #undef HAVE_ARC4RANDOM_BUF */
 
 /* define if the compiler supports basic C++11 syntax */
 /* #undef HAVE_CXX11 */
