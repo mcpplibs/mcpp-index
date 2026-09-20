@@ -101,6 +101,45 @@ question is about a target rather than the package as a whole.
 that cannot be built in any openkal graph, each with its reason; a member that
 fails is measured and published, not excluded.
 
+`[not-portable.<member>]` declares one TARGET of one member unbuildable by
+construction, with the reason. It exists because `[excluded]` is whole-member
+and some members are neither: `cmp-module` runs on `x86_64-windows-gnu` and
+cannot build on `x86_64-linux-gnu`, because asio's `detail/config.hpp`
+includes `<linux/version.h>` whenever `__linux__` is defined, outside every
+`ASIO_DISABLE_*` guard. Excluding the member outright would discard a result
+that is true in order to hide one that is also true.
+
+**The bar is that no manifest key reaches it.** Upstream source asking in the
+preprocessor qualifies; a generated configuration header this index writes
+does not, and belongs in the recipe instead. `curl`'s `linux/tcp.h` is the
+second kind — `#define HAVE_LINUX_TCP_H 1` inside `#if defined(__linux__)` in
+`pkgs/c/compat.curl.lua`, which reads a correct fact about the kernel as a
+claim about which userspace headers are installed.
+
+**The cell is measured anyway, and `compat.py check` fails if it builds.** A
+declaration that takes a cell out of the figure on the strength of a sentence
+has to stay falsifiable; one that nothing can contradict is a permanent
+excuse. The cost is a build that was already being paid for before the
+declaration existed.
+
+### curl's two failures have two different causes
+
+Both are recipe defects, and neither is the same defect:
+
+| target | first diagnostic | cause |
+| --- | --- | --- |
+| `x86_64-linux-gnu` | `lib/setopt.c:31: 'linux/tcp.h' file not found` | `#define HAVE_LINUX_TCP_H 1` inside `#if defined(__linux__)`. The kernel IS Linux, so the predicate is right; what is wrong is reading it as "glibc's userspace headers are installed". The honest test is `__has_include(<linux/tcp.h>)`. The same block also asserts `HAVE_GLIBC_STRERROR_R`, which is false over musl. |
+| `x86_64-windows-gnu` | `curl_setup.h:591: "too small curl_off_t"` | The recipe's `windows` branch omits `HAVE_CONFIG_H` so that `curl_setup.h` reaches the checked-in `lib/config-win32.h`, and links `-lws2_32` with Schannel. Over openkal that target presents POSIX and is **LP64**, while `config-win32.h` is written for LLP64 and the Win32 API. |
+
+**The second is the interesting one: the recipe branches on the PLATFORM where
+the question is about the C ENVIRONMENT.** Those two agreed on every target
+this index had until openkal presented POSIX on Windows, and mcpp has the
+predicate for the question actually being asked — `cfg(c-abi = "musl")`
+(mcpp docs/22, "Adaptation To The Resolved Target Side"). Selecting the
+generated POSIX configuration there, rather than the checked-in Win32 one, is
+the shape; it also needs this index's OpenSSL over the same environment, so
+it is a larger change than the first and is not folded into it.
+
 ## 3. When it runs
 
 `.github/workflows/openkal-compat.yml` runs weekly and on demand, measuring every

@@ -45,7 +45,10 @@ members whose test projects depend on a changed descriptor.
 
 `check` compares a results file with a baseline and fails when a member that
 the baseline records as `runs` or `builds` for a target is recorded lower. It
-is the regression guard for labels that have been published.
+is the regression guard for labels that have been published. It ALSO fails
+when a cell declared `[not-portable]` in members.toml built: a declaration
+that removes a cell from the figure has to stay falsifiable, or it is a
+permanent excuse nothing can contradict.
 """
 from __future__ import annotations
 
@@ -124,6 +127,17 @@ def platform_bound(manifest: dict) -> bool:
         if isinstance(cfg, dict) and cfg.get("dependencies"):
             return True
     return False
+
+
+def declared_not_portable(decls: dict, member: str, target: str) -> str | None:
+    """The reason `members.toml` gives for this (member, target) being
+    unbuildable by construction, or None.
+
+    PER TARGET, NOT PER MEMBER. `[excluded]` already covers a member that
+    cannot be built in any openkal graph; this covers one that builds on some
+    targets and cannot on another, where excluding the member outright would
+    discard a result that is true."""
+    return ((decls.get(member) or {}).get(target)) or None
 
 
 def kind_of(manifest: dict, status: str) -> str | None:
@@ -269,7 +283,12 @@ def cmd_run(args: argparse.Namespace) -> int:
         "pins": {k: v for k, v in pins.items() if k in ("runtime", "toolchain", "mcpp")},
         "members": {},
         "excluded": members_file.get("excluded", {}),
+        # CARRIED INTO THE RESULTS so the consumer that computes the figure
+        # can take these cells out of the denominator, and so a reader of the
+        # results file can see WHY without opening another file.
+        "not_portable": members_file.get("not-portable", {}),
     }
+    not_portable = members_file.get("not-portable", {})
     for member in members:
         manifest = load_toml(os.path.join(EXAMPLES, member, "mcpp.toml"))
         entry = {"packages": packages_of(manifest),
@@ -284,6 +303,13 @@ def cmd_run(args: argparse.Namespace) -> int:
             kind = kind_of(manifest, entry["targets"][target]["status"])
             if kind:
                 entry["targets"][target]["kind"] = kind
+            # MEASURED ANYWAY. Skipping the build would make the declaration
+            # unfalsifiable, and the cost is a cell that was going to be
+            # measured before it was declared.
+            why = declared_not_portable(not_portable, member, target)
+            if why:
+                entry["targets"][target]["declared"] = "not-portable"
+                entry["targets"][target]["declared_reason"] = why
             print(f"   {entry['targets'][target]['status']}"
                   + (f" ({kind})" if kind else "")
                   + (f": {entry['targets'][target].get('diagnostic', '')}"
@@ -312,11 +338,29 @@ def cmd_check(args: argparse.Namespace) -> int:
             if got < was:
                 regressions.append(f"{member} on {target}: {rec['status']} -> "
                                    f"{((now or {}).get('targets', {}).get(target) or {}).get('status', 'absent')}")
+    # A DECLARATION THAT NOTHING CAN CONTRADICT IS A PERMANENT EXCUSE.
+    # `[not-portable]` takes a cell out of the figure on the strength of a
+    # sentence, and the only thing that keeps the sentence honest is failing
+    # here when the cell builds. The cell is measured for this reason alone.
+    contradicted = []
+    decls = load_toml(os.path.join(HERE, "members.toml")).get("not-portable", {})
+    for member, targets in decls.items():
+        if args.members and member not in args.members:
+            continue
+        for target in targets:
+            rec = ((current.get("members", {}).get(member) or {})
+                   .get("targets", {}).get(target) or {})
+            if RANK.get(rec.get("status"), 0) > 0:
+                contradicted.append(
+                    f"{member} on {target}: declared not-portable and "
+                    f"recorded {rec.get('status')} -- remove the declaration")
     for line in regressions:
         print(f"regression: {line}")
-    if not regressions:
-        print("no published label regressed")
-    return 1 if regressions else 0
+    for line in contradicted:
+        print(f"contradicted declaration: {line}")
+    if not regressions and not contradicted:
+        print("no published label regressed, and no declaration was contradicted")
+    return 1 if (regressions or contradicted) else 0
 
 
 FAMILY_PREFIXES = ("pkgs/o/openkal", "pkgs/s/std-freestanding-alloc-kal", "tests/openkal/")
@@ -381,6 +425,15 @@ def cmd_selftest(_args: argparse.Namespace) -> int:
          classify_failure(ran, True)["status"], "builds"),
         ("the same output without a runner is not evidence it built",
          classify_failure(ran, False)["status"], "fails"),
+        # `[not-portable]` is per (member, target), and reading it per member
+        # would take a working cell out of the figure along with the broken
+        # one --- `cmp-module` runs on x86_64-windows-gnu.
+        ("a declaration is read for the target it names",
+         declared_not_portable({"m": {"t1": "why"}}, "m", "t1"), "why"),
+        ("and not for a target it does not name",
+         declared_not_portable({"m": {"t1": "why"}}, "m", "t2"), None),
+        ("nor for another member",
+         declared_not_portable({"m": {"t1": "why"}}, "n", "t1"), None),
     ]
     bad = 0
     for name, got, want in cases:
