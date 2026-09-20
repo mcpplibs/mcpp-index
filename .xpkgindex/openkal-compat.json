@@ -165,7 +165,7 @@
       "portable": true,
       "targets": {
         "x86_64-linux-gnu": {
-          "diagnostic": "/home/runner/work/mcpp-index/mcpp-index/mcpp-2026.9.18.3-linux-x86_64/registry/data/xpkgs/chriskohlhoff-x-asio/1.38.1/asio-asio-1-38-1/include/asio/detail/config.hpp:899:11: fatal error: 'linux/version.h' file not found",
+          "diagnostic": "/home/runner/work/mcpp-index/mcpp-index/mcpp-2026.9.20.1-linux-x86_64/registry/data/xpkgs/chriskohlhoff-x-asio/1.38.1/asio-asio-1-38-1/include/asio/detail/config.hpp:899:11: fatal error: 'linux/version.h' file not found",
           "status": "fails"
         },
         "x86_64-windows-gnu": {
@@ -229,8 +229,9 @@
       "portable": false,
       "targets": {
         "x86_64-linux-gnu": {
-          "diagnostic": "/home/runner/work/mcpp-index/mcpp-index/tests/openkal-work/expat/.mcpp/.xlings/data/xpkgs/compat-x-expat/2.7.1/lib/xmlparse.c:977:3: error: call to undeclared function 'arc4random_buf'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]",
-          "status": "fails"
+          "diagnostic": "dladdr locates the code that parsed                        FAILED",
+          "kind": "platform",
+          "status": "builds"
         },
         "x86_64-windows-gnu": {
           "kind": "platform",
@@ -496,8 +497,8 @@
     }
   },
   "pins": {
-    "mcpp": "2026.9.18.3",
-    "runtime": "0.12.0",
+    "mcpp": "2026.9.20.1",
+    "runtime": "0.13.0",
     "toolchain": "llvm@22.1.8"
   },
   "schema": 1
