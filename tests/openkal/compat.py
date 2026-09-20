@@ -13,10 +13,11 @@ claims. See docs/openkal-compat.md.
 adds the openkal C++ runtime named by pins.toml, and builds with the pinned
 toolchain. A target equal to the host is tested (`mcpp test`); another target
 is tested through its runner when pins.toml names one and the runner is on
-PATH, and built otherwise. Each member is reported per target as one of
+PATH, and has its tests built (`mcpp test --no-run`) otherwise. Each member is reported per target as one of
 
     runs      the member's tests passed
-    builds    the member built; its tests were not run on this host
+    builds    the member's own tests compiled and linked for the target; this
+              host cannot run them, so `mcpp test --no-run` stopped there
     fails     the build or the tests failed; the first diagnostic is kept
 
 and, alongside `status`, a second and orthogonal `kind` records how the
@@ -204,18 +205,41 @@ def first_diagnostic(output: str) -> str:
     return output.strip().splitlines()[-1][:300] if output.strip() else ""
 
 
+def command_for(target: str, toolchain: str, native: bool, can_run: bool) -> list:
+    """The command that measures one cell.
+
+    Separated from `measure` so the choice has a criterion that runs without a
+    toolchain, a network or a member (`compat.py selftest`). It decides what a
+    published `builds` means, and the reading it produced before was about the
+    member's dependencies rather than the member.
+    """
+    cmd = ["mcpp", "test", "--toolchain", toolchain]
+    if not native:
+        cmd += ["--target", target]
+    if not can_run:
+        # `mcpp test --no-run`, NOT `mcpp build`, AND THE DIFFERENCE IS THE
+        # WHOLE CELL.
+        #
+        # `mcpp build` builds the PACKAGE. Every member here keeps its sources
+        # under `tests/`, so for a target with no runner it compiled the
+        # member's dependencies, exited 0, and this file recorded `builds` --- a
+        # statement about musl and zlib with the member's name on it. Measured
+        # on `archive` for aarch64-macos: 1990 objects, of which none came from
+        # `tests/compression.cpp` or `tests/versions.cpp`.
+        #
+        # `--no-run` compiles and links the member's own tests for the target
+        # and does not execute them, which is exactly what this cell claims.
+        cmd.append("--no-run")
+    return cmd
+
+
 def measure(member: str, target: str, pins: dict) -> dict:
     work = prepare(member, pins)
     toolchain = pins["toolchain"]
     native = target == host_triple()
     runner = (pins.get("runners") or {}).get(target)
-    can_run = native or (runner and shutil.which(runner[0]))
-    if can_run:
-        cmd = ["mcpp", "test", "--toolchain", toolchain]
-        if not native:
-            cmd += ["--target", target]
-    else:
-        cmd = ["mcpp", "build", "--toolchain", toolchain, "--target", target]
+    can_run = bool(native or (runner and shutil.which(runner[0])))
+    cmd = command_for(target, toolchain, native, can_run)
     proc = subprocess.run(cmd, cwd=work, capture_output=True, text=True,
                           timeout=pins.get("timeout", 3600))
     out = proc.stdout + proc.stderr
@@ -434,6 +458,20 @@ def cmd_selftest(_args: argparse.Namespace) -> int:
          declared_not_portable({"m": {"t1": "why"}}, "m", "t2"), None),
         ("nor for another member",
          declared_not_portable({"m": {"t1": "why"}}, "n", "t1"), None),
+        # The command is what decides whether `builds` is about the member or
+        # about its dependencies. `mcpp build` was the old answer and compiled
+        # none of the member; these three pin the new one.
+        ("a target with no runner builds the member's own tests",
+         command_for("aarch64-macos", "llvm@22.1.8", False, False),
+         ["mcpp", "test", "--toolchain", "llvm@22.1.8",
+          "--target", "aarch64-macos", "--no-run"]),
+        ("a target with a runner runs them",
+         command_for("x86_64-windows-gnu", "llvm@22.1.8", False, True),
+         ["mcpp", "test", "--toolchain", "llvm@22.1.8",
+          "--target", "x86_64-windows-gnu"]),
+        ("the host names no target and runs them",
+         command_for("x86_64-linux-gnu", "llvm@22.1.8", True, True),
+         ["mcpp", "test", "--toolchain", "llvm@22.1.8"]),
     ]
     bad = 0
     for name, got, want in cases:

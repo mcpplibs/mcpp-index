@@ -33,9 +33,18 @@ recorded per target:
 | Result | Meaning |
 | --- | --- |
 | `runs` | the member's tests passed; on a target other than the host they ran through the pinned runner (Wine for Windows) |
-| `builds` | the member built, and its tests were not run or did not pass; the first diagnostic is kept |
+| `builds` | the member's own tests compiled and linked for the target, and were not run or did not pass; the first diagnostic is kept |
 | `fails` | the member did not build; the first diagnostic is kept |
 | `refused` | the member asked this graph for a capability it does not supply, and was told so before anything was compiled |
+
+**A target with no runner is measured with `mcpp test --no-run`, and until it
+was, `builds` was a statement about the dependencies.** Every member here keeps
+its sources under `tests/`, and `mcpp build` builds the PACKAGE: for a target
+this host cannot execute it compiled the member's dependencies, exited 0, and
+that exit code was recorded as `builds`. Measured on `archive` for
+`aarch64-macos`: 1990 objects, none of them from `tests/compression.cpp` or
+`tests/versions.cpp`. `mcpp test --no-run` compiles and links the member's own
+tests for the target and does not execute them, which is what this row claims.
 
 **A refusal is not a failure, and the difference is not a matter of degree.**
 A member that declares `[kernel-abi] requires-interfaces` naming something the
