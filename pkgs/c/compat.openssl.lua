@@ -132,6 +132,41 @@ package = {
         include_dirs = { "include" },
         deps         = { },
 
+        -- THIS ARCHIVE IS BOUND TO THE C LIBRARY IT WAS BUILT AGAINST, AND
+        -- SAYING SO IS THE ONLY THING THAT MAKES THAT VISIBLE.
+        --
+        -- `install()` runs OpenSSL's own Configure and make, outside mcpp's
+        -- compile rules, once per installed package. `cc_override()` hands
+        -- that build `gcc --sysroot=<xim:glibc payload>` on linux and
+        -- `/usr/bin/cc` on macOS, so the archive it produces is a glibc (or
+        -- libSystem) artefact -- and the hook cannot be otherwise, because it
+        -- runs at install time and knows nothing about the graph any later
+        -- consumer will resolve.
+        --
+        -- Linked into a graph with a different C library, it fails at symbols
+        -- that library does not have. Measured on x86_64-linux-gnu over
+        -- openkal, whose c-abi is musl:
+        --
+        --     ld.lld: error: undefined symbol: setcontext
+        --     >>> referenced by async.c
+        --     >>>    libcrypto-lib-async.o in archive .../libcrypto.a
+        --
+        -- (musl omits the `*context` family deliberately), and
+        -- `__isoc23_strtol`, which is glibc's header redirection for
+        -- `strtol`.
+        --
+        -- `platform-sdk` is the engine's existing word for "this package
+        -- brings the platform's own side into the graph" (docs/06, "Making it
+        -- visible to the closure"). Declaring it does not make the link
+        -- succeed, and is not meant to: it puts the package on every build's
+        -- `Target` report and lets `[build] platform-dependencies = "refuse"`
+        -- fail the build with the cause rather than with a missing symbol
+        -- three layers down. Building OpenSSL inside the graph is what would
+        -- make the link succeed, and that is a different change: its source
+        -- list comes from Configure, so it needs the snapshot treatment
+        -- compat.c-ares and compat.ffmpeg have.
+        provides     = { "platform-sdk" },
+
         linux = {
             ldflags = {
                 "-Llib",
