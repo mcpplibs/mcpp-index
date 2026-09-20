@@ -14,14 +14,26 @@
 --
 -- The consequence for a program is that it names this package and nothing else.
 --
--- 0.15.0 is pending, not listed below. It declares `[c-abi] presents = "posix"`
--- (design: openkal/.agents/docs/2026-09-18-openkal-c-environment-and-
--- personalities-design.md §3.2) and removes the LLP64/16-bit-wchar_t patches
--- to musl's generated Windows headers, in favour of the Cygwin-shaped LP64
--- target that declaration realises (same design, §4); this repository's
--- `index.toml` carries a matching note about the `min_mcpp` this needs.
--- Neither the release nor its sha256 exist yet -- this comment marks the
--- entry as prepared and blocked, not as data to invent.
+-- 0.17.0 states what this library does NOT supply: a top-level
+-- `[c-abi-absent]` table of 24 rows, each naming the shape in which that
+-- absence reaches a program (`link`, `enosys`, `accepted-no-effect`), with
+-- the package's own CI asserting every row against the objects it builds.
+-- It also moves the implementation pins to openkal-linux 0.15.0 and
+-- openkal-windows 0.10.0. No source changed.
+--
+-- IT ASKS NOTHING OF `index.toml`'s `min_mcpp`, AND THAT WAS MEASURED. mcpp
+-- ignores a top-level table it does not know and refuses an unknown MEMBER of
+-- a table it does know, so the first spelling of this table --- `[c-abi]`.`absent`
+-- --- made every engine below 2026.9.20.1 refuse the whole manifest on every
+-- target. Measured against the published 2026.9.18.3 archive on this exact
+-- manifest; the table moved to the top level, and openkal-musl's own CI now
+-- builds 0.17.0 green with that same published 2026.9.18.3. A client stopped
+-- below 2026.9.20.1 therefore keeps this package and loses only the note mcpp
+-- would have attached to a link that failed at one of these names.
+--
+-- (An earlier revision of this comment said 0.15.0 was pending and unlisted.
+-- It had been released and registered; a note claiming a published version
+-- does not exist reads as missing data rather than as a stale sentence.)
 package = {
     spec        = "1",
     namespace   = "mcpplibs",
@@ -33,6 +45,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.17.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-musl/archive/refs/tags/0.17.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-musl/releases/download/0.17.0/openkal-musl-0.17.0.tar.gz",
+                },
+                sha256 = "201932848af47311dd6610c9acf6b35d193559cea64cf5f620c246656f2ccc05",
+            },
             ["0.16.0"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-musl/archive/refs/tags/0.16.0.tar.gz",
@@ -203,6 +222,13 @@ package = {
             },
         },
         macosx = {
+            ["0.17.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-musl/archive/refs/tags/0.17.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-musl/releases/download/0.17.0/openkal-musl-0.17.0.tar.gz",
+                },
+                sha256 = "201932848af47311dd6610c9acf6b35d193559cea64cf5f620c246656f2ccc05",
+            },
             ["0.16.0"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-musl/archive/refs/tags/0.16.0.tar.gz",
@@ -373,6 +399,13 @@ package = {
             },
         },
         windows = {
+            ["0.17.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-musl/archive/refs/tags/0.17.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-musl/releases/download/0.17.0/openkal-musl-0.17.0.tar.gz",
+                },
+                sha256 = "201932848af47311dd6610c9acf6b35d193559cea64cf5f620c246656f2ccc05",
+            },
             ["0.16.0"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-musl/archive/refs/tags/0.16.0.tar.gz",
