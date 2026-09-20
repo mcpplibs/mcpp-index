@@ -45,7 +45,7 @@ package = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-musl/archive/refs/tags/0.15.0.tar.gz",
                     CN     = "https://gitcode.com/mcpp-res/openkal-musl/releases/download/0.15.0/openkal-musl-0.15.0.tar.gz",
                 },
-                sha256 = "75803192a09a46d532300a2b49c5b7b3d12473a2247870585a655630881c4dd5",
+                sha256 = "ee953bd8ff39822ecc66e67faa3a37efdab3703e097e85c6e422e51e084ca8b6",
             },
             ["0.14.0"] = {
                 url    = {
@@ -215,7 +215,7 @@ package = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-musl/archive/refs/tags/0.15.0.tar.gz",
                     CN     = "https://gitcode.com/mcpp-res/openkal-musl/releases/download/0.15.0/openkal-musl-0.15.0.tar.gz",
                 },
-                sha256 = "75803192a09a46d532300a2b49c5b7b3d12473a2247870585a655630881c4dd5",
+                sha256 = "ee953bd8ff39822ecc66e67faa3a37efdab3703e097e85c6e422e51e084ca8b6",
             },
             ["0.14.0"] = {
                 url    = {
@@ -385,7 +385,7 @@ package = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-musl/archive/refs/tags/0.15.0.tar.gz",
                     CN     = "https://gitcode.com/mcpp-res/openkal-musl/releases/download/0.15.0/openkal-musl-0.15.0.tar.gz",
                 },
-                sha256 = "75803192a09a46d532300a2b49c5b7b3d12473a2247870585a655630881c4dd5",
+                sha256 = "ee953bd8ff39822ecc66e67faa3a37efdab3703e097e85c6e422e51e084ca8b6",
             },
             ["0.14.0"] = {
                 url    = {
