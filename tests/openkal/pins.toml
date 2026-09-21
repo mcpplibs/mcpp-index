@@ -18,6 +18,27 @@ toolchain = "llvm@22.1.8"
 # index requires mcpp >= 2026.9.18.1 but this is mcpp 2026.9.17.3 [E0006]"
 # before a single line of the member's own source is read.
 #
+# 2026-09-21 (second move): `mcpp` -> 2026.9.21.3, AND THIS ONE MOVES ALONE.
+#
+# THE HARNESS NOW NEEDS AN ENGINE FLAG. A target with no runner is measured
+# with `mcpp test --no-run`, which 2026.9.21.3 is the first release to carry.
+# Before it, such a target was measured with `mcpp build`, which builds the
+# PACKAGE -- and every member here keeps its sources under `tests/`, so that
+# compiled the member's dependencies and none of the member. The reading was
+# never wrong in CI, because both targets below are runnable there (linux
+# natively, windows through the Wine this workflow installs and checks); it
+# was wrong the moment a third target was considered.
+#
+# `runtime` does not move with it: 0.15.0 is the graph this engine change was
+# measured against, and moving both at once would make a red cell ambiguous
+# between the two.
+#
+# aarch64-macos IS STILL NOT PINNED, and that is a measurement rather than an
+# omission: 20 of 30 members build there and 10 do not, nine of the ten
+# reaching for the Apple C environment under `#ifdef __APPLE__` on a target
+# where `__APPLE__` is true and libSystem is not present. See
+# docs/openkal-compat.md, "Why aarch64-macos is not a pinned target yet".
+
 # 2026-09-21: `runtime` -> 0.15.0 AND `mcpp` -> 2026.9.21.2, AND THE TWO MOVE
 # TOGETHER BECAUSE THE MEASUREMENT IS ABOUT WHAT THE PAIR DOES.
 #
@@ -74,7 +95,7 @@ toolchain = "llvm@22.1.8"
 # openkal-musl 0.16.0 and openkal-llvm-runtime 0.12.0), because a pin that
 # moves onto an unreachable or divergent asset fails every member at once and
 # reports it as a compatibility result.
-mcpp      = "2026.9.21.2"
+mcpp      = "2026.9.21.3"
 
 targets = ["x86_64-linux-gnu", "x86_64-windows-gnu"]
 

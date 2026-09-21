@@ -37,7 +37,7 @@ env:
   # run if this drifts from pins.toml. See the comment beside `mcpp` in
   # pins.toml for why this pin, not just validate.yml's, is gated by the
   # index floor.
-  MCPP_VERSION: "2026.9.21.2"
+  MCPP_VERSION: "2026.9.21.3"
   # CROSS-VALIDATION BEFORE A RELEASE, NOT AFTER IT.
   #
   # Empty in an ordinary run, so this measurement keeps using the RELEASED

@@ -102,17 +102,39 @@ int main()
     // the same either way: the code that just parsed must not have come from
     // the ecosystem's `xim:expat`, which is present whenever Mesa is and would
     // otherwise answer silently.
+    //
+    // A STATICALLY LINKED BINARY CANNOT ANSWER THIS, AND THAT IS NOT A
+    // FAILURE. musl's `dladdr` is `weak_alias(stub_dladdr, dladdr)` returning
+    // 0 (src/ldso/dladdr.c); the dynamic loader overrides it, and a static
+    // link has no loader to do so. An openkal program is statically linked, so
+    // the call returns 0 for every address, and the risk this check exists for
+    // cannot arise there either: nothing was loaded at runtime, so the only
+    // expat in the process is the one that was linked in.
+    //
+    // SKIPPING IT SILENTLY WOULD MAKE "no loader" AND "the loader answered
+    // wrongly" THE SAME READING, so the fallback asserts what distinguishes
+    // them. `main` is in this executable by construction; if `dladdr` cannot
+    // locate that either, there is no dynamic symbol information at all and
+    // the question is moot. If it locates `main` but not `XML_ParserCreate`,
+    // something is wrong and the check fails as before.
     {
         Dl_info info{};
         const bool located =
             ::dladdr(reinterpret_cast<void *>(&XML_ParserCreate), &info) != 0
             && info.dli_fname != nullptr;
-        check(located, "dladdr locates the code that parsed");
         if (located) {
             const std::string from = info.dli_fname;
             std::printf("   resolved from: %s\n", from.c_str());
             check(from.find("xim-x-expat") == std::string::npos,
                   "it is not the ecosystem payload's libexpat");
+        } else {
+            Dl_info self{};
+            const bool anyAnswer =
+                ::dladdr(reinterpret_cast<void *>(&main), &self) != 0;
+            std::printf("   dladdr answers nothing in this image%s\n",
+                        anyAnswer ? " EXCEPT main" : " at all (static link)");
+            check(!anyAnswer,
+                  "dladdr locates the code that parsed, or locates nothing");
         }
     }
 

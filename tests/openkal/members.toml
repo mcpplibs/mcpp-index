@@ -50,6 +50,14 @@ cmp-module     = "coroutines, C++ modules"
 # `curl`'s `linux/tcp.h` is exactly that, `#define HAVE_LINUX_TCP_H 1` inside
 # `#if defined(__linux__)` in `pkgs/c/compat.curl.lua`. What qualifies is
 # upstream source that asks in the preprocessor where no key can answer.
+[not-portable.curl]
+# Both targets, one cause: this graph supplies no TLS provider, and the member's
+# own test refuses a curl without one -- transfer.cpp:45 fails when
+# CURL_VERSION_SSL is clear, because "a curl built with no SSL still links and
+# still runs, it just silently cannot do https".
+x86_64-linux-gnu = "curl's TLS backend here is compat.openssl, which builds through OpenSSL's own Configure from an install() hook and is therefore a glibc artefact: it declares provides = [\"platform-sdk\"] and fails this graph's link at setcontext and __isoc23_strtol, which musl does not have. Building OpenSSL inside the graph would change this cell."
+x86_64-windows-gnu = "curl's Windows configuration is Schannel plus the checked-in lib/config-win32.h, and both are selected by _WIN32, which a C library presenting POSIX on Windows does not define. With neither HAVE_CONFIG_H nor _WIN32, curl_setup.h reads no configuration at all and stops at curl_setup.h:591 'too small curl_off_t', which names a consequence and not the cause. compat.openssl has no Windows build, so there is no second TLS provider to fall back to."
+
 [not-portable.cmp-module]
 x86_64-linux-gnu = "asio's detail/config.hpp:899 includes <linux/version.h> whenever __linux__ is defined, OUTSIDE every ASIO_DISABLE_* guard, so no configuration macro prevents it. openkal runs on the Linux kernel, so __linux__ is correct; the uapi headers glibc's userspace installs beside it are not part of what openkal presents."
 

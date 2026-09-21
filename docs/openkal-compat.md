@@ -33,9 +33,18 @@ recorded per target:
 | Result | Meaning |
 | --- | --- |
 | `runs` | the member's tests passed; on a target other than the host they ran through the pinned runner (Wine for Windows) |
-| `builds` | the member built, and its tests were not run or did not pass; the first diagnostic is kept |
+| `builds` | the member's own tests compiled and linked for the target, and were not run or did not pass; the first diagnostic is kept |
 | `fails` | the member did not build; the first diagnostic is kept |
 | `refused` | the member asked this graph for a capability it does not supply, and was told so before anything was compiled |
+
+**A target with no runner is measured with `mcpp test --no-run`, and until it
+was, `builds` was a statement about the dependencies.** Every member here keeps
+its sources under `tests/`, and `mcpp build` builds the PACKAGE: for a target
+this host cannot execute it compiled the member's dependencies, exited 0, and
+that exit code was recorded as `builds`. Measured on `archive` for
+`aarch64-macos`: 1990 objects, none of them from `tests/compression.cpp` or
+`tests/versions.cpp`. `mcpp test --no-run` compiles and links the member's own
+tests for the target and does not execute them, which is what this row claims.
 
 **A refusal is not a failure, and the difference is not a matter of degree.**
 A member that declares `[kernel-abi] requires-interfaces` naming something the
@@ -157,6 +166,67 @@ The workflow also compares a new measurement with the published file
 lower. The comparison becomes a required check for pull requests once the
 repository variable `OPENKAL_RATCHET` is `on`; it is enabled after the weekly
 measurement has been stable for two consecutive weeks.
+
+### The 2026-09-21 measurement, on mcpp 2026.9.21.3
+
+Thirty members, two targets, sixty cells, measured by this repository's own CI:
+
+| | before | after |
+| --- | --- | --- |
+| `runs` | 50 | **56** |
+| `builds` | 0 | 1 |
+| `fails` | 10 | **3, all declared** |
+
+`compat.py check` against the published baseline: no published label
+regressed, and no declaration was contradicted.
+
+The one `builds` is `mimalloc` on `x86_64-windows-gnu`. Its build was repaired
+in this round — `MI_USE_BUILTIN_THREAD_POINTER=0`, see the recipe — and its
+`alloc` test then exits 1 under the Wine CI installs while passing under
+another. A repaired build is not a passing test, and the label says which one
+this is.
+
+### Why `aarch64-macos` is not a pinned target yet
+
+`pins.toml` names linux and windows. macOS is measurable — `mcpp test --no-run`
+compiles and links each member's own tests for a target this host cannot run —
+and it was measured once, on 2026-09-21, against mcpp 2026.9.21.3 and
+openkal-llvm-runtime 0.15.0: **20 members build and 10 do not.**
+
+Nine of the ten are one cause, and it is not ten packaging defects:
+
+| diagnostic | members |
+| --- | --- |
+| `TargetConditionals.h` not found | catch2, curl, mimalloc, re2, sqlite3 |
+| `sys/cdefs.h`, through Apple's `dnsinfo.h` | c-ares |
+| `sys/event.h`, the kqueue reactor | cmp-module |
+| `xlocale.h` | fmtlib.fmt |
+| `pthread_threadid_np` undeclared | spdlog |
+| `library not found for -lm` | brotli |
+
+Every one of those is reached under `#ifdef __APPLE__`, and on this target
+`__APPLE__` is **correct**: it is an Apple platform — Mach-O, arm64, macOS.
+What it does not say is which C library is underneath, and upstream code uses
+it to mean both because on a real macOS the two coincide.
+
+**This is the macOS mirror of the Windows problem this document's `c-ares`
+entry describes, with one difference: there the engine has a lever.** A C
+library presenting POSIX on Windows is realised as `--target=…-pc-cygwin`,
+which suppresses `_WIN32`, so `#ifdef _WIN32` stops selecting the Win32
+branch. On macOS the realisation adds `-D__unix__` and leaves `__APPLE__` and
+`__MACH__` standing, because they are true. Measured, the whole identity a
+source file sees there is
+
+```
+__APPLE__  __MACH__  __MCPP_TARGET_MACOS__  __OPENKAL__  __unix__
+```
+
+and nothing in it answers "which C library". musl defines no identifying macro
+by design, so there is no portable question to ask either.
+
+Pinning the target today would add ten red cells whose repair is one design
+question, not ten. The measurement is recorded here so the question is asked
+with a number attached.
 
 ## 4. Adapting a package
 
