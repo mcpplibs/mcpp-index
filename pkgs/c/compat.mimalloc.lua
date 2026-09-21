@@ -135,6 +135,16 @@ package = {
             -- Windows branch, and on a Win32 target the setting is not read at
             -- all --- `_WIN32` selects `NtCurrentTeb()` three arms earlier ---
             -- so it changes only the target that has no `_WIN32`.
+            --
+            -- WHAT THIS FIXES AND WHAT IT DOES NOT. The cell goes from
+            -- `fails: error: build failed` to `builds`: the backend crash is
+            -- gone and the member compiles and links for this target. Its
+            -- `alloc` test then passes under one Wine and exits 1 under the
+            -- one this repository's CI installs, so the published reading is
+            -- `builds` rather than `runs`. That remainder is a separate
+            -- question about the TLS path the override falls back to, and it
+            -- is recorded here rather than folded into this one so the next
+            -- reader does not take a green build for a green test.
             cflags = { "-DMI_USE_BUILTIN_THREAD_POINTER=0" },
         },
     },

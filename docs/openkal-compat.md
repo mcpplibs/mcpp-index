@@ -167,6 +167,25 @@ lower. The comparison becomes a required check for pull requests once the
 repository variable `OPENKAL_RATCHET` is `on`; it is enabled after the weekly
 measurement has been stable for two consecutive weeks.
 
+### The 2026-09-21 measurement, on mcpp 2026.9.21.3
+
+Thirty members, two targets, sixty cells, measured by this repository's own CI:
+
+| | before | after |
+| --- | --- | --- |
+| `runs` | 50 | **56** |
+| `builds` | 0 | 1 |
+| `fails` | 10 | **3, all declared** |
+
+`compat.py check` against the published baseline: no published label
+regressed, and no declaration was contradicted.
+
+The one `builds` is `mimalloc` on `x86_64-windows-gnu`. Its build was repaired
+in this round — `MI_USE_BUILTIN_THREAD_POINTER=0`, see the recipe — and its
+`alloc` test then exits 1 under the Wine CI installs while passing under
+another. A repaired build is not a passing test, and the label says which one
+this is.
+
 ### Why `aarch64-macos` is not a pinned target yet
 
 `pins.toml` names linux and windows. macOS is measurable — `mcpp test --no-run`
