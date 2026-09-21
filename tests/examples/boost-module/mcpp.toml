@@ -1,0 +1,23 @@
+# boost.boost C++23-module package test: selective feature consumption of the
+# Boost named-modules wrapper — `import boost.optional;` plus the umbrella
+# `import boost;`. The package is Form A (upstream ships its own mcpp.toml), so
+# this member is also the only place the descriptor's `mcpp = "*/mcpp.toml"`
+# default lookup is exercised.
+#
+# Overrides the workspace-root redirect: root declares `compat`, this member
+# needs `boost`. A member-level [indices] REPLACES the inherited table rather
+# than merging with it, which keeps this to ONE project index repo — two repos
+# pointing at the same tree make every lookup ambiguous.
+[indices]
+boost = { path = "../../.." }
+
+[package]
+name    = "boost-module-tests"
+version = "0.1.0"
+
+# Selective, NOT the package's 49-library default closure: opt out of the
+# default set and pick a core sample (header-only optional/type_traits, the
+# compiled json, and the version constants). This keeps index CI on the
+# validated module surface without building the whole wrapper.
+[dependencies.boost]
+boost = { version = "b1.91.0w0.0.0", default-features = false, features = ["optional", "type_traits", "json", "version"] }
