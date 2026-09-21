@@ -167,6 +167,48 @@ lower. The comparison becomes a required check for pull requests once the
 repository variable `OPENKAL_RATCHET` is `on`; it is enabled after the weekly
 measurement has been stable for two consecutive weeks.
 
+### Why `aarch64-macos` is not a pinned target yet
+
+`pins.toml` names linux and windows. macOS is measurable — `mcpp test --no-run`
+compiles and links each member's own tests for a target this host cannot run —
+and it was measured once, on 2026-09-21, against mcpp 2026.9.21.3 and
+openkal-llvm-runtime 0.15.0: **20 members build and 10 do not.**
+
+Nine of the ten are one cause, and it is not ten packaging defects:
+
+| diagnostic | members |
+| --- | --- |
+| `TargetConditionals.h` not found | catch2, curl, mimalloc, re2, sqlite3 |
+| `sys/cdefs.h`, through Apple's `dnsinfo.h` | c-ares |
+| `sys/event.h`, the kqueue reactor | cmp-module |
+| `xlocale.h` | fmtlib.fmt |
+| `pthread_threadid_np` undeclared | spdlog |
+| `library not found for -lm` | brotli |
+
+Every one of those is reached under `#ifdef __APPLE__`, and on this target
+`__APPLE__` is **correct**: it is an Apple platform — Mach-O, arm64, macOS.
+What it does not say is which C library is underneath, and upstream code uses
+it to mean both because on a real macOS the two coincide.
+
+**This is the macOS mirror of the Windows problem this document's `c-ares`
+entry describes, with one difference: there the engine has a lever.** A C
+library presenting POSIX on Windows is realised as `--target=…-pc-cygwin`,
+which suppresses `_WIN32`, so `#ifdef _WIN32` stops selecting the Win32
+branch. On macOS the realisation adds `-D__unix__` and leaves `__APPLE__` and
+`__MACH__` standing, because they are true. Measured, the whole identity a
+source file sees there is
+
+```
+__APPLE__  __MACH__  __MCPP_TARGET_MACOS__  __OPENKAL__  __unix__
+```
+
+and nothing in it answers "which C library". musl defines no identifying macro
+by design, so there is no portable question to ask either.
+
+Pinning the target today would add ten red cells whose repair is one design
+question, not ten. The measurement is recorded here so the question is asked
+with a number attached.
+
 ## 4. Adapting a package
 
 A package that fails in an openkal graph has met one of the layers. The rules
