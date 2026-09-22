@@ -20,4 +20,4 @@ version = "0.1.0"
 # compiled json, and the version constants). This keeps index CI on the
 # validated module surface without building the whole wrapper.
 [dependencies.boost]
-boost = { version = "b1.91.0w0.0.0", default-features = false, features = ["optional", "type_traits", "json", "version"] }
+boost = { version = "1.91.0.0.1.0", default-features = false, features = ["optional", "type_traits", "json", "version"] }
