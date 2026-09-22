@@ -18,6 +18,7 @@ members = [
     "tests/examples/boost-config",
     "tests/examples/boost-ext.ut",
     "tests/examples/boost-family",
+    "tests/examples/boost-module",
     "tests/examples/boost-throw-exception",
     "tests/examples/boost-type-traits",
     "tests/examples/boost-uuid",
