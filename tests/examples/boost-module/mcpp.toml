@@ -5,11 +5,13 @@
 # default lookup is exercised.
 #
 # Overrides the workspace-root redirect: root declares `compat`, this member
-# needs `boost`. A member-level [indices] REPLACES the inherited table rather
-# than merging with it, which keeps this to ONE project index repo — two repos
-# pointing at the same tree make every lookup ambiguous.
+# needs `ZheFeng7110`. The table is keyed by NAMESPACE, so the key must be the
+# dependency's namespace (`ZheFeng7110`), not the package name (`boost`). A
+# member-level [indices] REPLACES the inherited table rather than merging with
+# it, which keeps this to ONE project index repo — two repos pointing at the
+# same tree make every lookup ambiguous.
 [indices]
-boost = { path = "../../.." }
+ZheFeng7110 = { path = "../../.." }
 
 [package]
 name    = "boost-module-tests"
