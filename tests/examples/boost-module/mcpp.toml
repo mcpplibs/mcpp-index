@@ -19,5 +19,5 @@ version = "0.1.0"
 # default set and pick a core sample (header-only optional/type_traits, the
 # compiled json, and the version constants). This keeps index CI on the
 # validated module surface without building the whole wrapper.
-[dependencies.boost]
+[dependencies.ZheFeng7110]
 boost = { version = "1.91.0.0.1.0", default-features = false, features = ["optional", "type_traits", "json", "version"] }
