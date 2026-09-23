@@ -44,7 +44,7 @@ cmp-module     = "coroutines, C++ modules"
 # excuse, and this project has shipped one of those before.
 #
 # DISTINCT FROM `[excluded]` BELOW, which is whole-member. `cmp-module` runs on
-# `x86_64-windows-gnu`; excluding it would discard a result that is true in
+# `x86_64-windows-musl`; excluding it would discard a result that is true in
 # order to hide one that is also true.
 #
 # THE BAR IS "NO MANIFEST KEY REACHES IT". A generated configuration header
@@ -58,7 +58,7 @@ cmp-module     = "coroutines, C++ modules"
 # CURL_VERSION_SSL is clear, because "a curl built with no SSL still links and
 # still runs, it just silently cannot do https".
 x86_64-linux-gnu = "curl's TLS backend here is compat.openssl, which builds through OpenSSL's own Configure from an install() hook and is therefore a glibc artefact: it declares provides = [\"platform-sdk\"] and fails this graph's link at setcontext and __isoc23_strtol, which musl does not have. Building OpenSSL inside the graph would change this cell."
-x86_64-windows-gnu = "curl's Windows configuration is Schannel plus the checked-in lib/config-win32.h, and both are selected by _WIN32, which a C library presenting POSIX on Windows does not define. With neither HAVE_CONFIG_H nor _WIN32, curl_setup.h reads no configuration at all and stops at curl_setup.h:591 'too small curl_off_t', which names a consequence and not the cause. compat.openssl has no Windows build, so there is no second TLS provider to fall back to."
+x86_64-windows-musl = "curl's Windows configuration is Schannel plus the checked-in lib/config-win32.h, and both are selected by _WIN32, which a C library presenting POSIX on Windows does not define. With neither HAVE_CONFIG_H nor _WIN32, curl_setup.h reads no configuration at all and stops at curl_setup.h:591 'too small curl_off_t', which names a consequence and not the cause. compat.openssl has no Windows build, so there is no second TLS provider to fall back to."
 
 [not-portable.cmp-module]
 x86_64-linux-gnu = "asio's detail/config.hpp:899 includes <linux/version.h> whenever __linux__ is defined, OUTSIDE every ASIO_DISABLE_* guard, so no configuration macro prevents it. openkal runs on the Linux kernel, so __linux__ is correct; the uapi headers glibc's userspace installs beside it are not part of what openkal presents."

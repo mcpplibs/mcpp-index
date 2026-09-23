@@ -23,6 +23,18 @@
   包归入 `openkal-ecosystem`;测试项目在 openkal 依赖图中测得 `runs` 的包归入
   `openkal-compat`。只测得 `builds` 或 `fails` 的包不再归入分面,其页面仍按目标列出测量结果
   与第一条诊断。
+- **openkal 测量按改动选成员,不再每次全量。** `compat.py select --base <merge-base>`:
+  改动 openkal 家族描述符、`pins.toml`、`compat.py` 才测全部成员;改 `members.toml` 只测
+  新增或改动的条目(`[not-portable]` 计入所指成员,`[excluded]` 不选);改
+  `tests/examples/<成员>/` 测该成员;改描述符测依赖它的成员。`selftest` 为每条规则各加一例。
+- **openkal 的 Windows 目标改名为 `x86_64-windows-musl`。** 依赖图在 Windows 上呈现的是
+  musl 的 C 环境,不是 MinGW;`x86_64-windows-gnu` 会被读成 mingw-w64 构建。实测同一依赖图:
+  cli11、zlib、cmp-module 仍 runs,curl 仍停在同一条 `curl_setup.h:591`。2026-09-23 之前的
+  结果仍记在旧名下。
+- **CN 镜像可以由库的维护者自己托管。** `check_mirror_urls.lua` 要求 `CN` 是 gitcode 的
+  release 资产(`https://gitcode.com/<owner>/<repo>/releases/download/…`),不再限定
+  `mcpp-res` 组织;`mcpp-res` 仍是默认。#463 起 `main` 上的 lint 因 `ZheFeng7110.boost`
+  的维护者镜像而失败,现在通过。
 
 ### Fixed
 

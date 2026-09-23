@@ -116,9 +116,14 @@ toolchain = "llvm@22.1.8"
 # reports it as a compatibility result.
 mcpp      = "2026.9.21.3"
 
-targets = ["x86_64-linux-gnu", "x86_64-windows-gnu"]
+# The Windows target is named for the C environment the graph presents there,
+# which is musl's (openkal-musl declares `[c-abi] presents = "posix"`), not
+# MinGW's: `x86_64-windows-gnu` read as a mingw-w64 build, which this graph
+# has never been. Results measured before 2026-09-23 are recorded under that
+# older name.
+targets = ["x86_64-linux-gnu", "x86_64-windows-musl"]
 
 # A target that is not the host is tested through its runner when the runner is
 # on PATH, and built otherwise.
 [runners]
-x86_64-windows-gnu = ["wine"]
+x86_64-windows-musl = ["wine"]

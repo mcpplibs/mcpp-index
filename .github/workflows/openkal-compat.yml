@@ -25,6 +25,7 @@ on:
     paths:
       - "pkgs/**/*.lua"
       - "tests/openkal/**"
+      - "tests/examples/**"
       - ".xpkgindex/openkal-compat.json"
       - ".github/workflows/openkal-compat.yml"
 
@@ -68,15 +69,17 @@ jobs:
         with:
           fetch-depth: 0
 
-      # A pull request measures the members its change can affect; the schedule
-      # and a request with no members measure every listed member.
+      # A pull request measures the members its change can affect (see
+      # `select_members` in compat.py: adding one member measures that member);
+      # the schedule and a request with no members measure every listed member.
       - name: Select the members
         id: select
         shell: bash
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
-            files=$(git diff --name-only "origin/${{ github.base_ref }}...HEAD")
-            members=$(python3 tests/openkal/compat.py select $files)
+            base=$(git merge-base "origin/${{ github.base_ref }}" HEAD)
+            files=$(git diff --name-only "$base" HEAD)
+            members=$(python3 tests/openkal/compat.py select --base "$base" $files)
           else
             members="${{ github.event.inputs.members }}"
             [ -n "$members" ] || members=$(python3 tests/openkal/compat.py select tests/openkal/)

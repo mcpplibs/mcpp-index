@@ -4,7 +4,10 @@
 -- urls remain valid and are left to the author):
 --   * a url table must define BOTH `GLOBAL` and `CN`
 --   * both values must be non-empty strings
---   * `CN` must be a gitcode.com/mcpp-res/<repo>/releases/download/... URL
+--   * `CN` must be a gitcode.com/<owner>/<repo>/releases/download/... URL.
+--     The owner is usually the index's `mcpp-res` organization, and may be
+--     the library's own maintainer, who then keeps that mirror in step with
+--     the GLOBAL asset (same bytes, same sha256).
 --   * `GLOBAL` must not itself point at the mcpp-res CN mirror
 --
 -- Usage: lua5.4 tests/check_mirror_urls.lua <file.lua>
@@ -41,8 +44,11 @@ local function check_url(ctx, u)
     if type(c) ~= "string" or c == "" then
         err(ctx .. ": url table missing non-empty CN")
     end
-    if type(c) == "string" and not c:match("^https://gitcode%.com/mcpp%-res/") then
-        err(ctx .. ": CN url must be under https://gitcode.com/mcpp-res/ (got " .. tostring(c) .. ")")
+    if type(c) == "string"
+            and not c:match("^https://gitcode%.com/[^/]+/[^/]+/releases/download/[^/]+/[^/]+$") then
+        err(ctx .. ": CN url must be a gitcode.com release asset, "
+            .. "https://gitcode.com/<owner>/<repo>/releases/download/<tag>/<file> (got "
+            .. tostring(c) .. ")")
     end
     if type(g) == "string" and g:match("^https://gitcode%.com/mcpp%-res/") then
         err(ctx .. ": GLOBAL url must not point at the CN mirror")
