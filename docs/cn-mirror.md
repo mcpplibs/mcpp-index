@@ -14,12 +14,16 @@ effect through the existing engine.
   for the `nlohmann` family prefer `nlohmann-json`, to avoid the ambiguity of a bare `json`).
 - The public URL of a CN asset follows this convention:
   `https://gitcode.com/mcpp-res/<slug>/releases/download/<ver>/<slug>-<ver>.<ext>`
+- A library's own maintainer may host its CN mirror instead, under their own gitcode account
+  (`https://gitcode.com/<owner>/<repo>/releases/download/<tag>/<file>`, as `ZheFeng7110.boost` does). They then keep it
+  in step with the GLOBAL asset: the same bytes, so the same `sha256`.
 
 ## Fallback without `mcpp-res` write access
 
 Setting up a mirror requires write access (a token) to the gitcode `mcpp-res` organization. Without it, do not force a
 mirror table into existence: lint (`check_mirror_urls.lua`) mandates that once `url` is written as a table, its `CN`
-must be `https://gitcode.com/mcpp-res/…`, so `{ GLOBAL=upstream, CN=upstream }` fails lint outright. The correct
+must be a gitcode release asset (`https://gitcode.com/<owner>/<repo>/releases/download/…`), so
+`{ GLOBAL=upstream, CN=upstream }` fails lint outright. The correct
 fallback is a plain-string url (upstream release only) — lint imposes no mirror constraint on plain-string urls:
 
 ```lua

@@ -12,11 +12,15 @@
   `nlohmann-json` 以避免裸 `json` 的歧义)。
 - CN 资产的公网 URL 约定为:
   `https://gitcode.com/mcpp-res/<slug>/releases/download/<ver>/<slug>-<ver>.<ext>`
+- 库的维护者也可以在自己的 gitcode 账号下自行维护 CN 镜像
+  (`https://gitcode.com/<owner>/<repo>/releases/download/<tag>/<file>`,如 `ZheFeng7110.boost`)。
+  此时由维护者保证它与 GLOBAL 资产字节一致,即 `sha256` 相同。
 
 ## 无 `mcpp-res` 写权限时的回退
 
 建立镜像需要 gitcode `mcpp-res` 组织的写权限(token)。在不具备该权限时,不应勉强构造镜像表:lint
-(`check_mirror_urls.lua`)强制要求,一旦 `url` 写成表形式,其 `CN` 必须为 `https://gitcode.com/mcpp-res/…`,
+(`check_mirror_urls.lua`)强制要求,一旦 `url` 写成表形式,其 `CN` 必须为 gitcode 的 release 资产
+(`https://gitcode.com/<owner>/<repo>/releases/download/…`),
 因此 `{ GLOBAL=上游, CN=上游 }` 会直接导致 lint 失败。正确的回退方式是采用纯字符串 url(仅填上游 release),
 lint 对纯字符串 url 不施加镜像约束:
 

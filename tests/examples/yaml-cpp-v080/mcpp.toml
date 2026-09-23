@@ -1,0 +1,11 @@
+# yaml-cpp 0.8.0 test project: the same assertions as tests/examples/yaml-cpp
+# (0.9.0) minus the float formatting 0.9.0 added, plus a compile-time probe
+# that 0.9.0's new header is absent, so a member silently resolving the newer
+# version fails instead of passing.
+# `compat` redirect inherited from the workspace root.
+[package]
+name = "yaml-cpp-v080-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+yaml-cpp = "0.8.0"

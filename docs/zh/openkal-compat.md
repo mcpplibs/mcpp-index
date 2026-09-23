@@ -29,13 +29,20 @@
 | `builds` | 成员构建成功,测试未运行或未通过;保留第一条诊断 |
 | `fails` | 成员构建失败;保留第一条诊断 |
 
-结果连同固定版本与日期写入 `.xpkgindex/openkal-compat.json`。一个包若被多个测试项目覆盖,站点对每个目标取其中最好的结果,并按最好的目标将包归入 `openkal` 分面。openkal 自身的包归为 `openkal 本身`。
+结果连同固定版本与日期写入 `.xpkgindex/openkal-compat.json`。一个包若被多个测试项目覆盖,站点对每个目标取其中最好的结果。`openkal` 分面有两个取值:
+
+| 分面取值 | 归入的包 |
+| --- | --- |
+| `openkal-ecosystem` | 构成 openkal 的包:规范、各平台实现,以及直接建立在它之上的各层 |
+| `openkal-compat` | 最好的目标记录为 `runs` 的包 |
+
+最好的目标只记录为 `builds` 或 `fails` 的包不归入任何取值;它的页面仍按目标显示测量结果与第一条诊断。
 
 成员是否自行选择平台依赖也会记录。自行选择平台依赖是允许的:openkal 上的包可以使用平台的系统接口,只要这些依赖来自依赖图。这一区分会显示出来,但不降低标签。
 
 `tests/openkal/members.toml` 列出测量对象。`[excluded]` 列出在任何 openkal 依赖图中都无法构建的成员,并逐条写明原因;失败的成员照常测量并公布,不列入排除。
 
-`[not-portable.<成员>]` 声明某个成员的**某一个目标**按构造无法构建,并写明理由。它存在是因为 `[excluded]` 是整成员级的,而有些成员两头都不是:`cmp-module` 在 `x86_64-windows-gnu` 上 runs,在 `x86_64-linux-gnu` 上建不起来——asio 的 `detail/config.hpp` 只要 `__linux__` 有定义就 include `<linux/version.h>`,而那行在所有 `ASIO_DISABLE_*` 守卫之外。整个排除掉这个成员,等于为了藏起一个真的结果而丢掉另一个同样真的结果。
+`[not-portable.<成员>]` 声明某个成员的**某一个目标**按构造无法构建,并写明理由。它存在是因为 `[excluded]` 是整成员级的,而有些成员两头都不是:`cmp-module` 在 `x86_64-windows-musl` 上 runs,在 `x86_64-linux-gnu` 上建不起来——asio 的 `detail/config.hpp` 只要 `__linux__` 有定义就 include `<linux/version.h>`,而那行在所有 `ASIO_DISABLE_*` 守卫之外。整个排除掉这个成员,等于为了藏起一个真的结果而丢掉另一个同样真的结果。
 
 **门槛是「没有任何清单键伸得进去」。** 上游源码在预处理期发问,算;本索引自己生成的配置头,不算,那属于配方。`curl` 的 `linux/tcp.h` 就是后者——`pkgs/c/compat.curl.lua` 在 `#if defined(__linux__)` 里写了 `#define HAVE_LINUX_TCP_H 1`,把一个关于内核的正确事实读成了关于「装了哪些 userspace 头」的断言。
 
@@ -48,13 +55,24 @@
 | 目标 | 首条诊断 | 真因 |
 | --- | --- | --- |
 | `x86_64-linux-gnu` | `lib/setopt.c:31: 'linux/tcp.h' file not found` | `#if defined(__linux__)` 里写死了 `#define HAVE_LINUX_TCP_H 1`。内核**确实**是 Linux,谓词没错;错的是把它读成「glibc 的 userspace 头都装好了」。诚实的判据是 `__has_include(<linux/tcp.h>)`。同一个块里还有 `HAVE_GLIBC_STRERROR_R`,在 musl 上它是假的。 |
-| `x86_64-windows-gnu` | `curl_setup.h:591: "too small curl_off_t"` | 配方的 `windows` 分支**有意**不定义 `HAVE_CONFIG_H`,好让 `curl_setup.h` 去取仓库里checked-in 的 `lib/config-win32.h`,并链 `-lws2_32` 走 Schannel。而在 openkal 上,那个目标呈现的是 POSIX 且是 **LP64**,`config-win32.h` 写的是 LLP64 与 Win32 API。 |
+| `x86_64-windows-musl` | `curl_setup.h:591: "too small curl_off_t"` | 配方的 `windows` 分支**有意**不定义 `HAVE_CONFIG_H`,好让 `curl_setup.h` 去取仓库里checked-in 的 `lib/config-win32.h`,并链 `-lws2_32` 走 Schannel。而在 openkal 上,那个目标呈现的是 POSIX 且是 **LP64**,`config-win32.h` 写的是 LLP64 与 Win32 API。 |
 
 **第二条才是有意思的那条:配方按「平台」分支,而问题问的是「C 环境」。** 在 openkal 于 Windows 上呈现 POSIX 之前,这两者在本索引的每一个目标上都同答案。mcpp 有那个真正被问的谓词——`cfg(c-abi = "musl")`(mcpp docs/22「按解析出的目标侧适配」)。在那里改选生成的 POSIX 配置而不是 checked-in 的 Win32 配置,就是它的形状;它还需要本索引的 OpenSSL 跑在同一个环境上,所以比第一条大,不与它合并。
 
 ## 3. 何时运行
 
-`.github/workflows/openkal-compat.yml` 每周运行、可手动触发,测量全部列出的成员。对 PR,openkal 家族或 `tests/openkal` 变化时测量全部成员,否则测量依赖了被修改描述符的成员。除非启用下文的比较,它不阻止合并。
+`.github/workflows/openkal-compat.yml` 每周运行、可手动触发,测量全部列出的成员。对 PR,`compat.py select` 只测量改动可能影响的成员:
+
+| PR 改动了 | 测量的成员 |
+| --- | --- |
+| openkal 家族描述符、`pins.toml`、`compat.py`,或 `tests/openkal/` 下除 `members.toml` 以外的文件 | 全部列出的成员:依赖图或测量工具变了 |
+| `members.toml` | 与基准分支相比,条目新增或改动的成员;`[not-portable]` 声明计入它所指的成员,`[excluded]` 不选中任何成员 |
+| `tests/examples/<成员>/` | 该成员(若已列出) |
+| `pkgs/` 下的描述符 | 测试项目依赖该描述符的已列出成员 |
+
+因此新增一个成员只测量该成员,而不是整张列表。除非启用下文的比较,它不阻止合并。
+
+目标为 `x86_64-linux-gnu` 与 `x86_64-windows-musl`。Windows 目标按依赖图在那里呈现的 C 环境命名,即 musl 的,而不是 MinGW 的。2026-09-23 之前测得的结果记为 `x86_64-windows-gnu`,即该目标当时的名字。
 
 它有意安装宿主的 Windows 交叉头文件。若构建触及宿主头文件,结果会因其存在而改变;结果不变即说明依赖图是封闭的。
 

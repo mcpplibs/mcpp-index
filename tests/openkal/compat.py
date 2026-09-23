@@ -7,7 +7,7 @@ claims. See docs/openkal-compat.md.
 
     compat.py run   [--member NAME ...] [--target TRIPLE ...] --out FILE
     compat.py check --results FILE [--baseline FILE] [--members NAME ...]
-    compat.py select FILE ...
+    compat.py select [--base REF] FILE ...
 
 `run` copies each selected member of tests/examples into tests/openkal-work,
 adds the openkal C++ runtime named by pins.toml, and builds with the pinned
@@ -41,8 +41,11 @@ openkal/.agents/docs/2026-09-18-openkal-c-environment-and-personalities-
 design.md §7, §12 decision 5) -- and is not computed here.
 
 `select` reads changed file paths and prints the members to measure: every
-listed member when the openkal family or this directory changed, otherwise the
-members whose test projects depend on a changed descriptor.
+listed member when the graph or the harness changed (an openkal family
+descriptor, pins.toml, compat.py), otherwise only the members the change names
+-- an entry added or changed in members.toml (compared with `--base`), a
+member's own test project, or a descriptor a member's test project depends on.
+See `select_members`.
 
 `check` compares a results file with a baseline and fails when a member that
 the baseline records as `runs` or `builds` for a target is recorded lower. It
@@ -387,7 +390,62 @@ def cmd_check(args: argparse.Namespace) -> int:
     return 1 if (regressions or contradicted) else 0
 
 
-FAMILY_PREFIXES = ("pkgs/o/openkal", "pkgs/s/std-freestanding-alloc-kal", "tests/openkal/")
+# A change to any of these changes the graph every member is measured in, or
+# the harness that measures it, so it selects every listed member.
+FAMILY_PREFIXES = ("pkgs/o/openkal", "pkgs/s/std-freestanding-alloc-kal")
+MEMBERS_FILE = "tests/openkal/members.toml"
+
+
+def members_changed(now: dict, base: dict) -> set[str]:
+    """The members whose entry in members.toml differs from the base: added,
+    re-described, or with a `[not-portable]` declaration added, changed or
+    removed. `[excluded]` selects nothing -- an excluded member is not
+    measured -- and a removed member has nothing left to measure."""
+    changed = set()
+    now_m, base_m = now.get("members", {}), base.get("members", {})
+    for m in now_m:
+        if m not in base_m or now_m[m] != base_m[m]:
+            changed.add(m)
+    now_np, base_np = now.get("not-portable", {}), base.get("not-portable", {})
+    for m in set(now_np) | set(base_np):
+        if now_np.get(m) != base_np.get(m) and m in now_m:
+            changed.add(m)
+    return changed
+
+
+def select_members(changed: list[str], listed: list[str], packages: dict,
+                   members_now: dict, members_base: dict | None) -> list[str]:
+    """What a change can affect, in listed order.
+
+    Every listed member, when the change reaches all of them: an openkal
+    family descriptor (the graph), `pins.toml` (the graph's versions),
+    `compat.py` or anything else under tests/openkal/ (the harness), or
+    members.toml with no base to compare it against.
+
+    Otherwise only the members the change names: a member whose members.toml
+    entry changed (`members_changed`), a member whose own test project under
+    tests/examples/ changed, and a member whose test project depends on a
+    changed descriptor. Adding one member measures that member, not the list.
+    """
+    chosen: set[str] = set()
+    ids = set()
+    for p in changed:
+        if p.startswith(FAMILY_PREFIXES):
+            return list(listed)
+        if p == MEMBERS_FILE:
+            if members_base is None:
+                return list(listed)
+            chosen |= members_changed(members_now, members_base)
+        elif p.startswith("tests/openkal/"):
+            return list(listed)
+        elif p.startswith("tests/examples/"):
+            chosen.add(p[len("tests/examples/"):].split("/", 1)[0])
+        elif p.startswith("pkgs/") and p.endswith(".lua"):
+            ids.add(descriptor_id(p))
+    for member in listed:
+        if ids & set(packages.get(member, [])):
+            chosen.add(member)
+    return [m for m in listed if m in chosen]
 
 
 def descriptor_id(path: str) -> str:
@@ -403,18 +461,21 @@ def descriptor_id(path: str) -> str:
 
 
 def cmd_select(args: argparse.Namespace) -> int:
-    listed = list(load_toml(os.path.join(HERE, "members.toml")).get("members", {}).keys())
+    members_now = load_toml(os.path.join(HERE, "members.toml"))
+    listed = list(members_now.get("members", {}).keys())
     changed = [p.strip() for p in args.files if p.strip()]
-    if any(p.startswith(FAMILY_PREFIXES) for p in changed):
-        print(" ".join(listed))
-        return 0
-    ids = {descriptor_id(p) for p in changed if p.startswith("pkgs/") and p.endswith(".lua")}
-    chosen = []
-    for member in listed:
-        manifest = load_toml(os.path.join(EXAMPLES, member, "mcpp.toml"))
-        if ids & set(packages_of(manifest)):
-            chosen.append(member)
-    print(" ".join(chosen))
+    # The base's members.toml, so that adding a member measures that member.
+    # Without --base, or when the base has no such file, a change to it
+    # selects every member, which is what it did before --base existed.
+    members_base = None
+    if args.base:
+        proc = subprocess.run(["git", "show", f"{args.base}:{MEMBERS_FILE}"],
+                              cwd=ROOT, capture_output=True, text=True)
+        if proc.returncode == 0 and tomllib is not None:
+            members_base = tomllib.loads(proc.stdout)
+    packages = {m: packages_of(load_toml(os.path.join(EXAMPLES, m, "mcpp.toml")))
+                for m in listed}
+    print(" ".join(select_members(changed, listed, packages, members_now, members_base)))
     return 0
 
 
@@ -451,7 +512,7 @@ def cmd_selftest(_args: argparse.Namespace) -> int:
          classify_failure(ran, False)["status"], "fails"),
         # `[not-portable]` is per (member, target), and reading it per member
         # would take a working cell out of the figure along with the broken
-        # one --- `cmp-module` runs on x86_64-windows-gnu.
+        # one --- `cmp-module` runs on x86_64-windows-musl.
         ("a declaration is read for the target it names",
          declared_not_portable({"m": {"t1": "why"}}, "m", "t1"), "why"),
         ("and not for a target it does not name",
@@ -466,12 +527,48 @@ def cmd_selftest(_args: argparse.Namespace) -> int:
          ["mcpp", "test", "--toolchain", "llvm@22.1.8",
           "--target", "aarch64-macos", "--no-run"]),
         ("a target with a runner runs them",
-         command_for("x86_64-windows-gnu", "llvm@22.1.8", False, True),
+         command_for("x86_64-windows-musl", "llvm@22.1.8", False, True),
          ["mcpp", "test", "--toolchain", "llvm@22.1.8",
-          "--target", "x86_64-windows-gnu"]),
+          "--target", "x86_64-windows-musl"]),
         ("the host names no target and runs them",
          command_for("x86_64-linux-gnu", "llvm@22.1.8", True, True),
          ["mcpp", "test", "--toolchain", "llvm@22.1.8"]),
+    ]
+
+    # `select` decides how much of a pull request's four-hour matrix runs. It
+    # used to measure every member for any change under tests/openkal/, which
+    # made adding one member cost the whole list.
+    listed = ["a", "b", "c"]
+    packages = {"a": ["compat.x"], "b": ["compat.y"], "c": []}
+    base = {"members": {"a": "A", "b": "B"}}
+    now = {"members": {"a": "A", "b": "B", "c": "C"}}
+    sel = lambda changed, n=now, b=base: select_members(changed, listed, packages, n, b)
+    cases += [
+        ("adding a member measures that member",
+         sel([MEMBERS_FILE]), ["c"]),
+        ("re-describing a member measures it",
+         sel([MEMBERS_FILE], {"members": {"a": "A2", "b": "B"}}), ["a"]),
+        ("a not-portable declaration measures the member it names",
+         sel([MEMBERS_FILE], {"members": base["members"],
+                              "not-portable": {"b": {"t": "why"}}}), ["b"]),
+        ("an exclusion alone measures nothing",
+         sel([MEMBERS_FILE], {"members": base["members"], "excluded": {"z": "why"}}), []),
+        ("members.toml with no base measures every member",
+         sel([MEMBERS_FILE], now, None), listed),
+        ("a pin measures every member",
+         sel(["tests/openkal/pins.toml"]), listed),
+        ("the harness measures every member",
+         sel(["tests/openkal/compat.py"]), listed),
+        ("the scheduled run's directory measures every member",
+         sel(["tests/openkal/"]), listed),
+        ("an openkal family descriptor measures every member",
+         sel(["pkgs/o/openkal-musl.lua"]), listed),
+        ("a descriptor measures the members that depend on it",
+         sel(["pkgs/c/compat.y.lua"]), ["b"]),
+        ("a member's test project measures that member",
+         sel(["tests/examples/a/tests/t.cpp"]), ["a"]),
+        ("an unlisted test project measures nothing",
+         sel(["tests/examples/zzz/mcpp.toml"]), []),
     ]
     bad = 0
     for name, got, want in cases:
@@ -496,6 +593,7 @@ def main() -> int:
     check.add_argument("--baseline", required=True)
     check.add_argument("--members", nargs="*")
     select = sub.add_parser("select")
+    select.add_argument("--base", help="git ref whose members.toml the change is compared with")
     select.add_argument("files", nargs="*")
     sub.add_parser("selftest")
     args = parser.parse_args()

@@ -7,6 +7,35 @@
 
 ## [Unreleased]
 
+### Added
+
+- **`compat.yaml-cpp` 0.8.0 与 0.9.0。** YAML 1.2 解析与生成,按上游 CMake 目标原样编译
+  (`src/*.cpp` + `src/contrib/*.cpp`),GLOBAL + GitCode CN 镜像字节一致。上游把
+  `YAML_CPP_STATIC_DEFINE` 作为静态构建的 PUBLIC 定义;描述符的 `defines` 到不了消费者,
+  所以用 `yaml-cpp/dll.h` 的同名遮蔽头送达,测试在编译期断言它到了(MSVC ABI 上缺它就是
+  dllimport 链接错误,Linux 上看不出来)。两个版本各有一个测试成员(`yaml-cpp`、
+  `yaml-cpp-v080`),都列入 `tests/openkal/members.toml` 在 openkal 上测量。
+
+### Changed
+
+- **站点的 openkal 分面改为两个取值:`openkal-ecosystem` 与 `openkal-compat`。** 原先的
+  「openkal itself / runs on openkal / fails on openkal」是句子而不是名字。构成 openkal 的
+  包归入 `openkal-ecosystem`;测试项目在 openkal 依赖图中测得 `runs` 的包归入
+  `openkal-compat`。只测得 `builds` 或 `fails` 的包不再归入分面,其页面仍按目标列出测量结果
+  与第一条诊断。
+- **openkal 测量按改动选成员,不再每次全量。** `compat.py select --base <merge-base>`:
+  改动 openkal 家族描述符、`pins.toml`、`compat.py` 才测全部成员;改 `members.toml` 只测
+  新增或改动的条目(`[not-portable]` 计入所指成员,`[excluded]` 不选);改
+  `tests/examples/<成员>/` 测该成员;改描述符测依赖它的成员。`selftest` 为每条规则各加一例。
+- **openkal 的 Windows 目标改名为 `x86_64-windows-musl`。** 依赖图在 Windows 上呈现的是
+  musl 的 C 环境,不是 MinGW;`x86_64-windows-gnu` 会被读成 mingw-w64 构建。实测同一依赖图:
+  cli11、zlib、cmp-module 仍 runs,curl 仍停在同一条 `curl_setup.h:591`。2026-09-23 之前的
+  结果仍记在旧名下。
+- **CN 镜像可以由库的维护者自己托管。** `check_mirror_urls.lua` 要求 `CN` 是 gitcode 的
+  release 资产(`https://gitcode.com/<owner>/<repo>/releases/download/…`),不再限定
+  `mcpp-res` 组织;`mcpp-res` 仍是默认。#463 起 `main` 上的 lint 因 `ZheFeng7110.boost`
+  的维护者镜像而失败,现在通过。
+
 ### Fixed
 
 - **索引制品按提交只定一次字节,两个托管端提供同一份。** 同一提交重跑发布(夜间 cron)

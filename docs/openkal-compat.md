@@ -87,12 +87,22 @@ derivation, stated next to the code that computes it.
 
 The results are written to `.xpkgindex/openkal-compat.json` together with the
 pins and the date. The site gives every package a test project covers the best
-result any covering project recorded for each target, and files the package
-under the `openkal` facet by its best target and under the `openkal_kind`
-facet by `platform` if any measured target recorded it, else `posix` if any
-did. The packages of openkal itself are filed as `openkal itself` and carry
-neither `kind` nor `openkal_kind`: they answer what openkal is, not what a
-package built on it needs.
+result any covering project recorded for each target. The `openkal` facet
+has two values:
+
+| Facet value | Packages filed under it |
+| --- | --- |
+| `openkal-ecosystem` | the packages that make up openkal: the specification, its implementations, and the layers built directly on it |
+| `openkal-compat` | packages whose best target recorded `runs` |
+
+A package whose best target recorded `builds` or `fails` is filed under
+neither value. Its page still shows the measurement for each target, with the
+first diagnostic.
+
+A measured package is also filed under the `openkal_kind` facet: `platform`
+if any measured target recorded it, otherwise `posix` if any target did.
+`openkal-ecosystem` packages carry neither `kind` nor `openkal_kind`: they
+answer what openkal is, not what a package built on it needs.
 
 The `openkal_kind` facet and the badge it drives are a package-level
 **summary**: they take the strictest target, the way `platform` above is
@@ -112,7 +122,7 @@ fails is measured and published, not excluded.
 
 `[not-portable.<member>]` declares one TARGET of one member unbuildable by
 construction, with the reason. It exists because `[excluded]` is whole-member
-and some members are neither: `cmp-module` runs on `x86_64-windows-gnu` and
+and some members are neither: `cmp-module` runs on `x86_64-windows-musl` and
 cannot build on `x86_64-linux-gnu`, because asio's `detail/config.hpp`
 includes `<linux/version.h>` whenever `__linux__` is defined, outside every
 `ASIO_DISABLE_*` guard. Excluding the member outright would discard a result
@@ -138,7 +148,7 @@ Both are recipe defects, and neither is the same defect:
 | target | first diagnostic | cause |
 | --- | --- | --- |
 | `x86_64-linux-gnu` | `lib/setopt.c:31: 'linux/tcp.h' file not found` | `#define HAVE_LINUX_TCP_H 1` inside `#if defined(__linux__)`. The kernel IS Linux, so the predicate is right; what is wrong is reading it as "glibc's userspace headers are installed". The honest test is `__has_include(<linux/tcp.h>)`. The same block also asserts `HAVE_GLIBC_STRERROR_R`, which is false over musl. |
-| `x86_64-windows-gnu` | `curl_setup.h:591: "too small curl_off_t"` | The recipe's `windows` branch omits `HAVE_CONFIG_H` so that `curl_setup.h` reaches the checked-in `lib/config-win32.h`, and links `-lws2_32` with Schannel. Over openkal that target presents POSIX and is **LP64**, while `config-win32.h` is written for LLP64 and the Win32 API. |
+| `x86_64-windows-musl` | `curl_setup.h:591: "too small curl_off_t"` | The recipe's `windows` branch omits `HAVE_CONFIG_H` so that `curl_setup.h` reaches the checked-in `lib/config-win32.h`, and links `-lws2_32` with Schannel. Over openkal that target presents POSIX and is **LP64**, while `config-win32.h` is written for LLP64 and the Win32 API. |
 
 **The second is the interesting one: the recipe branches on the PLATFORM where
 the question is about the C ENVIRONMENT.** Those two agreed on every target
@@ -152,10 +162,23 @@ it is a larger change than the first and is not folded into it.
 ## 3. When it runs
 
 `.github/workflows/openkal-compat.yml` runs weekly and on demand, measuring every
-listed member. For a pull request it measures every member when the openkal
-family or `tests/openkal` changes, and otherwise the members whose test projects
-depend on a changed descriptor. It does not block a merge unless the comparison
-below is enabled.
+listed member. For a pull request, `compat.py select` measures only what the
+change can affect:
+
+| The pull request changes | Members measured |
+| --- | --- |
+| an openkal family descriptor, `pins.toml`, `compat.py`, or anything else under `tests/openkal/` except `members.toml` | every listed member: the graph or the harness changed |
+| `members.toml` | the members whose entry was added or changed, compared with the base branch; a `[not-portable]` declaration counts for the member it names, and `[excluded]` selects nothing |
+| `tests/examples/<member>/` | that member, if it is listed |
+| a descriptor under `pkgs/` | the listed members whose test projects depend on it |
+
+Adding a member therefore measures that member, not the whole list. The
+workflow does not block a merge unless the comparison below is enabled.
+
+The targets are `x86_64-linux-gnu` and `x86_64-windows-musl`. The Windows
+target is named for the C environment the graph presents there, which is
+musl's, not MinGW's. Results measured before 2026-09-23 are recorded as
+`x86_64-windows-gnu`, the name that target had then.
 
 It installs the Windows cross toolchain's host headers on purpose. A build that
 reached the host's headers would change its result when they are present, so a
