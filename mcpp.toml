@@ -152,6 +152,8 @@ members = [
     "tests/examples/websocket-tls",
     "tests/examples/tray",
     "tests/examples/xxhash",
+    "tests/examples/yaml-cpp",
+    "tests/examples/yaml-cpp-v080",
     "tests/examples/yyjson",
     "tests/examples/zlib",
     "tests/examples/magic_enum",

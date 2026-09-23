@@ -46,17 +46,25 @@ SURFACES = [
     ("external", _t("upstream mcpp.toml", "上游 mcpp.toml", "上游 mcpp.toml"), "neutral"),
 ]
 
-# Whether a package's test project builds and runs on openkal, measured by
-# tests/openkal/compat.py and recorded in .xpkgindex/openkal-compat.json. The
-# label is a measurement, never a declaration: a descriptor carries no field for
-# it. Ordered from the strongest statement to the weakest.
+# The two values the `openkal` facet files a package under, and the badge each
+# puts on the package. They are names, not sentences, and are the same in every
+# language:
+#
+#   openkal-ecosystem  a package that makes up openkal (OPENKAL_FAMILY below)
+#   openkal-compat     a package whose test project was measured to RUN in an
+#                      openkal graph, by tests/openkal/compat.py, recorded in
+#                      .xpkgindex/openkal-compat.json
+#
+# `openkal-compat` is a measurement, never a declaration: a descriptor carries
+# no field for it. A package measured only to build, or to fail, is filed under
+# neither -- the facet lists what a reader can pick, and that package's page
+# still shows its per-target measurement with the first diagnostic.
 OPENKAL_LEVELS = [
-    ("family", _t("openkal itself", "openkal 本身", "openkal 本身"), "module"),
-    ("runs", _t("runs on openkal", "在 openkal 上运行", "在 openkal 上執行"), "module"),
-    ("builds", _t("builds on openkal", "在 openkal 上构建", "在 openkal 上建置"), "header"),
-    ("fails", _t("fails on openkal", "在 openkal 上失败", "在 openkal 上失敗"), "neutral"),
-    ("n/a", _t("not applicable", "不适用", "不適用"), "neutral"),
+    ("ecosystem", _t("openkal-ecosystem", "openkal-ecosystem", "openkal-ecosystem"), "module"),
+    ("compat", _t("openkal-compat", "openkal-compat", "openkal-compat"), "module"),
 ]
+# The measured level -> the facet value it is filed under.
+_OPENKAL_FACET = {"family": "ecosystem", "runs": "compat"}
 _OPENKAL_RANK = {"fails": 0, "builds": 1, "runs": 2}
 
 # How a package's best-measured target relates to the platform, orthogonal to
@@ -514,11 +522,12 @@ class McppPlugin(Plugin):
 
         level = self._openkal_level(pkg.identity.slug)
         if level:
-            pkg.facets["openkal"] = level
             ext["openkal"] = {"level": level,
                               **(self.openkal_by_package.get(pkg.identity.slug) or {})}
-            if level in ("runs", "builds", "family"):
-                label = {k: lbl for k, lbl, _ in OPENKAL_LEVELS}[level]
+            facet = _OPENKAL_FACET.get(level)
+            if facet:
+                pkg.facets["openkal"] = facet
+                label = {k: lbl for k, lbl, _ in OPENKAL_LEVELS}[facet]
                 pkg.extensions.setdefault("_badges", []).append(label)
 
             # Wired the same way as `level` just above: a measurement, not a

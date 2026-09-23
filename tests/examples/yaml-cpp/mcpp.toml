@@ -1,0 +1,12 @@
+# yaml-cpp test project: consumes compat.yaml-cpp 0.9.0 and asserts behavior
+# under `mcpp test` -- parsing, aliases, multi-document loads, emitting, parse
+# errors, the contrib GraphBuilder and 0.9.0's shortest float formatting.
+# tests/examples/yaml-cpp-v080 covers 0.8.0. Also measured on openkal
+# (tests/openkal/members.toml).
+# `compat` redirect inherited from the workspace root.
+[package]
+name = "yaml-cpp-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+yaml-cpp = "0.9.0"

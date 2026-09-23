@@ -87,12 +87,22 @@ derivation, stated next to the code that computes it.
 
 The results are written to `.xpkgindex/openkal-compat.json` together with the
 pins and the date. The site gives every package a test project covers the best
-result any covering project recorded for each target, and files the package
-under the `openkal` facet by its best target and under the `openkal_kind`
-facet by `platform` if any measured target recorded it, else `posix` if any
-did. The packages of openkal itself are filed as `openkal itself` and carry
-neither `kind` nor `openkal_kind`: they answer what openkal is, not what a
-package built on it needs.
+result any covering project recorded for each target. The `openkal` facet
+has two values:
+
+| Facet value | Packages filed under it |
+| --- | --- |
+| `openkal-ecosystem` | the packages that make up openkal: the specification, its implementations, and the layers built directly on it |
+| `openkal-compat` | packages whose best target recorded `runs` |
+
+A package whose best target recorded `builds` or `fails` is filed under
+neither value. Its page still shows the measurement for each target, with the
+first diagnostic.
+
+A measured package is also filed under the `openkal_kind` facet: `platform`
+if any measured target recorded it, otherwise `posix` if any target did.
+`openkal-ecosystem` packages carry neither `kind` nor `openkal_kind`: they
+answer what openkal is, not what a package built on it needs.
 
 The `openkal_kind` facet and the badge it drives are a package-level
 **summary**: they take the strictest target, the way `platform` above is

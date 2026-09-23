@@ -8,6 +8,8 @@
 cjson          = "JSON parsing, C"
 yyjson         = "JSON parsing, C"
 "nlohmann.json" = "JSON, header-only C++"
+yaml-cpp       = "YAML parsing and emitting, C++ (0.9.0)"
+yaml-cpp-v080  = "YAML parsing and emitting, C++ (0.8.0)"
 expat          = "XML parsing, C"
 pcre2          = "regular expressions, C"
 re2            = "regular expressions, C++"

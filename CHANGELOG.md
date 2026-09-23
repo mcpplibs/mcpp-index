@@ -7,6 +7,23 @@
 
 ## [Unreleased]
 
+### Added
+
+- **`compat.yaml-cpp` 0.8.0 与 0.9.0。** YAML 1.2 解析与生成,按上游 CMake 目标原样编译
+  (`src/*.cpp` + `src/contrib/*.cpp`),GLOBAL + GitCode CN 镜像字节一致。上游把
+  `YAML_CPP_STATIC_DEFINE` 作为静态构建的 PUBLIC 定义;描述符的 `defines` 到不了消费者,
+  所以用 `yaml-cpp/dll.h` 的同名遮蔽头送达,测试在编译期断言它到了(MSVC ABI 上缺它就是
+  dllimport 链接错误,Linux 上看不出来)。两个版本各有一个测试成员(`yaml-cpp`、
+  `yaml-cpp-v080`),都列入 `tests/openkal/members.toml` 在 openkal 上测量。
+
+### Changed
+
+- **站点的 openkal 分面改为两个取值:`openkal-ecosystem` 与 `openkal-compat`。** 原先的
+  「openkal itself / runs on openkal / fails on openkal」是句子而不是名字。构成 openkal 的
+  包归入 `openkal-ecosystem`;测试项目在 openkal 依赖图中测得 `runs` 的包归入
+  `openkal-compat`。只测得 `builds` 或 `fails` 的包不再归入分面,其页面仍按目标列出测量结果
+  与第一条诊断。
+
 ### Fixed
 
 - **索引制品按提交只定一次字节,两个托管端提供同一份。** 同一提交重跑发布(夜间 cron)
