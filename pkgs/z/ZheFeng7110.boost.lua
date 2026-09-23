@@ -24,19 +24,28 @@ package = {
     xpm = {
         linux = {
             ["1.91.0.0.1.0"] = {
-                url    = "https://github.com/ZheFeng7110/boost-module/releases/download/v1.91.0.0.1.0/boost-module-v1.91.0.0.1.0.tar.xz",
+                url = {
+                    GLOBAL = "https://github.com/ZheFeng7110/boost-module/releases/download/v1.91.0.0.1.0/boost-module-v1.91.0.0.1.0.tar.xz",
+                    CN     = "https://gitcode.com/ZheFeng7/boost-module/releases/download/v1.91.0.0.1.0/boost-module-v1.91.0.0.1.0.tar.xz",
+                },
                 sha256 = "63a9aae63140f22e518a4ee758332afd5b5037d916731dc9c8339dea1a1e1010",
             },
         },
         macosx = {
             ["1.91.0.0.1.0"] = {
-                url    = "https://github.com/ZheFeng7110/boost-module/releases/download/v1.91.0.0.1.0/boost-module-v1.91.0.0.1.0.tar.xz",
+                url = {
+                    GLOBAL = "https://github.com/ZheFeng7110/boost-module/releases/download/v1.91.0.0.1.0/boost-module-v1.91.0.0.1.0.tar.xz",
+                    CN     = "https://gitcode.com/ZheFeng7/boost-module/releases/download/v1.91.0.0.1.0/boost-module-v1.91.0.0.1.0.tar.xz",
+                },
                 sha256 = "63a9aae63140f22e518a4ee758332afd5b5037d916731dc9c8339dea1a1e1010",
             },
         },
         windows = {
             ["1.91.0.0.1.0"] = {
-                url    = "https://github.com/ZheFeng7110/boost-module/releases/download/v1.91.0.0.1.0/boost-module-v1.91.0.0.1.0.tar.xz",
+                url = {
+                    GLOBAL = "https://github.com/ZheFeng7110/boost-module/releases/download/v1.91.0.0.1.0/boost-module-v1.91.0.0.1.0.tar.xz",
+                    CN     = "https://gitcode.com/ZheFeng7/boost-module/releases/download/v1.91.0.0.1.0/boost-module-v1.91.0.0.1.0.tar.xz",
+                },
                 sha256 = "63a9aae63140f22e518a4ee758332afd5b5037d916731dc9c8339dea1a1e1010",
             },
         },
