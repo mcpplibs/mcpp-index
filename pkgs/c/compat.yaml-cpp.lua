@@ -137,5 +137,15 @@ package = {
         -- Belt and braces for this package's OWN TUs; the shim above is what
         -- reaches everyone else's.
         defines = { "YAML_CPP_STATIC_DEFINE" },
+
+        -- 0.8.0's src/emitterutils.cpp names uint16_t/uint32_t unqualified
+        -- and includes neither <cstdint> nor <stdint.h> (0.9.0 added it). It
+        -- compiles here only because C++20 and later make libstdc++'s
+        -- <ostream> reach <format> -> bits/unicode.h -> <cstdint>. Measured
+        -- with gcc 15.1.0 over glibc 2.44: -std=c++17 fails with "'uint16_t'
+        -- was not declared in this scope", c++20/c++23 compile. The package
+        -- builds as c++23, so it holds today, but on a transitive include; this
+        -- makes it hold on purpose. Harmless for 0.9.0.
+        cxxflags = { "-include", "cstdint" },
     },
 }
