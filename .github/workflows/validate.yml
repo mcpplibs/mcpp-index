@@ -301,7 +301,19 @@ env:
   # is a cold one (mcpp's build-cache epoch moved from 2 to 3 in this same
   # release, because the old cache key did not cover the realised [c-abi]
   # environment).
-  MCPP_VERSION: "2026.9.20.1"
+  # ── 2026-09-25: raised 2026.9.20.1 -> 2026.9.25.1 ─────────────────────────
+  #
+  # 2026.9.25.1 changes what reaches a dependency's compile lines
+  # (mcpp-community/mcpp#690): a consumer's `include_dirs` no longer reach the
+  # units of its dependencies, `[build] defines` is a set keyed by macro name,
+  # and a member inside an index archive inherits its archive's workspace. No
+  # member here declares `include_dirs` and no archive here declares an
+  # inheritable workspace table, so no descriptor needs a change; the raise is
+  # the measurement of that statement on every member and platform. The build
+  # cache epoch moves from 3 to 4 in the same release, so the first run is cold.
+  #
+  # `index.toml` min_mcpp does not move: no descriptor grammar changed.
+  MCPP_VERSION: "2026.9.25.1"
 
 jobs:
   lint:
