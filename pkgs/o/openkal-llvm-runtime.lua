@@ -27,6 +27,14 @@
 -- favour of definitions the package's own manifest now gives per target
 -- (design §3.4). Neither the release nor its sha256 exist yet -- this
 -- comment marks the entry as prepared and blocked, not as data to invent.
+-- 0.15.2 pins openkal-musl 0.19.2, which ships the eight empty archives musl
+-- installs beside libc.a (`libm.a` among them). From mcpp 2026.9.26.1 a link
+-- over a graph-supplied C library searches no host library directory
+-- (mcpp-community/mcpp#696), so a program's `-lm` is answered by those archives
+-- or by nothing; before it, the host's glibc archive answered it. openkal-musl
+-- is pinned exactly here, so this is the version a consumer moves to receive
+-- them. No source changed.
+--
 -- 0.15.0 makes `thread_local` destructors run. Upstream libc++abi exports
 -- `__cxa_thread_atexit` on Linux and Fuchsia only, because elsewhere another
 -- runtime already does --- `libmingw32.a` on an ordinary MinGW target. openkal
@@ -67,6 +75,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.15.2"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.15.2.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-llvm-runtime/releases/download/0.15.2/openkal-llvm-runtime-0.15.2.tar.gz",
+                },
+                sha256 = "c2219ad87345acdb15e6df19b9474bd7103b4fe4d995e070a9a88012d6c0d0d9",
+            },
             ["0.15.1"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.15.1.tar.gz",
@@ -258,6 +273,13 @@ package = {
             },
         },
         macosx = {
+            ["0.15.2"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.15.2.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-llvm-runtime/releases/download/0.15.2/openkal-llvm-runtime-0.15.2.tar.gz",
+                },
+                sha256 = "c2219ad87345acdb15e6df19b9474bd7103b4fe4d995e070a9a88012d6c0d0d9",
+            },
             ["0.15.1"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.15.1.tar.gz",
@@ -449,6 +471,13 @@ package = {
             },
         },
         windows = {
+            ["0.15.2"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.15.2.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-llvm-runtime/releases/download/0.15.2/openkal-llvm-runtime-0.15.2.tar.gz",
+                },
+                sha256 = "c2219ad87345acdb15e6df19b9474bd7103b4fe4d995e070a9a88012d6c0d0d9",
+            },
             ["0.15.1"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.15.1.tar.gz",
