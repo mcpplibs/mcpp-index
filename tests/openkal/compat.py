@@ -101,6 +101,20 @@ def host_triple() -> str:
     return f"{arch}-{system}"
 
 
+def host_executes(target: str, host: str | None = None) -> bool:
+    """Whether this host runs the target's programs itself, with no runner.
+
+    A Linux host executes a Linux image of its own architecture whatever C
+    library the image carries: an `x86_64-linux-musl` program is a static
+    image, and mcpp runs it on an `x86_64-linux-gnu` machine as it is (`mcpp
+    test --target x86_64-linux-musl` needs no runner). Measured with `--no-run`
+    instead, such a cell would record `builds` for a member that runs."""
+    h = (host or host_triple()).split("-")
+    t = target.split("-")
+    return len(h) >= 2 and len(t) >= 2 and h[1] == "linux" and t[1] == "linux" \
+        and h[0] == t[0]
+
+
 def packages_of(manifest: dict) -> list[str]:
     """The index packages a member depends upon, as `namespace.name`."""
     found: list[str] = []
@@ -241,7 +255,8 @@ def measure(member: str, target: str, pins: dict) -> dict:
     toolchain = pins["toolchain"]
     native = target == host_triple()
     runner = (pins.get("runners") or {}).get(target)
-    can_run = bool(native or (runner and shutil.which(runner[0])))
+    can_run = bool(native or host_executes(target)
+                   or (runner and shutil.which(runner[0])))
     cmd = command_for(target, toolchain, native, can_run)
     proc = subprocess.run(cmd, cwd=work, capture_output=True, text=True,
                           timeout=pins.get("timeout", 3600))
@@ -533,6 +548,14 @@ def cmd_selftest(_args: argparse.Namespace) -> int:
         ("the host names no target and runs them",
          command_for("x86_64-linux-gnu", "llvm@22.1.8", True, True),
          ["mcpp", "test", "--toolchain", "llvm@22.1.8"]),
+        # A static musl image of the host's own architecture is run as it
+        # is; a runner is for what the host cannot execute.
+        ("a Linux image of the host's architecture runs without a runner",
+         host_executes("x86_64-linux-musl", "x86_64-linux-gnu"), True),
+        ("another architecture needs a runner",
+         host_executes("aarch64-linux-musl", "x86_64-linux-gnu"), False),
+        ("and so does another system",
+         host_executes("x86_64-windows-musl", "x86_64-linux-gnu"), False),
     ]
 
     # `select` decides how much of a pull request's four-hour matrix runs. It

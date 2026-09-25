@@ -103,7 +103,12 @@
 # The pull request that moves validate.yml's pin to 2026.9.25.1 runs every
 # member on every platform with that release, which is what "known good"
 # means for this hint. The release changes no descriptor grammar.
+# ── 2026-09-26: latest_mcpp -> 2026.9.26.1, min_mcpp unchanged ─────────────
+#
+# Moved in the pull request that moves validate.yml's pin and the openkal
+# measurement's pin to 2026.9.26.1, which run every member on every platform
+# with it. The release changes no descriptor grammar.
 [index]
 spec        = "1"
 min_mcpp    = "2026.9.18.3"
-latest_mcpp = "2026.9.25.1"
+latest_mcpp = "2026.9.26.1"

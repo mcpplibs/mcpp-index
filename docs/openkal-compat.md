@@ -175,10 +175,15 @@ change can affect:
 Adding a member therefore measures that member, not the whole list. The
 workflow does not block a merge unless the comparison below is enabled.
 
-The targets are `x86_64-linux-gnu` and `x86_64-windows-musl`. The Windows
-target is named for the C environment the graph presents there, which is
-musl's, not MinGW's. Results measured before 2026-09-23 are recorded as
-`x86_64-windows-gnu`, the name that target had then.
+The targets are `x86_64-linux-gnu`, `x86_64-windows-musl`, `x86_64-linux-musl`
+and `aarch64-linux-musl`. The Windows target is named for the C environment the
+graph presents there, which is musl's, not MinGW's. Results measured before
+2026-09-23 are recorded as `x86_64-windows-gnu`, the name that target had then.
+The two `linux-musl` targets joined on 2026-09-26, with mcpp 2026.9.26.1: a link
+over the graph's C library searches no host library directory from that release
+(mcpp-community/mcpp#696), and these are the targets where that link is the
+graph's own. `x86_64-linux-musl` runs on the host as it is, and
+`aarch64-linux-musl` runs under qemu-aarch64.
 
 It installs the Windows cross toolchain's host headers on purpose. A build that
 reached the host's headers would change its result when they are present, so a
