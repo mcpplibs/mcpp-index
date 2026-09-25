@@ -28,6 +28,18 @@
 -- borrowed name, the release that withdraws it defines mcpp's own, and no
 -- engine defines neither. No source of musl itself changed.
 --
+-- 0.19.2 ships the eight archives musl's own `make install` places beside
+-- `libc.a` --- `libm.a', `librt.a', `libpthread.a', `libcrypt.a', `libutil.a',
+-- `libxnet.a', `libresolv.a' and `libdl.a', each an empty archive --- and adds
+-- their directory to its Linux `ldflags'. A program's `-lm' is then answered
+-- by this package rather than by the build machine's own libraries: with no
+-- host directory in a graph link's search (mcpp#696), `-lm' fails without them,
+-- and before that fix it was answered by the host's glibc archive. Nothing
+-- else changed, and it asks nothing more of `min_mcpp': openkal-musl's own CI
+-- builds 0.19.2 with the published 2026.9.18.3 and reads, in the linker's own
+-- trace, that each of `-lm', `-lpthread', `-ldl' and `-lrt' opened this
+-- package's archive and nothing under /usr or /lib.
+--
 -- IT ASKS NOTHING OF `index.toml`'s `min_mcpp`, AND THAT WAS MEASURED. mcpp
 -- ignores a top-level table it does not know and refuses an unknown MEMBER of
 -- a table it does know, so the first spelling of this table --- `[c-abi]`.`absent`
@@ -52,6 +64,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.19.2"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-musl/archive/refs/tags/0.19.2.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-musl/releases/download/0.19.2/openkal-musl-0.19.2.tar.gz",
+                },
+                sha256 = "e8043bcd9971ee91a0861ef11b7678606a690898abfe98744a254222d9c82238",
+            },
             ["0.19.1"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-musl/archive/refs/tags/0.19.1.tar.gz",
@@ -250,6 +269,13 @@ package = {
             },
         },
         macosx = {
+            ["0.19.2"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-musl/archive/refs/tags/0.19.2.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-musl/releases/download/0.19.2/openkal-musl-0.19.2.tar.gz",
+                },
+                sha256 = "e8043bcd9971ee91a0861ef11b7678606a690898abfe98744a254222d9c82238",
+            },
             ["0.19.1"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-musl/archive/refs/tags/0.19.1.tar.gz",
@@ -448,6 +474,13 @@ package = {
             },
         },
         windows = {
+            ["0.19.2"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-musl/archive/refs/tags/0.19.2.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-musl/releases/download/0.19.2/openkal-musl-0.19.2.tar.gz",
+                },
+                sha256 = "e8043bcd9971ee91a0861ef11b7678606a690898abfe98744a254222d9c82238",
+            },
             ["0.19.1"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-musl/archive/refs/tags/0.19.1.tar.gz",
