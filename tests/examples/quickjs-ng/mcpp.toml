@@ -1,0 +1,12 @@
+# QuickJS-ng test project: evaluate JavaScript through the engine and assert
+# the values it computes, one group per compiled source file.
+#
+# compat.quickjs-ng carries a `linux` section only (see the descriptor's
+# header), so the dependency is gated and the test compiles to a no-op main()
+# elsewhere, the same shape as tests/examples/libaio and tests/examples/wamr.
+[package]
+name = "quickjs-ng-tests"
+version = "0.1.0"
+
+[target.'cfg(linux)'.dependencies.compat]
+quickjs-ng = "0.17.0"
