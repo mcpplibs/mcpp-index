@@ -313,7 +313,20 @@ env:
   # cache epoch moves from 3 to 4 in the same release, so the first run is cold.
   #
   # `index.toml` min_mcpp does not move: no descriptor grammar changed.
-  MCPP_VERSION: "2026.9.25.1"
+  # ── 2026-09-26: raised 2026.9.25.1 -> 2026.9.26.1 ─────────────────────────
+  #
+  # 2026.9.26.1 changes three things a member's build can see
+  # (mcpp-community/mcpp#693-#696): a package's `c_standard` reaches that
+  # package's own C units and no one else's; a link over a graph-supplied C
+  # library searches no host library directory; and paths are held as UTF-8,
+  # so a project in a directory whose name is not ASCII builds on Windows. The
+  # three descriptors that spell `-D_GNU_SOURCE` because a dependency's
+  # `gnu11` used to be dropped keep the define, which works under every engine
+  # this index admits. The raise is the measurement of that on every member
+  # and platform.
+  #
+  # `index.toml` min_mcpp does not move: no descriptor grammar changed.
+  MCPP_VERSION: "2026.9.26.1"
 
 jobs:
   lint:

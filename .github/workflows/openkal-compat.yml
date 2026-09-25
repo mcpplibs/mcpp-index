@@ -38,7 +38,7 @@ env:
   # run if this drifts from pins.toml. See the comment beside `mcpp` in
   # pins.toml for why this pin, not just validate.yml's, is gated by the
   # index floor.
-  MCPP_VERSION: "2026.9.21.3"
+  MCPP_VERSION: "2026.9.26.1"
   # CROSS-VALIDATION BEFORE A RELEASE, NOT AFTER IT.
   #
   # Empty in an ordinary run, so this measurement keeps using the RELEASED
@@ -140,16 +140,18 @@ jobs:
       # The Windows cross headers of the host are installed deliberately. A
       # graph that reached them would build differently with them present, so a
       # result that is the same here and on a runner without them is evidence
-      # that the graph is closed. Wine runs the Windows members' tests.
-      - name: Host headers the graph must not reach, and a runner for Windows
+      # that the graph is closed. Wine runs the Windows members' tests, and
+      # qemu-aarch64 the aarch64-linux-musl members' (tests/openkal/pins.toml).
+      - name: Host headers the graph must not reach, and runners for Windows and aarch64
         if: steps.select.outputs.members != ''
         shell: bash
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq mingw-w64 wine64 > /dev/null
+          sudo apt-get install -y -qq mingw-w64 wine64 qemu-user > /dev/null
           ls /usr/x86_64-w64-mingw32/include/windows.h
           command -v wine || sudo ln -s "$(command -v wine64)" /usr/local/bin/wine
           wine --version
+          qemu-aarch64 --version | head -1
 
       - name: The pins agree with this workflow
         if: steps.select.outputs.members != ''

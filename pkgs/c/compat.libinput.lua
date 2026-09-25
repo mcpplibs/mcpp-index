@@ -75,9 +75,11 @@ package = {
         language   = "c++23",
         import_std = false,
         -- Upstream asks for `c_std=gnu99` and means it — see the `typeof`
-        -- note in cflags. `c_standard = "gnu11"` was tried here first and is
-        -- NOT the fix: mcpp accepts the string and still emits `-std=c11`, so
-        -- the descriptor would claim a dialect the compiler never sees.
+        -- note in cflags. `c_standard = "gnu11"` was tried here first, when
+        -- mcpp (up to 2026.9.25.1) applied only the root package's value and
+        -- dropped a dependency's own (mcpp-community/mcpp#695, fixed in
+        -- 2026.9.26.1); the defines below work under every engine this index
+        -- admits, so they stay.
         c_standard = "c11",
 
         -- `"*"` is the package ROOT, and it is here for exactly one file:
@@ -240,10 +242,11 @@ package = {
             -- damage lands as `-Wint-conversion` errors in a dozen unrelated
             -- files that never mention typeof.
             --
-            -- This is a `-D` rather than `c_standard = "gnu11"` because the
-            -- gnu dialects do not reach the compiler: mcpp accepts the string
-            -- and still emits `-std=c11`. Measured, not assumed — gnu11 was
-            -- set here and these exact errors survived it.
+            -- This is a `-D` rather than `c_standard = "gnu11"` because a
+            -- dependency's own C standard did not reach the compiler before
+            -- mcpp 2026.9.26.1 (mcpp-community/mcpp#695): gnu11 was set here
+            -- and these exact errors survived it. The `-D` works under every
+            -- engine this index admits.
             --
             -- Safe because `__typeof__` IS `typeof`, always available in any
             -- dialect, and nothing can be named `typeof` in code that expects

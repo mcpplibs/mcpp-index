@@ -22,11 +22,13 @@
 -- `_body_io_syscall` macro), and `sigset_t` never arrives, so even the PUBLIC
 -- header fails to parse at `io_pgetevents(…, sigset_t *sigmask)`. Upstream
 -- never hits this because its Makefile compiles in the compiler's default gnu
--- mode. Declaring `c_standard = "gnu11"` looks like the tidier fix and is a
--- trap: mcpp 2026.8.27.2 accepts the string and still emits `-std=c11`
--- (verified in the emitted compile_commands.json), so the build fails exactly
--- as if nothing had been declared. The define is the spelling that actually
--- takes effect.
+-- mode. `c_standard = "gnu11"` is the declaration upstream's build implies,
+-- and mcpp up to 2026.9.25.1 did not apply it to a package in the dependency
+-- position: the root's value reached every C unit of the graph and a
+-- dependency's own was dropped, so the build failed exactly as if nothing had
+-- been declared (verified in the emitted compile_commands.json under
+-- 2026.8.27.2). mcpp 2026.9.26.1 applies it (mcpp-community/mcpp#695); the
+-- define stays because it works under every engine this index admits.
 --
 -- Two further GNU-isms ride along and are fine under plain `-std=c11` because
 -- gcc/clang only diagnose them under -pedantic: `syscall.h`'s named-variadic

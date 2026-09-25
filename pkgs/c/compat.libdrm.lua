@@ -110,9 +110,11 @@ package = {
         import_std = false,
         c_standard = "c11",
 
-        -- `c_standard = "gnu11"` is accepted and silently emits -std=c11, so
-        -- _GNU_SOURCE has to be spelled out. Without it O_CLOEXEC, `asprintf`
-        -- and `major`/`minor` are hidden and xf86drm.c does not compile.
+        -- _GNU_SOURCE is spelled out because mcpp up to 2026.9.25.1 dropped a
+        -- dependency's own `c_standard = "gnu11"` (mcpp-community/mcpp#695;
+        -- applied from 2026.9.26.1), and the define works under every engine
+        -- this index admits. Without it O_CLOEXEC, `asprintf` and
+        -- `major`/`minor` are hidden and xf86drm.c does not compile.
         -- -fPIC because this becomes a .so; -fvisibility=hidden to match
         -- upstream's `gnu_symbol_visibility : 'hidden'`, so only the symbols
         -- libdrm_macros.h marks drm_public are exported.
