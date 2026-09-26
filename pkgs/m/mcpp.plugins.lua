@@ -2,11 +2,16 @@
 -- each member selected by a feature.
 --
 --   [dependencies.mcpp]
---   plugins = { version = "0.15.0", features = ["rules-spirv"], host-module = true }
+--   plugins = { version = "0.15.1", features = ["rules-spirv"], host-module = true }
 --
 --   // build.mcpp
 --   import mcpp;
 --   import mcpp.rules.spirv;
+--
+-- 0.15.1 (same mcpp floor): a vcpkg installation waits for another one of
+-- the same root (`--x-wait-for-lock`) instead of failing; two workspace
+-- members installing one root ran at once and one failed under 0.15.0.
+-- mcpp-community/mcpp-plugins#33.
 --
 -- 0.15.0 (same mcpp floor): features state mechanisms, and `build.mcpp` is
 -- where a project configures them. `rules-qt-xim`, `rules-qt-xim-base` and
@@ -590,6 +595,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.15.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.15.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.15.1/mcpp-plugins-0.15.1.tar.gz",
+                },
+                sha256 = "7e91a1289e075bdd96bb5151f5c63fa3b12308b311e578ea639a447cc5a57160",
+            },
             ["0.15.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.15.0.tar.gz",
@@ -807,9 +819,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.15.0" },
+            ["latest"] = { ref = "0.15.1" },
         },
         macosx = {
+            ["0.15.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.15.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.15.1/mcpp-plugins-0.15.1.tar.gz",
+                },
+                sha256 = "7e91a1289e075bdd96bb5151f5c63fa3b12308b311e578ea639a447cc5a57160",
+            },
             ["0.15.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.15.0.tar.gz",
@@ -1027,9 +1046,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.15.0" },
+            ["latest"] = { ref = "0.15.1" },
         },
         windows = {
+            ["0.15.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.15.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.15.1/mcpp-plugins-0.15.1.tar.gz",
+                },
+                sha256 = "7e91a1289e075bdd96bb5151f5c63fa3b12308b311e578ea639a447cc5a57160",
+            },
             ["0.15.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.15.0.tar.gz",
@@ -1247,7 +1273,7 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.15.0" },
+            ["latest"] = { ref = "0.15.1" },
         },
     },
 
