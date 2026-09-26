@@ -2,11 +2,16 @@
 -- each member selected by a feature.
 --
 --   [dependencies.mcpp]
---   plugins = { version = "0.13.0", features = ["rules-spirv"], host-module = true }
+--   plugins = { version = "0.13.1", features = ["rules-spirv"], host-module = true }
 --
 --   // build.mcpp
 --   import mcpp;
 --   import mcpp.rules.spirv;
+--
+-- 0.13.1 (same mcpp floor): `rules-qt` runs `lupdate` as an action whose
+-- output is the `.ts` file it rewrites. 0.13.0 declared the `.ts` file's
+-- directory as a `prepare` output, which for a `.ts` kept in the package root
+-- is the package's source directory. mcpp-community/mcpp-plugins#30.
 --
 -- 0.13.0 requires **mcpp 2026.9.26.2** for its new members and nothing newer
 -- for the rest; they are selected by feature, so a project that selects none
@@ -558,6 +563,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.13.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.13.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.13.1/mcpp-plugins-0.13.1.tar.gz",
+                },
+                sha256 = "770741ae7cb83fb53d1d0623f4c709b386be8900135bf32ef29c8c446f72d9cd",
+            },
             ["0.13.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.13.0.tar.gz",
@@ -754,9 +766,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.13.0" },
+            ["latest"] = { ref = "0.13.1" },
         },
         macosx = {
+            ["0.13.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.13.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.13.1/mcpp-plugins-0.13.1.tar.gz",
+                },
+                sha256 = "770741ae7cb83fb53d1d0623f4c709b386be8900135bf32ef29c8c446f72d9cd",
+            },
             ["0.13.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.13.0.tar.gz",
@@ -953,9 +972,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.13.0" },
+            ["latest"] = { ref = "0.13.1" },
         },
         windows = {
+            ["0.13.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.13.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.13.1/mcpp-plugins-0.13.1.tar.gz",
+                },
+                sha256 = "770741ae7cb83fb53d1d0623f4c709b386be8900135bf32ef29c8c446f72d9cd",
+            },
             ["0.13.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.13.0.tar.gz",
@@ -1152,7 +1178,7 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.13.0" },
+            ["latest"] = { ref = "0.13.1" },
         },
     },
 
