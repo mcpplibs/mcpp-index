@@ -2,11 +2,25 @@
 -- each member selected by a feature.
 --
 --   [dependencies.mcpp]
---   plugins = { version = "0.14.0", features = ["rules-spirv"], host-module = true }
+--   plugins = { version = "0.15.0", features = ["rules-spirv"], host-module = true }
 --
 --   // build.mcpp
 --   import mcpp;
 --   import mcpp.rules.spirv;
+--
+-- 0.15.0 (same mcpp floor): features state mechanisms, and `build.mcpp` is
+-- where a project configures them. `rules-qt-xim`, `rules-qt-xim-base` and
+-- `rules-qt-xim-addons` are removed: `rules-qt` takes the SDK from
+-- `options::root`, then `QT_ROOT_DIR`, then a Qt payload the project declares
+-- in its own `[xlings]` table at the version it chooses, and the payload
+-- carries its runtime closure (Linux: libdbus, xcb and the rest under the
+-- xlings loader; Windows: the VC++ runtime). The deps members run the
+-- installer itself -- `vcpkg install`, or `cmake -P` over a script they write
+-- -- so the `mcpp-deps` tool is gone and an edge names no `tools`. On Linux
+-- under a libc++ toolchain, ports and CMake subprojects build with mcpp's
+-- clang; each vcpkg triplet is its own installation
+-- (`<install root>/<triplet>/<triplet>`). docs/plugin-development.md states
+-- the conventions. mcpp-community/mcpp-plugins#32.
 --
 -- 0.14.0 (same mcpp floor) places the files a program reads at run time
 -- beside it, so `mcpp run` finds them and `mcpp pack` carries them: each file
@@ -576,6 +590,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.15.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.15.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.15.0/mcpp-plugins-0.15.0.tar.gz",
+                },
+                sha256 = "2173fca40c72475fbb4682ff3dd97b5062d0895580e20f236f891eab59f5e2e5",
+            },
             ["0.14.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.14.0.tar.gz",
@@ -786,9 +807,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.14.0" },
+            ["latest"] = { ref = "0.15.0" },
         },
         macosx = {
+            ["0.15.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.15.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.15.0/mcpp-plugins-0.15.0.tar.gz",
+                },
+                sha256 = "2173fca40c72475fbb4682ff3dd97b5062d0895580e20f236f891eab59f5e2e5",
+            },
             ["0.14.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.14.0.tar.gz",
@@ -999,9 +1027,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.14.0" },
+            ["latest"] = { ref = "0.15.0" },
         },
         windows = {
+            ["0.15.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.15.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.15.0/mcpp-plugins-0.15.0.tar.gz",
+                },
+                sha256 = "2173fca40c72475fbb4682ff3dd97b5062d0895580e20f236f891eab59f5e2e5",
+            },
             ["0.14.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.14.0.tar.gz",
@@ -1212,7 +1247,7 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.14.0" },
+            ["latest"] = { ref = "0.15.0" },
         },
     },
 
