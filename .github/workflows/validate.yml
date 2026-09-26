@@ -326,7 +326,22 @@ env:
   # and platform.
   #
   # `index.toml` min_mcpp does not move: no descriptor grammar changed.
-  MCPP_VERSION: "2026.9.26.1"
+  # ── 2026-09-26: raised 2026.9.26.1 -> 2026.9.26.2 ─────────────────────────
+  #
+  # 2026.9.26.2 changes what a member's build writes and reads
+  # (mcpp-community/mcpp#699, #701, #703): the compile database is kept per
+  # configuration with `directory` naming the output directory; link flags are
+  # read as words, so a `$ORIGIN` reaches the linker as written; build programs
+  # gain `runtime_search_dir` and the `prepare` role, and an action role
+  # outside source, check, object, artifact and prepare is refused. No
+  # descriptor here escapes a link flag for the shell or ninja by hand, and the
+  # build programs here use only `source`, so no descriptor needs a change; the
+  # raise is the measurement of that on every member and platform. The
+  # build-program cache epoch moves from 2 to 3, so each build program runs
+  # once more after the raise.
+  #
+  # `index.toml` min_mcpp does not move: no descriptor grammar changed.
+  MCPP_VERSION: "2026.9.26.2"
 
 jobs:
   lint:
