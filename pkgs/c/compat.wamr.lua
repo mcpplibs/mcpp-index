@@ -62,7 +62,7 @@
 -- ─────────────────────────────────────────────────────────────────────────
 -- WHAT THE BASE CONTAINS
 --
--- Interpreter runtime only: classic + fast interpreter, bulk memory and
+-- Interpreter runtime only: the fast interpreter, bulk memory and
 -- reference types (both on in upstream's own default build), no AOT, no JIT,
 -- and no libc for the guest. That is the configuration an embedder wants when
 -- wasm modules are plugins reached only through host-provided imports.
