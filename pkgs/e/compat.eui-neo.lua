@@ -11,11 +11,13 @@
 -- libpng, zlib, glad, tray, yyjson, md4c). NONE of those are built here: each
 -- one already exists in this index as its own `compat.*` package at the same
 -- upstream version, and building them once for the whole ecosystem is the
--- point of having them. `3rd/` is still on the include path because three
+-- point of having them. `3rd/` is still on the include path because four
 -- genuinely vendored single-file headers live at its root (stb_image,
--- nanosvg, nanosvgrast) and the sources include them as `"3rd/stb_image.h"`.
+-- nanosvg, nanosvgrast, and since 0.6.0 miniaudio) and the sources include
+-- them as `"3rd/stb_image.h"` — except miniaudio, which audio.cpp includes
+-- BARE; see the 0.6.0 note below.
 --
--- The build recipe below tracks upstream `CMakeLists.txt` (v0.5.9): CORE_SOURCES
+-- The build recipe below tracks upstream `CMakeLists.txt` (v0.6.0): CORE_SOURCES
 -- plus the OpenGL backend and, for the glfw window backend, `ime_bridge.c`.
 -- 0.5.5 grew a Shadertoy subsystem: render_backend.h and include/eui/types.h now
 -- include core/render/shadertoy.h unconditionally, and opengl_backend.cpp calls
@@ -56,8 +58,30 @@
 -- via global properties. 3rd/, dependencies, features, and flags carry over
 -- unchanged.
 --
+-- 0.6.0: CORE_SOURCES gains one TU — `core/audio/audio.cpp`, a streaming
+-- audio Player behind the new `include/eui/audio.h`. Its only third-party
+-- need is miniaudio 0.11.21, vendored as the single header `3rd/miniaudio.h`
+-- (same category as stb_image/nanosvg — genuinely vendored, not mirrored as
+-- an index package), and the TU carries `#define MINIAUDIO_IMPLEMENTATION`
+-- itself, so NOTHING else in the lib touches it. Two things follow:
+--   * audio.cpp includes it as a BARE `"miniaudio.h"` (upstream adds
+--     `EUI_MINIAUDIO_DIR` = `3rd/` as a PRIVATE include dir), so `*/3rd` must
+--     be on this package's include path — see private_include_dirs below.
+--     PUBLISHED headers stay clean: `core/audio/audio.h` hides miniaudio
+--     behind a pimpl, so consumers must not inherit the raw `3rd/` path
+--     (it would expose bare stb_image.h/nanosvg.h and shadow real index
+--     packages for every consumer TU).
+--   * miniaudio links something on every platform (upstream: `${CMAKE_DL_LIBS}
+--     m` PUBLIC on Linux, CoreAudio+AudioToolbox+CoreFoundation on macOS,
+--     nothing on Windows — the WASAPI backend is dlopen-bound at runtime).
+-- Everything else this release moves is app- or CMake-level: the
+-- EUI_ENABLE_MODULES default, an INTERFACE `EUI_DEBUG_BUILD=1` tied to the
+-- Debug CONFIG, promo/vcd_viewer example targets, and Chinese re-commenting
+-- of tray_bridge.c (diff vs 0.5.9: comments + EOF newline only). `3rd/`,
+-- deps and the backend/app-main source lists are unchanged.
+--
 -- All `mcpp` paths are GLOBS relative to the verdir; the leading `*/` absorbs
--- the GitHub tarball's `EUI-NEO-0.5.9/` wrap layer.
+-- the GitHub tarball's `EUI-NEO-0.6.0/` wrap layer.
 package = {
     spec        = "1",
     namespace   = "compat",
@@ -155,6 +179,14 @@ package = {
                 url    = "https://github.com/sudoevolve/EUI-NEO/archive/refs/tags/v0.5.9.tar.gz",
                 sha256 = "370d1da706d94bbbb144fa1634e1d9796a8a1ffd58b696fbb801296aef15703d",
             },
+            -- 0.6.0 has no CN mirror yet (never published to mcpp-res), so it
+            -- is a plain-string GLOBAL url — check_mirror_urls.lua exempts
+            -- plain strings, and the maintainer flips it to { GLOBAL, CN }
+            -- when the mirror lands.
+            ["0.6.0"] = {
+                url    = "https://github.com/sudoevolve/EUI-NEO/archive/refs/tags/v0.6.0.tar.gz",
+                sha256 = "11d0725bcc6f16abbbea6052b58c6949008cf78ceaa1645002ba1b3abf9772a1",
+            },
         },
         macosx = {
             ["0.5.3"] = {
@@ -196,6 +228,11 @@ package = {
             ["0.5.9.1"] = {
                 url    = "https://github.com/sudoevolve/EUI-NEO/archive/refs/tags/v0.5.9.tar.gz",
                 sha256 = "370d1da706d94bbbb144fa1634e1d9796a8a1ffd58b696fbb801296aef15703d",
+            },
+            -- 0.6.0: see the linux block — plain-string GLOBAL, no CN mirror.
+            ["0.6.0"] = {
+                url    = "https://github.com/sudoevolve/EUI-NEO/archive/refs/tags/v0.6.0.tar.gz",
+                sha256 = "11d0725bcc6f16abbbea6052b58c6949008cf78ceaa1645002ba1b3abf9772a1",
             },
         },
         windows = {
@@ -239,6 +276,11 @@ package = {
                 url    = "https://github.com/sudoevolve/EUI-NEO/archive/refs/tags/v0.5.9.tar.gz",
                 sha256 = "370d1da706d94bbbb144fa1634e1d9796a8a1ffd58b696fbb801296aef15703d",
             },
+            -- 0.6.0: see the linux block — plain-string GLOBAL, no CN mirror.
+            ["0.6.0"] = {
+                url    = "https://github.com/sudoevolve/EUI-NEO/archive/refs/tags/v0.6.0.tar.gz",
+                sha256 = "11d0725bcc6f16abbbea6052b58c6949008cf78ceaa1645002ba1b3abf9772a1",
+            },
         },
     },
 
@@ -250,6 +292,21 @@ package = {
         -- `*/include` carries the umbrella `eui_neo.h` and `eui/*.h`; `*` is the
         -- verdir root, which is what makes the `"components/…"`, `"core/…"` and
         -- `"3rd/stb_image.h"` quoted includes resolve. Upstream marks both PUBLIC.
+        -- `*/3rd` is added to the PRIVATE include set of every platform block
+        -- below (0.6.0: audio.cpp includes the vendored `3rd/miniaudio.h` by
+        -- BARE name — see the header comment). Not here: a BASE-level
+        -- `private_include_dirs` is inert — measured, not assumed. The first
+        -- revision of this 0.6.0 change carried it and audio.cpp's dependency
+        -- scan failed with `'miniaudio.h' file not found` while every base
+        -- `include_dirs` entry took effect normally. The proven shape is the
+        -- glib pair below: `include_dirs` + `private_include_dirs` in the
+        -- PLATFORM block, which yields the -I on this package's own TUs and
+        -- NOT on consumers' (verified in emitted compile_commands), matching
+        -- upstream's `target_include_directories(eui_neo PRIVATE …)`.
+        -- Publishing `*/3rd` would hand every consumer a search path holding
+        -- bare stb_image.h/nanosvg.h/miniaudio.h and shadowed copies of the
+        -- index packages vendored under 3rd/; `core/audio/audio.h` is a pimpl
+        -- header that never mentions miniaudio, so nothing needs it publicly.
         include_dirs = { "*/include", "*", "mcpp_generated" },
 
         -- mcpp#233/#240: every package in a link emits its objects into ONE
@@ -332,6 +389,11 @@ package = {
             -- its own TU (upstream CORE_SOURCES). GLFW branch rides on ime_bridge.h
             -- (ime_bridge.c, already compiled) + glfw; SDL2 branch needs only SDL.
             "*/core/window/window_input_backend.cpp",
+            -- 0.6.0: streaming audio via the vendored single-header miniaudio
+            -- (MINIAUDIO_IMPLEMENTATION lives in this TU). Needs `*/3rd` on the
+            -- include path — see private_include_dirs — and per-platform link
+            -- additions — see the platform blocks.
+            "*/core/audio/audio.cpp",
         },
 
         targets = { ["eui-neo"] = { kind = "lib" } },
@@ -538,6 +600,12 @@ package = {
             -- upstream; until then this keeps us on a real upstream release
             -- tag rather than a fork carrying the patch.
             cxxflags = { "-DEUI_TRAY_WINAPI=1", "-DNOMINMAX", "-D_WIN32_WINNT=0x0A00" },
+            -- 0.6.0: audio.cpp's bare `#include "miniaudio.h"` — the same
+            -- platform-level pair the linux leg proves (see the note above
+            -- the base include_dirs). No link addition is needed on Windows:
+            -- miniaudio's WASAPI backend binds its APIs at runtime.
+            include_dirs         = { "*/3rd" },
+            private_include_dirs = { "*/3rd" },
             -- Upstream lists winmm/urlmon/shell32/user32/imm32/pdh and stops
             -- there, because CMake's MSVC default `CMAKE_C_STANDARD_LIBRARIES`
             -- already drags in kernel32/user32/gdi32/shell32/ole32/comdlg32/…
@@ -570,7 +638,17 @@ package = {
             -- bridge files; the AppKit tray path is Cocoa-native and never
             -- includes tray.h.
             cflags   = { "-DEUI_TRAY_APPKIT=1" },
-            ldflags  = { "-framework", "Cocoa", "-lobjc" },
+            -- 0.6.0: audio.cpp's bare `#include "miniaudio.h"` — the same
+            -- platform-level pair the linux leg proves. See the note above
+            -- the base include_dirs for why BASE-level private_include_dirs
+            -- does not work.
+            include_dirs         = { "*/3rd" },
+            private_include_dirs = { "*/3rd" },
+            -- 0.6.0: the three audio frameworks upstream links PUBLIC for
+            -- miniaudio's CoreAudio backend.
+            ldflags  = { "-framework", "Cocoa", "-lobjc",
+                         "-framework", "CoreAudio", "-framework", "AudioToolbox",
+                         "-framework", "CoreFoundation" },
             flags = {
                 { glob = "*/core/platform/native_bridge.c", cflags = { "-x", "objective-c" } },
                 { glob = "*/core/platform/tray_bridge.c",   cflags = { "-x", "objective-c" } },
@@ -631,16 +709,22 @@ package = {
             -- Where install() put glib. PRIVATE: `<gio/gio.h>` is included by
             -- tray_bridge.c and by nothing this package publishes, so a
             -- consumer must not inherit a glib header search path.
-            include_dirs         = { "mcpp_generated/glib/include/glib-2.0" },
-            private_include_dirs = { "mcpp_generated/glib/include/glib-2.0" },
+            -- `*/3rd` joins for 0.6.0 (audio.cpp's bare `"miniaudio.h"` — see
+            -- the note above the base include_dirs): package-side only, same
+            -- proven pairing as the glib path.
+            include_dirs         = { "mcpp_generated/glib/include/glib-2.0", "*/3rd" },
+            private_include_dirs = { "mcpp_generated/glib/include/glib-2.0", "*/3rd" },
             -- ⚠️ THE EXPLICIT `-L` IS NOT REDUNDANT WITH `runtime.library_dirs`
             -- BELOW. That key becomes `-Wl,-rpath` only — it tells the LOADER
             -- where to look, not the LINKER. lld happens to search rpath and
             -- would hide this; GNU ld does not, and `-lglib-2.0` then falls
             -- through to whatever the host has (or to nothing).
             --
-            -- `-ldl` is glad's CMAKE_DL_LIBS.
-            ldflags = { "-lpthread", "-ldl",
+            -- `-ldl` is glad's CMAKE_DL_LIBS; `-lm` joins for 0.6.0, where
+            -- upstream adds `${CMAKE_DL_LIBS} m` PUBLIC for miniaudio's ALSA
+            -- backend. (Linking libm is not staging it — the forbidden list
+            -- below is about payload RUNPATH contents.)
+            ldflags = { "-lpthread", "-ldl", "-lm",
                         "-Lmcpp_generated/glib/lib",
                         "-lgio-2.0", "-lgobject-2.0", "-lglib-2.0" },
             runtime = {
