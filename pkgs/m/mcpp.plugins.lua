@@ -2,11 +2,24 @@
 -- each member selected by a feature.
 --
 --   [dependencies.mcpp]
---   plugins = { version = "0.13.1", features = ["rules-spirv"], host-module = true }
+--   plugins = { version = "0.14.0", features = ["rules-spirv"], host-module = true }
 --
 --   // build.mcpp
 --   import mcpp;
 --   import mcpp.rules.spirv;
+--
+-- 0.14.0 (same mcpp floor) places the files a program reads at run time
+-- beside it, so `mcpp run` finds them and `mcpp pack` carries them: each file
+-- is produced by an action that names it as an output and is then deployed.
+-- `deps-archive` extracts a zip the project keeps (its central directory lists
+-- the members while the build program runs; `cmake -E tar` from `xim:cmake`
+-- extracts it); `deps-vcpkg` and `deps-cmake` take `options::deploy`, files of
+-- the installed prefix; `rules-qt` takes `translations::qt_languages`, Qt's
+-- own strings, which `lconvert` combines for the linked modules into
+-- `qt_<language>.qm` as windeployqt does. `rules-qt-xim-base` declares
+-- `xim:qt-base` -- qtbase, qttools, qttranslations and the QtQml library
+-- lupdate loads -- about a third of `xim:qt`'s download.
+-- mcpp-community/mcpp-plugins#31.
 --
 -- 0.13.1 (same mcpp floor): `rules-qt` runs `lupdate` as an action whose
 -- output is the `.ts` file it rewrites. 0.13.0 declared the `.ts` file's
@@ -563,6 +576,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.14.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.14.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.14.0/mcpp-plugins-0.14.0.tar.gz",
+                },
+                sha256 = "fd5220adb891445d840d0963ba1f7347d2124f27ead0b14bb96db40719e37917",
+            },
             ["0.13.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.13.1.tar.gz",
@@ -766,9 +786,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.13.1" },
+            ["latest"] = { ref = "0.14.0" },
         },
         macosx = {
+            ["0.14.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.14.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.14.0/mcpp-plugins-0.14.0.tar.gz",
+                },
+                sha256 = "fd5220adb891445d840d0963ba1f7347d2124f27ead0b14bb96db40719e37917",
+            },
             ["0.13.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.13.1.tar.gz",
@@ -972,9 +999,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.13.1" },
+            ["latest"] = { ref = "0.14.0" },
         },
         windows = {
+            ["0.14.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.14.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.14.0/mcpp-plugins-0.14.0.tar.gz",
+                },
+                sha256 = "fd5220adb891445d840d0963ba1f7347d2124f27ead0b14bb96db40719e37917",
+            },
             ["0.13.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.13.1.tar.gz",
@@ -1178,7 +1212,7 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.13.1" },
+            ["latest"] = { ref = "0.14.0" },
         },
     },
 
