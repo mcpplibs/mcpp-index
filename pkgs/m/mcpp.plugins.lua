@@ -2,11 +2,33 @@
 -- each member selected by a feature.
 --
 --   [dependencies.mcpp]
---   plugins = { version = "0.12.0", features = ["rules-spirv"], host-module = true }
+--   plugins = { version = "0.13.0", features = ["rules-spirv"], host-module = true }
 --
 --   // build.mcpp
 --   import mcpp;
 --   import mcpp.rules.spirv;
+--
+-- 0.13.0 requires **mcpp 2026.9.26.2** for its new members and nothing newer
+-- for the rest; they are selected by feature, so a project that selects none
+-- of them compiles none of them. A fourth family, `deps-*`, states where a
+-- library comes from, following mcpp's build-plugin specification (SPEC-007):
+-- `deps-vcpkg` installs a `vcpkg.json` manifest and `deps-cmake` a CMake
+-- subproject, each as a `prepare` action with an output directory whose
+-- command is the package's own host tool (`tools = ["mcpp-deps"]`). The build
+-- program states the prefix before anything is installed -- include
+-- directory, libraries by full path, and the shared-library directory as a
+-- runtime search directory -- so `mcpp emit build-database` plans a project
+-- that has never been built, `mcpp run` and `mcpp pack` find the libraries,
+-- and on Windows the engine places the DLLs beside the program. `deps-vcpkg`
+-- declares `xim:vcpkg` (vcpkg-tool with the scripts released beside it; a
+-- `builtin-baseline` manifest resolves through vcpkg's git registry cache);
+-- `deps-cmake` declares `xim:cmake`. `rules-qt` runs moc, uic, rcc and
+-- lrelease as actions and lupdate as a `prepare` action, links the Qt modules
+-- by full path and deploys the plugin directories beside the program;
+-- `rules-qt-xim` declares `xim:qt` 6.11.1 and `rules-qt-xim-addons` adds
+-- `xim:qt-addons`. On Linux the rule serves QtCore programs, which state
+-- `[build] cxx_runtime = "toolchain-coupled"` (mcpp-community/mcpp#704).
+-- mcpp-community/mcpp-plugins#29.
 --
 -- 0.12.0 requires **mcpp 2026.9.16.1** for the members that read the resolved
 -- graph, and nothing newer for the rest. A package states what it contributes
@@ -536,6 +558,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.13.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.13.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.13.0/mcpp-plugins-0.13.0.tar.gz",
+                },
+                sha256 = "297d28f9549ea3c6d86ab00109e0bf097ec72bf429a74c7f9030ab379a46d904",
+            },
             ["0.12.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.12.0.tar.gz",
@@ -725,9 +754,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.12.0" },
+            ["latest"] = { ref = "0.13.0" },
         },
         macosx = {
+            ["0.13.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.13.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.13.0/mcpp-plugins-0.13.0.tar.gz",
+                },
+                sha256 = "297d28f9549ea3c6d86ab00109e0bf097ec72bf429a74c7f9030ab379a46d904",
+            },
             ["0.12.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.12.0.tar.gz",
@@ -917,9 +953,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.12.0" },
+            ["latest"] = { ref = "0.13.0" },
         },
         windows = {
+            ["0.13.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.13.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.13.0/mcpp-plugins-0.13.0.tar.gz",
+                },
+                sha256 = "297d28f9549ea3c6d86ab00109e0bf097ec72bf429a74c7f9030ab379a46d904",
+            },
             ["0.12.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.12.0.tar.gz",
@@ -1109,7 +1152,7 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.12.0" },
+            ["latest"] = { ref = "0.13.0" },
         },
     },
 
