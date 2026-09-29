@@ -402,7 +402,12 @@ env:
   # `artifacts` links with its own closure's line, and `${mcpp.bin_dir}` in an
   # action a member's build program declares is that member's product
   # directory.
-  MCPP_VERSION: "2026.9.29.4"
+  #
+  # 2026.9.29.5 (mcpp-community/mcpp#742): a member's build program is reused
+  # across selections and runs after those of the members it depends on, the
+  # build database plans by configuration, and a build reports each step once
+  # with its outcome while a status line states the build.
+  MCPP_VERSION: "2026.9.29.5"
 
 jobs:
   lint:

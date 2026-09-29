@@ -139,7 +139,13 @@
 # Moved in the pull request that moves validate.yml's pin to 2026.9.29.4,
 # which runs every member on every platform with it. The release changes no
 # descriptor grammar.
+# ── 2026-09-30: latest_mcpp -> 2026.9.29.5, min_mcpp unchanged ─────────────
+#
+# Moved in the pull request that moves validate.yml's pin to 2026.9.29.5,
+# which runs every member on every platform with it. The release changes no
+# descriptor grammar; the build's human output changes, and no check here
+# reads it.
 [index]
 spec        = "1"
 min_mcpp    = "2026.9.18.3"
-latest_mcpp = "2026.9.29.4"
+latest_mcpp = "2026.9.29.5"
