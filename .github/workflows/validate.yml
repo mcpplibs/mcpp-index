@@ -407,7 +407,12 @@ env:
   # across selections and runs after those of the members it depends on, the
   # build database plans by configuration, and a build reports each step once
   # with its outcome while a status line states the build.
-  MCPP_VERSION: "2026.9.29.5"
+  #
+  # 2026.9.30.1 (mcpp-community/mcpp#743): a build names each package when it
+  # does work, the live display is drawn in one write, a path or git
+  # dependency's bare key states only its short name, and the lock file keeps
+  # one entry per identity.
+  MCPP_VERSION: "2026.9.30.1"
 
 jobs:
   lint:
