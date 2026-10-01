@@ -421,7 +421,13 @@ env:
   # the build compiles, a selected workspace member declares as the root
   # (mcpp-community/mcpp#747), and the clang MSVC row states its compiler
   # version (#746).
-  MCPP_VERSION: "2026.10.1.1"
+  #
+  # 2026.10.1.2 (mcpp-community/mcpp#754): every package's BMIs lie below its
+  # own directory in the build directory except the root's, and a unit reads
+  # one module map of what it reaches; every unit of an ELF target is compiled
+  # position-independent; `mcpp pack` states its build; `[build] jobs` bounds
+  # `test` and `pack` (#751, #753).
+  MCPP_VERSION: "2026.10.1.2"
 
 jobs:
   lint:

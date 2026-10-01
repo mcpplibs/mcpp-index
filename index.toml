@@ -166,7 +166,15 @@
 # that reads mcpp's output captures both streams (`tests/run_members.sh`).
 # A host module of an index package is compiled once per key and kept in the
 # global cache, which every member with a build program now exercises.
+# ── 2026-10-01: latest_mcpp -> 2026.10.1.2, min_mcpp unchanged ─────────────
+#
+# Moved in the pull request that moves validate.yml's pin to 2026.10.1.2,
+# which runs every member on every platform with it. The release changes no
+# descriptor grammar. A dependency's BMIs now lie below its package's
+# directory, and every unit of an ELF target is compiled with -fPIC, so every
+# member is compiled once more and its global cache entries are refilled; no
+# check here reads a BMI path.
 [index]
 spec        = "1"
 min_mcpp    = "2026.9.18.3"
-latest_mcpp = "2026.10.1.1"
+latest_mcpp = "2026.10.1.2"
