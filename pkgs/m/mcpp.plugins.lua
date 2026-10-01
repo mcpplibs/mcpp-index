@@ -2,11 +2,20 @@
 -- each member selected by a feature.
 --
 --   [dependencies.mcpp]
---   plugins = { version = "0.18.1", features = ["rules-spirv"], host-module = true }
+--   plugins = { version = "0.19.0", features = ["rules-spirv"], host-module = true }
 --
 --   // build.mcpp
 --   import mcpp;
 --   import mcpp.rules.spirv;
+--
+-- 0.19.0 (package floor mcpp 2026.10.1.3): every member answers where the tool it
+-- runs comes from in one order -- the build program's choice, the member's legacy
+-- variable, the engine's override, then the declared payload. A choice made in
+-- `build.mcpp` never asks for the payload, and five entries (xim:vcpkg, xim:cmake
+-- twice, xim:appimagetool, xim:bundletool) are installed only when a member asks,
+-- so a project that names its own tool downloads none of them. A root build
+-- program can also state the toolchain that builds the project.
+-- docs/tool-sources.md; mcpp-community/mcpp-plugins#41.
 --
 -- 0.18.1 (same package floor): rules-qt and deps leave out another build
 -- system's output directory when they walk a source tree -- one holding
@@ -634,6 +643,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.19.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.19.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.19.0/mcpp-plugins-0.19.0.tar.gz",
+                },
+                sha256 = "2dd13d81cffd77babdb1070d24659348d2f699c634981f66e3e97206389c5c7e",
+            },
             ["0.18.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.18.1.tar.gz",
@@ -893,9 +909,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.18.1" },
+            ["latest"] = { ref = "0.19.0" },
         },
         macosx = {
+            ["0.19.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.19.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.19.0/mcpp-plugins-0.19.0.tar.gz",
+                },
+                sha256 = "2dd13d81cffd77babdb1070d24659348d2f699c634981f66e3e97206389c5c7e",
+            },
             ["0.18.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.18.1.tar.gz",
@@ -1155,9 +1178,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.18.1" },
+            ["latest"] = { ref = "0.19.0" },
         },
         windows = {
+            ["0.19.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.19.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.19.0/mcpp-plugins-0.19.0.tar.gz",
+                },
+                sha256 = "2dd13d81cffd77babdb1070d24659348d2f699c634981f66e3e97206389c5c7e",
+            },
             ["0.18.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.18.1.tar.gz",
@@ -1417,7 +1447,7 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.18.1" },
+            ["latest"] = { ref = "0.19.0" },
         },
     },
 
