@@ -18,6 +18,19 @@ int main() {
     // 0.3.0: adding fields to this aggregate left four-initialiser
     // brace-initialisation working, which is the whole compatibility claim.
     HttpResponse response{204, "No Content", {}, {}};
+
+    // 0.3.4: a stop token on all three entry points. One stopped before the
+    // call ends it before anything is sent, so this needs no network and no
+    // listener; the result says why without anyone matching text.
+    std::stop_source stopped;
+    stopped.request_stop();
+    HttpClient client;
+    HttpRequest get;
+    get.url = "https://example.invalid/";
+    const auto cancelled = client.send(get, stopped.get_token());
+    const auto cancelledDownload = client.download_to_file(
+        "https://example.invalid/file", "tinyhttps-unused", nullptr, nullptr,
+        stopped.get_token());
     const bool ok = request.method == Method::POST
                  && request.url == "https://example.invalid/data"
                  && request.body == "{\"ok\":true}"
@@ -32,6 +45,12 @@ int main() {
                  && !not_a_status.has_value()
                  && response.bodyComplete          // 0.3.0, defaults to true
                  && response.bodyError.empty()
-                 && response.ok();
+                 && response.ok()
+                 && !response.cancelled            // 0.3.4, defaults to false
+                 && cancelled.cancelled
+                 && cancelled.statusCode == 0
+                 && !cancelled.ok()
+                 && cancelledDownload.cancelled
+                 && !cancelledDownload.ok();
     return ok ? 0 : 1;
 }
