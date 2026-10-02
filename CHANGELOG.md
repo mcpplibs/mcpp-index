@@ -9,6 +9,18 @@
 
 ### Added
 
+- **`openkal-linux` 0.16.0、`openkal-macos` 0.13.0、`openkal-windows` 0.11.0、
+  `openkal-emscripten` 0.4.0、`openkal-opensbi` 0.8.2、`openkal-musl` 0.20.0。**
+  六个同轮仓库的行:GLOBAL 为上游 tag 归档,CN 为字节一致的 gitcode 资源
+  (sha256 两次取自上游、一次取自 CN,三者相同)。openkal-linux 以 `mincore` 实测
+  映射、以 `mapping_end - RLIMIT_STACK` 与栈下最近映射之上一个 guard gap 的较高者
+  为下界;openkal-macos 走 `_pthread_self` 与两个 `_np` 查询(三个名字补进
+  `port/libSystem.tbd`);openkal-windows 走 `GetCurrentThreadStackLimits`(声明补进
+  `src/win32.h` 与 `port/kernel32.def`);openkal-emscripten 走
+  `emscripten_stack_get_base/_end`;openkal-opensbi 只移动锁定版本;openkal-musl 让
+  `pthread_getattr_np` 对调用线程给出真实区间、对其它线程一律 `ENOSYS`。同时修掉
+  openkal-linux 在 hosted 形态下从未描述自身 TLS 镜像的潜伏缺陷。
+
 - **`openkal` 0.15.0 与六个同轮仓库。** 规范新增 `kal_task_stack`:一个执行上下文可以
   说出自己所在的栈区间(自问自答、不取句柄),用于替换 C 库移植层此前对
   `pthread_getattr_np` 的拒绝。openkal-linux 0.16.0 用 `mincore` 实测映射并以

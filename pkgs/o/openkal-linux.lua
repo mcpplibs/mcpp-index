@@ -19,6 +19,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.16.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-linux/archive/refs/tags/0.16.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-linux/releases/download/0.16.0/openkal-linux-0.16.0.tar.gz",
+                },
+                sha256 = "e7c97f8a0cec75fe2db5a1d0f4e44b36e261fc1c93baed57a7967c193f13c4a6",
+            },
             ["0.15.1"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-linux/archive/refs/tags/0.15.1.tar.gz",
@@ -133,6 +140,13 @@ package = {
             },
         },
         macosx = {
+            ["0.16.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-linux/archive/refs/tags/0.16.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-linux/releases/download/0.16.0/openkal-linux-0.16.0.tar.gz",
+                },
+                sha256 = "e7c97f8a0cec75fe2db5a1d0f4e44b36e261fc1c93baed57a7967c193f13c4a6",
+            },
             ["0.15.1"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-linux/archive/refs/tags/0.15.1.tar.gz",
@@ -247,6 +261,13 @@ package = {
             },
         },
         windows = {
+            ["0.16.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-linux/archive/refs/tags/0.16.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-linux/releases/download/0.16.0/openkal-linux-0.16.0.tar.gz",
+                },
+                sha256 = "e7c97f8a0cec75fe2db5a1d0f4e44b36e261fc1c93baed57a7967c193f13c4a6",
+            },
             ["0.15.1"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-linux/archive/refs/tags/0.15.1.tar.gz",
