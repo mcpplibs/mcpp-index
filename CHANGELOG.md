@@ -9,6 +9,11 @@
 
 ### Added
 
+- **`openkal-llvm-runtime` 0.15.4。** 只移动锁定版本:openkal-musl 0.20.1 携带
+  openkal-linux 0.16.1(修复线程局部存储镜像的位置)。该包的 `examples/cxx` 探针
+  正是发现该缺陷的地方 —— C++ `thread_local` 对象的 guard 字节落在非零邻居上,
+  构造函数从未运行;修复后同一探针通过(PR #34)。
+
 - **`openkal-linux` 0.16.1 与 `openkal-musl` 0.20.1。** 0.16.1 修掉一处潜伏缺陷:
   线程局部存储的镜像被放在变量地址之下八字节(段声明 `p_align = 8, p_memsz = 56`
   时,链接器把变量放在 `tp - 56`,而区域按 16 对齐建成 64 深)。0.16.0 新增的
