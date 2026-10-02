@@ -182,6 +182,7 @@ members = [
     "tests/examples/vulkan-memory-allocator",
     "tests/examples/wamr",
     "tests/examples/wamr-features",
+    "tests/examples/wamr-runtime-features",
     "tests/examples/quickjs-ng",
 ]
 

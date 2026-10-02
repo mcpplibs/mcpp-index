@@ -1,0 +1,9 @@
+# WAMR execution-control features: software bound checks, instruction
+# metering and the thread manager. The base member (tests/examples/wamr) does
+# not request them.
+[package]
+name = "wamr-runtime-features-tests"
+version = "0.1.0"
+
+[target.'cfg(linux)'.dependencies.compat]
+wamr = { version = "2.4.5", features = ["no-hw-bound-check", "instruction-metering", "thread-mgr"] }

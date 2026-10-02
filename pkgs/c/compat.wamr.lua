@@ -81,6 +81,10 @@
 -- compat.recastnavigation's DT_POLYREF64 out of the feature table does not
 -- apply here.
 --
+-- `no-hw-bound-check`, `instruction-metering` and `thread-mgr` select runtime
+-- build options rather than a guest library. They are defines of the same kind:
+-- neither wasm_export.h nor wasm_c_api.h branches on any of them.
+--
 -- ─────────────────────────────────────────────────────────────────────────
 -- CN MIRROR
 --
@@ -140,6 +144,8 @@ package = {
             "*/core/iwasm/libraries/libc-wasi/sandboxed-system-primitives/include",
             "*/core/iwasm/libraries/libc-wasi/sandboxed-system-primitives/src",
             "*/core/shared/platform/common/libc-util",
+            -- wasm_c_api.c includes thread_manager.h by bare name under thread-mgr
+            "*/core/iwasm/libraries/thread-mgr",
             "mcpp_generated/include",
         },
 
@@ -163,6 +169,14 @@ package = {
                 "-include", "mcpp_wamr_config.h",
             },
             ldflags = { "-lpthread", "-lm" },
+        },
+
+        target_cfg = {
+            -- openkal has no sigaction: with thread-mgr, wasm_runtime_init cannot
+            -- install its wakeup handler and returns false
+            ["cfg(all(kernel-abi = \"openkal\", c-abi = \"musl\"))"] = {
+                cflags = { "-DWASM_DISABLE_WAKEUP_BLOCKING_OP=1" },
+            },
         },
 
         generated_files = {
@@ -239,6 +253,18 @@ package = {
         targets = { ["wamr"] = { kind = "lib" } },
 
         features = {
+            -- software bound checks only: no guard pages, sigaltstack or SIGSEGV handler
+            ["no-hw-bound-check"] = {
+                defines = { "WASM_DISABLE_HW_BOUND_CHECK=1" },
+            },
+            ["instruction-metering"] = {
+                defines = { "WASM_ENABLE_INSTRUCTION_METERING=1" },
+            },
+            -- wasm_runtime_terminate() from another thread stops a running guest
+            ["thread-mgr"] = {
+                sources = { "*/core/iwasm/libraries/thread-mgr/*.c" },
+                defines = { "WASM_ENABLE_THREAD_MGR=1" },
+            },
             -- Built-in libc wrappers exported to the guest under `env`.
             ["libc-builtin"] = {
                 sources = { "*/core/iwasm/libraries/libc-builtin/*.c" },
