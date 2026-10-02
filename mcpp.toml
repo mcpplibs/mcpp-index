@@ -104,6 +104,7 @@ members = [
     "tests/examples/glad",
     "tests/examples/glm",
     "tests/examples/libaio",
+    "tests/examples/libserial",
     "tests/examples/libassert",
     "tests/examples/libcoro",
     "tests/examples/libdrm",

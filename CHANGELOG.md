@@ -9,6 +9,8 @@
 
 ### Added
 
+- **`compat.libserial` 1.0.0。** LibSerial 的 `SerialPort`/`SerialStream` 以 compat 形态收录：上游 CMake 的 `LIBSERIAL_SOURCES` 三个 TU 编成一个 lib，公开头经 `include_dirs` 暴露。仅声明 `linux`（公开头以 `<termios.h>` 开头、实现触及 `<linux/serial.h>`，消费者用 `[target.'cfg(linux)'.dependencies]` 门控)。上游 `SerialPortConstants.h` 用了 `uint8_t` 却未含 `<cstdint>`，仅靠传递包含碰巧能编；本包用 `generated_files` shim 补上并由测试的首行包含做编译期断言。无 CN 镜像（无 mcpp-res 写权限，按文档回退为纯上游 url）。
+
 - **`openkal-linux` 0.16.0、`openkal-macos` 0.13.0、`openkal-windows` 0.11.0、
   `openkal-emscripten` 0.4.0、`openkal-opensbi` 0.8.2、`openkal-musl` 0.20.0。**
   六个同轮仓库的行:GLOBAL 为上游 tag 归档,CN 为字节一致的 gitcode 资源
