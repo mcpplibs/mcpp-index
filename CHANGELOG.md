@@ -9,6 +9,14 @@
 
 ### Added
 
+- **`openkal-linux` 0.16.1 与 `openkal-musl` 0.20.1。** 0.16.1 修掉一处潜伏缺陷:
+  线程局部存储的镜像被放在变量地址之下八字节(段声明 `p_align = 8, p_memsz = 56`
+  时,链接器把变量放在 `tp - 56`,而区域按 16 对齐建成 64 深)。0.16.0 新增的
+  实现自有 TLS 存储使该缺陷显形:两个带初值的线程局部变量互相读到对方的字节,
+  C++ 的 `thread_local` 对象的 guard 字节落到非零邻居上而不构造 —— 由
+  openkal-llvm-runtime 的探针在 runner 上报出。0.20.1 只移动锁定版本。
+  GLOBAL/CN 与 sha256 的取法与前一行相同。
+
 - **`openkal-linux` 0.16.0、`openkal-macos` 0.13.0、`openkal-windows` 0.11.0、
   `openkal-emscripten` 0.4.0、`openkal-opensbi` 0.8.2、`openkal-musl` 0.20.0。**
   六个同轮仓库的行:GLOBAL 为上游 tag 归档,CN 为字节一致的 gitcode 资源
