@@ -9,6 +9,19 @@
 
 ### Added
 
+- **`openkal` 0.15.0 与六个同轮仓库。** 规范新增 `kal_task_stack`:一个执行上下文可以
+  说出自己所在的栈区间(自问自答、不取句柄),用于替换 C 库移植层此前对
+  `pthread_getattr_np` 的拒绝。openkal-linux 0.16.0 用 `mincore` 实测映射并以
+  `mapping_end - RLIMIT_STACK` 与栈下最近映射之上一个 guard gap 两者中较高者为下界;
+  openkal-macos 0.13.0 走 `_pthread_self` 与两个 `_np` 查询(三个名字同时补进
+  `port/libSystem.tbd`);openkal-windows 0.11.0 走 `GetCurrentThreadStackLimits`
+  (声明补进 `src/win32.h` 与 `port/kernel32.def`);openkal-emscripten 0.4.0 走
+  `emscripten_stack_get_base/_end`;openkal-opensbi 0.8.2 只移动锁定版本;
+  openkal-musl 0.20.0 让 `pthread_getattr_np` 对**调用线程**给出真实区间、对其它线程
+  一律 `ENOSYS`,并撤回对应的 `[c-abi-absent]` 行。同时修掉 openkal-linux 在 hosted
+  形态下从未描述自身 TLS 镜像的潜伏缺陷(上下文线程指针落在存储区错误一端),新增
+  `tests/conformance_task_tls.cpp` 以非零初值观测该镜像。
+
 - **`compat.libevent` 2.1.13。** Linux、macOS、Windows 分别通过上游 CMake 生成
   平台配置头,再由 mcpp 编译 libevent 核心、HTTP/DNS 扩展和对应系统后端;
   TLS 可选组件未收录。workspace 成员测试事件分派、缓冲区和 HTTP 对象。
