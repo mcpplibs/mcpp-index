@@ -1,0 +1,9 @@
+[package]
+name = "mp-units-module-tests"
+version = "0.1.0"
+
+[indices]
+mpusz = { path = "../../.." }
+
+[dependencies.mpusz]
+mp-units = "2.5.0"
