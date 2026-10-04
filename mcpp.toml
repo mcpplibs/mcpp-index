@@ -147,6 +147,7 @@ members = [
     "tests/examples/sqlitecpp",
     "tests/examples/taskflow-module",
     "tests/examples/quill-module",
+    "tests/examples/mp-units-module",
     "tests/examples/tinyhttps",
     "tests/examples/usockets",
     "tests/examples/opencl",

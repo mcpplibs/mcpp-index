@@ -1456,6 +1456,22 @@ jobs:
             mine="${kept# }"
           fi
 
+          # `mp-units-module`: the reverse case. `mpusz.mp-units` requires
+          # libc++ on linux because GCC 16.1 cannot import its modules
+          # (`recursive lazy load`, mpusz/mp-units#717), so the gcc leg would
+          # only reach that refusal. Lift once xim ships a GCC that works.
+          if [ "${{ matrix.platform }}" = "linux" ] && [ "${{ matrix.toolchain }}" = "default" ]; then
+            kept=""
+            for m in $mine; do
+              case "$m" in
+                mp-units-module)
+                  echo "skipping '$m' on the gcc leg: the package requires libc++" ;;
+                *) kept="$kept $m" ;;
+              esac
+            done
+            mine="${kept# }"
+          fi
+
           echo "MEMBERS=$mine" >> "$GITHUB_ENV"
           echo "shard ${{ matrix.shard }}/${{ matrix.shards }}: ${mine:-<none>}"
 
