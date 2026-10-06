@@ -531,6 +531,8 @@ jobs:
       # release that republished an old tag would leave no other trace.
       - name: Lint duplicate versions
         run: lua5.4 tests/check_duplicate_versions.lua pkgs/*/*.lua
+      - name: Check Quill install hook boundaries
+        run: lua5.4 tests/check_quill_install.lua
       # The compatibility measurement's classifier decides a PUBLISHED figure
       # -- which members "run", which "build", and which were correctly
       # "refused" -- and the only thing that exercised it was the four-hour
@@ -1448,6 +1450,22 @@ jobs:
                 mysql-connector-cpp)
                   echo "skipping '$m' on the llvm leg: static libs are built" \
                        "against the system stdlib; see the comment above" ;;
+                *) kept="$kept $m" ;;
+              esac
+            done
+            mine="${kept# }"
+          fi
+
+          # `mp-units-module`: the reverse case. `mpusz.mp-units` requires
+          # libc++ on linux because GCC 16.1 cannot import its modules
+          # (`recursive lazy load`, mpusz/mp-units#717), so the gcc leg would
+          # only reach that refusal. Lift once xim ships a GCC that works.
+          if [ "${{ matrix.platform }}" = "linux" ] && [ "${{ matrix.toolchain }}" = "default" ]; then
+            kept=""
+            for m in $mine; do
+              case "$m" in
+                mp-units-module)
+                  echo "skipping '$m' on the gcc leg: the package requires libc++" ;;
                 *) kept="$kept $m" ;;
               esac
             done

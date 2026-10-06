@@ -1,0 +1,10 @@
+# 本成员通过本地索引验证 odygrd.quill 的模块消费
+[package]
+name = "quill-module-tests"
+version = "0.1.0"
+
+[indices]
+odygrd = { path = "../../.." }
+
+[dependencies.odygrd]
+quill = "13.0.0"

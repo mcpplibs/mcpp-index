@@ -1,0 +1,10 @@
+# 本成员通过本地索引验证 taskflow.taskflow 的模块消费
+[package]
+name = "taskflow-module-tests"
+version = "0.1.0"
+
+[indices]
+taskflow = { path = "../../.." }
+
+[dependencies.taskflow]
+taskflow = "4.1.0"
