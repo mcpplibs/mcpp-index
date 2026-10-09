@@ -31,6 +31,14 @@ int main() {
     const auto cancelledDownload = client.download_to_file(
         "https://example.invalid/file", "tinyhttps-unused", nullptr, nullptr,
         stopped.get_token());
+    // 0.3.5: roots added to the default store, empty unless set, and a TLS
+    // handshake that has a time limit. The pointer names the new parameter,
+    // which is the one source change the release asks of anyone.
+    HttpClientConfig extra;
+    const bool extraUnset = extra.extraCaFile.empty();
+    extra.extraCaFile = "/etc/corp/root-ca.pem";
+    HttpClient withExtra(extra);
+    bool (TlsSocket::*connectOver)(Socket&&, const char*, bool, int) = &TlsSocket::connect_over;
     const bool ok = request.method == Method::POST
                  && request.url == "https://example.invalid/data"
                  && request.body == "{\"ok\":true}"
@@ -51,6 +59,9 @@ int main() {
                  && cancelled.statusCode == 0
                  && !cancelled.ok()
                  && cancelledDownload.cancelled
-                 && !cancelledDownload.ok();
+                 && !cancelledDownload.ok()
+                 && extraUnset                     // 0.3.5
+                 && extra.extraCaFile == "/etc/corp/root-ca.pem"
+                 && connectOver != nullptr;
     return ok ? 0 : 1;
 }
