@@ -109,3 +109,35 @@ stdlib 头),使 shim 成为编译期断言:去掉 shim 该 TU 就编不过。
   包含,shim 仍是无害的(重复包含 <cstdint> 与 include_next 都安全)。
 - `include_dirs` 用 `*/src`(上游安装根),该目录下只有 `libserial/` 一个子目录,不会
   遮蔽任何系统头。
+
+## 10. 维护者追加(2026-10-11):llvm 腿失败与 CN 镜像
+
+**现象**:PR CI 的 `workspace (linux llvm 0/4)` 失败(`red members name their issues` 随之失败,
+它要求红成员登记 issue),gcc / macOS / Windows 全绿。
+
+**根因**:`src/libserial/SerialPort.h` 的公开模板 `call_with_retry` 写的是
+`typename std::result_of<Fn(Args...)>::type`。`std::result_of` 在 C++17 弃用、C++20 移除:
+libstdc++ 仍保留(仅弃用告警),libc++ 在 C++20 及以上直接删掉,于是三个 TU 全部报
+`no type named 'result_of' in namespace 'std'`。它在公开头里,消费者 TU 同样会坏。上游 master
+仍是这个写法。
+
+**为什么不用别的办法**:
+- shim(`#include_next`)只能在头文件前后加东西,改不了头文件内部的模板;
+- `_LIBCPP_ENABLE_CXX20_REMOVED_TYPE_TRAITS`(libc++ 22/23 仍认)必须在每个 TU 的第一个
+  libc++ 头之前定义;描述符的 `defines` 到不了消费者,shim 也无法保证顺序;
+- 降低语言标准同样到不了消费者 TU。
+
+**做法**:`install()` 在解包树上把两处改写为等价的 `std::invoke_result_t<Fn, Args...>`
+(对它实际被调用的函数指针 + 退化实参,两者结果相同),并在 `#include <memory>` 后补
+`<type_traits>`;每处断言匹配次数(2 / 1),上游一变就让安装失败而不是悄悄跳过。
+随后按 `compat.ftxui` / `taskflow.taskflow` 的方式把包装层移进安装目录,`*/src` glob 不变。
+工作区 `.mcpp/` 不在 CI 缓存里,故无需 `revision`。
+
+**CN 镜像**:建 `mcpp-res/libserial`,release `1.0.0` 上传与 GLOBAL 同一个 tarball,
+`curl` 回环 200 且逐字节一致;`url` 改为 `{ GLOBAL, CN }`。
+
+**验证**:`mcpp test -p tests/examples/libserial` 在 gcc 16.1.0、llvm 22.1.8、llvm 23.1.3 下
+均 `1 passed`(llvm 用 `--cache off` 确认 compat.libserial 由 clang 重新编译)。
+
+**另**:原分支合并 main 时把 CHANGELOG 中 `openkal-llvm-runtime 0.15.4` 与
+`openkal-linux 0.16.1 / openkal-musl 0.20.1` 两条误删,已按 main 恢复。
