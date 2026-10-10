@@ -1,31 +1,40 @@
--- Form B inline descriptor for toml++ (marzer/tomlplusplus) — a TOML config
--- file parser and serializer for C++17 (and later), exposed as the C++23
--- module `tomlplusplus` so users can write `import tomlplusplus;` out of the
--- box (no opt-in, no `#include` needed).
+-- toml++ (marzer/tomlplusplus) — a TOML config file parser and serializer for
+-- C++17 (and later), exposed as the C++23 module `tomlplusplus`: `import
+-- tomlplusplus;` works out of the box, from the project AND from build.mcpp:
 --
--- Why generated: the released v3.4.0 source tarball is header-only and ships
--- NO module interface unit. Upstream HAS authored an official one at
--- `src/modules/tomlplusplus.cppm` (`export module tomlplusplus;`), but it
--- lives on the `master` branch only and is not in any release tag yet (v3.4.0
--- 404s for that path). So we provide it ourselves via mcpp's `generated_files`,
--- embedding upstream's official tomlplusplus.cppm. The base headers stay
--- pinned to the reproducible v3.4.0 release tag, straight from upstream —
+--   [build-dependencies.marzer]
+--   tomlplusplus = { version = "3.4.0", host-module = true }
+--
+-- Form A, with install() writing the manifest. Why not Form B (`mcpp = {...}`
+-- with generated_files), which this package used before:
+--   * a build.mcpp host module needs a lib root, `[lib] path` or
+--     `src/<name>.cppm`, and the Form B vocabulary has no `lib` key. The lib
+--     root states the export surface, so it is written down here, not inferred.
+--   * mcpp reads no verdir mcpp.toml while a Form B table is present, and
+--     generated_files exists only inside that table — so the manifest is
+--     written by install(), into the unpacked tree, next to upstream's files.
+--
+-- Why generated at all: the released v3.4.0 tarball is header-only and ships NO
+-- module interface unit. Upstream HAS authored an official one at
+-- `src/modules/tomlplusplus.cppm` (`export module tomlplusplus;`), but only on
+-- `master` (v3.4.0 404s for that path). install() writes it at that same path,
+-- so the payload has the shape a future release will have. The base headers
+-- stay pinned to the reproducible v3.4.0 release tag, straight from upstream —
 -- no fork in the trust path.
 --
--- ONE deviation from upstream master's cppm, deliberate and minimal:
--- `using TOML_NAMESPACE::get_line;` is dropped. `get_line` was added to
--- `impl/source_region.hpp` AFTER v3.4.0 and does not exist in the pinned
--- headers, so re-exporting it would not compile. Every other line is verbatim.
+-- TWO deviations from upstream master's cppm, deliberate and minimal:
+--   * `using TOML_NAMESPACE::get_line;` is dropped: `get_line` was added to
+--     `impl/source_region.hpp` AFTER v3.4.0 and does not exist in the pinned
+--     headers.
+--   * the global module fragment includes `"../../include/toml++/toml.hpp"`
+--     instead of `<toml++/toml.hpp>`: mcpp compiles a host module alone, with
+--     none of the package's include_dirs (mcpp-community/mcpp#797). The
+--     relative path names the same file in every compile, so ordinary
+--     consumers are unaffected.
 --
 -- Evolution: once a toml++ release (>3.4.0) ships src/modules/tomlplusplus.cppm,
--- switch `sources` to "*/src/modules/tomlplusplus.cppm", drop `generated_files`,
--- and the get_line re-export comes back with it.
---
--- include_dirs exposes the tarball's include/ so the module unit's global-module
--- fragment `#include <toml++/toml.hpp>` resolves (and `#include` remains
--- available to users who want it). The upstream path is a GLOB — the leading
--- `*` absorbs the archive's `tomlplusplus-3.4.0/` wrap layer — while the
--- generated cppm path is verdir-relative (no glob), like nlohmann.json.
+-- install() stops writing the unit (keeping only mcpp.toml), and get_line comes
+-- back with it; once mcpp#797 lands, the include returns to `<toml++/toml.hpp>`.
 package = {
     spec        = "1",
     namespace   = "marzer",
@@ -43,6 +52,8 @@ package = {
                     CN     = "https://gitcode.com/mcpp-res/tomlplusplus/releases/download/3.4.0/tomlplusplus-3.4.0.tar.gz",
                 },
                 sha256 = "8517f65938a4faae9ccf8ebb36631a38c1cadfb5efa85d9a72e15b9e97d25155",
+                -- 1: Form B -> Form A (install() writes mcpp.toml + the module unit).
+                revision = 1,
             },
         },
         macosx = {
@@ -52,6 +63,8 @@ package = {
                     CN     = "https://gitcode.com/mcpp-res/tomlplusplus/releases/download/3.4.0/tomlplusplus-3.4.0.tar.gz",
                 },
                 sha256 = "8517f65938a4faae9ccf8ebb36631a38c1cadfb5efa85d9a72e15b9e97d25155",
+                -- 1: Form B -> Form A (install() writes mcpp.toml + the module unit).
+                revision = 1,
             },
         },
         windows = {
@@ -61,21 +74,46 @@ package = {
                     CN     = "https://gitcode.com/mcpp-res/tomlplusplus/releases/download/3.4.0/tomlplusplus-3.4.0.tar.gz",
                 },
                 sha256 = "8517f65938a4faae9ccf8ebb36631a38c1cadfb5efa85d9a72e15b9e97d25155",
+                -- 1: Form B -> Form A (install() writes mcpp.toml + the module unit).
+                revision = 1,
             },
         },
     },
 
-    mcpp = {
-        schema       = "0.1",
-        language     = "c++23",
-        import_std   = false,
-        modules      = { "tomlplusplus" },
-        include_dirs = { "*/include" },
-        -- Upstream's official module unit (master @ src/modules/tomlplusplus.cppm),
-        -- reproduced verbatim apart from the get_line drop documented above.
-        -- Verdir-relative path, no glob.
-        generated_files = {
-            ["mcpp_generated/tomlplusplus.cppm"] = [==[
+    -- `*` absorbs the archive's tomlplusplus-<version>/ wrap layer.
+    mcpp = "*/mcpp.toml",
+}
+
+local MCPP_TOML = [==[
+[package]
+namespace = "marzer"
+name      = "tomlplusplus"
+version   = "@VERSION@"
+standard  = "c++23"
+
+[language]
+import_std = false
+
+# The export surface: the one module unit. Required by build.mcpp's
+# host-module path, which has no other way to find it.
+[lib]
+path = "src/modules/tomlplusplus.cppm"
+
+[modules]
+exports = ["tomlplusplus"]
+
+[build]
+sources      = ["src/modules/tomlplusplus.cppm"]
+# The module unit's GMF and users who prefer `#include <toml++/toml.hpp>`.
+include_dirs = ["include"]
+
+[targets.tomlplusplus]
+kind = "lib"
+]==]
+
+-- Upstream's official module unit (master @ src/modules/tomlplusplus.cppm),
+-- reproduced verbatim apart from the two deviations documented above.
+local MODULE_UNIT = [==[
 /**
  * @file tomlpp.cppm
  * @brief File containing the module declaration for toml++.
@@ -84,7 +122,10 @@ package = {
 module;
 
 #define TOML_UNDEF_MACROS 0
-#include <toml++/toml.hpp>
+// mcpp#797: a host-module compile is not given this package's include_dirs,
+// so reach the header relative to this file (src/modules/ -> include/).
+// Same file either way; restore `<toml++/toml.hpp>` once mcpp#797 is settled.
+#include "../../include/toml++/toml.hpp"
 
 export module tomlplusplus;
 
@@ -163,10 +204,34 @@ export namespace toml {
 
 	using TOML_NAMESPACE::preserve_source_value_flags;
 }
-]==],
-        },
-        sources      = { "mcpp_generated/tomlplusplus.cppm" },
-        targets      = { ["tomlplusplus"] = { kind = "lib" } },
-        deps         = { },
-    },
-}
+]==]
+
+import("xim.libxpkg.pkginfo")
+
+function install()
+    -- Reproduce the default unpack shape — install_dir/<wrap>/... — so the
+    -- `*/mcpp.toml` pointer matches exactly one wrap level. NO SHELL and no
+    -- directory listing in this sandbox: the wrap is asked about by name.
+    local v     = pkginfo.version()
+    local idir  = pkginfo.install_dir()
+    local layer = path.join(idir, "tomlplusplus-" .. v)
+    os.tryrm(idir)
+    os.mkdir(idir)
+    for _, name in ipairs({ "tomlplusplus-" .. v, "tomlplusplus-v" .. v }) do
+        if os.isfile(path.join(name, "include", "toml++", "toml.hpp")) then
+            os.mv(name, layer)
+            break
+        end
+    end
+    if not os.isfile(path.join(layer, "include", "toml++", "toml.hpp")) then
+        log.error("tomlplusplus: no include/toml++/toml.hpp under %s after "
+                  .. "unpacking; the archive layout changed", layer)
+        return false
+    end
+
+    io.writefile(path.join(layer, "mcpp.toml"),
+                 (MCPP_TOML:gsub("@VERSION@", v)))
+    os.mkdir(path.join(layer, "src", "modules"))
+    io.writefile(path.join(layer, "src", "modules", "tomlplusplus.cppm"), MODULE_UNIT)
+    return true
+end
