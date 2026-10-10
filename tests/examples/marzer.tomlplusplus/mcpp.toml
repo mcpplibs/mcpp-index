@@ -1,5 +1,9 @@
 # toml++ test project: consumes the C++23 module `tomlplusplus` and asserts
 # parse + typed access + round-trip serialization under `mcpp test`.
+# The same module imported from build.mcpp (a host module) is tested by the
+# sibling member marzer.tomlplusplus-build-mcpp, kept apart because one package
+# in both [dependencies] and [build-dependencies] currently loses its
+# target-side BMI (mcpp-community/mcpp#797).
 # Overrides the workspace-root redirect: root declares `compat`, this member
 # needs `marzer`. A member-level [indices] REPLACES the inherited table rather
 # than merging with it, which is what keeps this to ONE project index repo —
