@@ -253,7 +253,7 @@ end
 | mcpp issue | [mcpp#797](https://github.com/mcpp-community/mcpp/issues/797) | 一般 deps 与 build deps(host-module)在导出面与编译上下文上的分歧;设计问题 6 条,不预设实现。追加评论:同一包同时写在 `[dependencies]` 与 `[build-dependencies]`(host-module)时,合并后的边带 `hostModule`,被 build-time-only 剪枝误判为 target 不可达,项目侧 BMI 丢失 |
 | xpkgindex | [openxlings/xpkgindex#10](https://github.com/openxlings/xpkgindex/pull/10) | F2:未命中的相对链接 → 包页 / 目录 README 的 guide / `{github}/blob\|tree/HEAD/…` / 不存在则 warning;另修译文 guide 链接以 `depth=3` 跳回默认语言的问题 |
 | mcpp-index 站点 | `.xpkgindex.json` | F1 注册 `descriptor-examples`、`openkal-compat`(含 zh);`repository-and-schema` 挂 zh 译文;F4 `base_url` → `https://mcpp.index.xlings.org` |
-| mcpp-index CI | `site-check.yml` + `tools/site/check_links.py` | F3 产物内部链接检查;xpkgindex **临时 pin** 到 #10 分支联调,#10 合入后改回默认分支 |
+| mcpp-index CI | `site-check.yml` + `tools/site/check_links.py` | F3 产物内部链接检查(联调期曾临时 pin 到 xpkgindex#10 分支,#10 已合入,改回默认分支) |
 | toml++ | `pkgs/m/marzer.tomlplusplus.lua` | Form A + `install()` 写 `mcpp.toml`(`[lib] path`)与 `src/modules/tomlplusplus.cppm`(相对 include,mcpp#797);各平台 `revision = 1` 迫使旧 Form B payload 重装(实测迁移通过) |
 | 测试 | `tests/examples/marzer.tomlplusplus-build-mcpp` | build.mcpp `import tomlplusplus;` 解析 `build-config.toml` → define → 断言;与项目侧测试分成两个成员(规避上面的双角色 bug) |
 

@@ -31,10 +31,7 @@ jobs:
           python-version: '3.12'
 
       - name: Install xpkgindex
-        # TEMPORARY: pinned to openxlings/xpkgindex#10 (guide link fallback +
-        # translated guides keep their language) for joint testing. Revert to
-        # the default branch once it is merged — deploy-site.yml already uses it.
-        run: pip install git+https://github.com/openxlings/xpkgindex.git@fix/guide-link-fallback
+        run: pip install git+https://github.com/openxlings/xpkgindex.git
 
       - name: Build the site
         # --strict turns the growth reconciliation warning into an error: if
