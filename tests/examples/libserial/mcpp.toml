@@ -1,0 +1,19 @@
+# libserial test project: drive a real PTY through the SerialPort API.
+#
+# LibSerial is not a portable library with a Linux backend -- it IS a POSIX
+# serial-port wrapper whose headers begin with <termios.h> and whose TUs
+# include <linux/serial.h> -- so the descriptor has a `linux` section and
+# nothing else, the dependency is gated, and the test compiles to a no-op
+# main() elsewhere. Same shape as tests/examples/libaio.
+#
+# Nothing is mocked: a pseudo-terminal pair (openpty) stands in for the UART,
+# because on a build machine /dev/ttyUSB0 does not exist, and a link-only test
+# would pass even if SerialPort mis-set termios flags. Writing to the master
+# exercises SerialPort's read path; writing through SerialPort exercises the
+# master's read path.
+[package]
+name = "libserial-tests"
+version = "0.1.0"
+
+[target.'cfg(linux)'.dependencies.compat]
+libserial = "1.0.0"

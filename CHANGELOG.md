@@ -9,6 +9,16 @@
 
 ### Added
 
+- **`compat.libserial` 1.0.0。** LibSerial 的 `SerialPort`/`SerialStream` 以 compat
+  形态收录:上游 CMake `LIBSERIAL_SOURCES` 的三个 TU 编成一个 lib,公开头经
+  `include_dirs` 暴露。仅声明 `linux`(公开头以 `<termios.h>` 开头、实现触及
+  `<linux/serial.h>`,消费者用 `[target.'cfg(linux)'.dependencies]` 门控)。两处上游头
+  文件缺陷在包内修复:`SerialPortConstants.h` 用 `uint8_t` 却未含 `<cstdint>`,由
+  `generated_files` shim 补上;`SerialPort.h` 的 `call_with_retry` 用了 C++20 已移除的
+  `std::result_of`,libc++ 下整个库编不过,由 `install()` 改写为等价的
+  `std::invoke_result_t`。GLOBAL 为上游 tag,CN 为 `mcpp-res/libserial` 镜像,
+  sha256 相同。
+
 - **`openkal-llvm-runtime` 0.15.4。** 只移动锁定版本:openkal-musl 0.20.1 携带
   openkal-linux 0.16.1(修复线程局部存储镜像的位置)。该包的 `examples/cxx` 探针
   正是发现该缺陷的地方 —— C++ `thread_local` 对象的 guard 字节落在非零邻居上,
