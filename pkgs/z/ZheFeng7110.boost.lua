@@ -22,7 +22,7 @@ package = {
 
     xpm = {
         linux = {
-            ["v1.92.0.0.0.0"] = {
+            ["1.92.0.0.0.0"] = {
                 url = {
                     GLOBAL = "https://github.com/ZheFeng7110/boost-module/releases/download/v1.92.0.0.0.0/boost-module-v1.92.0.0.0.0.tar.xz",
                     CN     = "https://gitcode.com/ZheFeng7/boost-module/releases/download/v1.92.0.0.0.0/boost-module-v1.92.0.0.0.0.tar.xz",
@@ -38,7 +38,7 @@ package = {
             },
         },
         macosx = {
-            ["v1.92.0.0.0.0"] = {
+            ["1.92.0.0.0.0"] = {
                 url = {
                     GLOBAL = "https://github.com/ZheFeng7110/boost-module/releases/download/v1.92.0.0.0.0/boost-module-v1.92.0.0.0.0.tar.xz",
                     CN     = "https://gitcode.com/ZheFeng7/boost-module/releases/download/v1.92.0.0.0.0/boost-module-v1.92.0.0.0.0.tar.xz",
@@ -54,7 +54,7 @@ package = {
             },
         },
         windows = {
-            ["v1.92.0.0.0.0"] = {
+            ["1.92.0.0.0.0"] = {
                 url = {
                     GLOBAL = "https://github.com/ZheFeng7110/boost-module/releases/download/v1.92.0.0.0.0/boost-module-v1.92.0.0.0.0.tar.xz",
                     CN     = "https://gitcode.com/ZheFeng7/boost-module/releases/download/v1.92.0.0.0.0/boost-module-v1.92.0.0.0.0.tar.xz",
