@@ -1,0 +1,17 @@
+# toml++ imported by build.mcpp: the package as a host module
+# ([build-dependencies] host-module = true). build.mcpp parses
+# build-config.toml and turns a value into a define the test asserts.
+#
+# A member of its own rather than part of marzer.tomlplusplus: one package in
+# BOTH [dependencies] and [build-dependencies] (host-module) currently loses its
+# target-side BMI (mcpp-community/mcpp#797), so the two uses are tested apart.
+# Same [indices] override as marzer.tomlplusplus (root declares `compat`).
+[indices]
+marzer = { path = "../../.." }
+
+[package]
+name = "tomlplusplus-build-mcpp-tests"
+version = "0.1.0"
+
+[build-dependencies.marzer]
+tomlplusplus = { version = "3.4.0", host-module = true }

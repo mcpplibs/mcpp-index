@@ -15,6 +15,7 @@ on:
       - '.xpkgindex.json'
       - '.xpkgindex/**'
       - 'docs/**'
+      - 'tools/site/**'
       - '.github/workflows/site-check.yml'
   workflow_dispatch:
 
@@ -57,6 +58,13 @@ jobs:
                    zh/index.html zh-Hant/index.html; do
             test -s "/tmp/site/$f" || { echo "::error::missing $f"; exit 1; }
           done
+
+      - name: Every internal link resolves
+        # A guide links repository files, the templates link pages, the plugin
+        # links packages; a dead one fails here whichever layer produced it.
+        # This is what let /zh/docs/contributing/descriptor-examples.md ship as
+        # a 404.
+        run: python3 tools/site/check_links.py /tmp/site
 
       - uses: actions/upload-artifact@v4
         if: always()
