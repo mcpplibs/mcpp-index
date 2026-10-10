@@ -74,6 +74,7 @@ members = [
     "tests/examples/imgui-window",
     "tests/examples/jwt-cpp",
     "tests/examples/marzer.tomlplusplus",
+    "tests/examples/marzer.tomlplusplus-build-mcpp",
     "tests/examples/mcpp-plugins",
     "tests/examples/mio",
     "tests/examples/muduo",

@@ -1,0 +1,4 @@
+# Read by build.mcpp through `import tomlplusplus;`; the value reaches the
+# tests as a compile define (tests/build_mcpp.cpp).
+[server]
+port = 8080

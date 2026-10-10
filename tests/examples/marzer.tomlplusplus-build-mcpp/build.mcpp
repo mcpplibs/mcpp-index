@@ -1,0 +1,14 @@
+// toml++ imported by the BUILD PROGRAM, not only by the project: declared as a
+// host module in [build-dependencies], it parses build-config.toml and hands a
+// value to the build as a define. tests/build_mcpp.cpp asserts it arrived.
+import std;
+import mcpp;
+import tomlplusplus;
+
+int main() {
+    auto cfg  = toml::parse_file("build-config.toml");
+    auto flag = std::format("-DTOMLPP_BUILD_PORT={}", cfg["server"]["port"].value_or(0));
+    mcpp::cxxflag(flag.c_str());
+    mcpp::rerun_if_changed("build-config.toml");
+    return 0;
+}
