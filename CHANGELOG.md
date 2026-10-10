@@ -9,7 +9,28 @@
 
 ### Added
 
-- **`compat.libserial` 1.0.0。** LibSerial 的 `SerialPort`/`SerialStream` 以 compat 形态收录：上游 CMake 的 `LIBSERIAL_SOURCES` 三个 TU 编成一个 lib，公开头经 `include_dirs` 暴露。仅声明 `linux`（公开头以 `<termios.h>` 开头、实现触及 `<linux/serial.h>`，消费者用 `[target.'cfg(linux)'.dependencies]` 门控)。上游 `SerialPortConstants.h` 用了 `uint8_t` 却未含 `<cstdint>`，仅靠传递包含碰巧能编；本包用 `generated_files` shim 补上并由测试的首行包含做编译期断言。无 CN 镜像（无 mcpp-res 写权限，按文档回退为纯上游 url）。
+- **`compat.libserial` 1.0.0。** LibSerial 的 `SerialPort`/`SerialStream` 以 compat
+  形态收录:上游 CMake `LIBSERIAL_SOURCES` 的三个 TU 编成一个 lib,公开头经
+  `include_dirs` 暴露。仅声明 `linux`(公开头以 `<termios.h>` 开头、实现触及
+  `<linux/serial.h>`,消费者用 `[target.'cfg(linux)'.dependencies]` 门控)。两处上游头
+  文件缺陷在包内修复:`SerialPortConstants.h` 用 `uint8_t` 却未含 `<cstdint>`,由
+  `generated_files` shim 补上;`SerialPort.h` 的 `call_with_retry` 用了 C++20 已移除的
+  `std::result_of`,libc++ 下整个库编不过,由 `install()` 改写为等价的
+  `std::invoke_result_t`。GLOBAL 为上游 tag,CN 为 `mcpp-res/libserial` 镜像,
+  sha256 相同。
+
+- **`openkal-llvm-runtime` 0.15.4。** 只移动锁定版本:openkal-musl 0.20.1 携带
+  openkal-linux 0.16.1(修复线程局部存储镜像的位置)。该包的 `examples/cxx` 探针
+  正是发现该缺陷的地方 —— C++ `thread_local` 对象的 guard 字节落在非零邻居上,
+  构造函数从未运行;修复后同一探针通过(PR #34)。
+
+- **`openkal-linux` 0.16.1 与 `openkal-musl` 0.20.1。** 0.16.1 修掉一处潜伏缺陷:
+  线程局部存储的镜像被放在变量地址之下八字节(段声明 `p_align = 8, p_memsz = 56`
+  时,链接器把变量放在 `tp - 56`,而区域按 16 对齐建成 64 深)。0.16.0 新增的
+  实现自有 TLS 存储使该缺陷显形:两个带初值的线程局部变量互相读到对方的字节,
+  C++ 的 `thread_local` 对象的 guard 字节落到非零邻居上而不构造 —— 由
+  openkal-llvm-runtime 的探针在 runner 上报出。0.20.1 只移动锁定版本。
+  GLOBAL/CN 与 sha256 的取法与前一行相同。
 
 - **`openkal-linux` 0.16.0、`openkal-macos` 0.13.0、`openkal-windows` 0.11.0、
   `openkal-emscripten` 0.4.0、`openkal-opensbi` 0.8.2、`openkal-musl` 0.20.0。**
