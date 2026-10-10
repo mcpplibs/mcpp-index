@@ -15,6 +15,7 @@ on:
       - '.xpkgindex.json'
       - '.xpkgindex/**'
       - 'docs/**'
+      - 'tools/site/**'
       - '.github/workflows/site-check.yml'
   workflow_dispatch:
 
@@ -30,7 +31,10 @@ jobs:
           python-version: '3.12'
 
       - name: Install xpkgindex
-        run: pip install git+https://github.com/openxlings/xpkgindex.git
+        # TEMPORARY: pinned to openxlings/xpkgindex#10 (guide link fallback +
+        # translated guides keep their language) for joint testing. Revert to
+        # the default branch once it is merged — deploy-site.yml already uses it.
+        run: pip install git+https://github.com/openxlings/xpkgindex.git@fix/guide-link-fallback
 
       - name: Build the site
         # --strict turns the growth reconciliation warning into an error: if
@@ -57,6 +61,13 @@ jobs:
                    zh/index.html zh-Hant/index.html; do
             test -s "/tmp/site/$f" || { echo "::error::missing $f"; exit 1; }
           done
+
+      - name: Every internal link resolves
+        # A guide links repository files, the templates link pages, the plugin
+        # links packages; a dead one fails here whichever layer produced it.
+        # This is what let /zh/docs/contributing/descriptor-examples.md ship as
+        # a 404.
+        run: python3 tools/site/check_links.py /tmp/site
 
       - uses: actions/upload-artifact@v4
         if: always()

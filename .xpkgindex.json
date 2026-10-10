@@ -93,7 +93,7 @@
       }
     ]
   },
-  "base_url": "https://mcpplibs.github.io/mcpp-index",
+  "base_url": "https://mcpp.index.xlings.org",
   "languages": [
     "en",
     "zh",
@@ -170,6 +170,18 @@
         }
       },
       {
+        "slug": "descriptor-examples",
+        "title": {
+          "en": "Descriptor examples",
+          "zh": "描述符示例总览",
+          "zh-Hant": "描述符範例總覽"
+        },
+        "path": "docs/descriptor-examples.md",
+        "translations": {
+          "zh": "docs/zh/descriptor-examples.md"
+        }
+      },
+      {
         "slug": "cn-mirror",
         "title": {
           "en": "CN mirror loop",
@@ -183,8 +195,27 @@
       },
       {
         "slug": "repository-and-schema",
-        "title": "Repository & schema",
-        "path": "docs/repository-and-schema.md"
+        "title": {
+          "en": "Repository & schema",
+          "zh": "仓库结构与 schema",
+          "zh-Hant": "倉庫結構與 schema"
+        },
+        "path": "docs/repository-and-schema.md",
+        "translations": {
+          "zh": "docs/zh/repository-and-schema.md"
+        }
+      },
+      {
+        "slug": "openkal-compat",
+        "title": {
+          "en": "openkal compatibility",
+          "zh": "openkal 兼容性",
+          "zh-Hant": "openkal 相容性"
+        },
+        "path": "docs/openkal-compat.md",
+        "translations": {
+          "zh": "docs/zh/openkal-compat.md"
+        }
       }
     ],
     "cta": {
