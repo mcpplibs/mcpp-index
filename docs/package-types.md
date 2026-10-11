@@ -298,8 +298,9 @@ one deliberately uses no generated code, this one is generated code end to end.
 
 A build plugin is a package whose modules a consumer's `build.mcpp` imports: its
 units import `mcpp.core` (also spelled `mcpp`) and reach a consumer through a
-`[build-dependencies]` edge with `host-module = true`. Three rules admit one to
-this index (mcpp#734):
+`[build-dependencies]` edge, which gives the build program the package's library
+(`host-module = true` states it explicitly). Three rules admit one to this index
+(mcpp#734):
 
 - **Module names.** A plugin names its build-program modules
   `mcpp.<namespace>.*` after its own namespace (`mcpp.acme.protobuf`). The second
@@ -310,15 +311,20 @@ this index (mcpp#734):
   (`tests/check_reserved_namespace.lua`). Modules the package also offers to
   programs follow the library rule, `<namespace>.<name>.*` (mcpp SPEC-008 I3).
 - **The manifest.** The official general library is reached through the feature
-  `plugins-core`. A plugin built on it depends on `mcpp.plugins` with
-  `host-module = true` and `features = ["plugins-core"]`, and adds
-  `reexport = true` when its consumers' build programs import the library
-  themselves:
+  `plugins-core`. What a plugin's own modules import is in its
+  `[dependencies]`: a plugin built on the library depends on `mcpp.plugins`
+  with `features = ["plugins-core"]`, and adds `reexport = true` when its
+  consumers' build programs import the library themselves (mcpp 2026.10.11.1+,
+  mcpp#797):
 
   ```toml
-  [build-dependencies.mcpp]
-  plugins = { version = "0.17.0", features = ["plugins-core"], host-module = true, reexport = true }
+  [dependencies.mcpp]
+  plugins = { version = "0.17.0", features = ["plugins-core"], reexport = true }
   ```
+
+  The same entry in `[build-dependencies]` with `host-module = true`, the
+  spelling before 2026.10.11.1, is read as a dependency of the plugin as well
+  and reported as deprecated; mcpp 2027.1 no longer reads it.
 - **The engine floor.** The package states the first mcpp release it needs,
   `[package] mcpp = ">=<release>"`; an older engine stops and names the upgrade.
   A plugin that reads the build information (the resolved tools, `mcpp::report`)
