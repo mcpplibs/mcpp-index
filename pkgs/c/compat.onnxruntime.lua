@@ -48,7 +48,7 @@ package = {
         },
         sources = { "mcpp_generated/onnxruntime_anchor.c" },
         targets = { ["onnxruntime"] = { kind = "lib" } },
-        deps    = {},
+        deps    = { ["compat.protobuf"] = "35.1" },
         linux   = {
             requires = { "mcpp:c++-abi=libc++" },
             ldflags = { "-Llib", "-lonnxruntime",
@@ -56,8 +56,7 @@ package = {
         },
         macosx  = {
             requires = { "mcpp:c++-abi=libc++" },
-            ldflags = { "-Llib", "-lonnxruntime",
-                        "-Wl,-Bdynamic,-lc++,-lc++abi,-lunwind" },
+            ldflags = { "-Llib", "-lonnxruntime" },
         },
         windows = {
             ldflags = { "-Llib", "-lonnxruntime" },
@@ -94,6 +93,16 @@ local function resolve_cmake()
     return nil
 end
 
+local function resolve_source(address, version, directory)
+    local root = pkginfo.install_dir(address, version)
+    if not root then return nil end
+    local direct = path.join(root, "CMakeLists.txt")
+    if os.isfile(direct) then return root end
+    local nested = path.join(root, directory, "CMakeLists.txt")
+    if os.isfile(nested) then return path.join(root, directory) end
+    return nil
+end
+
 function install()
     local wrap = "onnxruntime-" .. pkginfo.version()
     local source = path.join(wrap, "cmake")
@@ -105,6 +114,15 @@ function install()
     local cmake = resolve_cmake()
     if not cmake then
         log.error("compat.onnxruntime: xim:cmake executable not found")
+        return false
+    end
+
+    local protobuf = resolve_source("compat:protobuf", "35.1",
+                                    "protobuf-35.1")
+    local abseil = resolve_source("compat:abseil", "20250512.1",
+                                  "abseil-cpp-20250512.1")
+    if not protobuf or not abseil then
+        log.error("compat.onnxruntime: mcpp protobuf/abseil sources not found")
         return false
     end
 
@@ -121,6 +139,14 @@ function install()
         "-DCMAKE_INSTALL_PREFIX=" .. quote(prefix),
         "-DCMAKE_SKIP_INSTALL_RULES=OFF",
         "-DFETCHCONTENT_TRY_FIND_PACKAGE_MODE=NEVER",
+        "-DFETCHCONTENT_SOURCE_DIR_PROTOBUF=" .. quote(protobuf),
+        "-DFETCHCONTENT_SOURCE_DIR_ABSEIL_CPP=" .. quote(abseil),
+        "-DCMAKE_C_FLAGS=" .. quote("-I" ..
+            path.join(protobuf, "third_party", "utf8_range") ..
+            " -Wno-error=unused-variable -Wno-error=unused-result"),
+        "-DCMAKE_CXX_FLAGS=" .. quote("-I" ..
+            path.join(protobuf, "third_party", "utf8_range") ..
+            " -Wno-error=unused-variable -Wno-error=unused-result"),
         "-Donnxruntime_BUILD_SHARED_LIB=ON",
         "-Donnxruntime_BUILD_UNIT_TESTS=OFF",
         "-Donnxruntime_ENABLE_PYTHON=OFF",
@@ -139,10 +165,10 @@ function install()
         "-Donnxruntime_USE_VCPKG=OFF",
         "-Dprotobuf_WITH_ZLIB=OFF",
         "-Dprotobuf_BUILD_PROTOBUF_BINARIES=ON",
+        "-Dprotobuf_BUILD_LIBPROTOBUF=ON",
         "-Dprotobuf_BUILD_PROTOC_BINARIES=ON",
         "-Dprotobuf_BUILD_LIBPROTOC=ON",
         "-Dprotobuf_BUILD_TESTS=OFF",
-        "-Dprotobuf_INSTALL=OFF",
     }, " ")
     if os.host() == "linux" then
         configure = configure .. " -DCMAKE_SHARED_LINKER_FLAGS="
