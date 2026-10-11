@@ -16,7 +16,7 @@ package = {
 
     xpm = {
         linux = {
-            deps = { "xim:cmake@latest" },
+            deps = { "xim:cmake@latest", "xim:linux-headers@5.11.1" },
             ["1.31.0"] = {
                 url    = "https://github.com/microsoft/onnxruntime/archive/refs/tags/v1.31.0.tar.gz",
                 sha256 = "a7e84230b5d509e48fbd6b73c2453a56345ccb22da34a46dac1f0cb4a2d6507b",
@@ -128,11 +128,67 @@ function install()
 
     local prefix = pkginfo.install_dir()
     local build = path.join(wrap, "mcpp-build")
+    local protoc_build = path.join(wrap, "mcpp-protoc-build")
     os.tryrm(prefix)
     os.mkdir(prefix)
     os.tryrm(build)
+    os.tryrm(protoc_build)
 
     local jobs = (os.default_njob and os.default_njob()) or 4
+    local function run(command)
+        if os.host() == "windows" then
+            local bat = path.join(prefix, "mcpp_onnxruntime_command.bat")
+            io.writefile(bat, "@echo off\r\n" .. command
+                         .. "\r\nif errorlevel 1 exit /b 1\r\n")
+            command = "cmd /c " .. quote(bat)
+        end
+        return pcall(os.exec, command)
+    end
+
+    local protoc_configure = table.concat({
+        quote(cmake), "-S", quote(protobuf), "-B", quote(protoc_build),
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-Dprotobuf_BUILD_PROTOBUF_BINARIES=ON",
+        "-Dprotobuf_BUILD_LIBPROTOBUF=ON",
+        "-Dprotobuf_BUILD_PROTOC_BINARIES=ON",
+        "-Dprotobuf_BUILD_LIBPROTOC=ON",
+        "-Dprotobuf_BUILD_TESTS=OFF",
+        "-Dprotobuf_WITH_ZLIB=OFF",
+        "-Dprotobuf_INSTALL=OFF",
+        "-DFETCHCONTENT_SOURCE_DIR_ABSEIL_CPP=" .. quote(abseil),
+    }, " ")
+    local invoked, result = run(protoc_configure)
+    if not invoked or not result then
+        log.error("compat.onnxruntime: Protobuf protoc configure failed")
+        return false
+    end
+    local protoc_build_cmd = string.format("%s --build %s --target protoc --parallel %d",
+                                           quote(cmake), quote(protoc_build), jobs)
+    invoked, result = run(protoc_build_cmd)
+    if not invoked or not result then
+        log.error("compat.onnxruntime: Protobuf protoc build failed")
+        return false
+    end
+    local protoc_name = os.host() == "windows" and "protoc.exe" or "protoc"
+    local protoc_candidates = {
+        path.join(protoc_build, protoc_name),
+        path.join(protoc_build, "Release", protoc_name),
+        path.join(protoc_build, "RelWithDebInfo", protoc_name),
+        path.join(protoc_build, "Debug", protoc_name),
+        path.join(protoc_build, "bin", protoc_name),
+    }
+    local protoc
+    for _, candidate in ipairs(protoc_candidates) do
+        if os.isfile(candidate) then
+            protoc = candidate
+            break
+        end
+    end
+    if not protoc then
+        log.error("compat.onnxruntime: matching Protobuf protoc executable not found")
+        return false
+    end
+
     local configure = table.concat({
         quote(cmake), "-S", quote(source), "-B", quote(build),
         "-DCMAKE_BUILD_TYPE=Release",
@@ -141,12 +197,6 @@ function install()
         "-DFETCHCONTENT_TRY_FIND_PACKAGE_MODE=NEVER",
         "-DFETCHCONTENT_SOURCE_DIR_PROTOBUF=" .. quote(protobuf),
         "-DFETCHCONTENT_SOURCE_DIR_ABSEIL_CPP=" .. quote(abseil),
-        "-DCMAKE_C_FLAGS=" .. quote("-I" ..
-            path.join(protobuf, "third_party", "utf8_range") ..
-            " -Wno-error=unused-variable -Wno-error=unused-result"),
-        "-DCMAKE_CXX_FLAGS=" .. quote("-I" ..
-            path.join(protobuf, "third_party", "utf8_range") ..
-            " -Wno-error=unused-variable -Wno-error=unused-result"),
         "-Donnxruntime_BUILD_SHARED_LIB=ON",
         "-Donnxruntime_BUILD_UNIT_TESTS=OFF",
         "-Donnxruntime_ENABLE_PYTHON=OFF",
@@ -169,22 +219,40 @@ function install()
         "-Dprotobuf_BUILD_PROTOC_BINARIES=ON",
         "-Dprotobuf_BUILD_LIBPROTOC=ON",
         "-Dprotobuf_BUILD_TESTS=OFF",
+        "-DONNX_CUSTOM_PROTOC_EXECUTABLE=" .. quote(protoc),
     }, " ")
+    local include_flag = "-I"
+    local warning_flags = ""
+    if os.host() == "windows" then
+        include_flag = "/I"
+        warning_flags = " /wd4101 /wd4189"
+    else
+        warning_flags = " -Wno-error=unused-variable -Wno-error=unused-result"
+    end
+    local extra_include_dirs = { path.join(protobuf, "third_party", "utf8_range") }
+    if os.host() == "linux" then
+        local headers = pkginfo.build_dep("xim:linux-headers")
+                       or pkginfo.build_dep("linux-headers")
+        if not headers or not headers.path then
+            log.error("compat.onnxruntime: xim:linux-headers include path not found")
+            return false
+        end
+        extra_include_dirs[#extra_include_dirs + 1] = path.join(headers.path, "include")
+    end
+    local extra_includes = ""
+    for _, directory in ipairs(extra_include_dirs) do
+        extra_includes = extra_includes .. " " .. include_flag .. directory
+    end
+    configure = configure .. " -DCMAKE_C_FLAGS="
+        .. quote(extra_includes .. warning_flags)
+        .. " -DCMAKE_CXX_FLAGS="
+        .. quote(extra_includes
+                 .. warning_flags)
     if os.host() == "linux" then
         configure = configure .. " -DCMAKE_SHARED_LINKER_FLAGS="
             .. quote("-Wl,-Bsymbolic")
     end
-    local function run(command)
-        if os.host() == "windows" then
-            local bat = path.join(prefix, "mcpp_onnxruntime_command.bat")
-            io.writefile(bat, "@echo off\r\n" .. command
-                         .. "\r\nif errorlevel 1 exit /b 1\r\n")
-            command = "cmd /c " .. quote(bat)
-        end
-        return pcall(os.exec, command)
-    end
-
-    local invoked, result = run(configure)
+    invoked, result = run(configure)
     if not invoked or not result then
         log.error("compat.onnxruntime: CMake configure failed")
         return false
