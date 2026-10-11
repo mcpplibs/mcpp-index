@@ -48,7 +48,7 @@ package = {
         },
         sources = { "mcpp_generated/onnxruntime_anchor.c" },
         targets = { ["onnxruntime"] = { kind = "lib" } },
-        deps    = { ["compat.protobuf"] = "35.1" },
+        deps    = { ["compat.protobuf"] = {version = "35.1", features = ["protoc", "upb" ]} },
         linux   = {
             requires = { "mcpp:c++-abi=libc++" },
             ldflags = { "-Llib", "-lonnxruntime",
