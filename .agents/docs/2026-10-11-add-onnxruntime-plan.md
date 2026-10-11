@@ -15,8 +15,9 @@
 - Platforms: Linux, macOS, and Windows use the same source archive and the
   upstream CMake platform selection. `xim:cmake` is declared as the build
   dependency on each platform.
-- Test: `tests/examples/onnxruntime` loads the public C API and verifies the
-  runtime version string begins with `1.31.`.
+- Test: `tests/examples/onnxruntime` includes the installed public C API and
+  calls `OrtGetApiBase()` as a cross-platform runtime smoke test. The C API
+  header is installed at `include/onnxruntime/onnxruntime_c_api.h`.
 - CN mirror: not declared because no mcpp-res upload is available; the
   descriptor uses the permitted upstream URL fallback. The release archive
   SHA-256 is

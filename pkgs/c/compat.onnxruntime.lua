@@ -50,10 +50,14 @@ package = {
         targets = { ["onnxruntime"] = { kind = "lib" } },
         deps    = {},
         linux   = {
-            ldflags = { "-Llib", "-lonnxruntime" },
+            requires = { "mcpp:c++-abi=libc++" },
+            ldflags = { "-Llib", "-lonnxruntime",
+                        "-Wl,-Bdynamic,-lc++,-lc++abi,-lunwind" },
         },
         macosx  = {
-            ldflags = { "-Llib", "-lonnxruntime" },
+            requires = { "mcpp:c++-abi=libc++" },
+            ldflags = { "-Llib", "-lonnxruntime",
+                        "-Wl,-Bdynamic,-lc++,-lc++abi,-lunwind" },
         },
         windows = {
             ldflags = { "-Llib", "-lonnxruntime" },
@@ -115,6 +119,8 @@ function install()
         quote(cmake), "-S", quote(source), "-B", quote(build),
         "-DCMAKE_BUILD_TYPE=Release",
         "-DCMAKE_INSTALL_PREFIX=" .. quote(prefix),
+        "-DCMAKE_SKIP_INSTALL_RULES=OFF",
+        "-DFETCHCONTENT_TRY_FIND_PACKAGE_MODE=NEVER",
         "-Donnxruntime_BUILD_SHARED_LIB=ON",
         "-Donnxruntime_BUILD_UNIT_TESTS=OFF",
         "-Donnxruntime_ENABLE_PYTHON=OFF",
@@ -131,7 +137,12 @@ function install()
         "-Donnxruntime_USE_XNNPACK=OFF",
         "-Donnxruntime_USE_MIMALLOC=OFF",
         "-Donnxruntime_USE_VCPKG=OFF",
+        "-Dprotobuf_WITH_ZLIB=OFF",
     }, " ")
+    if os.host() == "linux" then
+        configure = configure .. " -DCMAKE_SHARED_LINKER_FLAGS="
+            .. quote("-Wl,-Bsymbolic")
+    end
     local function run(command)
         if os.host() == "windows" then
             local bat = path.join(prefix, "mcpp_onnxruntime_command.bat")
@@ -164,8 +175,8 @@ function install()
         return false
     end
 
-    if not os.isfile(path.join(prefix, "include", "onnxruntime", "core",
-                               "session", "onnxruntime_c_api.h")) then
+    if not os.isfile(path.join(prefix, "include", "onnxruntime",
+                               "onnxruntime_c_api.h")) then
         log.error("compat.onnxruntime: installed C API header not found")
         return false
     end
