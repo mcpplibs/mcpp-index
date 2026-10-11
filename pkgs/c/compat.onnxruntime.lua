@@ -138,6 +138,11 @@ function install()
         "-Donnxruntime_USE_MIMALLOC=OFF",
         "-Donnxruntime_USE_VCPKG=OFF",
         "-Dprotobuf_WITH_ZLIB=OFF",
+        "-Dprotobuf_BUILD_PROTOBUF_BINARIES=ON",
+        "-Dprotobuf_BUILD_PROTOC_BINARIES=ON",
+        "-Dprotobuf_BUILD_LIBPROTOC=ON",
+        "-Dprotobuf_BUILD_TESTS=OFF",
+        "-Dprotobuf_INSTALL=OFF",
     }, " ")
     if os.host() == "linux" then
         configure = configure .. " -DCMAKE_SHARED_LINKER_FLAGS="
