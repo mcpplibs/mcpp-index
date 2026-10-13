@@ -63,6 +63,8 @@ the online index; open a PR and confirm CI is green.
 A PR runs lint and tests only the workspace members that depend on the changed descriptors; after the merge,
 `deploy-site` publishes the site.
 
+Additional example: [`compat.etl`](pkgs/c/compat.etl.lua) — Header-only; [`consumer test`](tests/examples/etl/mcpp.toml).
+
 ## Documentation
 
 - [Library shapes and descriptor templates](docs/package-types.md)
