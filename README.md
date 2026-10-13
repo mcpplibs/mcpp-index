@@ -42,7 +42,7 @@ One descriptor per common shape:
 | Generated config header | [`compat.c-ares`](pkgs/c/compat.c-ares.lua) |
 | C++23 module wrapper | [`nlohmann.json`](pkgs/n/nlohmann.json.lua) |
 | C++23 module shipped by upstream | [`khronos.vulkan-hpp`](pkgs/k/khronos.vulkan-hpp.lua) |
-| External build system (`install()`) | [`compat.openssl`](pkgs/c/compat.openssl.lua) |
+| External build system (`install()`) | [`compat.openssl`](pkgs/c/compat.openssl.lua) · [`compat.openmp`](pkgs/c/compat.openmp.lua) |
 
 Every other shape, and why each descriptor is written the way it is, is in
 **[Descriptor examples by shape](docs/descriptor-examples.md)**.
@@ -63,7 +63,7 @@ the online index; open a PR and confirm CI is green.
 A PR runs lint and tests only the workspace members that depend on the changed descriptors; after the merge,
 `deploy-site` publishes the site.
 
-Additional example: [`compat.openmp`](pkgs/c/compat.openmp.lua) — External CMake runtime build; [`consumer test`](tests/examples/openmp/mcpp.toml).
+Additional example: [`compat.pybind11`](pkgs/c/compat.pybind11.lua) — Header-only Python bindings; [`consumer test`](tests/examples/pybind11/mcpp.toml).
 Additional example: [`compat.etl`](pkgs/c/compat.etl.lua) — Header-only; [`consumer test`](tests/examples/etl/mcpp.toml).
 Additional example: [`compat.richdem`](pkgs/c/compat.richdem.lua) — C++ sources, serial terrain analysis; [`consumer test`](tests/examples/richdem/mcpp.toml).
 
