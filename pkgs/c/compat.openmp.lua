@@ -76,9 +76,25 @@ local function tool(dep, name)
 end
 
 local function run(command, logfile)
-    local ok, result = pcall(os.exec, command .. " >> " .. quote(logfile) .. " 2>&1")
+    command = command .. " >> " .. quote(logfile) .. " 2>&1"
+    if os.host() == "windows" then
+        -- xlings cannot reliably invoke a quoted .exe directly on Windows.
+        -- A batch file preserves CMake's arguments and reports its exit code.
+        local bat = path.join(pkginfo.install_dir(), "mcpp_openmp_run.bat")
+        io.writefile(bat, "@echo off\r\n" .. command
+            .. "\r\nif errorlevel 1 exit /b 1\r\nexit /b 0\r\n")
+        command = "cmd /c " .. quote(bat)
+    end
+    local ok, result = pcall(os.exec, command)
     if ok and result then return true end
-    log.error("compat.openmp: CMake failed; see %s", logfile)
+    local lines = {}
+    if os.isfile(logfile) then
+        for line in (io.readfile(logfile) .. "\n"):gmatch("(.-)\n") do
+            lines[#lines + 1] = line
+        end
+    end
+    local tail = table.concat(lines, "\n", math.max(1, #lines - 59), #lines)
+    log.error("compat.openmp: CMake failed; see %s\n%s", logfile, tail)
     return false
 end
 
