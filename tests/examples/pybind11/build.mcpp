@@ -47,7 +47,7 @@ std::string python_executable() {
 
 std::string python_info_command() {
     return python_executable() +
-           R"PY( -c "import sysconfig; print(sysconfig.get_path('include')); print(sysconfig.get_config_var('LIBDIR') or sysconfig.get_config_var('prefix') or ''); print(sysconfig.get_config_var('LIBPL') or ''); print(sysconfig.get_config_var('LDLIBRARY') or ''); print(sysconfig.get_config_var('LIBRARY') or ''); print((sysconfig.get_config_var('LIBS') or '') + ' ' + (sysconfig.get_config_var('SYSLIBS') or ''))")PY";
+           R"PY( -c "import sysconfig; print(sysconfig.get_path('include')); print(sysconfig.get_config_var('LIBDIR') or sysconfig.get_config_var('prefix') or ''); print(sysconfig.get_config_var('LIBPL') or ''); print(sysconfig.get_config_var('LDLIBRARY') or ''); print(sysconfig.get_config_var('LIBRARY') or ''); print((sysconfig.get_config_var('LIBS') or '') + ' ' + (sysconfig.get_config_var('SYSLIBS') or '')); print(sysconfig.get_config_var('SIZEOF_LONG') or ''); print(sysconfig.get_config_var('SIZEOF_WCHAR_T') or ''); print('1' if sysconfig.get_config_var('WITH_THREAD') else '')")PY";
 }
 
 std::string library_name(std::string library) {
@@ -79,12 +79,18 @@ int main() {
     std::string shared_library_file;
     std::string static_library_file;
     std::string system_libraries;
+    std::string sizeof_long;
+    std::string sizeof_wchar_t;
+    std::string with_thread;
     const bool read_ok = read_line(pipe, include_dir) &&
                          read_line(pipe, shared_library_dir) &&
                          read_line(pipe, static_library_dir) &&
                          read_line(pipe, shared_library_file) &&
                          read_line(pipe, static_library_file) &&
-                         read_line(pipe, system_libraries);
+                         read_line(pipe, system_libraries) &&
+                         read_line(pipe, sizeof_long) &&
+                         read_line(pipe, sizeof_wchar_t) &&
+                         read_line(pipe, with_thread);
     const int exit_code = close_pipe(pipe);
     if (!read_ok || exit_code != 0 || include_dir.empty() ||
         shared_library_dir.empty() || shared_library_file.empty()) {
@@ -95,8 +101,7 @@ int main() {
     std::string library_dir = shared_library_dir;
     std::string library_file = shared_library_file;
     bool static_library = false;
-    if (std::string(mcpp::target_os()) != "windows" &&
-        !static_library_dir.empty() && !static_library_file.empty() &&
+    if (!static_library_dir.empty() && !static_library_file.empty() &&
         std::filesystem::exists(
             std::filesystem::path(static_library_dir) / static_library_file)) {
         library_dir = static_library_dir;
@@ -109,9 +114,21 @@ int main() {
     mcpp::runtime_search_dir(library_dir.c_str());
     if (library_dir != shared_library_dir)
         mcpp::runtime_search_dir(shared_library_dir.c_str());
+    const bool windows = std::string(mcpp::target_os()) == "windows";
+    const bool exact_static =
+        static_library && !windows && std::string(mcpp::target_os()) != "macosx";
     const std::string link_name =
-        static_library ? ":" + library_file : library_name(library_file);
+        exact_static ? ":" + library_file : library_name(library_file);
     mcpp::link_lib(link_name.c_str());
+
+    if (!sizeof_long.empty())
+        mcpp::cxxflag(("-DSIZEOF_LONG=" + sizeof_long).c_str());
+    if (!sizeof_wchar_t.empty())
+        mcpp::cxxflag(("-DSIZEOF_WCHAR_T=" + sizeof_wchar_t).c_str());
+    if (!with_thread.empty())
+        mcpp::cxxflag("-DWITH_THREAD=1");
+    if (!windows && !sizeof_long.empty())
+        mcpp::cxxflag(("-DLONG_BIT=" + std::to_string(std::stol(sizeof_long) * 8)).c_str());
 
     std::istringstream libraries(system_libraries);
     for (std::string flag; libraries >> flag;) {
