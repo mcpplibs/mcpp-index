@@ -1,0 +1,11 @@
+# OpenMP consumer test: the package supplies the compiler-facing omp.h entry
+# point, while this member enables the selected compiler's OpenMP runtime.
+[package]
+name = "openmp-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+openmp = "22.1.8"
+
+[build]
+cxxflags = ["-fopenmp"]

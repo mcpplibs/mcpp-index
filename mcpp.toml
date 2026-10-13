@@ -82,6 +82,7 @@ members = [
     "tests/examples/mysql-connector-cpp",
     "tests/examples/nlohmann.json",
     "tests/examples/openblas",
+    "tests/examples/openmp",
     "tests/examples/openssl",
     "tests/examples/recastnavigation",
     "tests/examples/recastnavigation-features",
