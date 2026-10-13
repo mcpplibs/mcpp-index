@@ -3,7 +3,10 @@ name = "pybind11-tests"
 version = "0.1.0"
 
 [dependencies.compat]
-pybind11 = "3.2.0"
+pybind11 = "3.2.0-dev.6254086"
 
 [indices]
 compat = { path = "../../.." }
+
+[xlings.workspace]
+"xim:python" = "3.13.12"

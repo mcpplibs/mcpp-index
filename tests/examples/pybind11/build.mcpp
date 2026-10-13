@@ -1,141 +1,36 @@
 #include <cstdio>
-#include <cstdlib>
 #include <filesystem>
-#include <sstream>
+#include <fstream>
 #include <string>
-#include <string_view>
 
 import mcpp;
 
-#ifdef _WIN32
-extern "C" FILE* _popen(const char*, const char*);
-extern "C" int _pclose(FILE*);
-#else
-#include <sys/wait.h>
-#endif
-
-namespace {
-
-FILE* open_pipe(const char* command) {
-#ifdef _WIN32
-    return _popen(command, "r");
-#else
-    return popen(command, "r");
-#endif
-}
-
-int close_pipe(FILE* pipe) {
-#ifdef _WIN32
-    return _pclose(pipe);
-#else
-    return pclose(pipe);
-#endif
-}
-
-bool read_line(FILE* pipe, std::string& value) {
-    char buffer[4096];
-    if (std::fgets(buffer, sizeof(buffer), pipe) == nullptr) return false;
-    value = buffer;
-    while (!value.empty() && (value.back() == '\n' || value.back() == '\r'))
-        value.pop_back();
-    return true;
-}
-
-std::string python_executable() {
-    return std::string(mcpp::target_os()) == "windows" ? "py -3" : "python3";
-}
-
-std::string python_info_command() {
-    return python_executable() +
-           R"PY( -c "import sysconfig; print(sysconfig.get_path('include')); print(sysconfig.get_config_var('LIBDIR') or sysconfig.get_config_var('prefix') or ''); print(sysconfig.get_config_var('LIBPL') or ''); print(sysconfig.get_config_var('LDLIBRARY') or ''); print(sysconfig.get_config_var('LIBRARY') or ''); print((sysconfig.get_config_var('LIBS') or '') + ' ' + (sysconfig.get_config_var('SYSLIBS') or '')); print(sysconfig.get_config_var('SIZEOF_LONG') or ''); print(sysconfig.get_config_var('SIZEOF_WCHAR_T') or ''); print('1' if sysconfig.get_config_var('WITH_THREAD') else '')")PY";
-}
-
-std::string library_name(std::string library) {
-    const auto slash = library.find_last_of("/\\");
-    if (slash != std::string::npos) library.erase(0, slash + 1);
-    if (library.rfind("lib", 0) == 0) library.erase(0, 3);
-    for (const std::string suffix : {".so", ".dylib", ".a", ".lib"}) {
-        const auto dot = library.find(suffix);
-        if (dot != std::string::npos) {
-            library.erase(dot);
-            break;
-        }
-    }
-    return library;
-}
-
-}  // namespace
-
 int main() {
-    FILE* pipe = open_pipe(python_info_command().c_str());
-    if (pipe == nullptr) {
-        std::fputs("unable to start the platform Python command\n", stderr);
+    namespace fs = std::filesystem;
+    const fs::path python = mcpp::xpkg_dir("xim", "python");
+    if (python.empty() || !fs::is_directory(python)) {
+        std::fputs("the declared xim:python SDK is unavailable\n", stderr);
         return 1;
     }
-
-    std::string include_dir;
-    std::string shared_library_dir;
-    std::string static_library_dir;
-    std::string shared_library_file;
-    std::string static_library_file;
-    std::string system_libraries;
-    std::string sizeof_long;
-    std::string sizeof_wchar_t;
-    std::string with_thread;
-    const bool read_ok = read_line(pipe, include_dir) &&
-                         read_line(pipe, shared_library_dir) &&
-                         read_line(pipe, static_library_dir) &&
-                         read_line(pipe, shared_library_file) &&
-                         read_line(pipe, static_library_file) &&
-                         read_line(pipe, system_libraries) &&
-                         read_line(pipe, sizeof_long) &&
-                         read_line(pipe, sizeof_wchar_t) &&
-                         read_line(pipe, with_thread);
-    const int exit_code = close_pipe(pipe);
-    if (!read_ok || exit_code != 0 || include_dir.empty() ||
-        shared_library_dir.empty() || shared_library_file.empty()) {
-        std::fputs("Python did not report usable include/library paths\n", stderr);
-        return 1;
-    }
-
-    std::string library_dir = shared_library_dir;
-    std::string library_file = shared_library_file;
-    bool static_library = false;
-    if (!static_library_dir.empty() && !static_library_file.empty() &&
-        std::filesystem::exists(
-            std::filesystem::path(static_library_dir) / static_library_file)) {
-        library_dir = static_library_dir;
-        library_file = static_library_file;
-        static_library = true;
-    }
-
-    mcpp::include_dir(include_dir.c_str());
-    mcpp::link_search(library_dir.c_str());
-    mcpp::runtime_search_dir(library_dir.c_str());
-    if (library_dir != shared_library_dir)
-        mcpp::runtime_search_dir(shared_library_dir.c_str());
     const bool windows = std::string(mcpp::target_os()) == "windows";
-    const bool exact_static =
-        static_library && !windows && std::string(mcpp::target_os()) != "macosx";
-    const std::string link_name =
-        exact_static ? ":" + library_file : library_name(library_file);
-    mcpp::link_lib(link_name.c_str());
-
-    if (!sizeof_long.empty())
-        mcpp::cxxflag(("-DSIZEOF_LONG=" + sizeof_long).c_str());
-    if (!sizeof_wchar_t.empty())
-        mcpp::cxxflag(("-DSIZEOF_WCHAR_T=" + sizeof_wchar_t).c_str());
-    if (!with_thread.empty())
-        mcpp::cxxflag("-DWITH_THREAD=1");
-    if (!windows && !sizeof_long.empty())
-        mcpp::cxxflag(("-DLONG_BIT=" + std::to_string(std::stol(sizeof_long) * 8)).c_str());
-
-    std::istringstream libraries(system_libraries);
-    for (std::string flag; libraries >> flag;) {
-        if (flag.rfind("-l", 0) == 0 && flag.size() > 2)
-            mcpp::link_lib(flag.c_str() + 2);
+    const fs::path headers = python / "include" / (windows ? "" : "python3.13");
+    const fs::path libraries = python / (windows ? "libs" : "lib");
+    if (!fs::exists(headers / "Python.h")) return 1;
+    mcpp::include_dir(headers.string().c_str());
+    mcpp::link_search(libraries.string().c_str());
+    mcpp::link_lib(windows ? "python313" : "python3.13");
+    mcpp::runtime_search_dir((python / (windows ? "" : "lib")).string().c_str());
+    // Resolve the standard library in the same SDK when embedding Python.
+    const fs::path config_dir = fs::absolute(".mcpp/python-sdk");
+    fs::create_directories(config_dir);
+    std::ofstream config(config_dir / "python_sdk.h");
+    config << "#define MCPP_PYTHON_HOME R\"SDK(" << python.generic_string() << ")SDK\"\n";
+    config.close();
+    if (!config) return 1;
+    mcpp::include_dir(config_dir.string().c_str());
+    if (windows) {
+        mcpp::deploy((python / "python313.dll").string().c_str(), "python313.dll");
     }
-
     mcpp::rerun_if_changed("build.mcpp");
     return 0;
 }

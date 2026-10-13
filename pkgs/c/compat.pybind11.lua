@@ -1,9 +1,8 @@
 -- Form B inline descriptor for pybind11, a header-only library for creating
 -- Python bindings from C++.
 --
--- Python's headers and import library are supplied by the consumer's Python
--- installation. The companion build.mcpp test demonstrates how to discover
--- those platform-specific paths and add them to an mcpp build.
+-- Python headers and libraries come from a matching consumer Python SDK.
+-- The example declares xim:python and uses its payload rather than host Python.
 package = {
     spec        = "1",
     namespace   = "compat",
@@ -15,19 +14,19 @@ package = {
 
     xpm = {
         linux = {
-            ["3.2.0"] = {
+            ["3.2.0-dev.6254086"] = {
                 url    = "https://github.com/pybind/pybind11/archive/6254086d96062249c5153c17eab6b4437dd1589f.tar.gz",
                 sha256 = "4a77778750ae4bd27d29dd328902b03a7efb9c3468c6f23180fa39d80c05f635",
             },
         },
         macosx = {
-            ["3.2.0"] = {
+            ["3.2.0-dev.6254086"] = {
                 url    = "https://github.com/pybind/pybind11/archive/6254086d96062249c5153c17eab6b4437dd1589f.tar.gz",
                 sha256 = "4a77778750ae4bd27d29dd328902b03a7efb9c3468c6f23180fa39d80c05f635",
             },
         },
         windows = {
-            ["3.2.0"] = {
+            ["3.2.0-dev.6254086"] = {
                 url    = "https://github.com/pybind/pybind11/archive/6254086d96062249c5153c17eab6b4437dd1589f.tar.gz",
                 sha256 = "4a77778750ae4bd27d29dd328902b03a7efb9c3468c6f23180fa39d80c05f635",
             },

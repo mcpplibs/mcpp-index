@@ -63,6 +63,8 @@ the online index; open a PR and confirm CI is green.
 A PR runs lint and tests only the workspace members that depend on the changed descriptors; after the merge,
 `deploy-site` publishes the site.
 
+Additional example: [`compat.pybind11`](pkgs/c/compat.pybind11.lua) — Header-only Python bindings; [`consumer test`](tests/examples/pybind11/mcpp.toml).
+
 ## Documentation
 
 - [Library shapes and descriptor templates](docs/package-types.md)
