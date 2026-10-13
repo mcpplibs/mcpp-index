@@ -86,6 +86,7 @@ members = [
     "tests/examples/openssl",
     "tests/examples/recastnavigation",
     "tests/examples/recastnavigation-features",
+    "tests/examples/richdem",
     "tests/examples/protobuf",
     "tests/examples/protobuf-upb",
     "tests/examples/protobuf-gzip",

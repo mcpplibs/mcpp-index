@@ -64,6 +64,7 @@ A PR runs lint and tests only the workspace members that depend on the changed d
 `deploy-site` publishes the site.
 
 Additional example: [`compat.openmp`](pkgs/c/compat.openmp.lua) — External CMake runtime build; [`consumer test`](tests/examples/openmp/mcpp.toml).
+Additional example: [`compat.richdem`](pkgs/c/compat.richdem.lua) — C++ sources, serial terrain analysis; [`consumer test`](tests/examples/richdem/mcpp.toml).
 
 ## Documentation
 
