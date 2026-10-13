@@ -13,7 +13,7 @@ Python is a consumer SDK dependency, not vendored into pybind11. The example
 declares xim:python 3.13.12 and asks mcpp::xpkg_dir for its actual payload.
 Headers, library and standard library all come from that SDK, avoiding system
 Python multiarch configuration and mixed-libc failures. It selects python313.lib
-on Windows and python3.13 on Unix; Windows deploys the matching Python DLL.
+on Windows and python3.13 on Unix; The SDK runtime directory lets mcpp deploy the matching Python DLLs on Windows.
 It never invents Python configuration macros or uses Linux-only link syntax.
 
 The example embeds Python, evaluates a sum and calls a C++ function from

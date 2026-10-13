@@ -28,9 +28,6 @@ int main() {
     config.close();
     if (!config) return 1;
     mcpp::include_dir(config_dir.string().c_str());
-    if (windows) {
-        mcpp::deploy((python / "python313.dll").string().c_str(), "python313.dll");
-    }
     mcpp::rerun_if_changed("build.mcpp");
     return 0;
 }
