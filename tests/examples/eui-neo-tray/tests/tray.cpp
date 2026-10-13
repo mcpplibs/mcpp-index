@@ -42,6 +42,7 @@
 
 #if defined(__linux__)
 #include <limits.h>
+#include <stdlib.h>
 #include <unistd.h>
 #endif
 
