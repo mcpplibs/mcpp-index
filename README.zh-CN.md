@@ -59,6 +59,8 @@ agent(如 Claude Code)即可:
 
 提交 PR 后,CI 执行 lint,并只测试依赖了被修改描述符的 workspace 成员;合并后,`deploy-site` 发布站点。
 
+新增示例: [`compat.richdem`](pkgs/c/compat.richdem.lua) — C++ sources, serial terrain analysis; [`消费测试`](tests/examples/richdem/mcpp.toml)。
+
 ## 文档
 
 - [库形态与描述符模板](docs/zh/package-types.md)

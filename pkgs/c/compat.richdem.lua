@@ -1,11 +1,9 @@
 -- Form B inline descriptor for RichDEM, a C++ library for high-performance
 -- terrain analysis.
 --
--- RichDEM's public headers are under include/richdem and its standalone
--- library sources are under src/. GDAL support is optional upstream: enabling
--- the feature matches CMake's USE_GDAL option by defining USEGDAL and adding
--- the GDAL implementation source. Consumers enabling that feature must also
--- provide GDAL headers and the GDAL library in their environment.
+-- Serial core build: GDAL, Boost serialization and OpenMP are disabled.
+-- GDAL needs a define, headers and a runtime dependency, so a sources-only
+-- feature cannot enable it correctly. Do not advertise an inert gdal feature.
 package = {
     spec        = "1",
     namespace   = "compat",
@@ -48,12 +46,6 @@ package = {
             "*/src/terrain_generation/PerlinNoise.cpp",
         },
         targets      = { ["richdem"] = { kind = "lib" } },
-        features     = {
-            ["gdal"] = {
-                defines = { "USEGDAL" },
-                sources = { "*/src/gdal.cpp" },
-            },
-        },
         deps = {},
     },
 }

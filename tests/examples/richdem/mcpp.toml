@@ -4,3 +4,6 @@ version = "0.1.0"
 
 [dependencies.compat]
 richdem = "2.2.11"
+
+[indices]
+compat = { path = "../../.." }
