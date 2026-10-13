@@ -184,6 +184,7 @@ members = [
     "tests/examples/nanosvg",
     "tests/examples/nanodbc",
     "tests/examples/plf-hive",
+    "tests/examples/pybind11",
     "tests/examples/spirv-reflect",
     "tests/examples/vulkan-memory-allocator",
     "tests/examples/wamr",
