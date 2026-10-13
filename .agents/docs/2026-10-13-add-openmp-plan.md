@@ -1,43 +1,26 @@
-# Add `compat.openmp`
+# Add compat.openmp
 
-## Shape and source
+LLVM libomp 22.1.8 is a separable CMake project inside llvm-project.
+The descriptor downloads the full official llvm-project-22.1.8.src.tar.xz,
+whose SHA-256 was checked twice; license Apache-2.0 WITH LLVM-exception.
+The install hook builds upstream openmp/ and installs the generated omp.h
+and real runtime. It writes the C anchor only after installation succeeds.
 
-OpenMP is a compiler language/runtime interface rather than an independently
-portable library. GCC and Clang provide `omp.h` and select an ABI runtime
-(`libgomp` or `libomp`) when OpenMP is enabled. Shipping a separately built
-runtime from the index would allow a project to combine an incompatible runtime
-with its compiler, so this entry is a compiler-facing API package rather than a
-vendored runtime package.
+Unix uses static libomp.a, which implements both Clang and GCC OpenMP ABIs
+without a C++ standard-library ABI dependency. The hook uses the system C/C++
+SDK explicitly because installation precedes mcpp consumer toolchain selection.
+Windows uses the upstream-supported DLL/import library with Visual Studio 2022;
+the DLL is declared as a runtime artifact directory for consumer deployment.
+CMake and Python are declared build dependencies. Offloading and OMPT tools
+are disabled; there is no misleading sources-only feature for these builds.
 
-The descriptor uses a generated compatibility header and a C anchor target.
-The header reaches the `omp.h` supplied by the selected compiler with
-`#include_next` when available. Apple Clang commonly has no OpenMP header
-installed, so the header supplies the standard language macro and basic API
-declarations as a fallback; a complete runtime header still takes precedence.
-The package does not replace the compiler's runtime. Consumers enable OpenMP in
-their own build flags, as the test member does with `-fopenmp`.
+No mirror upload was performed. Plain-string GLOBAL URLs provide CN fallback.
+The example redirects compat to this checkout. It enables OpenMP with normal
+GCC/Clang flags (Apple Clang uses -Xclang -fopenmp), links the package runtime,
+launches two threads, and checks thread identity plus a reduction sum. The
+header never defines _OPENMP: a missing compiler flag is a compile error.
 
-The package is pinned to the LLVM 22.1.8 OpenMP source revision for licensing
-and version identity. The downloaded license is only an integrity anchor; no
-LLVM runtime sources are unpacked or compiled by this descriptor.
-
-## Mirror
-
-No `mcpp-res` upload was performed. The descriptor therefore uses the
-plain-string upstream license URL, which is the documented fallback when the
-index contributor does not have mirror write access.
-
-## Feature assessment
-
-There are no optional package sources to gate. Runtime selection belongs to the
-consumer's compiler/toolchain and cannot be represented safely as a package
-feature.
-
-## Test and verification
-
-`tests/examples/openmp` depends on `compat:openmp`, enables `-fopenmp`, includes
-`omp.h`, executes an OpenMP SIMD directive, and checks the compiler's `_OPENMP`
-macro. It intentionally does not launch a parallel region: the package does not
-vendor or select `libgomp`/`libomp`, so linking an ABI-specific runtime is the
-consumer toolchain's responsibility. The descriptor passes the package-name,
-mirror-url, reserved-namespace, and `mcpp xpkg parse` checks.
+Local validation with CI-pinned mcpp 2026.10.1.2 and gcc 16.1.0:
+`mcpp test -p openmp`: `test result ok. 1 passed; 0 failed`.
+An independent upstream CMake build also succeeded. Cross-platform behavior
+is validated by the PR CI matrix rather than inferred from a SIMD-only test.

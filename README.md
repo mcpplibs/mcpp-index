@@ -63,6 +63,8 @@ the online index; open a PR and confirm CI is green.
 A PR runs lint and tests only the workspace members that depend on the changed descriptors; after the merge,
 `deploy-site` publishes the site.
 
+Additional example: [`compat.openmp`](pkgs/c/compat.openmp.lua) — External CMake runtime build; [`consumer test`](tests/examples/openmp/mcpp.toml).
+
 ## Documentation
 
 - [Library shapes and descriptor templates](docs/package-types.md)

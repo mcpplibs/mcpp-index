@@ -7,5 +7,14 @@ version = "0.1.0"
 [dependencies.compat]
 openmp = "22.1.8"
 
-[build]
+[target.'cfg(linux)'.build]
 cxxflags = ["-fopenmp"]
+
+[target.'cfg(macos)'.build]
+cxxflags = ["-Xclang", "-fopenmp"]
+
+[target.'cfg(windows)'.build]
+cxxflags = ["-fopenmp"]
+
+[indices]
+compat = { path = "../../.." }

@@ -1,9 +1,18 @@
 #include <omp.h>
 
-int main() {
-    int values[] = {1, 2, 3, 4};
-#pragma omp simd
-    for (int i = 0; i < 4; ++i) values[i] *= 2;
+#ifndef _OPENMP
+#error "The compiler must enable OpenMP; a header cannot supply _OPENMP."
+#endif
 
-    return values[0] == 2 && values[3] == 8 && _OPENMP > 0 ? 0 : 1;
+int main() {
+    omp_set_dynamic(0);
+    int sum = 0;
+    int threads = 0;
+#pragma omp parallel num_threads(2) reduction(+:sum)
+    {
+#pragma omp single
+        threads = omp_get_num_threads();
+        sum += omp_get_thread_num() + 1;
+    }
+    return threads == 2 && sum == 3 ? 0 : 1;
 }
