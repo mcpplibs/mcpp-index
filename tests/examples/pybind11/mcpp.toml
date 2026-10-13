@@ -1,0 +1,9 @@
+[package]
+name = "pybind11-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+pybind11 = "3.2.0"
+
+[indices]
+compat = { path = "../../.." }
