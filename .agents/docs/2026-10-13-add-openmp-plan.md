@@ -9,11 +9,13 @@ runtime from the index would allow a project to combine an incompatible runtime
 with its compiler, so this entry is a compiler-facing API package rather than a
 vendored runtime package.
 
-The descriptor uses a generated forwarding header and a C anchor target. The
-forwarder reaches the `omp.h` supplied by the selected compiler with
-`#include_next`; the package does not claim to replace the compiler's runtime.
-Consumers enable OpenMP in their own build flags, as the test member does with
-`-fopenmp`.
+The descriptor uses a generated compatibility header and a C anchor target.
+The header reaches the `omp.h` supplied by the selected compiler with
+`#include_next` when available. Apple Clang commonly has no OpenMP header
+installed, so the header supplies the standard language macro and basic API
+declarations as a fallback; a complete runtime header still takes precedence.
+The package does not replace the compiler's runtime. Consumers enable OpenMP in
+their own build flags, as the test member does with `-fopenmp`.
 
 The package is pinned to the LLVM 22.1.8 OpenMP source revision for licensing
 and version identity. The downloaded license is only an integrity anchor; no
