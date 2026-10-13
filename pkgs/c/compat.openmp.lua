@@ -129,6 +129,16 @@ function install()
         .. " -DLIBOMP_OMPT_SUPPORT=OFF -DLIBOMP_USE_ITT_NOTIFY=OFF" .. options
     if not run(configure, logfile) then return false end
     if not run(quote(cmake) .. " --build " .. quote(build) .. " --config Release --parallel 4", logfile) then return false end
+    if windows then
+        -- The Visual Studio generator can omit the archive of upstream's
+        -- source-less ompimp target. The DLL link already produced an import
+        -- library for these exact exports; give install() its expected name.
+        local expected = path.join(build, "runtime", "src", "Release", "libomp.lib")
+        local linked = path.join(build, "runtime", "src", "Release", "libomp.dll.lib")
+        if not os.isfile(expected) and os.isfile(linked) then
+            os.cp(linked, expected)
+        end
+    end
     if not run(quote(cmake) .. " --install " .. quote(build) .. " --config Release", logfile) then return false end
     local library = path.join(output, "lib", windows and "libomp.lib" or "libomp.a")
     if not os.isfile(library) or not os.isfile(path.join(output, "include", "omp.h")) then

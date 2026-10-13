@@ -11,6 +11,11 @@ without a C++ standard-library ABI dependency. The hook uses the system C/C++
 SDK explicitly because installation precedes mcpp consumer toolchain selection.
 Windows uses the upstream-supported DLL/import library with Visual Studio 2022;
 the DLL is declared as a runtime artifact directory for consumer deployment.
+The Visual Studio generator can omit the archive for upstream's source-less
+ompimp target. In that case the hook installs the import library produced by
+the DLL link under the expected libomp.lib name; DLL and imports are from the
+same build. Windows CMake commands run through a batch file, preserving quoted
+SDK paths and propagating failures with the build log tail.
 CMake and Python are declared build dependencies. Offloading and OMPT tools
 are disabled; there is no misleading sources-only feature for these builds.
 
