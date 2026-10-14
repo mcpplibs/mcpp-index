@@ -1,0 +1,11 @@
+# ETL test project: exercise a fixed-capacity vector and a queue without
+# requiring dynamic allocation from the library.
+[package]
+name = "etl-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+etl = "20.49.0"
+
+[indices]
+compat = { path = "../../.." }

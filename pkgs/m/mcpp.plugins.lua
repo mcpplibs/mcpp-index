@@ -2,11 +2,19 @@
 -- each member selected by a feature.
 --
 --   [dependencies.mcpp]
---   plugins = { version = "0.19.0", features = ["rules-spirv"], host-module = true }
+--   plugins = { version = "0.19.1", features = ["rules-spirv"], host-module = true }
 --
 --   // build.mcpp
 --   import mcpp;
 --   import mcpp.rules.spirv;
+--
+-- 0.19.1 (same package floor): `mcpp::plugins::json::value` holds its object
+-- members as a plain struct instead of `std::pair<std::string, value>`, which
+-- clang with libstdc++'s `std` module refused -- the combination an editor's
+-- clangd reads a GCC project with -- so a build program importing a member no
+-- longer shows its imports as missing modules in an editor. Source-compatible.
+-- CI builds the collection under llvm@22.1.8 (libc++) and reads every fixture's
+-- build.mcpp as an editor does. mcpp-community/mcpp-plugins#46, #47.
 --
 -- 0.19.0 (package floor mcpp 2026.10.1.3): every member answers where the tool it
 -- runs comes from in one order -- the build program's choice, the member's legacy
@@ -643,6 +651,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.19.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.19.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.19.1/mcpp-plugins-0.19.1.tar.gz",
+                },
+                sha256 = "f5da4f55683d9c3e2eeb94d303756df788b1e3ec6319eff045c02189cca66d8d",
+            },
             ["0.19.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.19.0.tar.gz",
@@ -909,9 +924,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.19.0" },
+            ["latest"] = { ref = "0.19.1" },
         },
         macosx = {
+            ["0.19.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.19.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.19.1/mcpp-plugins-0.19.1.tar.gz",
+                },
+                sha256 = "f5da4f55683d9c3e2eeb94d303756df788b1e3ec6319eff045c02189cca66d8d",
+            },
             ["0.19.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.19.0.tar.gz",
@@ -1178,9 +1200,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.19.0" },
+            ["latest"] = { ref = "0.19.1" },
         },
         windows = {
+            ["0.19.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.19.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.19.1/mcpp-plugins-0.19.1.tar.gz",
+                },
+                sha256 = "f5da4f55683d9c3e2eeb94d303756df788b1e3ec6319eff045c02189cca66d8d",
+            },
             ["0.19.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.19.0.tar.gz",
@@ -1447,7 +1476,7 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.19.0" },
+            ["latest"] = { ref = "0.19.1" },
         },
     },
 
