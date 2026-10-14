@@ -19,6 +19,9 @@
 - hook 显式使用 `CFLAGS=-std=c11`。GSL 2.8 的 configure 探测包含旧式 C
   兼容性代码，在 GCC 16 的默认 C23 模式下会被拒绝；固定到 C11 同时符合
   GSL 的 ANSI C 构建要求，并保持 Linux CI 与本地工具链一致。
+- Linux hook 显式选择 `/usr/bin/gcc`，而不是 PATH 中可能由 xlings 注入的
+  payload compiler。GSL configure 会编译并运行 ABI 探测程序，宿主编译器
+  保证这些探测程序能在 CI runner 上执行。
 - 消费侧公开 `include/gsl/*.h`，链接顺序为 `libgsl`、`libgslcblas`、`libm`。
 - GSL 自带 CBLAS 随包默认提供，不再声明或隐式绑定 `compat.openblas`，避免 BLAS ABI
   和符号来源不明确。

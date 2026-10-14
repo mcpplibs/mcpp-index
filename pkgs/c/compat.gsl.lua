@@ -64,11 +64,33 @@ local function resolve_make()
     return "make"
 end
 
+local function resolve_cc()
+    if os.host() == "linux" and os.isfile("/usr/bin/gcc") then
+        return "/usr/bin/gcc"
+    end
+    if os.host() == "macosx" and os.isfile("/usr/bin/cc") then
+        return "/usr/bin/cc"
+    end
+    return "cc"
+end
+
+local function tail_lines(file, count)
+    local ok, content = pcall(io.readfile, file)
+    if not ok or not content then return "<log unavailable>" end
+    local lines = {}
+    for line in (tostring(content) .. "\n"):gmatch("(.-)\n") do
+        lines[#lines + 1] = line
+    end
+    local first = math.max(1, #lines - count + 1)
+    return table.concat(lines, "\n", first, #lines)
+end
+
 local function run(command, logf)
     local ok, result = pcall(os.exec, string.format(
         "bash -c %s", sh_quote(command .. " >> " .. sh_quote(logf) .. " 2>&1")))
     if not ok or not result then
-        log.error("compat.gsl: build command failed; see %s", logf)
+        log.error("compat.gsl: build command failed; see %s\n%s",
+                  logf, tail_lines(logf, 80))
         return false
     end
     return true
@@ -89,12 +111,14 @@ local function install_gsl()
 
     local logf = path.join(prefix, "mcpp_gsl_build.log")
     local make = resolve_make()
+    local cc = resolve_cc()
     local jobs = (os.default_njob and os.default_njob()) or 4
     local configure = string.format(
-        "CC=cc CFLAGS='-std=c11' %s --disable-shared --enable-static "
+        "CC=%s CFLAGS='-std=c11' %s --disable-shared --enable-static "
         .. "--disable-dependency-tracking "
         .. "--prefix=%s --libdir=%s",
-        "./configure", sh_quote(prefix), sh_quote(path.join(prefix, "lib")))
+        sh_quote(cc), "./configure", sh_quote(prefix),
+        sh_quote(path.join(prefix, "lib")))
     if not run(configure, logf) then return false end
     if not run(string.format("%s -j%d", sh_quote(make), jobs), logf) then
         return false
