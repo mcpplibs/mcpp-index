@@ -14,8 +14,11 @@
 ## 2. 描述符设计
 
 - 身份为 `compat:gsl`，文件为 `pkgs/c/compat.gsl.lua`。
-- Linux/macOS 使用官方源码包和 `xim:make@latest`，关闭 shared、启用 static，
-  产物安装到包的 `include/` 与 `lib/`。
+- Linux 使用官方源码包和 `xim:make@latest`，macOS 使用系统自带的 GNU Make；
+  关闭 shared、启用 static，产物安装到包的 `include/` 与 `lib/`。
+- hook 显式使用 `CFLAGS=-std=c11`。GSL 2.8 的 configure 探测包含旧式 C
+  兼容性代码，在 GCC 16 的默认 C23 模式下会被拒绝；固定到 C11 同时符合
+  GSL 的 ANSI C 构建要求，并保持 Linux CI 与本地工具链一致。
 - 消费侧公开 `include/gsl/*.h`，链接顺序为 `libgsl`、`libgslcblas`、`libm`。
 - GSL 自带 CBLAS 随包默认提供，不再声明或隐式绑定 `compat.openblas`，避免 BLAS ABI
   和符号来源不明确。

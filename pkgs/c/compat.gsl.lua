@@ -25,7 +25,6 @@ package = {
             },
         },
         macosx = {
-            deps = { "xim:make@latest" },
             ["2.8"] = {
                 url = "https://ftp.gnu.org/gnu/gsl/gsl-2.8.tar.gz",
                 sha256 = "6a99eeed15632c6354895b1dd542ed5a855c0f15d9ad1326c6fe2b2c9e423190",
@@ -92,7 +91,8 @@ local function install_gsl()
     local make = resolve_make()
     local jobs = (os.default_njob and os.default_njob()) or 4
     local configure = string.format(
-        "CC=cc %s --disable-shared --enable-static --disable-dependency-tracking "
+        "CC=cc CFLAGS='-std=c11' %s --disable-shared --enable-static "
+        .. "--disable-dependency-tracking "
         .. "--prefix=%s --libdir=%s",
         "./configure", sh_quote(prefix), sh_quote(path.join(prefix, "lib")))
     if not run(configure, logf) then return false end
