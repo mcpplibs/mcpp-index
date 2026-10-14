@@ -42,7 +42,7 @@ One descriptor per common shape:
 | Generated config header | [`compat.c-ares`](pkgs/c/compat.c-ares.lua) |
 | C++23 module wrapper | [`nlohmann.json`](pkgs/n/nlohmann.json.lua) |
 | C++23 module shipped by upstream | [`khronos.vulkan-hpp`](pkgs/k/khronos.vulkan-hpp.lua) |
-| External build system (`install()`) | [`compat.openssl`](pkgs/c/compat.openssl.lua) |
+| External build system (`install()`) | [`compat.openssl`](pkgs/c/compat.openssl.lua) · [`compat.gsl`](pkgs/c/compat.gsl.lua) |
 
 Every other shape, and why each descriptor is written the way it is, is in
 **[Descriptor examples by shape](docs/descriptor-examples.md)**.

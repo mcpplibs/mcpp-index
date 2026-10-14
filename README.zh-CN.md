@@ -41,7 +41,7 @@ mcpp self config --mirror CN   # 切换至国内镜像,默认使用 GLOBAL 上�
 | 生成 config 头 | [`compat.c-ares`](pkgs/c/compat.c-ares.lua) |
 | C++23 module wrapper | [`nlohmann.json`](pkgs/n/nlohmann.json.lua) |
 | 上游自带 C++23 module | [`khronos.vulkan-hpp`](pkgs/k/khronos.vulkan-hpp.lua) |
-| 外部构建系统(`install()`) | [`compat.openssl`](pkgs/c/compat.openssl.lua) |
+| 外部构建系统(`install()`) | [`compat.openssl`](pkgs/c/compat.openssl.lua) · [`compat.gsl`](pkgs/c/compat.gsl.lua) |
 
 其余形态,以及每个描述符为何这样写,见 **[描述符示例总览(按形态)](docs/zh/descriptor-examples.md)**。
 

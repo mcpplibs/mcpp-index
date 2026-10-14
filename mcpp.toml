@@ -62,6 +62,7 @@ members = [
     "tests/examples/gzip-hpp",
     "tests/examples/huxerui-module",
     "tests/examples/gmp-gmpxx",
+    "tests/examples/gsl",
     "tests/examples/godot-cpp",
     "tests/examples/godot-cpp-module",
     "tests/examples/godot-cpp-module-v10",

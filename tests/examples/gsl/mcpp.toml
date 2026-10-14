@@ -1,0 +1,12 @@
+[package]
+name    = "gsl-tests"
+version = "0.1.0"
+
+[indices]
+compat = { path = "../../.." }
+
+[target.'cfg(unix)'.dependencies.compat]
+gsl = "2.8"
+
+[target.'cfg(unix)'.build]
+cxxflags = ["-DHAVE_GSL=1"]
