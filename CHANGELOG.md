@@ -9,6 +9,30 @@
 
 ### Added
 
+- **`compat.fmt` 12.2.0。** {fmt} 的**头文件形态**(`#include <fmt/format.h>` + 链接)收录,
+  即 `fmtlib.fmt`(模块形态)的非模块兄弟:同一个上游归档、同一个 sha256,身份却分开 ——
+  想要 `#include` 写法的工程不必为此背上一个自己从不 `import` 的模块 BMI。形态是编译库:
+  `sources` 直接抄上游默认 lib 的两份实现 TU(`*/src/format.cc`、`*/src/os.cc`,即 CMake 的
+  `add_library(fmt src/format.cc)` 加上 `FMT_OS` 默认 ON 的 `src/os.cc`),
+  `include_dirs = {"*/include"}`(前导 `*` 吃掉 `fmt-12.2.0/` 包装层)。没有
+  `generated_files`、没有 anchor,也不需要任何 define:`FMT_OS` 在 12.2.0 已不被头文件读取,
+  `FMT_SHARED`/`FMT_LIB_EXPORT` 是静态链路上不该定义的 DLL 词法,而 `src/fmt.cc` 是模块 unit,
+  归 `fmtlib.fmt`。上游那个**独立的** C API 静态库(`src/fmt-c.cc` + `include/fmt/fmt-c.h`)
+  按仓内 sources-only feature 收成 `features = { ["c-api"] = … }`,默认 OFF:只要 C++ 头的
+  消费者不付这个 TU。**门控经负向实测**:把 `tests/examples/fmt-c` 的依赖改回纯版本号,它在
+  **链接期**报 `lld-link: error: undefined symbol: fmt_vformat` 与 `fmt_vprint`(`fmt_arg`
+  的构造在头里是 `static inline`,未解析符号只可能是 fmt-c.cc 的),带 feature 时包构建报
+  3 units、不带报 2 units。⚠️ MSVC 的 `/utf-8` 属**消费侧**:上游标记它 PUBLIC 的唯一来源是
+  `chrono.h` 的 `"µs"` 字面量,而本包三个 TU 及它们包含的全部头(base.h / format.h /
+  format-inl.h)实测均为纯 ASCII;`cxxflags` 只作用于本包 TU,替消费侧表达不了,故不声明,
+  只写进描述符注释。⚠️ CN 镜像尚未发布到 `mcpp-res`,按 `compat.rapidcsv` 的先例用纯字符串
+  url 回退 GLOBAL;补传镜像后改回 `{ GLOBAL, CN }` 即可,sha256 不变。
+  实测:`mcpp xpkg parse pkgs/c/compat.fmt.lua` → `parse OK`;`mcpp test -p fmt` →
+  `test result ok. 2 passed; 0 failed`(format.cc 的编译库断言 + os.cc 的
+  `getpagesize`/pipe 往返),`mcpp test -p fmt-c` → `1 passed; 0 failed`;`.xpkg.lua` 快照
+  里就是本 checkout 这份带 `c-api` 表的描述符,证明解析没落到远端已发布索引。新增成员
+  `tests/examples/fmt` 与 `tests/examples/fmt-c`;linux/macOS 两腿交 CI 裁决。
+
 - **`compat.sdl3` 3.4.18。** 在 3.4.2 之外新增版本键(旧键保留,与 `compat.ftxui`
   等既有做法一致)。**补丁号不等于补丁**:这份描述符里真正会失效的东西是源集与两份
   签入 config,所以四处都按两个 tarball 实测过,而不是假定 —— `src/` 只增 4 个文件

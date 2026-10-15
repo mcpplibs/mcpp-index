@@ -1,0 +1,30 @@
+# compat.fmt's `c-api` FEATURE path — the OTHER half of the package, the way
+# tests/examples/concurrentqueue-c-api is the other half of compat.concurrentqueue.
+#
+# The base member (tests/examples/fmt) consumes the default build, which does
+# NOT compile src/fmt-c.cc; this one asks for the feature in the long form and
+# asserts the C API's two entry points actually resolve and behave, which is
+# what proves the gate both compiles and links what it names. The negative half
+# is structural and was measured: flip this dependency back to a plain
+# `fmt = "12.2.0"` and this member fails to LINK, one undefined reference per
+# entry point (fmt_arg's constructors are `static inline` in the header, so the
+# unresolved symbols can only be fmt-c.cc's).
+#
+# The test source is C++ and calls the `extern "C"` functions directly rather
+# than C with the header's fmt_format/fmt_print macros. Those macros live under
+# `#ifndef __cplusplus` and demand MSVC's conformant preprocessor
+# (/Zc:preprocessor, which the header #errors about) — a consumer-side compiler
+# flag no descriptor can express. The linkage claim under test is the same
+# either way.
+#
+# Same QUALIFIED-dependency reasoning as the base member: the request must
+# resolve from this checkout's index.
+[package]
+name    = "fmt-c-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+fmt = { version = "12.2.0", features = ["c-api"] }
+
+[indices]
+compat = { path = "../../.." }

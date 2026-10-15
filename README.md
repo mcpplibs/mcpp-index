@@ -67,6 +67,7 @@ Additional example: [`compat.rapidcsv`](pkgs/c/compat.rapidcsv.lua) — Header-o
 Additional example: [`compat.pybind11`](pkgs/c/compat.pybind11.lua) — Header-only Python bindings; [`consumer test`](tests/examples/pybind11/mcpp.toml).
 Additional example: [`compat.etl`](pkgs/c/compat.etl.lua) — Header-only; [`consumer test`](tests/examples/etl/mcpp.toml).
 Additional example: [`compat.richdem`](pkgs/c/compat.richdem.lua) — C++ sources, serial terrain analysis; [`consumer test`](tests/examples/richdem/mcpp.toml).
+Additional example: [`compat.fmt`](pkgs/c/compat.fmt.lua) — {fmt} in header form (`#include <fmt/format.h>`; the non-module sibling of `fmtlib.fmt`), its C API behind a `c-api` feature; [`consumer test`](tests/examples/fmt/mcpp.toml), [`feature test`](tests/examples/fmt-c/mcpp.toml).
 
 ## Documentation
 

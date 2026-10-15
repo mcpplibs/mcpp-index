@@ -56,6 +56,8 @@ members = [
     "tests/examples/eui-neo-window",
     "tests/examples/ffmpeg",
     "tests/examples/ffmpeg-module",
+    "tests/examples/fmt",
+    "tests/examples/fmt-c",
     "tests/examples/fmtlib.fmt",
     "tests/examples/ftxui-module",
     "tests/examples/gmp",

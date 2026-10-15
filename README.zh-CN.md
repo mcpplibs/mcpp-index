@@ -63,6 +63,7 @@ agent(如 Claude Code)即可:
 新增示例: [`compat.pybind11`](pkgs/c/compat.pybind11.lua) — Header-only Python bindings; [`消费测试`](tests/examples/pybind11/mcpp.toml)。
 新增示例: [`compat.etl`](pkgs/c/compat.etl.lua) — Header-only; [`消费测试`](tests/examples/etl/mcpp.toml)。
 新增示例: [`compat.richdem`](pkgs/c/compat.richdem.lua) — C++ sources, serial terrain analysis; [`消费测试`](tests/examples/richdem/mcpp.toml)。
+新增示例: [`compat.fmt`](pkgs/c/compat.fmt.lua) — {fmt} 头文件形态(`#include <fmt/format.h>`,即 `fmtlib.fmt` 的非模块兄弟),C API 由 `c-api` feature 门控; [`消费测试`](tests/examples/fmt/mcpp.toml)、[`feature 测试`](tests/examples/fmt-c/mcpp.toml)。
 
 ## 文档
 
