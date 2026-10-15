@@ -63,6 +63,7 @@ the online index; open a PR and confirm CI is green.
 A PR runs lint and tests only the workspace members that depend on the changed descriptors; after the merge,
 `deploy-site` publishes the site.
 
+Additional example: [`compat.rapidcsv`](pkgs/c/compat.rapidcsv.lua) — Header-only CSV parsing; [`consumer test`](tests/examples/rapidcsv/mcpp.toml).
 Additional example: [`compat.pybind11`](pkgs/c/compat.pybind11.lua) — Header-only Python bindings; [`consumer test`](tests/examples/pybind11/mcpp.toml).
 Additional example: [`compat.etl`](pkgs/c/compat.etl.lua) — Header-only; [`consumer test`](tests/examples/etl/mcpp.toml).
 Additional example: [`compat.richdem`](pkgs/c/compat.richdem.lua) — C++ sources, serial terrain analysis; [`consumer test`](tests/examples/richdem/mcpp.toml).
