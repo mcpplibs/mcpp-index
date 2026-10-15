@@ -9,6 +9,25 @@
 
 ### Added
 
+- **`compat.sdl3` 3.4.18。** 在 3.4.2 之外新增版本键(旧键保留,与 `compat.ftxui`
+  等既有做法一致)。**补丁号不等于补丁**:这份描述符里真正会失效的东西是源集与两份
+  签入 config,所以四处都按两个 tarball 实测过,而不是假定 —— `src/` 只增 4 个文件
+  (两个 Vulkan 着色器头落在已整目录 glob 的目录里;另两个是
+  `src/video/wayland/SDL_waylandutil.{c,h}`,wayland 本就不在任何列表里),签入的
+  windows/macOS config 与 3.4.2 **逐字节相同**(两个平台的源集正是从它们反推的,
+  所以这次抬版本它们照用),linux config 的模板只动三行(删掉的 `HAVE__UITOA` 本就
+  未定义,新增的 `SDL_EMSCRIPTEN_PERSISTENT_PATH_STRING` 只对 emscripten 有意义),
+  上游 `CMakeLists.txt` 的源选择未变(唯一的 `.c/.m` 命中行是缩进)。
+  ⚠️ 生成的 linux config **不重新生成**:它是冻结的 CMake 输出,3.4.18 新增而它不知道
+  的宏一律读作关闭 —— 与当初裁剪的方向一致,也与「config 只许声明索引真正打了包的
+  东西」同源。⚠️ CN 镜像 3.4.18 尚未发布到 `mcpp-res`,按 `compat.ftxui` 7.0.3 的先例
+  用纯字符串 url 回退到 GLOBAL(`list_cn_urls.lua` 明写忽略纯字符串 url,所以
+  `mirror-cn-reachable` 对这一条是空集);补传镜像后改回 `{ GLOBAL, CN }` 即可,
+  sha256 不变(镜像按原样重托管 tag 归档)。
+  实测:windows 本地 `mcpp test -p sdl3` 编完并跑通 —— 3.4.18 报出 3 个视频驱动,
+  dummy 窗口 320x240、定时器前进,`test result ok. 1 passed`。linux/macOS 两条腿由
+  CI 裁决:冻结的 linux config 是这次唯一没有被本地证伪的东西。
+
 - **`compat.libserial` 1.0.0。** LibSerial 的 `SerialPort`/`SerialStream` 以 compat
   形态收录:上游 CMake `LIBSERIAL_SOURCES` 的三个 TU 编成一个 lib,公开头经
   `include_dirs` 暴露。仅声明 `linux`(公开头以 `<termios.h>` 开头、实现触及
