@@ -64,6 +64,7 @@ agent(如 Claude Code)即可:
 新增示例: [`compat.etl`](pkgs/c/compat.etl.lua) — Header-only; [`消费测试`](tests/examples/etl/mcpp.toml)。
 新增示例: [`compat.richdem`](pkgs/c/compat.richdem.lua) — C++ sources, serial terrain analysis; [`消费测试`](tests/examples/richdem/mcpp.toml)。
 新增示例: [`compat.fmt`](pkgs/c/compat.fmt.lua) — {fmt} 头文件形态(`#include <fmt/format.h>`,即 `fmtlib.fmt` 的非模块兄弟),C API 由 `c-api` feature 门控; [`消费测试`](tests/examples/fmt/mcpp.toml)、[`feature 测试`](tests/examples/fmt-c/mcpp.toml)。
+新增示例: [`compat.soci`](pkgs/c/compat.soci.lua) — C++ 数据库访问层,SQLite3 后端编入同一库,引擎来自 `compat.sqlite3`; [`消费测试`](tests/examples/soci/mcpp.toml)。
 
 ## 文档
 

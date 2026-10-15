@@ -9,6 +9,37 @@
 
 ### Added
 
+- **`compat.soci` 4.1.4。** SOCI(C++ 数据库访问层)以 C++ 源码 compat 形态收录:上游 `src/core`
+  的 22 个 TU 与 sqlite3 后端的 10 个 TU 编入**同一个 lib** —— 上游 CMake 把它们拆成
+  `soci_core`/`soci_sqlite3` 两个库,但 mcpp 的 `sources` 是每包一张表,且没有后端的 core 连
+  `session` 都开不了,所以拍平。两处"上游归档里没有、必须补"的东西:`3rdparty/sqlite3` 是**空的
+  git submodule**,由 `compat.sqlite3` 3.45.3 的依赖边替代(与 `compat.sqlitecpp` 同构);
+  SOCI 4.1 起 core 与后端共 12 个 TU 无条件 `#include <fmt/format.h>`,依赖刚落的 `compat.fmt`
+  12.2.0 —— **必须是普通形态,且这是实测**:先按「取 `fmtlib.fmt` 的头 + `FMT_HEADER_ONLY` 编进
+  自己的 TU」实现过,`mcpp test -p soci` 一路走到**链接期**才失败,
+  `lld-link: error: duplicate symbol … fmt::v12::detail::dragonbox::cache_accessor<double>::compute_mul`
+  (模块对象的 COMDAT 键与 header-only 的不相撞),换成编译库形态后无需任何 define。
+  三组 CMake PRIVATE 定义分别落地:`-DSOCI_SQLITE3_SOURCE=1` 进 `cxxflags`(缺它
+  `soci-sqlite3.h` 只给两句前置声明,每个 `sqlite3_*` 调用都报 "use of undeclared identifier" ——
+  消费者走的恰是**不定义**的那条路,所以它必须止步于本包);带引号的
+  `SOCI_LIB_PREFIX`/`SOCI_LIB_SUFFIX`/`SOCI_DEBUG_POSTFIX` 走 `-include` shim(引号穿不过
+  描述符 → mcpp → argv 管道,`compat.unixodbc` 撞过同一堵墙);`SOCI_HAVE_SQLITE3` 所在的
+  `soci-config.h` 是 CMake `file(GENERATE)` 产物、**不随 tarball 发布**,按「只开 sqlite3」
+  时的输出逐字节复刻进 `generated_files`。Boost 不做依赖:不加 `SOCI_USE_BOOST` 时全部源码不碰它。
+  其余七个后端**不做 feature**:它们的客户端库要么根本不在索引里(libpq / Oracle / DB2 /
+  Firebird),要么驱动管理器按平台来源天差地别而 feature 的 `deps` 没有平台门控(odbc 在 linux 靠
+  `compat.unixodbc` 源码构建、windows/macOS 靠系统 SDK);以后加后端是一行 `sources` 加一行
+  `deps`,不是重构。实测:`mcpp xpkg parse pkgs/c/compat.soci.lua` → `parse OK`;
+  `mcpp test -p soci` 冷验证 → `test result ok. 1 passed; 0 failed`(llvm 23.1.3 / MSVC ABI)——
+  `:memory:` 建表、绑定参数双向往返、rowset 迭代、`indicator` 区分 NULL、事务三条路径
+  (显式 `rollback()` / 出作用域未 commit 自动回滚 / `commit()`)、后端自带错误码与
+  `constraint_violation` 分类、`SOCI_VERSION` 精确断言。消费侧命令行另有两条旁证:实测**无
+  `-DNDEBUG`**(所以那批断言是活的,不是空测试)、**无 `-DSOCI_SQLITE3_SOURCE`**(私有定义
+  确实没外泄)。⚠️ 后端以 `soci::sqlite3` **工厂对象**取得:`session("sqlite3", …)` 会走 SOCI 的
+  动态加载器去 dlopen 一个本包故意不产出的 `libsoci_sqlite3.so`。⚠️ CN 镜像尚未发布到
+  `mcpp-res`,按先例用纯字符串 url 回退 GLOBAL,补传后 sha256 不变。新增成员
+  `tests/examples/soci`;linux/macOS 两腿交 CI 裁决。
+
 - **`compat.fmt` 12.2.0。** {fmt} 的**头文件形态**(`#include <fmt/format.h>` + 链接)收录,
   即 `fmtlib.fmt`(模块形态)的非模块兄弟:同一个上游归档、同一个 sha256,身份却分开 ——
   想要 `#include` 写法的工程不必为此背上一个自己从不 `import` 的模块 BMI。形态是编译库:

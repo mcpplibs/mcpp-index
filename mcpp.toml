@@ -151,6 +151,7 @@ members = [
     "tests/examples/llmapi",
     "tests/examples/md4c",
     "tests/examples/spdlog-compiled",
+    "tests/examples/soci",
     "tests/examples/sqlite3",
     "tests/examples/sqlitecpp",
     "tests/examples/taskflow-module",
