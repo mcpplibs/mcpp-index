@@ -65,6 +65,7 @@ agent(如 Claude Code)即可:
 新增示例: [`compat.richdem`](pkgs/c/compat.richdem.lua) — C++ sources, serial terrain analysis; [`消费测试`](tests/examples/richdem/mcpp.toml)。
 新增示例: [`compat.fmt`](pkgs/c/compat.fmt.lua) — {fmt} 头文件形态(`#include <fmt/format.h>`,即 `fmtlib.fmt` 的非模块兄弟),C API 由 `c-api` feature 门控; [`消费测试`](tests/examples/fmt/mcpp.toml)、[`feature 测试`](tests/examples/fmt-c/mcpp.toml)。
 新增示例: [`compat.soci`](pkgs/c/compat.soci.lua) — C++ 数据库访问层,SQLite3 后端编入同一库,引擎来自 `compat.sqlite3`; [`消费测试`](tests/examples/soci/mcpp.toml)。
+示例: [`compat.imgui`](pkgs/c/compat.imgui.lua) — Dear ImGui 1.93.0 核心源码,含 docking 版本; [`无窗口测试`](tests/examples/imgui/mcpp.toml)、[`GLFW/OpenGL3 后端测试`](tests/examples/imgui-window/mcpp.toml)。
 
 ## 文档
 
