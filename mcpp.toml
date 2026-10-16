@@ -199,6 +199,7 @@ members = [
     "tests/examples/wamr-runtime-features",
     "tests/examples/quickjs-ng",
     "tests/examples/rapidcsv",
+    "tests/examples/mcr",
 ]
 
 # ── The index redirect, hoisted to the workspace root ───────────────────

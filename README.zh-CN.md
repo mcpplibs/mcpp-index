@@ -66,6 +66,7 @@ agent(如 Claude Code)即可:
 新增示例: [`compat.fmt`](pkgs/c/compat.fmt.lua) — {fmt} 头文件形态(`#include <fmt/format.h>`,即 `fmtlib.fmt` 的非模块兄弟),C API 由 `c-api` feature 门控; [`消费测试`](tests/examples/fmt/mcpp.toml)、[`feature 测试`](tests/examples/fmt-c/mcpp.toml)。
 新增示例: [`compat.soci`](pkgs/c/compat.soci.lua) — C++ 数据库访问层,SQLite3 后端编入同一库,引擎来自 `compat.sqlite3`; [`消费测试`](tests/examples/soci/mcpp.toml)。
 示例: [`compat.imgui`](pkgs/c/compat.imgui.lua) — Dear ImGui 1.93.0 核心源码,含 docking 版本; [`无窗口测试`](tests/examples/imgui/mcpp.toml)、[`GLFW/OpenGL3 后端测试`](tests/examples/imgui-window/mcpp.toml)。
+新增示例: [`yizhinailong.mcr`](pkgs/y/yizhinailong.mcr.lua) — Form A 模块库:基于 libcurl 的 C++23 HTTP 客户端,支持同步、异步、协程与批量请求,构建由上游自带 `mcpp.toml` 负责; [`消费测试`](tests/examples/mcr/mcpp.toml)。
 
 ## 文档
 
