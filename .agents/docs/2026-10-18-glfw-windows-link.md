@@ -17,10 +17,10 @@ dialect-neutral form rather than raw linker flags. GLFW dynamically loads its
 OpenGL, XInput, DirectInput and DWM functions; no new import libraries are needed
 for those. Application calls to OpenGL/Vulkan remain the consumer's responsibility.
 
-Publish index revision 3.4.0.2 on all three platforms (same upstream 3.4 archive,
-URLs, SHA and install hook), so existing installed metadata can be refreshed by
-selecting the new version. Upstream source version remains 3.4.0. Retain historical
-versions and existing consumers' pins. The new test consumes 3.4.0.2.
+Keep the existing package versions and upstream 3.4 archive, URLs, SHA and
+install hook. This is a descriptor-only fix: xpkg refreshes the descriptor, so
+no new package version is needed when the source is unchanged. The new test
+consumes upstream version 3.4.
 
 Validation: CI uses mcpp 2026.10.1.2. Initial Windows failure is the regression
 proof; final PR checks must cover the fix, including execution of the Win32 test.

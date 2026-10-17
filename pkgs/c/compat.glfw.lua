@@ -15,14 +15,6 @@ package = {
             -- version -- and where a consumer also names the farm directly, the
             -- two disagree and the build stops. Measured on a CI runner with a
             -- warm ~/.mcpp; see the note on compat.vulkan 1.4.357.1.
-            -- Index revision: declare GLFW's own Win32 import libraries.
-            ["3.4.0.2"] = {
-                url    = {
-                    GLOBAL = "https://github.com/glfw/glfw/archive/refs/tags/3.4.tar.gz",
-                    CN     = "https://gitcode.com/mcpp-res/glfw/releases/download/3.4/glfw-3.4.tar.gz",
-                },
-                sha256 = "c038d34200234d071fae9345bc455e4a8f2f544ab60150765d7704e08f3dac01",
-            },
             ["3.4.0.1"] = {
                 url    = {
                     GLOBAL = "https://github.com/glfw/glfw/archive/refs/tags/3.4.tar.gz",
@@ -45,14 +37,6 @@ package = {
             -- version -- and where a consumer also names the farm directly, the
             -- two disagree and the build stops. Measured on a CI runner with a
             -- warm ~/.mcpp; see the note on compat.vulkan 1.4.357.1.
-            -- Index revision: declare GLFW's own Win32 import libraries.
-            ["3.4.0.2"] = {
-                url    = {
-                    GLOBAL = "https://github.com/glfw/glfw/archive/refs/tags/3.4.tar.gz",
-                    CN     = "https://gitcode.com/mcpp-res/glfw/releases/download/3.4/glfw-3.4.tar.gz",
-                },
-                sha256 = "c038d34200234d071fae9345bc455e4a8f2f544ab60150765d7704e08f3dac01",
-            },
             ["3.4.0.1"] = {
                 url    = {
                     GLOBAL = "https://github.com/glfw/glfw/archive/refs/tags/3.4.tar.gz",
@@ -75,14 +59,6 @@ package = {
             -- version -- and where a consumer also names the farm directly, the
             -- two disagree and the build stops. Measured on a CI runner with a
             -- warm ~/.mcpp; see the note on compat.vulkan 1.4.357.1.
-            -- Index revision: declare GLFW's own Win32 import libraries.
-            ["3.4.0.2"] = {
-                url    = {
-                    GLOBAL = "https://github.com/glfw/glfw/archive/refs/tags/3.4.tar.gz",
-                    CN     = "https://gitcode.com/mcpp-res/glfw/releases/download/3.4/glfw-3.4.tar.gz",
-                },
-                sha256 = "c038d34200234d071fae9345bc455e4a8f2f544ab60150765d7704e08f3dac01",
-            },
             ["3.4.0.1"] = {
                 url    = {
                     GLOBAL = "https://github.com/glfw/glfw/archive/refs/tags/3.4.tar.gz",
