@@ -71,6 +71,7 @@ members = [
     "tests/examples/godot-cpp-v10",
     "tests/examples/grpc-codegen",
     "tests/examples/grpc-module",
+    "tests/examples/glfw",
     "tests/examples/gui-stack",
     "tests/examples/imgui",
     "tests/examples/imgui-module",
