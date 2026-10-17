@@ -15,6 +15,14 @@ package = {
             -- version -- and where a consumer also names the farm directly, the
             -- two disagree and the build stops. Measured on a CI runner with a
             -- warm ~/.mcpp; see the note on compat.vulkan 1.4.357.1.
+            -- Index revision: declare GLFW's own Win32 import libraries.
+            ["3.4.0.2"] = {
+                url    = {
+                    GLOBAL = "https://github.com/glfw/glfw/archive/refs/tags/3.4.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/glfw/releases/download/3.4/glfw-3.4.tar.gz",
+                },
+                sha256 = "c038d34200234d071fae9345bc455e4a8f2f544ab60150765d7704e08f3dac01",
+            },
             ["3.4.0.1"] = {
                 url    = {
                     GLOBAL = "https://github.com/glfw/glfw/archive/refs/tags/3.4.tar.gz",
@@ -37,6 +45,14 @@ package = {
             -- version -- and where a consumer also names the farm directly, the
             -- two disagree and the build stops. Measured on a CI runner with a
             -- warm ~/.mcpp; see the note on compat.vulkan 1.4.357.1.
+            -- Index revision: declare GLFW's own Win32 import libraries.
+            ["3.4.0.2"] = {
+                url    = {
+                    GLOBAL = "https://github.com/glfw/glfw/archive/refs/tags/3.4.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/glfw/releases/download/3.4/glfw-3.4.tar.gz",
+                },
+                sha256 = "c038d34200234d071fae9345bc455e4a8f2f544ab60150765d7704e08f3dac01",
+            },
             ["3.4.0.1"] = {
                 url    = {
                     GLOBAL = "https://github.com/glfw/glfw/archive/refs/tags/3.4.tar.gz",
@@ -59,6 +75,14 @@ package = {
             -- version -- and where a consumer also names the farm directly, the
             -- two disagree and the build stops. Measured on a CI runner with a
             -- warm ~/.mcpp; see the note on compat.vulkan 1.4.357.1.
+            -- Index revision: declare GLFW's own Win32 import libraries.
+            ["3.4.0.2"] = {
+                url    = {
+                    GLOBAL = "https://github.com/glfw/glfw/archive/refs/tags/3.4.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/glfw/releases/download/3.4/glfw-3.4.tar.gz",
+                },
+                sha256 = "c038d34200234d071fae9345bc455e4a8f2f544ab60150765d7704e08f3dac01",
+            },
             ["3.4.0.1"] = {
                 url    = {
                     GLOBAL = "https://github.com/glfw/glfw/archive/refs/tags/3.4.tar.gz",
@@ -168,7 +192,12 @@ package = {
             -- consumer's build. `runtime.libraries` renders as gdi32.lib for
             -- MSVC and -lgdi32 for GNU.
             runtime = {
-                libraries = { "gdi32" },
+                -- GLFW calls User32 window/input APIs, GDI pixel-format APIs,
+                -- and Shell32 drag/drop APIs itself. CMake's Windows defaults
+                -- hide user32/shell32; a direct clang consumer needs them here.
+                -- OpenGL, XInput, DirectInput and DWM are dynamically loaded by
+                -- GLFW, so they do not require additional import libraries.
+                libraries = { "user32", "gdi32", "shell32" },
             },
         },
     },
