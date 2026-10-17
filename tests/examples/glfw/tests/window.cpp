@@ -12,16 +12,20 @@ static bool window_test(int platform) {
     if (!glfwInit()) return false;
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
-    GLFWwindow* window = glfwCreateWindow(64, 48, "compat.glfw smoke", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(640, 480, "compat.glfw smoke", nullptr, nullptr);
     bool ok = window && glfwGetPlatform() == platform;
     if (window) {
         int width = 0, height = 0;
         glfwGetWindowSize(window, &width, &height);
         int marker = 42;
         glfwSetWindowUserPointer(window, &marker);
-        ok = ok && width == 64 && height == 48 &&
+        ok = ok && width == 640 && height == 480 &&
              glfwGetWindowUserPointer(window) == &marker &&
              !glfwWindowShouldClose(window);
+        if (!ok) std::fprintf(stderr, "platform %x: size=%dx%d, expected=640x480, user_pointer=%d, should_close=%d\n",
+                              platform, width, height,
+                              glfwGetWindowUserPointer(window) == &marker,
+                              glfwWindowShouldClose(window));
         glfwSetWindowShouldClose(window, GLFW_TRUE);
         ok = ok && glfwWindowShouldClose(window);
         glfwPollEvents();
