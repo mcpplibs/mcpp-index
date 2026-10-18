@@ -69,6 +69,8 @@ Additional example: [`compat.etl`](pkgs/c/compat.etl.lua) — Header-only; [`con
 Additional example: [`compat.richdem`](pkgs/c/compat.richdem.lua) — C++ sources, serial terrain analysis; [`consumer test`](tests/examples/richdem/mcpp.toml).
 Additional example: [`compat.fmt`](pkgs/c/compat.fmt.lua) — {fmt} in header form (`#include <fmt/format.h>`; the non-module sibling of `fmtlib.fmt`), its C API behind a `c-api` feature; [`consumer test`](tests/examples/fmt/mcpp.toml), [`feature test`](tests/examples/fmt-c/mcpp.toml).
 Additional example: [`compat.soci`](pkgs/c/compat.soci.lua) — C++ database API, with the SQLite3 backend compiled in and the engine taken from `compat.sqlite3`; [`consumer test`](tests/examples/soci/mcpp.toml).
+Additional example: [`compat.imgui`](pkgs/c/compat.imgui.lua) — Dear ImGui 1.93.0 core sources, including the docking variant; [`headless test`](tests/examples/imgui/mcpp.toml), [`GLFW/OpenGL3 backend test`](tests/examples/imgui-window/mcpp.toml).
+Additional example: [`yizhinailong.mcr`](pkgs/y/yizhinailong.mcr.lua) — Form A module library: libcurl-based C++23 HTTP client with sync, async, coroutine and batch requests, built from the upstream's own `mcpp.toml`; [`consumer test`](tests/examples/mcr/mcpp.toml).
 
 ## Documentation
 

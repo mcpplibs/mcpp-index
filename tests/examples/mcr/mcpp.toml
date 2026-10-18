@@ -1,0 +1,18 @@
+# Public Form-A consumer for `yizhinailong.mcr`. The package owns its build
+# (upstream mcpp.toml + build.mcpp), so this member only proves the descriptor
+# resolves and the exported module compiles and links.
+#
+# The member-level [indices] REPLACES the workspace root's `compat` table
+# rather than merging with it, which is the documented hard constraint: two
+# project index repos make every lookup ambiguous (mcpp#238). So `compat.*` —
+# mcr's own compat.curl / nlohmann.json dependencies — deliberately resolves
+# from the published remote index while the new namespace resolves here.
+[indices]
+yizhinailong = { path = "../../.." }
+
+[package]
+name = "mcr-tests"
+version = "0.1.0"
+
+[dependencies.yizhinailong]
+mcr = "0.1.5"

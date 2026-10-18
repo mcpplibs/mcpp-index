@@ -9,6 +9,15 @@ package = {
 
     xpm = {
         linux = {
+            -- No CN mirror credentials: use upstream URLs for the new releases.
+            ["1.93.0"] = {
+                url    = "https://github.com/ocornut/imgui/archive/refs/tags/v1.93.0.tar.gz",
+                sha256 = "f7bf6bc76e5d79d40d751096663e6c5d18daf08129dd52e7f7b09e4251c8eeee",
+            },
+            ["1.93.0-docking"] = {
+                url    = "https://github.com/ocornut/imgui/archive/refs/tags/v1.93.0-docking.tar.gz",
+                sha256 = "746c265540bd3aa109570f29492ef4d8f5b421dd9fd0049c35ca35f21496f1a5",
+            },
             ["1.92.8"] = {
                 url    = {
                     GLOBAL = "https://github.com/ocornut/imgui/archive/refs/tags/v1.92.8.tar.gz",
@@ -25,6 +34,14 @@ package = {
             },
         },
         macosx = {
+            ["1.93.0"] = {
+                url    = "https://github.com/ocornut/imgui/archive/refs/tags/v1.93.0.tar.gz",
+                sha256 = "f7bf6bc76e5d79d40d751096663e6c5d18daf08129dd52e7f7b09e4251c8eeee",
+            },
+            ["1.93.0-docking"] = {
+                url    = "https://github.com/ocornut/imgui/archive/refs/tags/v1.93.0-docking.tar.gz",
+                sha256 = "746c265540bd3aa109570f29492ef4d8f5b421dd9fd0049c35ca35f21496f1a5",
+            },
             ["1.92.8"] = {
                 url    = {
                     GLOBAL = "https://github.com/ocornut/imgui/archive/refs/tags/v1.92.8.tar.gz",
@@ -41,6 +58,14 @@ package = {
             },
         },
         windows = {
+            ["1.93.0"] = {
+                url    = "https://github.com/ocornut/imgui/archive/refs/tags/v1.93.0.tar.gz",
+                sha256 = "f7bf6bc76e5d79d40d751096663e6c5d18daf08129dd52e7f7b09e4251c8eeee",
+            },
+            ["1.93.0-docking"] = {
+                url    = "https://github.com/ocornut/imgui/archive/refs/tags/v1.93.0-docking.tar.gz",
+                sha256 = "746c265540bd3aa109570f29492ef4d8f5b421dd9fd0049c35ca35f21496f1a5",
+            },
             ["1.92.8"] = {
                 url    = {
                     GLOBAL = "https://github.com/ocornut/imgui/archive/refs/tags/v1.92.8.tar.gz",

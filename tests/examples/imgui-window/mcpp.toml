@@ -6,7 +6,7 @@ name = "imgui-window-tests"
 version = "0.1.0"
 
 [target.'cfg(linux)'.dependencies.compat]
-imgui = "1.92.8"
+imgui = "1.93.0"
 glfw = "3.4.0.1"
 [target.'cfg(linux)'.build]
 ldflags = ["-ldl"]
