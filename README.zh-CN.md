@@ -37,7 +37,7 @@ mcpp self config --mirror CN   # 切换至国内镜像,默认使用 GLOBAL 上�
 | 原生模块库(Form A) | [`mcpplibs.tinyhttps`](pkgs/t/tinyhttps.lua) · [`gzj-creator.galay`](pkgs/g/gzj-creator.galay.lua) |
 | C 源码 + `features` | [`compat.cjson`](pkgs/c/compat.cjson.lua) |
 | C++ 源码,多版本 | [`compat.yaml-cpp`](pkgs/c/compat.yaml-cpp.lua) |
-| header-only | [`compat.gtl`](pkgs/c/compat.gtl.lua) |
+| header-only | [`compat.gtl`](pkgs/c/compat.gtl.lua) · [`compat.safeint`](pkgs/c/compat.safeint.lua) |
 | 生成 config 头 | [`compat.c-ares`](pkgs/c/compat.c-ares.lua) |
 | C++23 module wrapper | [`nlohmann.json`](pkgs/n/nlohmann.json.lua) |
 | 上游自带 C++23 module | [`khronos.vulkan-hpp`](pkgs/k/khronos.vulkan-hpp.lua) |
