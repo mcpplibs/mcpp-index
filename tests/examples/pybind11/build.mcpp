@@ -1,0 +1,33 @@
+#include <cstdio>
+#include <filesystem>
+#include <fstream>
+#include <string>
+
+import mcpp;
+
+int main() {
+    namespace fs = std::filesystem;
+    const fs::path python = mcpp::xpkg_dir("xim", "python");
+    if (python.empty() || !fs::is_directory(python)) {
+        std::fputs("the declared xim:python SDK is unavailable\n", stderr);
+        return 1;
+    }
+    const bool windows = std::string(mcpp::target_os()) == "windows";
+    const fs::path headers = python / "include" / (windows ? "" : "python3.13");
+    const fs::path libraries = python / (windows ? "libs" : "lib");
+    if (!fs::exists(headers / "Python.h")) return 1;
+    mcpp::include_dir(headers.string().c_str());
+    mcpp::link_search(libraries.string().c_str());
+    mcpp::link_lib(windows ? "python313" : "python3.13");
+    mcpp::runtime_search_dir((python / (windows ? "" : "lib")).string().c_str());
+    // Resolve the standard library in the same SDK when embedding Python.
+    const fs::path config_dir = fs::absolute(".mcpp/python-sdk");
+    fs::create_directories(config_dir);
+    std::ofstream config(config_dir / "python_sdk.h");
+    config << "#define MCPP_PYTHON_HOME R\"SDK(" << python.generic_string() << ")SDK\"\n";
+    config.close();
+    if (!config) return 1;
+    mcpp::include_dir(config_dir.string().c_str());
+    mcpp::rerun_if_changed("build.mcpp");
+    return 0;
+}

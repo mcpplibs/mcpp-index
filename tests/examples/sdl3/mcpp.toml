@@ -9,4 +9,4 @@ name = "sdl3-tests"
 version = "0.1.0"
 
 [dependencies.compat]
-sdl3 = "3.4.2"
+sdl3 = "3.4.18"

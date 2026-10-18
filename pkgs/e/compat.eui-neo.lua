@@ -17,7 +17,7 @@
 -- them as `"3rd/stb_image.h"` — except miniaudio, which audio.cpp includes
 -- BARE; see the 0.6.0 note below.
 --
--- The build recipe below tracks upstream `CMakeLists.txt` (v0.6.0): CORE_SOURCES
+-- The build recipe below tracks upstream `CMakeLists.txt` (v0.6.1): CORE_SOURCES
 -- plus the OpenGL backend and, for the glfw window backend, `ime_bridge.c`.
 -- 0.5.5 grew a Shadertoy subsystem: render_backend.h and include/eui/types.h now
 -- include core/render/shadertoy.h unconditionally, and opengl_backend.cpp calls
@@ -80,8 +80,59 @@
 -- of tray_bridge.c (diff vs 0.5.9: comments + EOF newline only). `3rd/`,
 -- deps and the backend/app-main source lists are unchanged.
 --
+-- 0.6.1: CORE_SOURCES and VULKAN_SOURCES are byte-identical to 0.6.0, so
+-- the lib's source list, deps, features and flags carry over unchanged.
+-- The release is window lifecycle + component fixes, and two of its pieces
+-- deserve notes because they LOOK like descriptor work and are not:
+--   * `core/window/x11_moveresize.h` is NEW but header-only: EWMH
+--     _NET_WM_MOVERESIZE move/resize delegation, with libX11 dlopen'd at
+--     RUNTIME (no link-time X11 dependency — upstream says so verbatim in
+--     the header, and -ldl is already on the linux ldflags for glad).
+--     It DOES add a compile-time `<X11/Xlib.h>` on linux, because
+--     window_backend.cpp includes it UNCONDITIONALLY and the header guards
+--     its X11 block only on `__linux__ && !__ANDROID__`. That include
+--     resolves through the transitive compat.glfw → compat.x11 dep chain
+--     (verified by the 0.6.1 build of the eui-neo member — do not add a
+--     direct compat.x11 dep without measuring a failure first).
+--   * ime_bridge.c grows a third arm,
+--     `#elif defined(__linux__) && defined(EUI_GLFW_X11_IME_POSITION)`,
+--     implementing the X11 IME candidate-window-follows-caret fix. The arm
+--     calls glfwSetX11InputMethodCursorPos, a function upstream's
+--     `scripts/patch_glfw_x11_ime.cmake` ADDS TO ITS BUNDLED glfw — the
+--     index builds compat.glfw, which is unpatched upstream 3.4, so the
+--     define is never set here and the arm is inert; our linux IME keeps
+--     the `#else` stub exactly as 0.6.0 did. Enabling the fix would
+--     require patching compat.glfw, which is out of scope for a bump.
+--   * ⚠️ THE ONE REAL DESCRIPTOR CHANGE. In the SDL2 backend,
+--     window_backend.cpp calls sendX11MoveResizeForWindow from
+--     beginWindowMove/beginWindowResize UNGUARDED, but the SDL2 branch's
+--     declaration sits INSIDE `#if __linux__ && … &&
+--     defined(SDL_VIDEO_DRIVER_X11)` (:223-298) — unlike the GLFW branch's
+--     copy (:608), which upstream hoisted out of the guard with its own
+--     `#else return false`. Three builds fail (all measured): linux +
+--     compat.sdl2 (dummy+offscreen config, macro absent — local eui-neo-sdl2
+--     run), macOS and Windows (`__linux__` false, so NO macro can wake the
+--     declaration — both CI legs of PR #531; upstream's own CI builds the
+--     SDL2 backend on Linux only). The fix is one package-private shim in
+--     mcpp_eui_backends.h, split by platform: on linux define
+--     SDL_VIDEO_DRIVER_X11 for this package's own TUs, waking the guarded
+--     block (it can never fire at runtime — compat.sdl2 has no X11 driver to
+--     produce an X11 window, so every delegation returns false); elsewhere
+--     supply the core::window stub the GLFW branch and upstream's release
+--     notes both describe ("on non-X11 platforms the delegation returns
+--     false and callers keep their programmatic fallback"), guarded by
+--     `__cplusplus` so C TUs (tray_bridge.c, native_bridge.c) don't choke
+--     on `namespace`. It must NOT be an interface define: consumers would
+--     inherit the lie on every platform.
+-- The rest is header/app-level: transparent framebuffer
+-- (DslAppConfig::transparent / framebufferTransparent), beginWindowMove /
+-- beginWindowResize (the consumers of x11_moveresize.h), DslAppConfig
+-- onStart()/appId(), GLFW 3.3/3.4 macro guards (we pin 3.4), platform.cpp
+-- dialog-diagnostics capture (mkstemp, POSIX-guarded), dropdown/slider
+-- z-order and OpenGL pixel-unpack fixes. No `3rd/` pin moves.
+--
 -- All `mcpp` paths are GLOBS relative to the verdir; the leading `*/` absorbs
--- the GitHub tarball's `EUI-NEO-0.6.0/` wrap layer.
+-- the GitHub tarball's `EUI-NEO-0.6.1/` wrap layer.
 package = {
     spec        = "1",
     namespace   = "compat",
@@ -187,6 +238,11 @@ package = {
                 url    = "https://github.com/sudoevolve/EUI-NEO/archive/refs/tags/v0.6.0.tar.gz",
                 sha256 = "11d0725bcc6f16abbbea6052b58c6949008cf78ceaa1645002ba1b3abf9772a1",
             },
+            -- 0.6.1: see the linux block — plain-string GLOBAL, no CN mirror.
+            ["0.6.1"] = {
+                url    = "https://github.com/sudoevolve/EUI-NEO/archive/refs/tags/v0.6.1.tar.gz",
+                sha256 = "cd0bd6bd437177db097da146fc20f4b8b01c70d0db561a6f8e26baa26dbbbf5f",
+            },
         },
         macosx = {
             ["0.5.3"] = {
@@ -234,6 +290,11 @@ package = {
                 url    = "https://github.com/sudoevolve/EUI-NEO/archive/refs/tags/v0.6.0.tar.gz",
                 sha256 = "11d0725bcc6f16abbbea6052b58c6949008cf78ceaa1645002ba1b3abf9772a1",
             },
+            -- 0.6.1: see the linux block — plain-string GLOBAL, no CN mirror.
+            ["0.6.1"] = {
+                url    = "https://github.com/sudoevolve/EUI-NEO/archive/refs/tags/v0.6.1.tar.gz",
+                sha256 = "cd0bd6bd437177db097da146fc20f4b8b01c70d0db561a6f8e26baa26dbbbf5f",
+            },
         },
         windows = {
             ["0.5.3"] = {
@@ -280,6 +341,11 @@ package = {
             ["0.6.0"] = {
                 url    = "https://github.com/sudoevolve/EUI-NEO/archive/refs/tags/v0.6.0.tar.gz",
                 sha256 = "11d0725bcc6f16abbbea6052b58c6949008cf78ceaa1645002ba1b3abf9772a1",
+            },
+            -- 0.6.1: see the linux block — plain-string GLOBAL, no CN mirror.
+            ["0.6.1"] = {
+                url    = "https://github.com/sudoevolve/EUI-NEO/archive/refs/tags/v0.6.1.tar.gz",
+                sha256 = "cd0bd6bd437177db097da146fc20f4b8b01c70d0db561a6f8e26baa26dbbbf5f",
             },
         },
     },
@@ -340,6 +406,49 @@ package = {
  * the SDL2 define, which is how upstream spells it too). */
 #if defined(MCPP_FEATURE_SDL2)
 #  define EUI_WINDOW_BACKEND_SDL2 1
+/* 0.6.1, SDL2 backend only: in window_backend.cpp upstream hoists the GLFW
+ * branch's sendX11MoveResizeForWindow OUT of any platform guard (the :608
+ * definition carries its own `#else return false`), but the SDL2 branch's
+ * copy sits INSIDE `#if __linux__ && !__ANDROID__ &&
+ * defined(SDL_VIDEO_DRIVER_X11)` (:223-298) — while beginWindowMove /
+ * beginWindowResize call it UNGUARDED (:567/:571). Three builds fail with
+ * 'sendX11MoveResizeForWindow' not declared, all measured:
+ *
+ *   * linux + compat.sdl2 — its linux config is dummy+offscreen only, so
+ *     SDL_VIDEO_DRIVER_X11 is absent (eui-neo-sdl2 member, local). Wake the
+ *     guarded block by defining the macro for THIS PACKAGE'S OWN TUs. It
+ *     can never fire at runtime: no SDL window is ever an X11 window under
+ *     compat.sdl2, so SDL_GetWindowWMInfo never reports SDL_SYSWM_X11 and
+ *     every delegation returns false — upstream's own "unavailable →
+ *     report failure" contract. The <SDL_syswm.h>/<X11/Xresource.h> it
+ *     pulls resolve through the same transitive compat.glfw → compat.x11
+ *     chain the GLFW leg already relies on.
+ *
+ * Both halves must NOT become interface defines — consumers would inherit
+ * the lie on every platform (on macOS, SDL_syswm.h would then demand X11
+ * headers consumers do not have). */
+#  if defined(__linux__) && !defined(__ANDROID__)
+#    define SDL_VIDEO_DRIVER_X11 1
+#  elif defined(__cplusplus)
+/* macOS / Windows: `__linux__` is false, so no macro can wake the guarded
+ * declaration — upstream's own CI builds the SDL2 backend on Linux only and
+ * never sees it (measured on both CI legs: use of undeclared identifier at
+ * :567/:571). Supply the fallback upstream's GLFW branch and its release
+ * notes both describe — "on non-X11 platforms the delegation returns false
+ * and callers keep their programmatic fallback" — as a core::window stub.
+ * Handle is void* in the SDL2 branch (window_types.h), so the signature
+ * matches exactly, and the later real definition cannot exist on this branch
+ * of the #if (it is linux-only), so there is no redefinition. Guarded by
+ * __cplusplus because mcpp_eui_backends.h is force-included into the package's
+ * C TUs (tray_bridge.c, native_bridge.c) as well as its C++ ones. */
+namespace core::window {
+inline bool sendX11MoveResizeForWindow(void* window, int direction) {
+    (void)window;
+    (void)direction;
+    return false;
+}
+}
+#  endif
 #endif
 ]==],
             ["mcpp_generated/eui_neo_platform_tu.cpp"] = [==[

@@ -168,7 +168,12 @@ package = {
             -- consumer's build. `runtime.libraries` renders as gdi32.lib for
             -- MSVC and -lgdi32 for GNU.
             runtime = {
-                libraries = { "gdi32" },
+                -- GLFW calls User32 window/input APIs, GDI pixel-format APIs,
+                -- and Shell32 drag/drop APIs itself. CMake's Windows defaults
+                -- hide user32/shell32; a direct clang consumer needs them here.
+                -- OpenGL, XInput, DirectInput and DWM are dynamically loaded by
+                -- GLFW, so they do not require additional import libraries.
+                libraries = { "user32", "gdi32", "shell32" },
             },
         },
     },

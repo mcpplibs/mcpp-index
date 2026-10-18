@@ -1,0 +1,28 @@
+# SOCI test project: a real SQLite session through SOCI's own session/statement
+# layer.
+#
+# The package brings its own sqlite3 backend plus a dependency edge on
+# compat.sqlite3, so this member is what proves upstream's missing
+# `3rdparty/sqlite3` submodule has really been replaced: the assertions reach
+# `sqlite_version()` and the backend's own error codes, which need a linked-in
+# SQLite and not merely a header. It is also the first member to consume
+# compat.fmt as a plain `#include <fmt/format.h>` dependency of a library.
+#
+# `compat.soci` is spelled qualified so the workspace-root [indices] redirect
+# applies, and this member repeats the one-entry redirect itself (same as
+# fmt/rapidcsv/etl/gsl): the dependency must resolve to THIS checkout's
+# descriptor — which is unmerged — not to whatever the published remote index
+# serves.
+#
+# No platform gating: all three xpm legs are declared and the backend builds
+# against SQLite's amalgamation everywhere, so the same assertions run on linux,
+# macOS and windows.
+[package]
+name    = "soci-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+soci = "4.1.4"
+
+[indices]
+compat = { path = "../../.." }

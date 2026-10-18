@@ -41,7 +41,7 @@ mcpp self config --mirror CN   # 切换至国内镜像,默认使用 GLOBAL 上�
 | 生成 config 头 | [`compat.c-ares`](pkgs/c/compat.c-ares.lua) |
 | C++23 module wrapper | [`nlohmann.json`](pkgs/n/nlohmann.json.lua) |
 | 上游自带 C++23 module | [`khronos.vulkan-hpp`](pkgs/k/khronos.vulkan-hpp.lua) |
-| 外部构建系统(`install()`) | [`compat.openssl`](pkgs/c/compat.openssl.lua) |
+| 外部构建系统(`install()`) | [`compat.openssl`](pkgs/c/compat.openssl.lua) · [`compat.openmp`](pkgs/c/compat.openmp.lua) |
 
 其余形态,以及每个描述符为何这样写,见 **[描述符示例总览(按形态)](docs/zh/descriptor-examples.md)**。
 
@@ -58,6 +58,13 @@ agent(如 Claude Code)即可:
 ```
 
 提交 PR 后,CI 执行 lint,并只测试依赖了被修改描述符的 workspace 成员;合并后,`deploy-site` 发布站点。
+
+新增示例: [`compat.rapidcsv`](pkgs/c/compat.rapidcsv.lua) — Header-only CSV 解析; [`消费测试`](tests/examples/rapidcsv/mcpp.toml)。
+新增示例: [`compat.pybind11`](pkgs/c/compat.pybind11.lua) — Header-only Python bindings; [`消费测试`](tests/examples/pybind11/mcpp.toml)。
+新增示例: [`compat.etl`](pkgs/c/compat.etl.lua) — Header-only; [`消费测试`](tests/examples/etl/mcpp.toml)。
+新增示例: [`compat.richdem`](pkgs/c/compat.richdem.lua) — C++ sources, serial terrain analysis; [`消费测试`](tests/examples/richdem/mcpp.toml)。
+新增示例: [`compat.fmt`](pkgs/c/compat.fmt.lua) — {fmt} 头文件形态(`#include <fmt/format.h>`,即 `fmtlib.fmt` 的非模块兄弟),C API 由 `c-api` feature 门控; [`消费测试`](tests/examples/fmt/mcpp.toml)、[`feature 测试`](tests/examples/fmt-c/mcpp.toml)。
+新增示例: [`compat.soci`](pkgs/c/compat.soci.lua) — C++ 数据库访问层,SQLite3 后端编入同一库,引擎来自 `compat.sqlite3`; [`消费测试`](tests/examples/soci/mcpp.toml)。
 
 ## 文档
 
