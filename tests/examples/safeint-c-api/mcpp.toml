@@ -1,0 +1,8 @@
+# The C API cannot share a translation unit with SafeInt.hpp, and mcpp builds
+# every tests/*.cpp as its own executable, so it gets a second member.
+[package]
+name = "safeint-c-api-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+safeint = "3.0.28a"

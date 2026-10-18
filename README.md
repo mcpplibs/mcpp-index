@@ -38,7 +38,7 @@ One descriptor per common shape:
 | Native module library (Form A) | [`mcpplibs.tinyhttps`](pkgs/t/tinyhttps.lua) · [`gzj-creator.galay`](pkgs/g/gzj-creator.galay.lua) |
 | C sources + `features` | [`compat.cjson`](pkgs/c/compat.cjson.lua) |
 | C++ sources, several versions | [`compat.yaml-cpp`](pkgs/c/compat.yaml-cpp.lua) |
-| Header-only | [`compat.gtl`](pkgs/c/compat.gtl.lua) |
+| Header-only | [`compat.gtl`](pkgs/c/compat.gtl.lua) · [`compat.safeint`](pkgs/c/compat.safeint.lua) |
 | Generated config header | [`compat.c-ares`](pkgs/c/compat.c-ares.lua) |
 | C++23 module wrapper | [`nlohmann.json`](pkgs/n/nlohmann.json.lua) |
 | C++23 module shipped by upstream | [`khronos.vulkan-hpp`](pkgs/k/khronos.vulkan-hpp.lua) |
