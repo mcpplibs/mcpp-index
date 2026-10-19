@@ -684,6 +684,9 @@ jobs:
   # a selective one does not.
   select:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
     outputs:
       members: ${{ steps.fanout.outputs.members }}
       matrix:  ${{ steps.fanout.outputs.matrix }}

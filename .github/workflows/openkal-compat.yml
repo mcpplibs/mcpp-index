@@ -66,6 +66,9 @@ jobs:
     name: measure (linux, windows through wine)
     runs-on: ubuntu-24.04
     timeout-minutes: 240
+    permissions:
+      contents: read
+      pull-requests: read
     outputs:
       members: ${{ steps.select.outputs.members }}
     steps:
