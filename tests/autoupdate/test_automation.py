@@ -116,7 +116,8 @@ class AutomationTests(unittest.TestCase):
                 with patch.object(automation, "gh", side_effect=gh), \
                      patch.object(automation.subprocess, "run", side_effect=run), \
                      patch.object(automation, "verify_pr", return_value=PR), \
-                     patch.object(automation, "dispatch", return_value=[{"status": "dispatched"}]) as dispatch:
+                     patch.object(automation, "dispatch", return_value=[{"status": "dispatched"}]) as dispatch, \
+                     patch.object(automation, "wait_for_ci", return_value=0):
                     self.assertEqual(automation.propose(plan, output), 1)
                 dispatch.assert_called_once_with(PR, REPO, "compat:foo")
                 result = json.loads(output.read_text())["packages"]
@@ -146,3 +147,48 @@ class AutomationTests(unittest.TestCase):
                 self.assertEqual(automation.propose(plan, output), 0)
             dispatch.assert_not_called()
             self.assertEqual(json.loads(output.read_text())["packages"][0]["ci"], [{"status": "ordinary-pr-ci"}])
+
+    def test_ci_summary_waits_for_all_four_exact_head_runs(self):
+        outcomes = [{"id": "compat:foo", "head": "head", "branch": PR["head"]["ref"],
+                     "url": PR["html_url"], "ci": [{"workflow": f"ci-{n}.yml"} for n in range(4)]}]
+        call = 0
+
+        def gh(*args):
+            nonlocal call
+            call += 1
+            complete = call > 4
+            return json.dumps([{"databaseId": call, "headSha": "head", "url": "run",
+                                "status": "completed" if complete else "in_progress", "conclusion": "success" if complete else None}])
+
+        with tempfile.TemporaryDirectory() as directory, \
+             patch.object(automation, "gh", side_effect=gh), \
+             patch.object(automation, "publish_status") as publish, \
+             patch.object(automation, "verify_pr", return_value=PR) as verify, \
+             patch.object(automation.time, "sleep"):
+            self.assertEqual(automation.wait_for_ci(outcomes, REPO, Path(directory) / "report.json"), 0)
+        self.assertEqual([c.args[2] for c in publish.call_args_list], ["pending", "success"])
+        verify.assert_called_once_with("7", REPO, "head")
+        self.assertEqual(outcomes[0]["verification"], "success")
+
+    def test_failed_cancelled_wrong_head_and_timeout_never_report_success(self):
+        for state in ("failure", "cancelled", "wrong-head", "timeout"):
+            with self.subTest(state=state), tempfile.TemporaryDirectory() as directory:
+                outcomes = [{"id": "compat:foo", "head": "head", "branch": PR["head"]["ref"],
+                             "url": PR["html_url"], "ci": [{"workflow": "validate.yml"}]}]
+                run = {"headSha": "wrong" if state == "wrong-head" else "head",
+                       "status": "in_progress" if state == "timeout" else "completed", "conclusion": state}
+                with patch.object(automation, "gh", return_value=json.dumps([run])), \
+                     patch.object(automation, "publish_status") as publish:
+                    if state == "wrong-head":
+                        with self.assertRaisesRegex(ValueError, "head differs"):
+                            automation.wait_for_ci(outcomes, REPO, Path(directory) / "report.json")
+                    else:
+                        self.assertEqual(automation.wait_for_ci(outcomes, REPO, Path(directory) / "report.json", timeout=0), 1)
+                        self.assertNotIn("success", [c.args[2] for c in publish.call_args_list])
+
+    def test_status_is_not_republished_when_unchanged(self):
+        with patch.object(automation, "gh", return_value=json.dumps({"statuses": [
+            {"context": "xpkgindex-update/ci", "state": "success"},
+        ]})) as gh:
+            automation.publish_status(REPO, "head", "success")
+        self.assertEqual(gh.call_count, 1)

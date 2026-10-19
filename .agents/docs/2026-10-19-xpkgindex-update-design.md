@@ -623,3 +623,16 @@ skill 明确普通包 PR 不改根 README 或站点配置；用户明确要求�
 工具 #2 已 squash 合并为 `6c0bee2941e36132bc2ac3d1f7edbef8b5790320`，61 项回归和全部 7 个 CI checks 成功；索引固定使用此提交。
 本地 8 项编排/基线回归覆盖 bot/head/仓库/文件边界、默认分支移动、局部 dispatch 恢复、重复 PR、人工 PR 和局部提案失败。
 Actionlint、真实 PR CI 与 bot 生产验证结果在本节补充；未完成前不再报告无人值守链路已通过。
+
+
+### 16.5 bot PR 实测发现的 CI 展示边界
+
+#546 已在 50 个执行 checks 成功后 squash 合入 `f20ab0f`，其中全部 44 个候选验证通过。
+main Action `39316000537` 已由真正的 `github-actions[bot]` 创建 libuv #547，
+仅一个描述符新增 10 行、无删除。重复 Action `39316324744` 返回 pending，未创建重复 PR、未重复 dispatch。
+四类显式 dispatch 无需审批并全部成功，但实测 GitHub PR 的 statusCheckRollup 仍为空，原生 PR 事件产生未执行的审批请求。
+
+因此提案 job 额外取得 statuses:write，等待四类 dispatch 的真实结果，对同一 PR head 写
+`xpkgindex-update/ci` 汇总状态并链接提案运行；summary 和 artifact 包含四个实际运行链接。
+仅所有运行成功且 PR 仍是同一 head 才可标绿；失败、取消、超时、head 不符均不得标绿。
+不是 dispatch 成功就通过，也不批准或删除原生 PR 审批记录。后续日常运行可为 pending PR 补齐状态。

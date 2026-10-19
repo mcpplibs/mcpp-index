@@ -8,6 +8,7 @@ import os
 import re
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 
@@ -60,6 +61,71 @@ def dispatch(pr, repo, identity):
     return results
 
 
+
+def publish_status(repo, head, state):
+    context = "xpkgindex-update/ci"
+    current = json.loads(gh("api", f"repos/{repo}/commits/{head}/status"))
+    if any(s["context"] == context and s["state"] == state for s in current["statuses"]):
+        return
+    descriptions = {
+        "pending": "Waiting for candidate, consumer, site and openkal CI",
+        "success": "All four CI workflows passed for this exact PR head",
+        "failure": "An update CI workflow failed; inspect the actual runs",
+        "error": "CI verification timed out; no successful result was recorded",
+    }
+    gh("api", "--method", "POST", f"repos/{repo}/statuses/{head}",
+       "-f", f"state={state}", "-f", f"context={context}",
+       "-f", f"description={descriptions[state]}", "-f",
+       f"target_url=https://github.com/{repo}/actions/runs/{os.environ['GITHUB_RUN_ID']}")
+
+
+def wait_for_ci(outcomes, repo, output, *, timeout=2400, interval=20):
+    """Report real dispatched results on the PR; never infer success from dispatch."""
+    pending = [r for r in outcomes if r.get("head") and r.get("ci")]
+    deadline = time.monotonic() + timeout
+    last = {}
+    failed = False
+    while pending:
+        for record in pending[:]:
+            runs = []
+            for ci in record["ci"]:
+                found = json.loads(gh(
+                    "run", "list", "--repo", repo, "--workflow", ci["workflow"],
+                    "--branch", record["branch"], "--commit", record["head"],
+                    "--event", "workflow_dispatch", "--limit", "1", "--json",
+                    "databaseId,status,conclusion,url,headSha"))
+                if found and found[0]["headSha"] != record["head"]:
+                    raise ValueError("dispatched CI head differs from the update PR")
+                runs.append(found[0] if found else {"status": "queued"})
+            state = "pending"
+            if any(r["status"] == "completed" and r["conclusion"] != "success" for r in runs):
+                state = "failure"
+            elif all(r["status"] == "completed" for r in runs):
+                number = record["url"].rsplit("/", 1)[-1]
+                verify_pr(number, repo, record["head"])
+                state = "success"
+            elif time.monotonic() >= deadline:
+                state = "error"
+            if last.get(record["id"]) != state:
+                publish_status(repo, record["head"], state)
+                print(f"{record['id']} CI: {state}", flush=True)
+                last[record["id"]] = state
+                summary = os.environ.get("GITHUB_STEP_SUMMARY")
+                if summary:
+                    links = [f"[{ci['workflow']}]({run['url']})" for ci, run in zip(record["ci"], runs) if run.get("url")]
+                    with open(summary, "a", encoding="utf-8") as stream:
+                        stream.write(f"\n### {record['id']}: {state}\n\n" + " · ".join(links) + "\n")
+            record["verification"] = state
+            record["runs"] = runs
+            if state != "pending":
+                failed |= state != "success"
+                pending.remove(record)
+        output.write_text(json.dumps({"packages": outcomes}, indent=2) + "\n", encoding="utf-8")
+        if pending:
+            time.sleep(interval)
+    return int(failed)
+
+
 def propose(plan, output):
     repo = os.environ["GITHUB_REPOSITORY"]
     base = os.environ["DEFAULT_BRANCH"]
@@ -96,12 +162,14 @@ def propose(plan, output):
                     raise ValueError("expected exactly one pending update PR")
                 number = matches[0]["number"]
             pr = verify_pr(number, repo)
-            outcomes.append({**record, "url": pr["html_url"], "ci": dispatch(pr, repo, record["id"])})
+            outcomes.append({**record, "url": pr["html_url"], "head": pr["head"]["sha"],
+                             "branch": pr["head"]["ref"], "ci": dispatch(pr, repo, record["id"])})
         except (ValueError, subprocess.CalledProcessError) as error:
             outcomes.append({**record, "status": "error", "reason": str(error)})
     output.write_text(json.dumps({"packages": outcomes}, indent=2) + "\n", encoding="utf-8")
+    verification = wait_for_ci(outcomes, repo, output)
     print(output.read_text(encoding="utf-8"))
-    return result.returncode or int(any(r["status"] == "error" for r in outcomes))
+    return result.returncode or verification or int(any(r["status"] == "error" for r in outcomes))
 
 
 def main():

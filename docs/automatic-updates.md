@@ -68,7 +68,7 @@ and referenced by platform entries. Different resources remain separate.
 ## Workflow and credentials
 
 The scan and build jobs have read access. Only the default-branch `propose` job
-receives `contents: write`, `pull-requests: write` and `actions: write`.
+receives `contents: write`, `pull-requests: write`, `actions: write` and `statuses: write`.
 It consumes the exact scan artifact using the pinned CLI; no local user token
 or long-lived secret is involved. Organization and repository settings must
 allow GitHub Actions to create PRs. The combined setting also permits approvals,
@@ -88,6 +88,13 @@ A later daily run can resume missing CI dispatches on an existing bot PR without
 creating duplicates; existing runs, including failures, are not silently rerun.
 `max_prs` in [.github/xpkgindex-update.yml](../.github/xpkgindex-update.yml) limits
 new PRs per run. No update PR can recursively create more PRs.
+
+The proposal job waits for the four real dispatch results and publishes the
+`xpkgindex-update/ci` commit status on the same PR head. Only four successful
+workflows produce success; failure, cancellation, timeout or a changed head
+cannot pass. Its link leads to the proposal report containing the CI run links.
+Native PR approval requests can be left untouched: validation uses the explicit
+dispatches and this aggregate status.
 
 The temporary `wellwei/libmysqlclient` outage exception retains its scan error;
 its affected consumers are reported as **NOT TESTED**, not successful builds.
