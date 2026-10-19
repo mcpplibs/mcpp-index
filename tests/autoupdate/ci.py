@@ -203,6 +203,30 @@ def experiment(consumer: Path, output: Path):
             print("root imports std (diagnostic only):", result.returncode)
     finally:
         probe.write_bytes(source)
+    # A path manifest over the very same installed files distinguishes Lua
+    # descriptor acquisition from the scanner/backend, without another download.
+    payload = consumer / ".mcpp/.xlings/data/xpkgs/compat-x-hiredis/1.5.0"
+    manifest = payload / "mcpp.toml"
+    root_manifest = consumer / "mcpp.toml"
+    root_source = root_manifest.read_bytes()
+    try:
+        manifest.write_text(
+            '[package]\nname = "hiredis"\nnamespace = "compat"\nversion = "1.5.0"\n'
+            '[build]\ninclude_dirs = ["*", "mcpp_generated/include"]\n'
+            'sources = ["*/alloc.c", "*/async.c", "*/hiredis.c", "*/net.c", '
+            '"*/read.c", "*/sds.c", "*/sockcompat.c"]\n'
+            'cflags = ["-D_CRT_SECURE_NO_WARNINGS", "-DWIN32_LEAN_AND_MEAN"]\n'
+            'ldflags = ["-lws2_32", "-lcrypt32"]\n', encoding="utf-8")
+        text = root_source.decode().replace('hiredis = "1.5.0"',
+            'hiredis = { path = ' + json.dumps(payload.as_posix()) + ' }')
+        root_manifest.write_text(text, encoding="utf-8")
+        with (output / "path-manifest.log").open("w", encoding="utf-8") as log:
+            result = subprocess.run([mcpp, "test", "--verbose", "--cache", "off"], cwd=consumer,
+                                    stdout=log, stderr=subprocess.STDOUT)
+            print("same payload through a path manifest:", result.returncode)
+    finally:
+        root_manifest.write_bytes(root_source)
+        manifest.unlink(missing_ok=True)
 
 
 def main():
