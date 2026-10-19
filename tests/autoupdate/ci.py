@@ -121,7 +121,7 @@ def prepare(plan: Path, identity: str, output: Path):
         text = f'[package]\nname = "candidate-{name}"\nversion = "0.1.0"\n\n[dependencies.{namespace}]\n{name} = "{version}"\n'
         (output / "tests").mkdir(exist_ok=True)
         probes = {
-            "hiredis": '#include <read.h>\nint main() { auto *r = redisReaderCreate(); if (!r) return 1; redisReaderFree(r); }\n',
+            "hiredis": '#include <hiredis.h>\nint main() { auto *r = redisReaderCreate(); if (!r) return 1; redisReaderFree(r); }\n',
             "libuv": '#include <uv.h>\nint main() { uv_loop_t loop; if (uv_loop_init(&loop)) return 1; return uv_loop_close(&loop); }\n',
         }
         (output / "tests/probe.cpp").write_text(probes[name])
