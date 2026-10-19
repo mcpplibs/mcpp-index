@@ -48,6 +48,7 @@ jobs:
         env:
           BASE: ${{ github.event.pull_request.base.sha || 'origin/main' }}
         run: |
+          python -m unittest discover -s tests/autoupdate -p 'test_*.py'
           python tests/autoupdate/ci.py audit --base "$BASE" --output coverage.json
           python tests/autoupdate/ci.py selection --base "$BASE" --output selected-package.txt
           echo "package=$(cat selected-package.txt)" >> "$GITHUB_OUTPUT"

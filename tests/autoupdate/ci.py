@@ -18,11 +18,23 @@ from xpkgindex_update.manifest import assert_preserved, inventory, version_block
 ROOT = Path(__file__).resolve().parents[2]
 
 
+def base_descriptors(base: str) -> set[str]:
+    files = subprocess.check_output(
+        ["git", "ls-tree", "-r", "--name-only", base, "--", "pkgs"], cwd=ROOT, text=True)
+    return {name for name in files.splitlines() if name.endswith(".lua")}
+
+
 def audit(base: str, output: Path):
     records = []
-    for info in inventory(ROOT):
-        before = subprocess.check_output(["git", "show", f"{base}:{info['path']}"], cwd=ROOT).decode()
-        assert_preserved(before, info["text"])
+    previous = base_descriptors(base)
+    infos = inventory(ROOT)
+    removed = previous - {info["path"] for info in infos}
+    if removed:
+        raise RuntimeError(f"existing descriptors removed: {sorted(removed)}")
+    for info in infos:
+        if info["path"] in previous:
+            before = subprocess.check_output(["git", "show", f"{base}:{info['path']}"], cwd=ROOT).decode()
+            assert_preserved(before, info["text"])
         if info["direct"]:
             if info["autoupdate"] is None:
                 raise RuntimeError(f"missing autoupdate: {info['id']}")
@@ -57,7 +69,10 @@ def matrix(plan: Path, output: Path, base: str):
     # A normal bump PR already contains its candidate, so discovery says up-to-date.
     # Derive added versions from the actual diff and test those exact published entries.
     if base:
+        previous = base_descriptors(base)
         for info in inventory(ROOT):
+            if info["path"] not in previous:
+                continue  # New descriptors are covered by ordinary consumer validation.
             old_text = subprocess.check_output(["git", "show", f"{base}:{info['path']}"], cwd=ROOT).decode()
             old = version_blocks(old_text)
             new = version_blocks(info["text"])
