@@ -8,6 +8,11 @@ on:
       - '.github/xpkgindex-update.yml'
       - '.github/workflows/xpkgindex-update.yml'
   workflow_dispatch:
+    inputs:
+      package:
+        description: "Optional namespace:name; empty scans all declared packages"
+        type: string
+        required: false
 
 permissions:
   contents: read
@@ -38,10 +43,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: openxlings/xpkgindex-update
-          ref: 416a954c67dba4cdf52a033a71ee88fdec0acf1d
+          ref: 23c5e04948c55e606bc56ee2c649ddd4849b7ec6
           path: .updater
           persist-credentials: false
-      - name: Use the exact development tool source
+      - name: Use the pinned updater source
         run: echo "PYTHONPATH=$PWD/.updater/src" >> "$GITHUB_ENV"
       - name: All GitHub-direct descriptors are declared; published versions are unchanged
         id: coverage
@@ -55,11 +60,11 @@ jobs:
       - name: Discover and download real upstream candidates
         id: scan
         continue-on-error: true # The mandatory gate below accepts only the approved source outage.
-        uses: openxlings/xpkgindex-update@416a954c67dba4cdf52a033a71ee88fdec0acf1d
+        uses: openxlings/xpkgindex-update@23c5e04948c55e606bc56ee2c649ddd4849b7ec6
         with:
           mode: check
           token: ${{ github.token }}
-          package: ${{ steps.coverage.outputs.package }}
+          package: ${{ inputs.package || steps.coverage.outputs.package }}
       - name: Reject all scan failures except the approved unavailable source
         if: always()
         env:
@@ -110,14 +115,14 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: openxlings/xpkgindex-update
-          ref: 416a954c67dba4cdf52a033a71ee88fdec0acf1d
+          ref: 23c5e04948c55e606bc56ee2c649ddd4849b7ec6
           path: .updater
           persist-credentials: false
       - uses: actions/download-artifact@v4
         with:
           name: xpkgindex-update-build-plan
           path: .candidate-plan
-      - name: Use the development tool and a standalone consumer
+      - name: Use the pinned updater and a standalone consumer
         shell: bash
         run: |
           if [[ "$RUNNER_OS" == Windows ]]; then

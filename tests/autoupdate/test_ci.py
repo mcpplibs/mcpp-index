@@ -42,6 +42,23 @@ class BaselineTests(unittest.TestCase):
                 self.assertEqual(json.loads((root / "coverage.json").read_text())["covered"], 2)
                 ci.matrix(plan, root / "matrix.json", "HEAD")
                 self.assertEqual(json.loads((root / "matrix.json").read_text()), {"include": []})
+                # A normal bump is already present when discovery runs. Shared
+                # definitions must still produce jobs for that exact version.
+                resource = '{ url = "https://github.com/acme/old/archive/refs/tags/v1.1.0.tar.gz", sha256 = "' + "b" * 64 + '" }'
+                old.write_text('local versions = { ["1.1.0"] = ' + resource + ' }\n' +
+                               old.read_text().replace('xpm = { linux = {',
+                                   'xpm = { linux = { ["1.1.0"] = versions["1.1.0"],'))
+                consumer = root / "tests/examples/old"
+                consumer.mkdir(parents=True)
+                (consumer / "mcpp.toml").write_text('[dependencies.compat]\nold = "1.1.0"\n')
+                ci.audit("HEAD", root / "coverage.json")
+                ci.matrix(plan, root / "matrix.json", "HEAD")
+                jobs = json.loads((root / "matrix.json").read_text())["include"]
+                self.assertEqual(len(jobs), 2)
+                self.assertTrue(all(job["candidate"] == "1.1.0" for job in jobs))
+                generated = json.loads((root / "build-plan.json").read_text())["packages"][0]
+                self.assertEqual(generated["status"], "existing-candidate")
+                self.assertEqual(generated["assets"][0]["resources"]["GLOBAL"]["sha256"], "b" * 64)
                 old.unlink()
                 with self.assertRaisesRegex(RuntimeError, "existing descriptors removed"):
                     ci.audit("HEAD", root / "coverage.json")
