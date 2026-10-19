@@ -72,17 +72,12 @@ package = {
         -- `mcpp_generated/include` carries the `hiredis/`-prefixed wrappers.
         include_dirs = { "*", "mcpp_generated/include" },
 
-        -- Upstream CMakeLists' `hiredis_sources`, verbatim — identical across
-        -- every 1.x release.
-        sources = {
-            "*/alloc.c",
-            "*/async.c",
-            "*/hiredis.c",
-            "*/net.c",
-            "*/read.c",
-            "*/sds.c",
-            "*/sockcompat.c",
-        },
+        -- One wrapper per upstream TU preserves the original seven-source
+        -- build while bounding discovery to this generated directory.
+        -- hiredis 1.5 ships a .claude documentation symlink that Windows
+        -- cannot traverse; walking the whole archive stops before its C files.
+        -- No upstream file, installed metadata or archive is rewritten.
+        sources = { "mcpp_generated/src/*.c" },
 
         targets = { ["hiredis"] = { kind = "lib" } },
         deps    = {},
@@ -93,6 +88,13 @@ package = {
         -- skip the wrapper's own directory and land on the real headers via
         -- the `*` include dir (the flat `"..."` form would self-include).
         generated_files = {
+            ["mcpp_generated/src/alloc.c"]      = "#include <alloc.c>\n",
+            ["mcpp_generated/src/async.c"]      = "#include <async.c>\n",
+            ["mcpp_generated/src/hiredis.c"]    = "#include <hiredis.c>\n",
+            ["mcpp_generated/src/net.c"]        = "#include <net.c>\n",
+            ["mcpp_generated/src/read.c"]       = "#include <read.c>\n",
+            ["mcpp_generated/src/sds.c"]        = "#include <sds.c>\n",
+            ["mcpp_generated/src/sockcompat.c"] = "#include <sockcompat.c>\n",
             ["mcpp_generated/include/hiredis/hiredis.h"] = "#pragma once\n#include <hiredis.h>\n",
             ["mcpp_generated/include/hiredis/async.h"]   = "#pragma once\n#include <async.h>\n",
             -- redis-plus-plus's async build (event_loop.cpp) includes

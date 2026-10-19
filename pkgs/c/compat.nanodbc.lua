@@ -90,6 +90,7 @@ package = {
 #define MCPP_NANODBC_CHAR_TRAITS_H
 #include <cstdio>
 #include <cstring>
+#include <locale> // nanodbc 2.14 uses wstring_convert; codecvt no longer includes locale in libc++ 23.
 #include <string>
 #if defined(_LIBCPP_VERSION)
 namespace std {
