@@ -174,21 +174,35 @@ def diagnostics(consumer: Path, output: Path):
 
 
 def experiment(consumer: Path, output: Path):
-    """Keep the primary failure; isolate cache and test-layout variables."""
+    """Keep the primary failure; isolate source discovery in the job checkout."""
     output.mkdir(parents=True, exist_ok=True)
     mcpp = os.environ["MCPP"]
-    with (output / "no-cache.log").open("w", encoding="utf-8") as log:
-        result = subprocess.run([mcpp, "test", "--verbose", "--cache", "off"], cwd=consumer,
-                                stdout=log, stderr=subprocess.STDOUT)
-        print("standalone without cache:", result.returncode)
-    workspace = output / "workspace"
-    shutil.copytree(consumer, workspace / "consumer", dirs_exist_ok=True,
-                    ignore=shutil.ignore_patterns("target", ".mcpp", "mcpp.lock", "*.log"))
-    (workspace / "mcpp.toml").write_text('[workspace]\nmembers = ["consumer"]\n', encoding="utf-8")
-    with (output / "workspace.log").open("w", encoding="utf-8") as log:
-        result = subprocess.run([mcpp, "test", "-p", "consumer", "--verbose", "--cache", "off"],
-                                cwd=workspace, stdout=log, stderr=subprocess.STDOUT)
-        print("workspace without cache:", result.returncode)
+    descriptor = ROOT / "pkgs/c/compat.hiredis.lua"
+    original = descriptor.read_bytes()
+    try:
+        # Temporary diagnostic only: leave all version blocks untouched and
+        # restore the descriptor even when the experiment fails.
+        changed = original
+        for name in ("alloc", "async", "hiredis", "net", "read", "sds", "sockcompat"):
+            changed = changed.replace(f'"*/{name}.c"'.encode(),
+                                      f'"hiredis-1.5.0/{name}.c"'.encode())
+        descriptor.write_bytes(changed)
+        with (output / "literal-sources.log").open("w", encoding="utf-8") as log:
+            result = subprocess.run([mcpp, "test", "--verbose", "--cache", "off"], cwd=consumer,
+                                    stdout=log, stderr=subprocess.STDOUT)
+            print("literal sources:", result.returncode)
+    finally:
+        descriptor.write_bytes(original)
+    probe = consumer / "tests/probe.cpp"
+    source = probe.read_bytes()
+    try:
+        probe.write_bytes(b"import std;\n" + source)
+        with (output / "import-std.log").open("w", encoding="utf-8") as log:
+            result = subprocess.run([mcpp, "test", "--verbose", "--cache", "off"], cwd=consumer,
+                                    stdout=log, stderr=subprocess.STDOUT)
+            print("root imports std (diagnostic only):", result.returncode)
+    finally:
+        probe.write_bytes(source)
 
 
 def main():
