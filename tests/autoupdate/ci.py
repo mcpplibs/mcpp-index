@@ -229,12 +229,31 @@ def experiment(consumer: Path, output: Path):
             text = text.replace(f'"*/{name}.c"',
                 json.dumps((payload / "hiredis-1.5.0" / f"{name}.c").as_posix()))
         manifest.write_text(text, encoding="utf-8")
+        probe.write_text('''#include <filesystem>
+#include <iostream>
+int main() {
+    namespace fs = std::filesystem;
+    fs::path generic(ROOT_PATH);
+    auto native = generic;
+    native.make_preferred();
+    for (const auto& root : {generic, native}) {
+        std::cout << "ROOT " << root << " canonical=" << fs::canonical(root) << '\\n';
+        for (const auto& entry : fs::recursive_directory_iterator(root)) {
+            if (!entry.is_regular_file() || entry.path().extension() != ".c") continue;
+            auto relative = entry.path().lexically_relative(root);
+            std::cout << "FILE " << entry.path() << " relative=" << relative
+                      << " generic=" << relative.generic_string() << '\\n';
+        }
+    }
+}
+'''.replace('ROOT_PATH', json.dumps(payload.as_posix())), encoding="utf-8")
         with (output / "absolute-sources.log").open("w", encoding="utf-8") as log:
             result = subprocess.run([mcpp, "test", "--verbose", "--cache", "off"], cwd=consumer,
                                     stdout=log, stderr=subprocess.STDOUT)
             print("absolute sources bypassing glob expansion:", result.returncode)
     finally:
         root_manifest.write_bytes(root_source)
+        probe.write_bytes(source)
         manifest.unlink(missing_ok=True)
 
 
