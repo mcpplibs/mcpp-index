@@ -1,3 +1,10 @@
+local versions = {
+    ["1.5.0"] = {
+        url = "https://github.com/redis/hiredis/archive/refs/tags/v1.5.0.tar.gz",
+        sha256 = "eec7ef8641d221e144a58d5ef8d733c8c75c7fd487097a233aacb4fa33981cfb",
+    },
+}
+
 -- compat.hiredis — hiredis 1.2.0, minimal C client for Redis.
 --
 -- Shape A (C-source compat), same as compat.cjson / compat.zlib: the seven
@@ -47,30 +54,21 @@ package = {
                 url    = "https://github.com/redis/hiredis/archive/refs/tags/v1.2.0.tar.gz",
                 sha256 = "82ad632d31ee05da13b537c124f819eb88e18851d9cb0c30ae0552084811588c",
             },
-            ["1.5.0"] = {
-                url = "https://github.com/redis/hiredis/archive/refs/tags/v1.5.0.tar.gz",
-                sha256 = "eec7ef8641d221e144a58d5ef8d733c8c75c7fd487097a233aacb4fa33981cfb",
-            },
+            ["1.5.0"] = versions["1.5.0"],
         },
         macosx = {
             ["1.2.0"] = {
                 url    = "https://github.com/redis/hiredis/archive/refs/tags/v1.2.0.tar.gz",
                 sha256 = "82ad632d31ee05da13b537c124f819eb88e18851d9cb0c30ae0552084811588c",
             },
-            ["1.5.0"] = {
-                url = "https://github.com/redis/hiredis/archive/refs/tags/v1.5.0.tar.gz",
-                sha256 = "eec7ef8641d221e144a58d5ef8d733c8c75c7fd487097a233aacb4fa33981cfb",
-            },
+            ["1.5.0"] = versions["1.5.0"],
         },
         windows = {
             ["1.2.0"] = {
                 url    = "https://github.com/redis/hiredis/archive/refs/tags/v1.2.0.tar.gz",
                 sha256 = "82ad632d31ee05da13b537c124f819eb88e18851d9cb0c30ae0552084811588c",
             },
-            ["1.5.0"] = {
-                url = "https://github.com/redis/hiredis/archive/refs/tags/v1.5.0.tar.gz",
-                sha256 = "eec7ef8641d221e144a58d5ef8d733c8c75c7fd487097a233aacb4fa33981cfb",
-            },
+            ["1.5.0"] = versions["1.5.0"],
         },
     },
 
