@@ -53,11 +53,18 @@ jobs:
           echo "package=$(cat selected-package.txt)" >> "$GITHUB_OUTPUT"
       - name: Discover and download real upstream candidates
         id: scan
+        continue-on-error: true # The mandatory gate below accepts only the approved source outage.
         uses: openxlings/xpkgindex-update@416a954c67dba4cdf52a033a71ee88fdec0acf1d
         with:
           mode: check
           token: ${{ github.token }}
           package: ${{ steps.coverage.outputs.package }}
+      - name: Reject all scan failures except the approved unavailable source
+        if: always()
+        env:
+          PLAN: ${{ steps.scan.outputs.plan }}
+          OUTCOME: ${{ steps.scan.outcome }}
+        run: python tests/autoupdate/source_outage.py scan-gate --plan "$PLAN" --outcome "$OUTCOME"
       - name: Plan actual candidate build/run jobs
         id: matrix
         if: always() && steps.scan.outputs.plan != ''
@@ -170,9 +177,6 @@ jobs:
           PACKAGE: ${{ matrix.id }}
         run: |
           "$MCPP" index update
-          if [[ "$PACKAGE" == compat:hiredis ]]; then
-            "$MCPP" xpkg parse pkgs/c/compat.hiredis.lua --all-os
-          fi
           if [[ "$TOOLCHAIN" != default ]]; then
             "$MCPP" toolchain install "$TOOLCHAIN"
             "$MCPP" toolchain default "$TOOLCHAIN"
@@ -184,17 +188,6 @@ jobs:
         env:
           PACKAGE: ${{ matrix.id }}
         run: python tests/autoupdate/ci.py verify --plan .candidate-plan/build-plan.json --package "$PACKAGE" --consumer "$CONSUMER"
-      - name: Diagnose a Windows failure with the current released client
-        if: failure() && runner.os == 'Windows' && env.MCPP != ''
-        shell: bash
-        run: |
-          # Diagnostic only: the original failing step still makes the job fail.
-          version=2026.10.19.1
-          root="$RUNNER_TEMP/mcpp-${version}-windows-x86_64"
-          curl -fsSL --retry 2 -o "$root.zip" "https://github.com/mcpp-community/mcpp/releases/download/v${version}/mcpp-${version}-windows-x86_64.zip"
-          powershell -NoProfile -Command "Expand-Archive -Force -Path '$root.zip' -DestinationPath '$RUNNER_TEMP'"
-          cd "$CONSUMER"
-          "$root/bin/mcpp.exe" test --verbose 2>&1 | tee modern-client.log
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -203,22 +196,10 @@ jobs:
             ${{ env.CONSUMER }}/candidate.log
             ${{ env.CONSUMER }}/mcpp.lock
             ${{ env.CONSUMER }}/mcpp.toml
-            ${{ env.CONSUMER }}/modern-client.log
       - name: Collect compiler and linker evidence
         if: always()
         shell: bash
         run: python tests/autoupdate/ci.py diagnostics --consumer "$CONSUMER" --output candidate-diagnostics
-      - name: Isolate Windows cache and workspace planning
-        if: failure() && runner.os == 'Windows' && matrix.id == 'compat:hiredis'
-        shell: bash
-        run: python tests/autoupdate/ci.py experiment --consumer "$CONSUMER" --output candidate-experiment
-      - uses: actions/upload-artifact@v4
-        if: always() && runner.os == 'Windows' && matrix.id == 'compat:hiredis'
-        with:
-          name: candidate-experiment-${{ strategy.job-index }}
-          path: |
-            candidate-experiment/*.log
-          if-no-files-found: ignore
       - uses: actions/upload-artifact@v4
         if: always()
         with:

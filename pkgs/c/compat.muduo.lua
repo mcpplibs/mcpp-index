@@ -26,6 +26,9 @@ package = {
     mcpp = {
         language     = "c++23",
         import_std   = false,
+        -- Frozen upstream uses abort() without declaring it. Recent libc++
+        -- no longer provides that declaration through unrelated headers.
+        cxxflags     = { "-include", "cstdlib" },
         include_dirs = { "*" },
         sources      = {
             "*/muduo/base/*.cc",

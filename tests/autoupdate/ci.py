@@ -133,6 +133,15 @@ def prepare(plan: Path, identity: str, output: Path):
             path.unlink()
         (output / "tests/connection.cpp").write_text(
             '#include <nanodbc/nanodbc.h>\nint main() { nanodbc::connection c; return c.connected() ? 1 : 0; }\n')
+    if identity == "yizhinailong:mcr":
+        parts = version.split(".")
+        if len(parts) != 3 or not all(part.isdecimal() for part in parts):
+            raise RuntimeError("mcr version assertions require three numeric parts")
+        api = output / "tests/api.cpp"
+        defines = f'#define MCR_EXPECT_VERSION "{version}"\n'
+        defines += ''.join(f'#define MCR_EXPECT_{key} {int(value)}\n'
+                           for key, value in zip(("MAJOR", "MINOR", "PATCH"), parts))
+        api.write_text(defines + api.read_text(encoding="utf-8"), encoding="utf-8")
     text += f'\n[indices]\n"{namespace}" = {{ path = {json.dumps(str(ROOT).replace(chr(92), "/"))} }}\n'
     (output / "mcpp.toml").write_text(text)
     print(f"Prepared {identity}@{version} in {output}")
@@ -160,87 +169,11 @@ def diagnostics(consumer: Path, output: Path):
                     destination = output / path.relative_to(consumer)
                     destination.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copyfile(path, destination)
-    payload = consumer / ".mcpp/.xlings/data/xpkgs/compat-x-hiredis/1.5.0"
-    if payload.exists():
-        evidence = {"path": str(payload), "resolved": str(payload.resolve()),
-                    "children": [str(p.relative_to(payload)) for p in payload.iterdir()],
-                    "c_files": [{"path": str(p), "resolved": str(p.resolve()), "size": p.stat().st_size}
-                                for p in payload.glob("*/*.c")],
-                    "alloc_matches": [str(p) for p in payload.glob("*/alloc.c")]}
-        (output / "hiredis-payload.json").write_text(json.dumps(evidence, indent=2), encoding="utf-8")
-        for name in (".xpkg.lua", ".xpkg-install.json"):
-            if (payload / name).is_file():
-                shutil.copyfile(payload / name, output / ("hiredis-" + name.lstrip(".")))
-
-
-def experiment(consumer: Path, output: Path):
-    """Keep the primary failure; isolate source discovery in the job checkout."""
-    output.mkdir(parents=True, exist_ok=True)
-    mcpp = os.environ["MCPP"]
-    descriptor = ROOT / "pkgs/c/compat.hiredis.lua"
-    original = descriptor.read_bytes()
-    try:
-        # Temporary diagnostic only: leave all version blocks untouched and
-        # restore the descriptor even when the experiment fails.
-        changed = original
-        for name in ("alloc", "async", "hiredis", "net", "read", "sds", "sockcompat"):
-            changed = changed.replace(f'"*/{name}.c"'.encode(),
-                                      f'"hiredis-1.5.0/{name}.c"'.encode())
-        descriptor.write_bytes(changed)
-        with (output / "literal-sources.log").open("w", encoding="utf-8") as log:
-            result = subprocess.run([mcpp, "test", "--verbose", "--cache", "off"], cwd=consumer,
-                                    stdout=log, stderr=subprocess.STDOUT)
-            print("literal sources:", result.returncode)
-    finally:
-        descriptor.write_bytes(original)
-    probe = consumer / "tests/probe.cpp"
-    source = probe.read_bytes()
-    try:
-        probe.write_bytes(b"import std;\n" + source)
-        with (output / "import-std.log").open("w", encoding="utf-8") as log:
-            result = subprocess.run([mcpp, "test", "--verbose", "--cache", "off"], cwd=consumer,
-                                    stdout=log, stderr=subprocess.STDOUT)
-            print("root imports std (diagnostic only):", result.returncode)
-    finally:
-        probe.write_bytes(source)
-    # A path manifest over the very same installed files distinguishes Lua
-    # descriptor acquisition from the scanner/backend, without another download.
-    payload = consumer / ".mcpp/.xlings/data/xpkgs/compat-x-hiredis/1.5.0"
-    manifest = payload / "mcpp.toml"
-    root_manifest = consumer / "mcpp.toml"
-    root_source = root_manifest.read_bytes()
-    try:
-        manifest.write_text(
-            '[package]\nname = "hiredis"\nnamespace = "compat"\nversion = "1.5.0"\n'
-            '[build]\ninclude_dirs = ["*", "mcpp_generated/include"]\n'
-            'sources = ["*/alloc.c", "*/async.c", "*/hiredis.c", "*/net.c", '
-            '"*/read.c", "*/sds.c", "*/sockcompat.c"]\n'
-            'cflags = ["-D_CRT_SECURE_NO_WARNINGS", "-DWIN32_LEAN_AND_MEAN"]\n'
-            'ldflags = ["-lws2_32", "-lcrypt32"]\n', encoding="utf-8")
-        text = root_source.decode().replace('hiredis = "1.5.0"',
-            'hiredis = { path = ' + json.dumps(payload.as_posix()) + ' }')
-        root_manifest.write_text(text, encoding="utf-8")
-        with (output / "path-manifest.log").open("w", encoding="utf-8") as log:
-            result = subprocess.run([mcpp, "test", "--verbose", "--cache", "off"], cwd=consumer,
-                                    stdout=log, stderr=subprocess.STDOUT)
-            print("same payload through a path manifest:", result.returncode)
-        text = manifest.read_text(encoding="utf-8")
-        for name in ("alloc", "async", "hiredis", "net", "read", "sds", "sockcompat"):
-            text = text.replace(f'"*/{name}.c"',
-                json.dumps((payload / "hiredis-1.5.0" / f"{name}.c").as_posix()))
-        manifest.write_text(text, encoding="utf-8")
-        with (output / "absolute-sources.log").open("w", encoding="utf-8") as log:
-            result = subprocess.run([mcpp, "test", "--verbose", "--cache", "off"], cwd=consumer,
-                                    stdout=log, stderr=subprocess.STDOUT)
-            print("absolute sources bypassing glob expansion:", result.returncode)
-    finally:
-        root_manifest.write_bytes(root_source)
-        manifest.unlink(missing_ok=True)
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=("audit", "matrix", "prepare", "verify", "selection", "diagnostics", "experiment"))
+    parser.add_argument("command", choices=("audit", "matrix", "prepare", "verify", "selection", "diagnostics"))
     parser.add_argument("--base")
     parser.add_argument("--plan", type=Path)
     parser.add_argument("--package")
@@ -257,8 +190,6 @@ def main():
         prepare(args.plan, args.package, args.output)
     elif args.command == "diagnostics":
         diagnostics(args.consumer, args.output)
-    elif args.command == "experiment":
-        experiment(args.consumer, args.output)
     else:
         verify(args.plan, args.package, args.consumer)
 
