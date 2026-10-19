@@ -224,6 +224,15 @@ def experiment(consumer: Path, output: Path):
             result = subprocess.run([mcpp, "test", "--verbose", "--cache", "off"], cwd=consumer,
                                     stdout=log, stderr=subprocess.STDOUT)
             print("same payload through a path manifest:", result.returncode)
+        text = manifest.read_text(encoding="utf-8")
+        for name in ("alloc", "async", "hiredis", "net", "read", "sds", "sockcompat"):
+            text = text.replace(f'"*/{name}.c"',
+                json.dumps((payload / "hiredis-1.5.0" / f"{name}.c").as_posix()))
+        manifest.write_text(text, encoding="utf-8")
+        with (output / "absolute-sources.log").open("w", encoding="utf-8") as log:
+            result = subprocess.run([mcpp, "test", "--verbose", "--cache", "off"], cwd=consumer,
+                                    stdout=log, stderr=subprocess.STDOUT)
+            print("absolute sources bypassing glob expansion:", result.returncode)
     finally:
         root_manifest.write_bytes(root_source)
         manifest.unlink(missing_ok=True)
