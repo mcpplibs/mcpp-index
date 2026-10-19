@@ -10,7 +10,8 @@
 -- ODBC driver manager and cannot run without one:
 --
 --   * windows — the SDK's odbc32 is always there; just link it.
---   * macOS   — iODBC is part of the OS; just link it.
+--   * macOS   — link the OS iODBC runtime. Its development headers are no
+--     longer in recent SDKs; install Homebrew libiodbc for those headers.
 --   * linux   — the manager (unixODBC) is a third-party library, and mcpp's
 --     runtime closure rejects binaries whose NEEDED libodbc.so.2 only exists
 --     on the host. compat.unixodbc therefore builds the manager STATICALLY
@@ -149,7 +150,12 @@ struct char_traits<unsigned char> {
             cxxflags = { "-fpermissive" },
         },
         macosx = {
-            -- iODBC driver manager, part of the OS.
+            -- iODBC runtime is in the OS, but recent SDKs omit sql.h.
+            -- Homebrew's keg-only development headers (Apple Silicon/Intel).
+            include_dirs = {
+                "/opt/homebrew/opt/libiodbc/include",
+                "/usr/local/opt/libiodbc/include",
+            },
             ldflags = { "-liodbc" },
         },
         windows = {

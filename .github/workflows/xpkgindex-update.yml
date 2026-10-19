@@ -160,6 +160,9 @@ jobs:
           else
             echo "MCPP=$root/bin/mcpp" >> "$GITHUB_ENV"
           fi
+      - name: Install macOS ODBC development headers
+        if: runner.os == 'macOS' && matrix.id == 'compat:nanodbc'
+        run: brew install libiodbc
       - name: Resolve, build and run the actual candidate
         shell: bash
         env:
