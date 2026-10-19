@@ -9,6 +9,7 @@
 |------|------|
 | [package-types.md](package-types.md) | 四种库形态(C 源码 compat、header-only、C++23 module wrapper、外部 Form-A 模块仓)的描述符模板与样例 |
 | [descriptor-examples.md](descriptor-examples.md) | 本索引全部描述符的完整目录,按形态分组 —— 每个包编了什么,以及刻意没编什么 |
+| [automatic-updates.md](automatic-updates.md) | 适用条件、声明、每日 bot PR 与候选 CI |
 | [cn-mirror.md](cn-mirror.md) | GitCode `mcpp-res` CN 镜像闭环(`gtc` 工具、闭环校验、注意事项),含无 `mcpp-res` 写权限时的回退方案(plain-string 上游 url) |
 | [repository-and-schema.md](repository-and-schema.md) | 仓库布局、描述符 schema 速查、`validate.yml` CI 行为、本地 lint 复现、案例索引 |
 

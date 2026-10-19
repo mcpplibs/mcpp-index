@@ -7,8 +7,7 @@ meant to be read the way you would read a case book: find the row whose situatio
 and reuse its reasoning. Every entry records not just what the package compiles but **what it deliberately does not**,
 which is usually the part worth copying.
 
-For the templates behind each shape see [package-types.md](package-types.md); the short list of starting points lives
-in the [root README](../README.md#reference-examples).
+For descriptor templates see [package-types.md](package-types.md).
 
 | Shape | Examples |
 |------|------|
