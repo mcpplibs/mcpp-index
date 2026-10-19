@@ -177,6 +177,17 @@ jobs:
         env:
           PACKAGE: ${{ matrix.id }}
         run: python tests/autoupdate/ci.py verify --plan .candidate-plan/build-plan.json --package "$PACKAGE" --consumer "$CONSUMER"
+      - name: Diagnose a Windows failure with the current released client
+        if: failure() && runner.os == 'Windows' && env.MCPP != ''
+        shell: bash
+        run: |
+          # Diagnostic only: the original failing step still makes the job fail.
+          version=2026.10.19.1
+          root="$RUNNER_TEMP/mcpp-${version}-windows-x86_64"
+          curl -fsSL --retry 2 -o "$root.zip" "https://github.com/mcpp-community/mcpp/releases/download/v${version}/mcpp-${version}-windows-x86_64.zip"
+          powershell -NoProfile -Command "Expand-Archive -Force -Path '$root.zip' -DestinationPath '$RUNNER_TEMP'"
+          cd "$CONSUMER"
+          "$root/bin/mcpp.exe" test --verbose 2>&1 | tee modern-client.log
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -185,6 +196,7 @@ jobs:
             ${{ env.CONSUMER }}/candidate.log
             ${{ env.CONSUMER }}/mcpp.lock
             ${{ env.CONSUMER }}/mcpp.toml
+            ${{ env.CONSUMER }}/modern-client.log
       - name: Collect compiler and linker evidence
         if: always()
         shell: bash
