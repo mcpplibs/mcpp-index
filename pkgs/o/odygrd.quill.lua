@@ -67,6 +67,15 @@ function install()
         content = patched
     end
 
+    -- This descriptor builds Quill's header-backed module (QUILL_IMPORT_STD
+    -- is not defined). 13.1 adds an inactive conditional import, which mcpp's
+    -- source scanner refuses before preprocessing. Remove that known inactive
+    -- block from the generated interface; keep the downloaded source intact.
+    local optional_std = "#ifdef QUILL_IMPORT_STD\nimport std;\n  #define FMTQUILL_IMPORT_STD\n#endif\n"
+    if content:find(optional_std, 1, true) then
+        patch(optional_std, "")
+    end
+
     -- Clang 的资源目录在 ARM 上也含 x86 头，存在性检查不能代替目标架构判断
     patch("#if !defined(__INTEL_COMPILER)\n",
         "#if !defined(__INTEL_COMPILER) && (defined(__i386__) || defined(__x86_64__) || defined(_M_IX86) || defined(_M_X64))\n")
