@@ -135,15 +135,15 @@ import("xim.libxpkg.pkginfo")
 
 function install()
     local wrap = "llama.cpp-m-" .. pkginfo.version()
-    -- This checkpoint uses getenv/atoi/strtol/free without their header.
-    -- Scope the explicit include to its ordinary implementation sources;
+    -- libc++ 23 exposes missing standard headers in this Linux checkpoint.
+    -- Scope the explicit includes to ordinary Linux implementation sources;
     -- the exported module and the downloaded source files remain untouched.
     if pkginfo.version() == "b10069.2" then
         local manifest = path.join(wrap, "mcpp.toml")
         local content = assert(io.readfile(manifest)):gsub("\r\n", "\n")
-        local patched, count = content:gsub("\nflags%s*=%s*%[",
-            '\nflags = [\n  { glob = "third_party/llama.cpp/**/*.cpp", cxxflags = ["-include", "cstdlib", "-include", "cerrno"] },', 1)
-        assert(count == 1, "llamacpp: expected the native build flags table")
+        local patched, count = content:gsub("\n%[target%.linux%.build%]\n",
+            '\n[target.linux.build]\nflags = [{ glob = "third_party/llama.cpp/**/*.cpp", cxxflags = ["-include", "cstdlib", "-include", "cerrno"] }]\n', 1)
+        assert(count == 1, "llamacpp: expected the native Linux build table")
         io.writefile(manifest, patched)
     end
     local prefix = pkginfo.install_dir()
