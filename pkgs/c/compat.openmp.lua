@@ -74,6 +74,7 @@ local function tool(dep, name)
     if info then
         for _, candidate in ipairs({
             path.join(info.bin or info.path or "", name),
+            path.join(info.path or "", name), -- Windows Python lives at the payload root.
             path.join(info.path or "", "CMake.app", "Contents", "bin", name),
         }) do
             if os.isfile(candidate) then return candidate end
