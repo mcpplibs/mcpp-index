@@ -54,7 +54,7 @@ GitHub URL。这不是远端最终接入数量：其中包含历史条目、混�
 
 - 优先扫描 GitHub 已发布的 stable releases，排除 draft、prerelease；无匹配 release 的
   tag-only 仓库可查询 tags，按声明模板与版本语法筛选。tag 不能提供稳定性标记，报告标注发现来源。
-- 版本是至少两段的点分非负整数，例如 `1.2`、`1.2.3`、`2026.10.19.1`。
+- 版本支持数字点分（包括 calver）、b 编号，以及明确排序的单字母稳定后缀；不猜测任意字符串的版本关系。
 - tag 由固定前缀、`${version}`、固定后缀组成，例如 `v${version}`。
 - 按整数分段比较版本，缺少的尾段按零比较；等价但拼写不同的候选视为歧义并报错。
 - 下载 URL 是显式模板；资源已经发布；每个安装资源使用单个字符串 SHA256。
@@ -67,7 +67,7 @@ GitHub URL。这不是远端最终接入数量：其中包含历史条目、混�
 
 ### 3.2 不支持
 
-- commit、任意 tag、预发布版本、`b12345`、发行版后缀等非数字点分版本。
+- 自动推进 commit 快照、任意 tag、预发布版本和无明确排序的发行版后缀。
 - 自动回填历史 release、清理旧版本、升级依赖约束、批量联动多个包。
 - 架构分发表、per-arch SHA256、`XLINGS_RES`/`res_versioned` 等额外资源形态。
 - 需要修改 shim、sources、generated_files、安装 hook 或 build.mcpp 的更新。
@@ -109,9 +109,9 @@ package = {
 | `tag` | 一个且仅一个 `${version}`；其余字符按字面量匹配，不是正则或 Lua pattern |
 | `url` | 所有已有平台共用的资源模板，或平台到资源模板的映射 |
 
-允许的占位符只有 `${version}`、`${tag}`。不认识的占位符报错。
+允许的占位符为 `${version}`、`${version:dash}`、`${tag}`。dash 只把点分版本转换为横线分隔，用于 FreeType。其他占位符报错。
 `${tag}` 保留 API 返回的原始拼写，`${version}` 是从 tag 提取的版本。
-默认查询 `package.repo`，首版不提供 provider/repo 覆盖字段。
+优先从显式 GitHub 下载模板确定查询仓库；模板不指定 GitHub 仓库时回退 `package.repo`。首版不增加 provider/repo 覆盖字段。
 
 不同平台的写法：
 
@@ -190,7 +190,7 @@ jobs:
           token: ${{ secrets.UPDATE_TOKEN }}
 ```
 
-这是正式发布后的接口草案，Action 尚不存在。开发联调使用开发分支的完整 commit SHA，
+这是正式发布后的接口草案。开发 Action 已在 draft PR 实现，开发联调使用完整 commit SHA，
 不提前发布或移动 v1；composite Action 从自身 GITHUB_ACTION_PATH 执行该提交的源码，
 不能安装一个与开发提交无关的已发布 PyPI 版本。
 输入只有 `mode`（check/propose）、`token`（propose 必需）、可选 `package`。
@@ -452,7 +452,7 @@ Lua 注释/长字符串保留、修改原子性、实际候选选择、旧版本
 | R9 | 每包一个打开的更新 PR | 新 release 到来时不堆 PR、不自动改写维护者正在 review 的分支；关闭过的同版本不自动重开 |
 | R10 | GitHub App 优先，PAT 可过渡 | Action 自己配置 git 写认证；checkout 不保留默认凭证；不把 token 暴露给包安装测试 |
 
-本次交付仍是设计修订与自审。下一步按上述开发分支和 draft PR 路径实现；待维护者 review 后推进。
+设计约束与执行证据分开记录；下节列出实际进度，不能用设计自审代替 CI 通过。
 
 ## 13. 实现时核实的范围与调整
 
@@ -468,3 +468,13 @@ Lua 注释/长字符串保留、修改原子性、实际候选选择、旧版本
 - 实际候选 CI 发现 FreeType 2.15 新增 HVF 驱动；人工追加 hvf.c union glob，2.15 与旧 2.13.3 均已本地构建运行通过，旧版本块不变。
 - Linux 生成的计划与 Windows CRLF checkout 必须可互用：仅描述符计划摘要按 LF 规范化，实际追加仍逐字保留 checkout 的旧版本块；资源 SHA256 永不规范化。
 - 候选 CI 保留 verbose 编译、link response 与 CDB 证据，用于分辨安装资源、包配置和工具链问题。
+
+### 13.1 当前真实验证进度（2026-10-20 JST）
+
+- 工具 draft：[openxlings/xpkgindex-update #1](https://github.com/openxlings/xpkgindex-update/pull/1)；标准 src 布局、简约 README、45 项回归测试与六种 OS/Python CI 组合。
+- 接入 draft：[mcpp-index #543](https://github.com/mcpplibs/mcpp-index/pull/543)；真实 propose draft：[mcpp-index #544](https://github.com/mcpplibs/mcpp-index/pull/544)，hiredis 1.5.0，重复 propose 返回 pending。
+- OpenMP 23 移除 standalone 配置入口，人工将构建配方改为 runtimes；新 23.1.3 与旧 22.1.8 均完成本地静态库构建、安装和并行归约运行测试；仍需远端全平台验证。
+- nanodbc 的 macOS 候选暴露 SDK 缺少 sql.h；明确使用 Homebrew libiodbc 开发头文件，CI 安装该前置依赖，等待实际重跑结果。
+- Windows hiredis/libuv 候选存在真实链接失败；禁用缓存、独立/虚拟 workspace、显式源码路径及 import std 均未解决，不据此降级测试或声称通过。继续比较同一 payload 的 registry 与 path manifest 加载。
+- 旧版本保留与 82 包声明覆盖审计通过；扫描的 libmysqlclient 404 仍是可见错误，需要同源迁移信息才能恢复更新。
+- 开发期不发布稳定标签、不启用定时写入、不合并 PR；最终验收仍要求所有实际候选矩阵和既有 CI gates 通过。
