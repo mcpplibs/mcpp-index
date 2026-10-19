@@ -23,6 +23,10 @@ on:
     - cron: "0 6 * * 0"
   workflow_dispatch:
     inputs:
+      update_pr:
+        description: "Bot update PR number; dispatch its exact head with selective regression"
+        type: string
+        required: false
       cache:
         description: "Package build cache — 'local' rebuilds every dependency per member, which is what the timing table should be read against when comparing"
         type: choice
@@ -716,6 +720,10 @@ jobs:
       - name: Select affected workspace members
         id: plan
         shell: bash
+        env:
+          UPDATE_PR: ${{ inputs.update_pr }}
+          GH_TOKEN: ${{ github.token }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         run: |
           # A FULL RUN IS NO LONGER SOMETHING A PR CAN TRIGGER BY ACCIDENT.
           #
@@ -799,6 +807,13 @@ jobs:
                   || { widen "push predecessor $base not in history"; usable=0; }
               fi
               if [ "$usable" = 1 ]; then range="$base..HEAD"; else range=""; fi ;;
+            workflow_dispatch)
+              if [ -n "$UPDATE_PR" ]; then
+                base=$(python3 tests/autoupdate/automation.py verify --pr "$UPDATE_PR")
+                range="$base...HEAD"
+              else
+                full "event=workflow_dispatch"
+              fi ;;
             *)
               full "event=${{ github.event_name }}" ;;
           esac
@@ -1743,7 +1758,7 @@ jobs:
     if: >-
       always()
       && (needs.workspace.result == 'failure' || needs.mirror-cn-reachable.result == 'failure')
-      && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+      && (github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.update_pr == ''))
     runs-on: ubuntu-latest
     permissions:
       issues: write

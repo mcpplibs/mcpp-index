@@ -182,6 +182,18 @@
         }
       },
       {
+        "slug": "automatic-updates",
+        "title": {
+          "en": "Automatic updates",
+          "zh": "自动更新",
+          "zh-Hant": "自動更新"
+        },
+        "path": "docs/automatic-updates.md",
+        "translations": {
+          "zh": "docs/zh/automatic-updates.md"
+        }
+      },
+      {
         "slug": "cn-mirror",
         "title": {
           "en": "CN mirror loop",

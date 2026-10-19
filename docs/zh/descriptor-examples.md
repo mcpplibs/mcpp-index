@@ -6,7 +6,7 @@
 行,再打开对应描述符复用其推理过程。每条记录的不只是这个包编了什么,更包括它**刻意没有编什么** —— 后者通常才是
 值得照搬的部分。
 
-各形态的模板见 [package-types.md](package-types.md);精简版的入门示例见[根 README](../../README.zh-CN.md#参考示例)。
+各形态的模板见 [package-types.md](package-types.md)。
 
 | 形态 | 示例 |
 |------|------|

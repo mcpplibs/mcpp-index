@@ -1,7 +1,7 @@
 # xpkgindex-update：两个索引共用的声明式版本更新工具
 
 日期：2026-10-19  
-状态：实现联调中。工具开发 PR：openxlings/xpkgindex-update#1；mcpp 为首个 draft CI 接入仓库。
+状态：工具和索引接入已合并；2026-10-20 补齐每日 bot PR 与自动 CI，验收以第 16 节为准。
 
 ## 1. 目标与结论
 
@@ -546,3 +546,78 @@ package = {
 先等待索引候选与现有消费者 CI 全部成功，再 squash 合并 #543。将 #544 同步到 main 基线，以工具重新生成共享格式并验证后合入。随后手动触发 main 上的 Action，使用可选 package 输入限定一个真实更新包；从 artifact 取回同一份固定计划，由已合并的 CLI 创建针对 main 的更新 PR，等待实际构建、运行、锁文件及旧版本保留检查成功后 squash 合入。
 
 写 PR 使用本地已有授权，不新建长期 token secret。现有 libmysqlclient 源故障豁免继续明确保留，不改变其历史版本。此节是实施时的计划及已核实证据，最终合并与 CI 结果另见汇报和 PR 记录。
+
+## 15. 共享资源与真实更新验收记录
+
+本节为用户授权 squash 合并后的真实结果；不创建 docs-only 提交以重复触发整套 CI。
+
+| PR | 合并提交 | 结果 |
+|---|---|---|
+| [openxlings/xpkgindex-update #1](https://github.com/openxlings/xpkgindex-update/pull/1) | `23c5e04948c55e606bc56ee2c649ddd4849b7ec6` | squash 合并；59 测试、六种 OS/Python 组合及 Action/打包检查成功；工具 main CI 成功 |
+| [mcpp-index #543](https://github.com/mcpplibs/mcpp-index/pull/543) | `1a514dbd1d71de29f0c8e6a9c854bab92b928df9` | squash 合并前 74 个执行 checks 成功，52/52 共享资源候选构建/运行/锁文件检查和 13 个消费者回归分片成功 |
+| [mcpp-index #544](https://github.com/mcpplibs/mcpp-index/pull/544) | `54cad76b3058a46ceec4c63b7bfa2122d5fdb194` | 以 main 为基线，20 个执行 checks 成功后 squash 合并；hiredis 1.5.0 单资源定义，三个平台引用；旧 1.2.0 不变 |
+| [mcpp-index #545](https://github.com/mcpplibs/mcpp-index/pull/545) | `192c8653516a3057e6103ffacd9bc0e6e613b921` | 真实 Action 计划生成的 yyjson 0.13.0 更新，20 个执行 checks 成功后 squash 合并；旧 0.12.0 不变 |
+
+### 15.1 真正的 main 更新流程
+
+1. 在 main 的 `54cad76` 手动触发 [Action 39308549012](https://github.com/mcpplibs/mcpp-index/actions/runs/39308549012)，输入 `package=compat:yyjson`。
+2. Action 扫描确认 `0.12.0 -> 0.13.0`，资源完整下载并计算 SHA256；四种平台/工具链的实际构建/运行/锁文件检查全部成功。
+3. 原样取回 artifact `12215250910` 的固定计划，不重新构造计划；用合并提交 `23c5e04` 的 CLI 消费，自动创建 #545。使用已有本地授权，不配置新的长期 token secret。
+4. 再次执行同一计划的 propose 返回 `pending`，未创建重复 PR。
+5. #545 的实际 diff 为一个文件新增 10 行，无删除；URL/SHA 只定义一次，三个平台引用同一资源。全部 PR CI 成功后按已验证 head squash 合并。
+6. 合并后重新 check 返回 `compat:yyjson 0.13.0 up-to-date`；再 propose 返回 `{ "packages": [] }`。
+7. 独立 guard 继续确认原始基线 `981a4f2` 的 254 个描述符历史版本条目全部保留。
+
+### 15.2 发布索引的普通客户端验证
+
+- 最新 main 的 [发布](https://github.com/mcpplibs/mcpp-index/actions/runs/39309716725)、[站点部署](https://github.com/mcpplibs/mcpp-index/actions/runs/39309716804)、[消费者验证](https://github.com/mcpplibs/mcpp-index/actions/runs/39309716862) 均成功。
+- 固定客户端 `mcpp 2026.10.1.2` 刷新正式发布索引，报告 mcpplibs revision `192c865`。
+- 新建独立消费者仅依赖 `compat:yyjson = 0.13.0`，没有 `[indices]` 或本地索引覆盖。
+- 静态断言版本宏为 0.13.0；运行时 `yyjson_version()` 与版本宏一致；真实解析布尔 JSON 成功，输出 `PUBLISHED_YYJSON_0_13_0=PASS`。
+- 实际构建/运行结果为 1 passed、0 failed；锁文件确认为 `compat.yyjson`、`version = 0.13.0`、`source = index+compat@0.13.0`。
+
+### 15.3 保留的边界
+
+旧版本不做批量去重迁移，原镜像、哈希、注释和顺序保持原样。共享优化用于新追加的版本，后续追加复用同一个表。URL 不同的平台不因哈希相同而混用来源。工具不执行 Lua、不自动改安装配方、不自动 mirror、不自动 merge；本轮 squash 合并由用户明确授权。
+
+原有两个条件性通知/计时发布任务按原规则跳过，不是构建测试跳过。wellwei/libmysqlclient 的源故障豁免继续明确显示 error 和 NOT TESTED，不计作成功构建；其余失败均未屏蔽。xim-pkgindex 的 latest.ref 变更仍未启用。README 为 34 行，详细使用文档独立。
+
+较早的 integration main 提交 `1a514db` 的 [自动完整回归 39307639699](https://github.com/mcpplibs/mcpp-index/actions/runs/39307639699) 也已全部成功，19 个执行 jobs 全部通过，无剩余失败或待完成构建。至此，工具 main、索引接入 PR/main、hiredis PR/main、真实 yyjson 更新 PR/main 的构建、测试、发布及部署均完成。
+
+## 16. 每日无人值守更新与贡献规范（2026-10-20）
+
+### 16.1 补齐原验收缺口
+
+#545 是 Action 扫描、候选 CI 后，由本地 CLI 使用 Sunrisepeak 的已有授权创建的 PR。
+它证明了更新内容及发布有效，但不证明定时触发、Action 内提 PR 或 bot PR 无人值守 CI。
+此前“完成”的判断范围错误；本节单独验收这三个环节。
+
+### 16.2 正式流程
+
+- 使用原设计的 `17 2 * * *`，每日 02:17 UTC / 11:17 JST；手动默认分支 dispatch 走同一流程。
+- 扫描只读；固定 artifact 计划交给独立 propose job，不依赖本地 CLI 或本地用户 token。
+- 使用内置 `GITHUB_TOKEN`，PR 作者为 `github-actions[bot]`，不新增长期 secret。
+- 组织此前阻止 Actions 创建 PR（API 409）；用户已开启组织设置，仓库级也已开启。
+  仓库默认权限仍为 read，仅 propose job 获得 contents/pull-requests/actions write。
+- 按中央 `max_prs: 3` 每轮最多三个新 PR；每包一个打开 PR，关闭候选不重开。
+- propose 后显式 dispatch validate、候选、site、openkal 四个 workflow，避免依赖受限的普通 PR 事件。
+- validate/openkal 以 PR number、bot 身份、同仓 head/base、默认 base、head SHA 和单描述符 diff 校验请求，
+  然后选择受影响成员；普通不带 update_pr 的手动 validate 仍保持完整回归。
+- 新版本在 PR CI 内验证，不要求全量候选全部成功才能先开 PR；失败升级保留红色结果，由维护者适配。
+- 已有 PR 可补发缺失 dispatch；已有运行不自动重跑，失败仍可见。默认分支移动后拒绝旧扫描计划，须重跑。
+- 写入仅默认分支 schedule/dispatch 可执行；普通 PR 和更新分支都不会提 PR，无递归，也不自动审批或合并。
+
+### 16.3 agent 与文档约定
+
+新增或维护符合条件的公共 GitHub release/数字 tag 包时，skill 要求主动添加并验证
+`extensions.autoupdate`。快照、独立源码版本、非 GitHub 来源和需要修改配方的升级须说明例外。
+新版本仍只追加，旧版本/mirror 不改；不要求未来新版本自动 mirror。
+
+两份根 README 精简为用途、使用、贡献与链接；删除逐包 Additional example、重复示例表与 agent 长提示词。
+包形态和示例保留在专门文档；自动更新新增中英文独立文档并登记站点导航。
+skill 明确普通包 PR 不改根 README 或站点配置；用户明确要求的文档整理除外。
+
+### 16.4 验收
+
+本地新增编排回归覆盖 bot/head/仓库/文件边界、默认分支移动、局部 dispatch 恢复、重复 PR 和局部提案失败。
+Actionlint、真实 PR CI 与 bot 生产验证结果在本节补充；未完成前不再报告无人值守链路已通过。

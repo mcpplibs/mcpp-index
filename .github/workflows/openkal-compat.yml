@@ -13,6 +13,10 @@ on:
     - cron: "0 7 * * 0"
   workflow_dispatch:
     inputs:
+      update_pr:
+        description: "Bot update PR number; measure only members affected by its exact head"
+        required: false
+        default: ""
       members:
         description: "Space-separated members to measure (empty = every listed member)"
         required: false
@@ -75,9 +79,18 @@ jobs:
       - name: Select the members
         id: select
         shell: bash
+        env:
+          UPDATE_PR: ${{ inputs.update_pr }}
+          GH_TOKEN: ${{ github.token }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             base=$(git merge-base "origin/${{ github.base_ref }}" HEAD)
+            files=$(git diff --name-only "$base" HEAD)
+            members=$(python3 tests/openkal/compat.py select --base "$base" $files)
+          elif [ -n "$UPDATE_PR" ]; then
+            requested_base=$(python3 tests/autoupdate/automation.py verify --pr "$UPDATE_PR")
+            base=$(git merge-base "$requested_base" HEAD)
             files=$(git diff --name-only "$base" HEAD)
             members=$(python3 tests/openkal/compat.py select --base "$base" $files)
           else

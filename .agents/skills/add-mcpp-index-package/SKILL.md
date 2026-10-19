@@ -6,7 +6,7 @@ description: Use when adding a new third-party library/package to the mcpp-index
 # 向 mcpp-index 新增一个库(标准作业流程)
 
 本文件定义将上游库收录进 [`mcpp-index`](https://github.com/mcpplibs/mcpp-index) 的标准流程。其产出包括:一个
-`pkgs/<x>/<name>.lua` 描述符、一个 GitCode CN 镜像、一个位于 `tests/examples/` 的最小工程、一条 README 记录,
+`pkgs/<x>/<name>.lua` 描述符、可用时的 GitCode CN 镜像、一个位于 `tests/examples/` 的最小工程、适用时的自动更新声明,
 以及一份设计文档。完整流程为:本地验证通过,提交 PR,CI 全部通过,由维护者合并。合并后,`publish-artifact.yml`
 将自动重新发布 index artifact。
 
@@ -21,6 +21,7 @@ description: Use when adding a new third-party library/package to the mcpp-index
 
 - [docs/zh/package-types.md](../../../docs/zh/package-types.md) —— 四种库形态的描述符模板与样例路径。
 - [docs/zh/cn-mirror.md](../../../docs/zh/cn-mirror.md) —— CN 镜像闭环,含无 `mcpp-res` 权限时的回退方案。
+- [docs/zh/automatic-updates.md](../../../docs/zh/automatic-updates.md) —— 自动更新适用条件、声明、每日 bot PR 和候选 CI。
 - [docs/zh/repository-and-schema.md](../../../docs/zh/repository-and-schema.md) —— 仓库结构、schema、CI 行为、关键文件与注意事项。
 
 ## 适用范围
@@ -71,7 +72,7 @@ description: Use when adding a new third-party library/package to the mcpp-index
      编译为 no-op `main`(`#ifdef __linux__ … #else int main(){return 0;} #endif` 模式)。
    - 如需测试 feature,依赖采用长式声明 `name = { version = "…", features = ["…"] }`。
 7. **本地验证**(使用与 CI 相同版本的 mcpp,详见下文“本地验证”)。必须实际执行 `mcpp test -p <member>` 并通过。
-8. **更新 README**:在对应分类表中新增一条记录 —— `README.md`(英文,默认)与 `README.zh-CN.md`(中文)两份都要更新。
+8. **接入自动更新**：按下节检查适用条件；符合条件的包必须添加 `extensions.autoupdate` 并验证。普通包 PR 不修改两份根 README，也不为新包修改站点配置；站点会自动发现描述符。
 9. **撰写设计文档** `.agents/docs/<YYYY-MM-DD>-add-<lib>-plan.md`,记录形态判定、镜像、feature 评估、验证结论
    与注意事项。
 10. **本地 lint**:在本地复现 `validate.yml` 的 lint 检查(语法、必填字段、无前导 v、镜像表校验)。详见
@@ -81,6 +82,23 @@ description: Use when adding a new third-party library/package to the mcpp-index
 12. **确认 CI 通过**:`workspace (linux|macos|windows)` 的选择性成员测试应仅选中本库对应成员并通过
     (日志中 `selected members: <member>`),`lint`(含 `mcpp xpkg parse`)与 `mirror-cn-reachable`
     覆盖新增描述符与 CN url。合并由维护者执行。
+
+## 自动更新与 PR 范围
+
+- 对公共 GitHub release/数字 tag、稳定下载模板、无需改变构建配方的包，主动添加
+  `package.extensions.autoupdate = { tag = "v${version}", url = "https://github.com/acme/foo/archive/refs/tags/${tag}.tar.gz" }`。
+  实际 tag 不带 `v` 时使用 `${version}`；按真实上游规则填写，不照抄示例。
+- 共享 URL 或按平台映射均可。新版本可以直接使用 GitHub，不要求自动 mirror；不要声明尚不存在的 CN 模板。
+- commit 快照、独立源码/包版本映射、非 GitHub 来源、需要改配方的升级不强行接入；在 PR 中说明原因。
+- 使用 workflow 固定的工具提交运行 `inspect --package <namespace:name>` 和
+  `check --package <namespace:name> --output plan.json`；确实存在候选时，在干净 worktree 中 `apply` 并检查补丁。
+  新增版本必须有真实构建、运行、锁文件验证；不能只用仍依赖旧版本的测试证明升级成功。
+- 现有版本、URL、镜像、SHA256 和注释均保留；不迁移旧内联条目。相同新资源可以前置定义一次并由平台引用。
+- 每日默认分支 Action 由 `github-actions[bot]` 开 PR，并显式 dispatch 候选、消费者、站点和 openkal CI。
+  它不审批、不自动合并；普通 PR 和更新分支不会创建更多 PR。
+- **一般包 PR 不改 README**：不要追加 “Additional example / 新增示例”、包列表、更新记录或 agent 提示词。
+  用户明确要求整理文档或说明确有变化时才改入口文档。新增包通常也不改 `.xpkgindex.json`。
+- 详细字段、例外和认证机制见 [自动更新文档](../../../docs/zh/automatic-updates.md)。
 
 ## feature 机制
 
