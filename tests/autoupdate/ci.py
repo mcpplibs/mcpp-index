@@ -168,6 +168,9 @@ def diagnostics(consumer: Path, output: Path):
                                 for p in payload.glob("*/*.c")],
                     "alloc_matches": [str(p) for p in payload.glob("*/alloc.c")]}
         (output / "hiredis-payload.json").write_text(json.dumps(evidence, indent=2), encoding="utf-8")
+        for name in (".xpkg.lua", ".xpkg-install.json"):
+            if (payload / name).is_file():
+                shutil.copyfile(payload / name, output / ("hiredis-" + name.lstrip(".")))
 
 
 def main():
