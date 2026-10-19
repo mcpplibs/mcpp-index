@@ -69,7 +69,8 @@ python -m xpkgindex_update apply --plan plan.json --package compat:foo
 目标为默认分支且只修改一个描述符，再选择受影响成员。
 不带 `update_pr` 的普通手动消费者验证仍为全量回归。
 
-每包最多保留一个打开的更新 PR，已关闭的候选不会重新打开。
+每包最多保留一个打开的更新 PR；已有人工 PR 修改同一描述符时，也不重复提案，继续使用普通 PR CI。
+已关闭的候选不会重新打开。
 下一轮能为已有 bot PR 补齐未成功发出的 CI dispatch，不重复提 PR；已有运行（包括失败）不会被静默重跑。
 [中央配置](../../.github/xpkgindex-update.yml) 的 `max_prs` 限制每轮新 PR 数量。
 更新分支上的 CI 不会递归创建 PR。

@@ -80,8 +80,13 @@ def propose(plan, output):
             outcomes.append(record)
             continue
         try:
-            if record["status"] == "created":
+            if record.get("url"):
                 number = record["url"].rsplit("/", 1)[-1]
+                existing = json.loads(gh("api", f"repos/{repo}/pulls/{number}"))
+                if record["status"] == "pending" and existing["user"]["login"] != "github-actions[bot]":
+                    # Human PRs run ordinary pull_request CI; do not duplicate or dispatch their code.
+                    outcomes.append({**record, "ci": [{"status": "ordinary-pr-ci"}]})
+                    continue
             else:
                 slug = re.sub(r"[^a-zA-Z0-9._-]", "-", record["id"])
                 opened = json.loads(gh("pr", "list", "--repo", repo, "--state", "open",

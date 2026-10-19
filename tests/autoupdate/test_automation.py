@@ -50,16 +50,16 @@ class AutomationTests(unittest.TestCase):
             target[keys[-1]] = value
             variants.append(pr)
         for pr in variants:
-            with self.subTest(pr=pr), patch.object(automation, "gh", return_value=json.dumps(pr)):
-                with self.assertRaises(ValueError):
-                    automation.verify_pr(7, REPO, "head")
+            with (self.subTest(pr=pr),
+                  patch.object(automation, "gh", return_value=json.dumps(pr)),
+                  self.assertRaises(ValueError)):
+                automation.verify_pr(7, REPO, "head")
 
     def test_reject_workflow_changes(self):
         with patch.object(automation, "gh", side_effect=[
             json.dumps(PR), json.dumps([{"filename": ".github/workflows/validate.yml"}]),
-        ]):
-            with self.assertRaisesRegex(ValueError, "one package descriptor"):
-                automation.verify_pr(7, REPO, "head")
+        ]), self.assertRaisesRegex(ValueError, "one package descriptor"):
+            automation.verify_pr(7, REPO, "head")
 
     def test_partial_dispatch_is_resumable_and_targets_pr_head(self):
         calls = []
@@ -98,7 +98,7 @@ class AutomationTests(unittest.TestCase):
                 plan.write_text(json.dumps({"base_commit": "head"}))
                 output = Path(directory) / "automation-report.json"
 
-                def run(args, check):
+                def run(args, check, state=state):
                     self.assertEqual(args[2:4], ["xpkgindex_update", "propose"])
                     Path(args[-1]).write_text(json.dumps({"packages": [
                         {"id": "compat:foo", "status": state, "url": PR["html_url"]},
@@ -109,6 +109,8 @@ class AutomationTests(unittest.TestCase):
                 def gh(*args):
                     if args[:2] == ("pr", "list"):
                         return json.dumps([{"number": 7, "headRefName": PR["head"]["ref"]}])
+                    if args[0] == "api" and args[1].endswith("/pulls/7"):
+                        return json.dumps(PR)
                     return "head"
 
                 with patch.object(automation, "gh", side_effect=gh), \
@@ -120,3 +122,27 @@ class AutomationTests(unittest.TestCase):
                 result = json.loads(output.read_text())["packages"]
                 self.assertEqual(result[0]["ci"], [{"status": "dispatched"}])
                 self.assertEqual(result[1]["status"], "error")
+
+    def test_pending_human_pr_uses_ordinary_ci_without_dispatch(self):
+        with tempfile.TemporaryDirectory() as directory:
+            plan = Path(directory) / "plan.json"
+            plan.write_text(json.dumps({"base_commit": "head"}))
+            output = Path(directory) / "automation-report.json"
+
+            def run(args, check):
+                Path(args[-1]).write_text(json.dumps({"packages": [{
+                    "id": "compat:foo", "status": "pending", "url": PR["html_url"],
+                }]}))
+                return subprocess.CompletedProcess(args, 0)
+
+            def gh(*args):
+                if args[1].endswith("/pulls/7"):
+                    return json.dumps({**PR, "user": {"login": "maintainer"}})
+                return "head"
+
+            with patch.object(automation, "gh", side_effect=gh), \
+                 patch.object(automation.subprocess, "run", side_effect=run), \
+                 patch.object(automation, "dispatch") as dispatch:
+                self.assertEqual(automation.propose(plan, output), 0)
+            dispatch.assert_not_called()
+            self.assertEqual(json.loads(output.read_text())["packages"][0]["ci"], [{"status": "ordinary-pr-ci"}])

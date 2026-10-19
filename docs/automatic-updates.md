@@ -81,7 +81,9 @@ an open, same-repository bot PR, its exact head SHA, default base and single
 changed descriptor before selecting affected members. A regular manual
 consumer dispatch without `update_pr` still runs the full regression.
 
-One open update PR per package is retained. Closed candidate PRs are not reopened.
+One open update PR per package is retained. An existing manual PR editing the
+same descriptor also blocks duplicates and keeps its ordinary PR CI. Closed
+candidate PRs are not reopened.
 A later daily run can resume missing CI dispatches on an existing bot PR without
 creating duplicates; existing runs, including failures, are not silently rerun.
 `max_prs` in [.github/xpkgindex-update.yml](../.github/xpkgindex-update.yml) limits

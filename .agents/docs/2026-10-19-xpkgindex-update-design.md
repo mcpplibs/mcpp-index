@@ -600,6 +600,7 @@ package = {
 - 组织此前阻止 Actions 创建 PR（API 409）；用户已开启组织设置，仓库级也已开启。
   仓库默认权限仍为 read，仅 propose job 获得 contents/pull-requests/actions write。
 - 按中央 `max_prs: 3` 每轮最多三个新 PR；每包一个打开 PR，关闭候选不重开。
+  已有人工作业 PR 修改同一描述符时也不重复创建（例如已有 httplib #542）；人工 PR 继续走普通 PR CI。
 - propose 后显式 dispatch validate、候选、site、openkal 四个 workflow，避免依赖受限的普通 PR 事件。
 - validate/openkal 以 PR number、bot 身份、同仓 head/base、默认 base、head SHA 和单描述符 diff 校验请求，
   然后选择受影响成员；普通不带 update_pr 的手动 validate 仍保持完整回归。
@@ -619,5 +620,6 @@ skill 明确普通包 PR 不改根 README 或站点配置；用户明确要求�
 
 ### 16.4 验收
 
-本地新增编排回归覆盖 bot/head/仓库/文件边界、默认分支移动、局部 dispatch 恢复、重复 PR 和局部提案失败。
+工具 #2 已 squash 合并为 `6c0bee2941e36132bc2ac3d1f7edbef8b5790320`，61 项回归和全部 7 个 CI checks 成功；索引固定使用此提交。
+本地 8 项编排/基线回归覆盖 bot/head/仓库/文件边界、默认分支移动、局部 dispatch 恢复、重复 PR、人工 PR 和局部提案失败。
 Actionlint、真实 PR CI 与 bot 生产验证结果在本节补充；未完成前不再报告无人值守链路已通过。
