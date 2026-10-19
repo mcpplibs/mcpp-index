@@ -17,6 +17,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
+  PYTHONUTF8: '1'
   MCPP_VERSION: '2026.10.1.2'
   MCPP_INDEX_MIRROR: GLOBAL
 
@@ -37,7 +38,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: openxlings/xpkgindex-update
-          ref: c7bea7e8c469ae0d57c9cd96debd771960374284
+          ref: 0e574b1b67016d6c89c41c952f023453f2f1939e
           path: .updater
           persist-credentials: false
       - name: Use the exact development tool source
@@ -52,7 +53,7 @@ jobs:
           echo "package=$(cat selected-package.txt)" >> "$GITHUB_OUTPUT"
       - name: Discover and download real upstream candidates
         id: scan
-        uses: openxlings/xpkgindex-update@c7bea7e8c469ae0d57c9cd96debd771960374284
+        uses: openxlings/xpkgindex-update@0e574b1b67016d6c89c41c952f023453f2f1939e
         with:
           mode: check
           token: ${{ github.token }}
@@ -101,7 +102,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: openxlings/xpkgindex-update
-          ref: c7bea7e8c469ae0d57c9cd96debd771960374284
+          ref: 0e574b1b67016d6c89c41c952f023453f2f1939e
           path: .updater
           persist-credentials: false
       - uses: actions/download-artifact@v4
@@ -165,10 +166,12 @@ jobs:
           TOOLCHAIN: ${{ matrix.toolchain }}
         run: |
           "$MCPP" index update
-          args=()
-          if [[ "$TOOLCHAIN" != default ]]; then args+=(--toolchain "$TOOLCHAIN"); fi
+          if [[ "$TOOLCHAIN" != default ]]; then
+            "$MCPP" toolchain install "$TOOLCHAIN"
+            "$MCPP" toolchain default "$TOOLCHAIN"
+          fi
           cd "$CONSUMER"
-          "$MCPP" test "${args[@]}" 2>&1 | tee candidate.log
+          "$MCPP" test 2>&1 | tee candidate.log
       - name: The lockfile proves the candidate was selected
         shell: bash
         env:
