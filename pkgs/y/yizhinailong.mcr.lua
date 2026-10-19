@@ -11,8 +11,8 @@
 -- All three platforms share the one source archive. TLS is not inlined here
 -- because mcr's OWN manifest already branches it — Schannel on Windows,
 -- `compat.openssl` on linux/macosx — and Form A means upstream keeps owning
--- that decision. Its dependencies (compat.curl 8.21.0, nlohmann.json 3.12.0)
--- are both already in this index.
+-- that decision. Its dependencies are already in this index; 0.2 removes
+-- the JSON API and its nlohmann.json dependency.
 --
 -- No mcpp-res mirror is configured locally, so the plain-string GLOBAL url is
 -- the documented fallback for CN consumers (docs/cn-mirror.md) until a
@@ -21,7 +21,7 @@ package = {
     spec        = "1",
     namespace   = "yizhinailong",
     name        = "mcr",
-    description = "Modular C++23 HTTP client on libcurl — sync, async, coroutine and batch requests with JSON support",
+    description = "Modular C++23 HTTP client on libcurl — sync, async, coroutine and batch requests with typed responses",
     licenses    = {"MIT"},
     repo        = "https://github.com/yizhinailong/mcr",
     type        = "package",
@@ -56,3 +56,45 @@ package = {
 
     mcpp = "*/mcpp.toml",
 }
+
+import("xim.libxpkg.pkginfo")
+
+function install()
+    local wrap = "mcr-" .. pkginfo.version()
+    -- libc++ 20 does not implement views::join_with. Keep the two 0.2
+    -- formatting operations usable on the index's macOS baseline, preserving
+    -- empty elements, input order and the exact comma-space separator.
+    if pkginfo.version() == "0.2.0" then
+        local source = path.join(wrap, "src/options/http.cppm")
+        local content = assert(io.readfile(source), "mcr: cannot read " .. source):gsub("\r\n", "\n")
+        local function patch(before, after)
+            local pattern = before:gsub("(%W)", "%%%1")
+            local result, count = content:gsub(pattern, function() return after end)
+            assert(count == 1, "mcr: expected exactly one formatting expression")
+            content = result
+        end
+        local function joined(collection, item)
+            return "std::string joined; bool first = true;\n"
+                .. "            for (auto const& value : " .. collection .. ") {\n"
+                .. "                if (!first) joined += \", \"; first = false;\n"
+                .. "                joined += " .. item .. ";\n"
+                .. "            }\n            return joined;"
+        end
+        patch('return m_methods | std::views::join_with(std::string_view{ ", " }) | std::ranges::to<std::string>();',
+            joined("m_methods", "value"))
+        patch('return m_ranges | std::views::transform(&Range::Str) | std::views::join_with(std::string_view{ ", " }) | std::ranges::to<std::string>();',
+            joined("m_ranges", "value.Str()"))
+        io.writefile(source, content)
+        source = path.join(wrap, "src/session/session.cppm")
+        content = assert(io.readfile(source), "mcr: cannot read " .. source):gsub("\r\n", "\n")
+        patch("for (auto const& [index, entry] : m_sessions | std::views::enumerate) {",
+            "for (std::size_t index = 0; index < m_sessions.size(); ++index) {\n"
+                .. "            auto const& entry = m_sessions[index];")
+        io.writefile(source, content)
+    end
+    local prefix = pkginfo.install_dir()
+    os.tryrm(prefix)
+    os.mkdir(prefix)
+    os.mv(wrap, path.join(prefix, wrap))
+    return true
+end

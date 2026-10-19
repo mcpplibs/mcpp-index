@@ -461,7 +461,7 @@ Lua 注释/长字符串保留、修改原子性、实际候选选择、旧版本
 - 查询仓库优先来自显式 GitHub 下载模板，package.repo 作为回退，以覆盖下载自 GitHub 镜像但 repo 指向 GitLab 的 FreeType。
 - commit 快照报告 pinned-snapshot；独立包计数到源版本的映射报告 pinned-version-map，绝不猜测跟随分支。
 - SafeInt 历史上由 3.24 改为 3.0.28a；比较数字前同时过滤早于当前 release 的发布时间，避免回退。
-- compat.libmysqlclient 的既有 wellwei/libmysqlclient 上游 API 确认返回 404，保留真实 error 诊断与旧条目，等待明确的同源迁移地址。
+- compat.libmysqlclient 的既有 wellwei/libmysqlclient 上游 API 确认返回 404，保留真实 error 诊断与旧条目；用户允许本轮暂时忽略该上游不可用，CI 只豁免此仓库的明确 404，不豁免其他错误。
 - draft CI 全量审计声明和旧版本保留，对所有 update-ready 生成平台/工具链矩阵，在临时消费者实际构建运行并核对 mcpp.lock。
 - 工具已有 Linux/macOS/Windows、Python 3.11/3.13 CI；Windows 揭示的 CRLF 哈希问题已修复并添加字节保留测试。
 
@@ -473,8 +473,11 @@ Lua 注释/长字符串保留、修改原子性、实际候选选择、旧版本
 
 - 工具 draft：[openxlings/xpkgindex-update #1](https://github.com/openxlings/xpkgindex-update/pull/1)；标准 src 布局、简约 README、45 项回归测试与六种 OS/Python CI 组合。
 - 接入 draft：[mcpp-index #543](https://github.com/mcpplibs/mcpp-index/pull/543)；真实 propose draft：[mcpp-index #544](https://github.com/mcpplibs/mcpp-index/pull/544)，hiredis 1.5.0，重复 propose 返回 pending。
-- OpenMP 23 移除 standalone 配置入口，人工将构建配方改为 runtimes；新 23.1.3 与旧 22.1.8 均完成本地静态库构建、安装和并行归约运行测试；仍需远端全平台验证。
-- nanodbc 的 macOS 候选暴露 SDK 缺少 sql.h；明确使用 Homebrew libiodbc 开发头文件，CI 安装该前置依赖，等待实际重跑结果。
-- Windows hiredis/libuv 候选存在真实链接失败；禁用缓存、独立/虚拟 workspace、显式源码路径及 import std 均未解决，不据此降级测试或声称通过。继续比较同一 payload 的 registry 与 path manifest 加载。
-- 旧版本保留与 82 包声明覆盖审计通过；扫描的 libmysqlclient 404 仍是可见错误，需要同源迁移信息才能恢复更新。
-- 开发期不发布稳定标签、不启用定时写入、不合并 PR；最终验收仍要求所有实际候选矩阵和既有 CI gates 通过。
+- OpenMP 23 的 runtimes 入口修复已在候选四个平台/工具链组合实际通过，新旧版本本地测试通过。
+- Windows hiredis 的失败根因是上游 AI 配置中的 symlink 导致源码遍历 Access denied；生成七个独立 C 包装翻译单元后，真实 hiredis draft PR 的四个候选构建/运行 jobs 全通过。libuv 1.53 另需 synchronization 链接库，正在全量 CI 验证。
+- Quill 13.1 的安装适配、新旧 nanodbc 的 locale/ODBC 头修复已有本地验证；全量 CI 继续验证各平台。
+- 用户要求继续逐库适配升级：mcr 0.2 移除了 JSON API，测试保留旧版 JSON 断言并对新版验证 typed response/body/options；安装配方仅对 0.2.0 回补 libc++20 缺少的 join_with/enumerate，已有本地实际测试。
+- 旧版 muduo/llama.cpp 在 LLVM23 缺少标准头，人工补充编译参数，本地实际测试通过。工具本身仍只追加版本，不自动修改构建配方。
+- 用户明确允许暂时忽略 wellwei/libmysqlclient 的源不可用：原始扫描 error 留在 plan，单独强制 gate 仅接受该包/仓库/路径的确切 GitHub 404；libmysqlclient 和依赖它的 mysql-connector-cpp 消费者在 summary 明示 NOT TESTED，不冒充构建通过。其他错误仍失败；上游恢复后删除此临时策略。
+- 旧版本保留与 82 包声明覆盖审计通过；工具最新提交 416a954 的 14 个 checks 全部成功。接入及端到端 PR 的最终完整回归仍在进行。
+- 开发期不发布稳定标签、不启用定时写入、不合并 PR；最终验收要求除上述用户批准的源不可用豁免外，所有实际候选矩阵和既有 CI gates 通过。
