@@ -71,7 +71,8 @@ jobs:
   candidate:
     name: candidate (${{ matrix.id }} ${{ matrix.candidate }}, ${{ matrix.platform }}, ${{ matrix.toolchain }})
     needs: scan
-    if: always() && needs.scan.outputs.matrix != '' && needs.scan.outputs.matrix != '{"include": []}'
+    if: >-
+      always() && needs.scan.outputs.matrix != '' && needs.scan.outputs.matrix != '{"include": []}'
     strategy:
       fail-fast: false
       max-parallel: 8
