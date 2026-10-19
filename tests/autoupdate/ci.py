@@ -173,9 +173,27 @@ def diagnostics(consumer: Path, output: Path):
                 shutil.copyfile(payload / name, output / ("hiredis-" + name.lstrip(".")))
 
 
+def experiment(consumer: Path, output: Path):
+    """Keep the primary failure; isolate cache and test-layout variables."""
+    output.mkdir(parents=True, exist_ok=True)
+    mcpp = os.environ["MCPP"]
+    with (output / "no-cache.log").open("w", encoding="utf-8") as log:
+        result = subprocess.run([mcpp, "test", "--verbose", "--cache", "off"], cwd=consumer,
+                                stdout=log, stderr=subprocess.STDOUT)
+        print("standalone without cache:", result.returncode)
+    workspace = output / "workspace"
+    shutil.copytree(consumer, workspace / "consumer", dirs_exist_ok=True,
+                    ignore=shutil.ignore_patterns("target", ".mcpp", "mcpp.lock", "*.log"))
+    (workspace / "mcpp.toml").write_text('[workspace]\nmembers = ["consumer"]\n', encoding="utf-8")
+    with (output / "workspace.log").open("w", encoding="utf-8") as log:
+        result = subprocess.run([mcpp, "test", "-p", "consumer", "--verbose", "--cache", "off"],
+                                cwd=workspace, stdout=log, stderr=subprocess.STDOUT)
+        print("workspace without cache:", result.returncode)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=("audit", "matrix", "prepare", "verify", "selection", "diagnostics"))
+    parser.add_argument("command", choices=("audit", "matrix", "prepare", "verify", "selection", "diagnostics", "experiment"))
     parser.add_argument("--base")
     parser.add_argument("--plan", type=Path)
     parser.add_argument("--package")
@@ -192,6 +210,8 @@ def main():
         prepare(args.plan, args.package, args.output)
     elif args.command == "diagnostics":
         diagnostics(args.consumer, args.output)
+    elif args.command == "experiment":
+        experiment(args.consumer, args.output)
     else:
         verify(args.plan, args.package, args.consumer)
 
