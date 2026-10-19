@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -148,9 +149,22 @@ def verify(plan: Path, identity: str, consumer: Path):
     print(f"PROVEN: build resolved {identity}@{record['candidate']}")
 
 
+def diagnostics(consumer: Path, output: Path):
+    output.mkdir(parents=True, exist_ok=True)
+    for directory, dirs, files in os.walk(consumer):
+        dirs[:] = [name for name in dirs if name not in (".xlings", ".git")]
+        for name in files:
+            if name in ("compile_commands.json", "build.ninja") or name.endswith(".rsp"):
+                path = Path(directory) / name
+                if path.stat().st_size <= 8 * 1024 * 1024:
+                    destination = output / path.relative_to(consumer)
+                    destination.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copyfile(path, destination)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=("audit", "matrix", "prepare", "verify", "selection"))
+    parser.add_argument("command", choices=("audit", "matrix", "prepare", "verify", "selection", "diagnostics"))
     parser.add_argument("--base")
     parser.add_argument("--plan", type=Path)
     parser.add_argument("--package")
@@ -165,6 +179,8 @@ def main():
         matrix(args.plan, args.output, args.base)
     elif args.command == "prepare":
         prepare(args.plan, args.package, args.output)
+    elif args.command == "diagnostics":
+        diagnostics(args.consumer, args.output)
     else:
         verify(args.plan, args.package, args.consumer)
 

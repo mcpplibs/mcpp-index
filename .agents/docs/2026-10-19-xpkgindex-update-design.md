@@ -464,3 +464,7 @@ Lua 注释/长字符串保留、修改原子性、实际候选选择、旧版本
 - compat.libmysqlclient 的既有 wellwei/libmysqlclient 上游 API 确认返回 404，保留真实 error 诊断与旧条目，等待明确的同源迁移地址。
 - draft CI 全量审计声明和旧版本保留，对所有 update-ready 生成平台/工具链矩阵，在临时消费者实际构建运行并核对 mcpp.lock。
 - 工具已有 Linux/macOS/Windows、Python 3.11/3.13 CI；Windows 揭示的 CRLF 哈希问题已修复并添加字节保留测试。
+
+- 实际候选 CI 发现 FreeType 2.15 新增 HVF 驱动；人工追加 hvf.c union glob，2.15 与旧 2.13.3 均已本地构建运行通过，旧版本块不变。
+- Linux 生成的计划与 Windows CRLF checkout 必须可互用：仅描述符计划摘要按 LF 规范化，实际追加仍逐字保留 checkout 的旧版本块；资源 SHA256 永不规范化。
+- 候选 CI 保留 verbose 编译、link response 与 CDB 证据，用于分辨安装资源、包配置和工具链问题。
