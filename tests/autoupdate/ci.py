@@ -86,8 +86,8 @@ def matrix(plan: Path, output: Path, base: str):
         for platform in [asset["platform"] for asset in record["assets"]]:
             rows = {
                 "linux": ("ubuntu-latest", "linux-x86_64", "tar.gz"),
-                "macosx": ("macos-latest", "macos-arm64", "tar.gz"),
-                "windows": ("windows-latest", "windows-x86_64", "zip"),
+                "macosx": ("macos-15", "macosx-arm64", "tar.gz"),
+                "windows": ("windows-2022", "windows-x86_64", "zip"),
             }
             runner, suffix, ext = rows[platform]
             for toolchain in (["default", "llvm"] if platform == "linux" else ["default"]):
