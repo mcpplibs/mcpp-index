@@ -15,6 +15,13 @@ package = {
     repo        = "https://github.com/boostorg/io",
     type        = "package",
 
+    extensions = {
+        autoupdate = {
+            tag = "boost-${version}",
+            url = "https://github.com/boostorg/io/archive/refs/tags/${tag}.tar.gz",
+        },
+    },
+
     xpm = {
         linux = {
             ["1.92.0"] = {

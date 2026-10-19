@@ -18,6 +18,13 @@ package = {
     repo        = "https://github.com/ETLCPP/etl",
     type        = "package",
 
+    extensions = {
+        autoupdate = {
+            tag = "${version}",
+            url = "https://github.com/ETLCPP/etl/archive/refs/tags/${tag}.tar.gz",
+        },
+    },
+
     xpm = {
         linux = {
             ["20.49.0"] = {

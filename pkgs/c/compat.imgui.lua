@@ -7,6 +7,13 @@ package = {
     repo        = "https://github.com/ocornut/imgui",
     type        = "package",
 
+    extensions = {
+        autoupdate = {
+            tag = "v${version}",
+            url = "https://github.com/ocornut/imgui/archive/refs/tags/${tag}.tar.gz",
+        },
+    },
+
     xpm = {
         linux = {
             -- No CN mirror credentials: use upstream URLs for the new releases.

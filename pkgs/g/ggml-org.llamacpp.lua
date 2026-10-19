@@ -22,6 +22,13 @@ package = {
     repo        = "https://github.com/mcpplibs/llama.cpp-m",
     type        = "package",
 
+    extensions = {
+        autoupdate = {
+            tag = "${version}",
+            url = "https://github.com/mcpplibs/llama.cpp-m/archive/refs/tags/${tag}.tar.gz",
+        },
+    },
+
     xpm = {
         linux = {
             -- b10069.1 ADDS `backend-vulkan`, AND ITS BUILD PROGRAM NEEDS mcpp
@@ -123,3 +130,25 @@ package = {
 
     -- (无 `mcpp` 字段 —— 默认查找会命中 <verdir>/*/mcpp.toml)
 }
+
+import("xim.libxpkg.pkginfo")
+
+function install()
+    local wrap = "llama.cpp-m-" .. pkginfo.version()
+    -- libc++ 23 exposes missing standard headers in this Linux checkpoint.
+    -- Scope the explicit includes to ordinary Linux implementation sources;
+    -- the exported module and the downloaded source files remain untouched.
+    if pkginfo.version() == "b10069.2" then
+        local manifest = path.join(wrap, "mcpp.toml")
+        local content = assert(io.readfile(manifest)):gsub("\r\n", "\n")
+        local patched, count = content:gsub("\n%[target%.linux%.build%]\n",
+            '\n[target.linux.build]\nflags = [{ glob = "third_party/llama.cpp/**/*.cpp", cxxflags = ["-include", "cstdlib", "-include", "cerrno"] }]\n', 1)
+        assert(count == 1, "llamacpp: expected the native Linux build table")
+        io.writefile(manifest, patched)
+    end
+    local prefix = pkginfo.install_dir()
+    os.tryrm(prefix)
+    os.mkdir(prefix)
+    os.mv(wrap, path.join(prefix, wrap))
+    return true
+end

@@ -8,6 +8,13 @@ package = {
     repo        = "https://github.com/wellwei/libmysqlclient",
     type        = "package",
 
+    extensions = {
+        autoupdate = {
+            tag = "${version}",
+            url = "https://github.com/wellwei/libmysqlclient/archive/refs/tags/${tag}.tar.gz",
+        },
+    },
+
     xpm = {
         linux = {
             ["8.4.6"] = {

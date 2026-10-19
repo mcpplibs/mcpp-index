@@ -13,6 +13,13 @@ package = {
     repo        = "https://github.com/ibireme/yyjson",
     type        = "package",
 
+    extensions = {
+        autoupdate = {
+            tag = "${version}",
+            url = "https://github.com/ibireme/yyjson/archive/refs/tags/${tag}.tar.gz",
+        },
+    },
+
     xpm = {
         linux = {
             ["0.12.0"] = {

@@ -6,6 +6,13 @@ package = {
     licenses = { "MIT" },
     repo = "https://github.com/mpusz/mp-units",
     type = "package",
+    extensions = {
+        autoupdate = {
+            tag = "v${version}",
+            url = "https://github.com/mpusz/mp-units/archive/refs/tags/${tag}.tar.gz",
+        },
+    },
+
     xpm = {
         linux = {
             ["2.5.0"] = {

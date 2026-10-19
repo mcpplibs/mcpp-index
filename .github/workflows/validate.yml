@@ -1499,6 +1499,19 @@ jobs:
         run: |
           "$MCPP" index update
 
+      - name: Report temporarily untestable consumers of the unavailable MySQL source
+        shell: bash
+        run: |
+          if [[ "$RUNNER_OS" == Windows ]]; then
+            python tests/autoupdate/source_outage.py members
+          else
+            python3 tests/autoupdate/source_outage.py members
+          fi
+
+      - name: Install nanodbc macOS development headers
+        if: runner.os == 'macOS' && contains(format(' {0} ', env.MEMBERS), ' nanodbc ')
+        run: brew install libiodbc
+
       - name: mcpp test (workspace or affected members)
         shell: bash
         env:

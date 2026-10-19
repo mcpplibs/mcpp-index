@@ -15,6 +15,13 @@ package = {
     repo        = "https://github.com/zserge/tray",
     type        = "package",
 
+    extensions = {
+        autoupdate = {
+            tag = "v${version}",
+            url = "https://github.com/zserge/tray/archive/refs/tags/${tag}.tar.gz",
+        },
+    },
+
     xpm = {
         linux = {
             ["0.0.0-8dd1358"] = {

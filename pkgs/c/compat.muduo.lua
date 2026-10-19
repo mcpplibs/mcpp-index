@@ -7,6 +7,13 @@ package = {
     repo        = "https://github.com/chenshuo/muduo",
     type        = "package",
 
+    extensions = {
+        autoupdate = {
+            tag = "v${version}",
+            url = "https://github.com/chenshuo/muduo/archive/refs/tags/${tag}.tar.gz",
+        },
+    },
+
     xpm = {
         linux = {
             ["2.0.3"] = {
@@ -19,6 +26,9 @@ package = {
     mcpp = {
         language     = "c++23",
         import_std   = false,
+        -- Frozen upstream uses abort() without declaring it. Recent libc++
+        -- no longer provides that declaration through unrelated headers.
+        cxxflags     = { "-include", "cstdlib" },
         include_dirs = { "*" },
         sources      = {
             "*/muduo/base/*.cc",

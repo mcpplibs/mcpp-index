@@ -12,6 +12,13 @@ package = {
     repo        = "https://github.com/pybind/pybind11",
     type        = "package",
 
+    extensions = {
+        autoupdate = {
+            tag = "v${version}",
+            url = "https://github.com/pybind/pybind11/archive/refs/tags/${tag}.tar.gz",
+        },
+    },
+
     xpm = {
         linux = {
             ["3.2.0-dev.6254086"] = {

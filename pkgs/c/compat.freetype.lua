@@ -16,6 +16,13 @@ package = {
     repo        = "https://gitlab.freedesktop.org/freetype/freetype",
     type        = "package",
 
+    extensions = {
+        autoupdate = {
+            tag = "VER-${version:dash}",
+            url = "https://github.com/freetype/freetype/archive/refs/tags/${tag}.tar.gz",
+        },
+    },
+
     xpm = {
         linux = {
             ["2.13.3"] = {
@@ -69,6 +76,9 @@ package = {
             "*/src/cid/type1cid.c",
             "*/src/cache/ftcache.c",
             "*/src/gzip/ftgzip.c",
+            -- 2.15 registers the HVF driver in ftmodule.h; this aggregate is
+            -- absent (and the glob unmatched) on the preserved 2.13.3 release.
+            "*/src/hvf/hvf.c",
             "*/src/lzw/ftlzw.c",
             "*/src/pcf/pcf.c",
             "*/src/pfr/pfr.c",

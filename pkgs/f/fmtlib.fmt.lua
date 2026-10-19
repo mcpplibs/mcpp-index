@@ -48,6 +48,13 @@ package = {
     repo        = "https://github.com/fmtlib/fmt",
     type        = "package",
 
+    extensions = {
+        autoupdate = {
+            tag = "${version}",
+            url = "https://github.com/fmtlib/fmt/archive/refs/tags/${tag}.tar.gz",
+        },
+    },
+
     xpm = {
         linux = {
             ["12.2.0"] = {

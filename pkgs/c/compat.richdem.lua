@@ -13,6 +13,13 @@ package = {
     repo        = "https://github.com/r-barnes/richdem",
     type        = "package",
 
+    extensions = {
+        autoupdate = {
+            tag = "v${version}",
+            url = "https://github.com/r-barnes/richdem/archive/refs/tags/${tag}.tar.gz",
+        },
+    },
+
     xpm = {
         linux = {
             ["2.2.11"] = {
