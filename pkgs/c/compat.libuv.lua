@@ -1,3 +1,10 @@
+local versions = {
+    ["1.53.0"] = {
+        url = "https://github.com/libuv/libuv/archive/refs/tags/v1.53.0.tar.gz",
+        sha256 = "279f3f67a24bb9921fe999ca6cd5e332fade8d515873ef9ba054b70e70a31d9e",
+    },
+}
+
 -- compat.libuv — libuv 1.48.0, multi-platform async I/O library.
 --
 -- Shape A (C-source compat): the exact per-OS source sets from upstream's own
@@ -39,18 +46,21 @@ package = {
                 url    = "https://github.com/libuv/libuv/archive/refs/tags/v1.48.0.tar.gz",
                 sha256 = "8c253adb0f800926a6cbd1c6576abae0bc8eb86a4f891049b72f9e5b7dc58f33",
             },
+            ["1.53.0"] = versions["1.53.0"],
         },
         macosx = {
             ["1.48.0"] = {
                 url    = "https://github.com/libuv/libuv/archive/refs/tags/v1.48.0.tar.gz",
                 sha256 = "8c253adb0f800926a6cbd1c6576abae0bc8eb86a4f891049b72f9e5b7dc58f33",
             },
+            ["1.53.0"] = versions["1.53.0"],
         },
         windows = {
             ["1.48.0"] = {
                 url    = "https://github.com/libuv/libuv/archive/refs/tags/v1.48.0.tar.gz",
                 sha256 = "8c253adb0f800926a6cbd1c6576abae0bc8eb86a4f891049b72f9e5b7dc58f33",
             },
+            ["1.53.0"] = versions["1.53.0"],
         },
     },
 
