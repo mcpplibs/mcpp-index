@@ -164,8 +164,12 @@ jobs:
         shell: bash
         env:
           TOOLCHAIN: ${{ matrix.toolchain }}
+          PACKAGE: ${{ matrix.id }}
         run: |
           "$MCPP" index update
+          if [[ "$PACKAGE" == compat:hiredis ]]; then
+            "$MCPP" xpkg parse pkgs/c/compat.hiredis.lua --all-os
+          fi
           if [[ "$TOOLCHAIN" != default ]]; then
             "$MCPP" toolchain install "$TOOLCHAIN"
             "$MCPP" toolchain default "$TOOLCHAIN"

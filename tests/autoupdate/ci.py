@@ -160,6 +160,14 @@ def diagnostics(consumer: Path, output: Path):
                     destination = output / path.relative_to(consumer)
                     destination.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copyfile(path, destination)
+    payload = consumer / ".mcpp/.xlings/data/xpkgs/compat-x-hiredis/1.5.0"
+    if payload.exists():
+        evidence = {"path": str(payload), "resolved": str(payload.resolve()),
+                    "children": [str(p.relative_to(payload)) for p in payload.iterdir()],
+                    "c_files": [{"path": str(p), "resolved": str(p.resolve()), "size": p.stat().st_size}
+                                for p in payload.glob("*/*.c")],
+                    "alloc_matches": [str(p) for p in payload.glob("*/alloc.c")]}
+        (output / "hiredis-payload.json").write_text(json.dumps(evidence, indent=2), encoding="utf-8")
 
 
 def main():
