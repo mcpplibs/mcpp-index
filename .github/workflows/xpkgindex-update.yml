@@ -205,6 +205,17 @@ jobs:
         if: always()
         shell: bash
         run: python tests/autoupdate/ci.py diagnostics --consumer "$CONSUMER" --output candidate-diagnostics
+      - name: Isolate Windows cache and workspace planning
+        if: failure() && runner.os == 'Windows' && matrix.id == 'compat:hiredis'
+        shell: bash
+        run: python tests/autoupdate/ci.py experiment --consumer "$CONSUMER" --output candidate-experiment
+      - uses: actions/upload-artifact@v4
+        if: always() && runner.os == 'Windows' && matrix.id == 'compat:hiredis'
+        with:
+          name: candidate-experiment-${{ strategy.job-index }}
+          path: |
+            candidate-experiment/*.log
+          if-no-files-found: ignore
       - uses: actions/upload-artifact@v4
         if: always()
         with:
