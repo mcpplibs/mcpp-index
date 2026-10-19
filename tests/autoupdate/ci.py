@@ -40,7 +40,7 @@ def direct_member(identity: str) -> str | None:
     namespace, name = identity.split(":", 1)
     candidates = []
     for path in (ROOT / "tests/examples").glob("*/mcpp.toml"):
-        text = path.read_text()
+        text = path.read_text(encoding="utf-8")
         # Metadata-only selection; prepare() and the lock assertion verify actual resolution.
         if re.search(rf"(?m)^\s*{re.escape(name)}\s*=", text) and (
             f"dependencies.{namespace}]" in text or f"dependencies.{namespace}." in text
@@ -52,7 +52,7 @@ def direct_member(identity: str) -> str | None:
 
 
 def matrix(plan: Path, output: Path, base: str):
-    build_plan = json.loads(plan.read_text())
+    build_plan = json.loads(plan.read_text(encoding="utf-8"))
     # A normal bump PR already contains its candidate, so discovery says up-to-date.
     # Derive added versions from the actual diff and test those exact published entries.
     if base:
@@ -86,8 +86,8 @@ def matrix(plan: Path, output: Path, base: str):
         for platform in [asset["platform"] for asset in record["assets"]]:
             rows = {
                 "linux": ("ubuntu-latest", "linux-x86_64", "tar.gz"),
-                "macosx": ("macos-latest", "macos-arm64", "tar.gz"),
-                "windows": ("windows-latest", "windows-x86_64", "zip"),
+                "macosx": ("macos-15", "macosx-arm64", "tar.gz"),
+                "windows": ("windows-2022", "windows-x86_64", "zip"),
             }
             runner, suffix, ext = rows[platform]
             for toolchain in (["default", "llvm"] if platform == "linux" else ["default"]):
@@ -100,7 +100,7 @@ def matrix(plan: Path, output: Path, base: str):
 
 
 def prepare(plan: Path, identity: str, output: Path):
-    record = next(r for r in json.loads(plan.read_text())["packages"] if r["id"] == identity)
+    record = next(r for r in json.loads(plan.read_text(encoding="utf-8"))["packages"] if r["id"] == identity)
     namespace, name = identity.split(":", 1)
     version = record["candidate"]
     member = direct_member(identity)
@@ -109,7 +109,7 @@ def prepare(plan: Path, identity: str, output: Path):
         source = ROOT / "tests/examples" / member
         shutil.copytree(source, output, dirs_exist_ok=True,
                         ignore=shutil.ignore_patterns("target", ".mcpp", "mcpp.lock"))
-        text = (output / "mcpp.toml").read_text()
+        text = (output / "mcpp.toml").read_text(encoding="utf-8")
         text, replacements = re.subn(
             rf'(?m)^(\s*{re.escape(name)}\s*=\s*(?:\{{\s*version\s*=\s*)?")[^"]+(".*)$',
             lambda m: m[1] + version + m[2], text)
@@ -138,9 +138,9 @@ def prepare(plan: Path, identity: str, output: Path):
 
 
 def verify(plan: Path, identity: str, consumer: Path):
-    record = next(r for r in json.loads(plan.read_text())["packages"] if r["id"] == identity)
+    record = next(r for r in json.loads(plan.read_text(encoding="utf-8"))["packages"] if r["id"] == identity)
     namespace, name = identity.split(":", 1)
-    lock = tomllib.loads((consumer / "mcpp.lock").read_text())
+    lock = tomllib.loads((consumer / "mcpp.lock").read_text(encoding="utf-8"))
     matches = [value for key, value in lock.get("package", {}).items()
                if value.get("namespace") == namespace and key in (name, identity, f"{namespace}.{name}")]
     if not matches or any(v["version"] != record["candidate"] for v in matches):
