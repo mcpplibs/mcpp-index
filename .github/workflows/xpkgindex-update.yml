@@ -38,7 +38,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: openxlings/xpkgindex-update
-          ref: 597f2558d06eb144d2c80e1407eaaca6749e6afe
+          ref: 416a954c67dba4cdf52a033a71ee88fdec0acf1d
           path: .updater
           persist-credentials: false
       - name: Use the exact development tool source
@@ -53,7 +53,7 @@ jobs:
           echo "package=$(cat selected-package.txt)" >> "$GITHUB_OUTPUT"
       - name: Discover and download real upstream candidates
         id: scan
-        uses: openxlings/xpkgindex-update@597f2558d06eb144d2c80e1407eaaca6749e6afe
+        uses: openxlings/xpkgindex-update@416a954c67dba4cdf52a033a71ee88fdec0acf1d
         with:
           mode: check
           token: ${{ github.token }}
@@ -84,7 +84,7 @@ jobs:
     name: candidate (${{ matrix.id }} ${{ matrix.candidate }}, ${{ matrix.platform }}, ${{ matrix.toolchain }})
     needs: scan
     if: >-
-      always() && needs.scan.outputs.matrix != '' && needs.scan.outputs.matrix != '{"include": []}'
+      always() && !cancelled() && needs.scan.outputs.matrix != '' && needs.scan.outputs.matrix != '{"include": []}'
     strategy:
       fail-fast: false
       max-parallel: 8
@@ -102,7 +102,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: openxlings/xpkgindex-update
-          ref: 597f2558d06eb144d2c80e1407eaaca6749e6afe
+          ref: 416a954c67dba4cdf52a033a71ee88fdec0acf1d
           path: .updater
           persist-credentials: false
       - uses: actions/download-artifact@v4
