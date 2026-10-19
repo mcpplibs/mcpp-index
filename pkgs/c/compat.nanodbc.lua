@@ -40,6 +40,13 @@ package = {
     repo        = "https://github.com/nanodbc/nanodbc",
     type        = "package",
 
+    extensions = {
+        autoupdate = {
+            tag = "v${version}",
+            url = "https://github.com/nanodbc/nanodbc/archive/refs/tags/${tag}.tar.gz",
+        },
+    },
+
     xpm = {
         linux = {
             ["2.14.0"] = {

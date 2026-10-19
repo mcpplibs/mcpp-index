@@ -161,6 +161,13 @@ package = {
     repo        = "https://github.com/libsdl-org/SDL",
     type        = "package",
 
+    extensions = {
+        autoupdate = {
+            tag = "release-${version}",
+            url = "https://github.com/libsdl-org/SDL/archive/refs/tags/${tag}.tar.gz",
+        },
+    },
+
     xpm = {
         linux = {
             ["3.4.2"] = {

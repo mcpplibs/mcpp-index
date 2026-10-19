@@ -15,6 +15,13 @@ package = {
     repo        = "https://github.com/gzj-creator/galay",
     type        = "package",
 
+    extensions = {
+        autoupdate = {
+            tag = "v${version}",
+            url = "https://github.com/gzj-creator/galay/archive/refs/tags/${tag}.tar.gz",
+        },
+    },
+
     xpm = {
         linux = {
             ["5.0.2"] = {

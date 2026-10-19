@@ -142,6 +142,13 @@ package = {
     repo        = "https://github.com/sudoevolve/EUI-NEO",
     type        = "package",
 
+    extensions = {
+        autoupdate = {
+            tag = "v${version}",
+            url = "https://github.com/sudoevolve/EUI-NEO/archive/refs/tags/${tag}.tar.gz",
+        },
+    },
+
     xpm = {
         linux = {
             -- What the SNI tray needs, and where each half comes from.

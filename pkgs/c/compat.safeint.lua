@@ -23,6 +23,13 @@ package = {
     repo        = "https://github.com/dcleblanc/SafeInt",
     type        = "package",
 
+    extensions = {
+        autoupdate = {
+            tag = "${version}",
+            url = "https://github.com/dcleblanc/SafeInt/archive/refs/tags/${tag}.tar.gz",
+        },
+    },
+
     xpm = {
         linux = {
             ["3.0.28a"] = {

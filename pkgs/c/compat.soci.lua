@@ -94,6 +94,13 @@ package = {
     repo        = "https://github.com/SOCI/soci",
     type        = "package",
 
+    extensions = {
+        autoupdate = {
+            tag = "v${version}",
+            url = "https://github.com/SOCI/soci/archive/refs/tags/${tag}.tar.gz",
+        },
+    },
+
     xpm = {
         linux = {
             ["4.1.4"] = {

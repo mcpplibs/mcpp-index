@@ -7,6 +7,13 @@ package = {
     repo        = "https://github.com/boostorg/any",
     type        = "package",
 
+    extensions = {
+        autoupdate = {
+            tag = "boost-${version}",
+            url = "https://github.com/boostorg/any/archive/refs/tags/${tag}.tar.gz",
+        },
+    },
+
     xpm = {
         linux = {
             ["1.92.0"] = {

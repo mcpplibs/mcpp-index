@@ -50,6 +50,13 @@ package = {
     repo        = "https://github.com/sewenew/redis-plus-plus",
     type        = "package",
 
+    extensions = {
+        autoupdate = {
+            tag = "${version}",
+            url = "https://github.com/sewenew/redis-plus-plus/archive/refs/tags/${tag}.tar.gz",
+        },
+    },
+
     xpm = {
         linux = {
             ["1.3.3"] = {

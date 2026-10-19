@@ -100,6 +100,13 @@ package = {
     repo        = "https://github.com/bytecodealliance/wasm-micro-runtime",
     type        = "package",
 
+    extensions = {
+        autoupdate = {
+            tag = "WAMR-${version}",
+            url = "https://github.com/bytecodealliance/wasm-micro-runtime/archive/refs/tags/${tag}.tar.gz",
+        },
+    },
+
     xpm = {
         linux = {
             ["2.4.5"] = {

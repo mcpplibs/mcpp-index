@@ -68,6 +68,13 @@ package = {
     repo        = "https://github.com/quickjs-ng/quickjs",
     type        = "package",
 
+    extensions = {
+        autoupdate = {
+            tag = "v${version}",
+            url = "https://github.com/quickjs-ng/quickjs/archive/refs/tags/${tag}.tar.gz",
+        },
+    },
+
     xpm = {
         linux = {
             ["0.17.0"] = {

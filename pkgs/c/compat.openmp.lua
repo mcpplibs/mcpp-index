@@ -10,6 +10,13 @@ package = {
     licenses = {"Apache-2.0 WITH LLVM-exception"},
     repo = "https://github.com/llvm/llvm-project/tree/main/openmp",
     type = "package",
+    extensions = {
+        autoupdate = {
+            tag = "llvmorg-${version}",
+            url = "https://github.com/llvm/llvm-project/releases/download/${tag}/llvm-project-${version}.src.tar.xz",
+        },
+    },
+
     xpm = {
         linux = {
             deps = { "xim:cmake@latest", "xim:python@3.13.12" },

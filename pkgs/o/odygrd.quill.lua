@@ -7,6 +7,13 @@ package = {
     repo        = "https://github.com/odygrd/quill",
     type        = "package",
 
+    extensions = {
+        autoupdate = {
+            tag = "v${version}",
+            url = "https://github.com/odygrd/quill/archive/refs/tags/${tag}.tar.gz",
+        },
+    },
+
     xpm = {
         linux = {
             ["13.0.0"] = {

@@ -1,0 +1,172 @@
+name: xpkgindex-update
+
+on:
+  pull_request:
+    paths:
+      - 'pkgs/**/*.lua'
+      - 'tests/autoupdate/**'
+      - '.github/xpkgindex-update.yml'
+      - '.github/workflows/xpkgindex-update.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: xpkgindex-update-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  MCPP_VERSION: '2026.10.1.2'
+  MCPP_INDEX_MIRROR: GLOBAL
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/checkout@v4
+        with:
+          repository: openxlings/xpkgindex-update
+          ref: 989edfe335545b33feed9313a3b25c805f3315c2
+          path: .updater
+          persist-credentials: false
+      - name: Use the exact development tool source
+        run: echo "PYTHONPATH=$PWD/.updater/src" >> "$GITHUB_ENV"
+      - name: All GitHub-direct descriptors are declared; published versions are unchanged
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || 'origin/main' }}
+        run: python tests/autoupdate/ci.py audit --base "$BASE" --output coverage.json
+      - name: Discover and download real upstream candidates
+        id: scan
+        uses: openxlings/xpkgindex-update@989edfe335545b33feed9313a3b25c805f3315c2
+        with:
+          mode: check
+          token: ${{ github.token }}
+      - name: Plan actual candidate build/run jobs
+        id: matrix
+        if: always() && steps.scan.outputs.plan != ''
+        env:
+          PLAN: ${{ steps.scan.outputs.plan }}
+        run: |
+          python tests/autoupdate/ci.py matrix --plan "$PLAN" --output matrix.json
+          echo "matrix=$(cat matrix.json)" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: xpkgindex-update-coverage
+          path: |
+            coverage.json
+            matrix.json
+
+  candidate:
+    name: candidate (${{ matrix.id }} ${{ matrix.candidate }}, ${{ matrix.platform }}, ${{ matrix.toolchain }})
+    needs: scan
+    if: always() && needs.scan.outputs.matrix != '' && needs.scan.outputs.matrix != '{"include": []}'
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix: ${{ fromJSON(needs.scan.outputs.matrix) }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/checkout@v4
+        with:
+          repository: openxlings/xpkgindex-update
+          ref: 989edfe335545b33feed9313a3b25c805f3315c2
+          path: .updater
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: xpkgindex-update-plan
+          path: .candidate-plan
+      - name: Use the development tool and a standalone consumer
+        shell: bash
+        run: |
+          if [[ "$RUNNER_OS" == Windows ]]; then
+            echo "PYTHONPATH=$(cygpath -m "$PWD/.updater/src")" >> "$GITHUB_ENV"
+            echo "CONSUMER=$(cygpath -m "$RUNNER_TEMP/candidate-consumer")" >> "$GITHUB_ENV"
+          else
+            echo "PYTHONPATH=$PWD/.updater/src" >> "$GITHUB_ENV"
+            echo "CONSUMER=$RUNNER_TEMP/candidate-consumer" >> "$GITHUB_ENV"
+          fi
+      - name: Append the candidate and prepare its existing consumer test
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PACKAGE: ${{ matrix.id }}
+        run: |
+          python -m xpkgindex_update apply --plan .candidate-plan/xpkgindex-update-plan.json --package "$PACKAGE"
+          python tests/autoupdate/ci.py prepare --plan .candidate-plan/xpkgindex-update-plan.json --package "$PACKAGE" --output "$CONSUMER"
+          git diff -- pkgs
+      - uses: actions/cache/restore@v4
+        with:
+          path: |
+            ~/.mcpp/registry
+            !~/.mcpp/registry/data/xim-pkgindex
+            !~/.mcpp/registry/data/mcpplibs
+          key: candidate-${{ runner.os }}-${{ matrix.toolchain }}-${{ env.MCPP_VERSION }}-${{ github.run_id }}
+          restore-keys: |
+            mcpp-registry-${{ runner.os }}-${{ matrix.toolchain }}-${{ env.MCPP_VERSION }}-
+      - name: Install the same mcpp release as index validation
+        shell: bash
+        env:
+          SUFFIX: ${{ matrix.suffix }}
+          EXT: ${{ matrix.ext }}
+        run: |
+          root="mcpp-${MCPP_VERSION}-${SUFFIX}"
+          archive="$RUNNER_TEMP/$root.$EXT"
+          curl -fsSL --retry 2 -o "$archive" "https://github.com/mcpp-community/mcpp/releases/download/v${MCPP_VERSION}/$root.$EXT"
+          if [[ "$EXT" == zip ]]; then
+            powershell -NoProfile -Command "Expand-Archive -Force -Path '$archive' -DestinationPath '$RUNNER_TEMP'"
+          else
+            tar -xzf "$archive" -C "$RUNNER_TEMP"
+          fi
+          root="$RUNNER_TEMP/$root"
+          mkdir -p "$HOME/.mcpp/registry"
+          cp -a "$root/registry/." "$HOME/.mcpp/registry/"
+          echo "MCPP_HOME=$HOME/.mcpp" >> "$GITHUB_ENV"
+          if [[ "$RUNNER_OS" == Windows ]]; then
+            echo "MCPP=$(cygpath -m "$root/bin/mcpp.exe")" >> "$GITHUB_ENV"
+          else
+            echo "MCPP=$root/bin/mcpp" >> "$GITHUB_ENV"
+          fi
+      - name: Resolve, build and run the actual candidate
+        shell: bash
+        env:
+          TOOLCHAIN: ${{ matrix.toolchain }}
+        run: |
+          "$MCPP" index update
+          args=()
+          if [[ "$TOOLCHAIN" != default ]]; then args+=(--toolchain "$TOOLCHAIN"); fi
+          cd "$CONSUMER"
+          "$MCPP" test "${args[@]}" 2>&1 | tee candidate.log
+      - name: The lockfile proves the candidate was selected
+        shell: bash
+        env:
+          PACKAGE: ${{ matrix.id }}
+        run: python tests/autoupdate/ci.py verify --plan .candidate-plan/xpkgindex-update-plan.json --package "$PACKAGE" --consumer "$CONSUMER"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: candidate-${{ strategy.job-index }}
+          path: |
+            ${{ env.CONSUMER }}/candidate.log
+            ${{ env.CONSUMER }}/mcpp.lock
+            ${{ env.CONSUMER }}/mcpp.toml

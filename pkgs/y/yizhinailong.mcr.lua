@@ -26,6 +26,13 @@ package = {
     repo        = "https://github.com/yizhinailong/mcr",
     type        = "package",
 
+    extensions = {
+        autoupdate = {
+            tag = "v${version}",
+            url = "https://github.com/yizhinailong/mcr/archive/refs/tags/${tag}.tar.gz",
+        },
+    },
+
     xpm = {
         linux = {
             ["0.1.5"] = {

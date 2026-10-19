@@ -22,6 +22,13 @@ package = {
     repo        = "https://github.com/mcpplibs/llama.cpp-m",
     type        = "package",
 
+    extensions = {
+        autoupdate = {
+            tag = "${version}",
+            url = "https://github.com/mcpplibs/llama.cpp-m/archive/refs/tags/${tag}.tar.gz",
+        },
+    },
+
     xpm = {
         linux = {
             -- b10069.1 ADDS `backend-vulkan`, AND ITS BUILD PROGRAM NEEDS mcpp

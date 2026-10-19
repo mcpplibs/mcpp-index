@@ -34,6 +34,13 @@ package = {
     repo        = "https://github.com/redis/hiredis",
     type        = "package",
 
+    extensions = {
+        autoupdate = {
+            tag = "v${version}",
+            url = "https://github.com/redis/hiredis/archive/refs/tags/${tag}.tar.gz",
+        },
+    },
+
     xpm = {
         linux = {
             ["1.2.0"] = {
