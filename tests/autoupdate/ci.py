@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import re
 import shutil
 import subprocess
@@ -13,7 +12,7 @@ import sys
 import tomllib
 from pathlib import Path
 
-from xpkgindex_update.manifest import assert_preserved, inventory
+from xpkgindex_update.manifest import assert_preserved, inventory, version_blocks
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -31,6 +30,12 @@ def audit(base: str, output: Path):
     print(f"All {len(records)} GitHub-direct descriptors declared; all existing versions unchanged.")
 
 
+def selection(base: str, output: Path):
+    changed = subprocess.check_output(["git", "diff", "--name-only", base, "HEAD", "--", "pkgs"], cwd=ROOT, text=True).splitlines()
+    selected = [info["id"] for info in inventory(ROOT) if info["path"] in changed and info["autoupdate"]]
+    output.write_text(selected[0] if len(selected) == 1 else "")
+
+
 def direct_member(identity: str) -> str | None:
     namespace, name = identity.split(":", 1)
     candidates = []
@@ -46,10 +51,34 @@ def direct_member(identity: str) -> str | None:
     return min(candidates, key=lambda value: (len(value), value))
 
 
-def matrix(plan: Path, output: Path):
+def matrix(plan: Path, output: Path, base: str):
+    build_plan = json.loads(plan.read_text())
+    # A normal bump PR already contains its candidate, so discovery says up-to-date.
+    # Derive added versions from the actual diff and test those exact published entries.
+    if base:
+        for info in inventory(ROOT):
+            old_text = subprocess.check_output(["git", "show", f"{base}:{info['path']}"], cwd=ROOT).decode()
+            old = version_blocks(old_text)
+            new = version_blocks(info["text"])
+            added = {v for plat, entries in new.items() for v in entries if v not in old.get(plat, {})}
+            if not added:
+                continue
+            if len(added) != 1:
+                raise RuntimeError(f"expected one added candidate for {info['id']}: {added}")
+            candidate = added.pop()
+            assets = []
+            for plat, platform in info["platforms"].items():
+                if candidate not in platform["entries"]:
+                    raise RuntimeError("candidate missing on a platform")
+                entry = platform["entries"][candidate].plain()
+                urls = entry["url"] if isinstance(entry["url"], dict) else {"GLOBAL": entry["url"]}
+                assets.append({"platform": plat, "resources": {k: {"url": v, "sha256": entry["sha256"]} for k, v in urls.items()}})
+            build_plan["packages"] = [r for r in build_plan["packages"] if r["id"] != info["id"]]
+            build_plan["packages"].append({"id": info["id"], "path": info["path"],
+                                           "candidate": candidate, "status": "existing-candidate", "assets": assets})
     jobs = []
-    for record in json.loads(plan.read_text())["packages"]:
-        if record["status"] != "update-ready":
+    for record in build_plan["packages"]:
+        if record["status"] not in ("update-ready", "existing-candidate"):
             continue
         member = direct_member(record["id"])
         if member is None and record["id"] not in ("compat:hiredis", "compat:libuv"):
@@ -66,6 +95,7 @@ def matrix(plan: Path, output: Path):
                              "member": member or "probe", "platform": platform,
                              "os": runner, "suffix": suffix, "ext": ext, "toolchain": toolchain})
     output.write_text(json.dumps({"include": jobs}))
+    output.with_name("build-plan.json").write_text(json.dumps(build_plan, indent=2))
     print(f"Candidate matrix: {len(jobs)} real build/run jobs.")
 
 
@@ -120,7 +150,7 @@ def verify(plan: Path, identity: str, consumer: Path):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=("audit", "matrix", "prepare", "verify"))
+    parser.add_argument("command", choices=("audit", "matrix", "prepare", "verify", "selection"))
     parser.add_argument("--base")
     parser.add_argument("--plan", type=Path)
     parser.add_argument("--package")
@@ -129,8 +159,10 @@ def main():
     args = parser.parse_args()
     if args.command == "audit":
         audit(args.base, args.output)
+    elif args.command == "selection":
+        selection(args.base, args.output)
     elif args.command == "matrix":
-        matrix(args.plan, args.output)
+        matrix(args.plan, args.output, args.base)
     elif args.command == "prepare":
         prepare(args.plan, args.package, args.output)
     else:
