@@ -13,18 +13,30 @@ package = {
         -- No mcpp-res credentials are available in this environment. Keep the
         -- GLOBAL URL as a plain string until a byte-identical CN asset exists.
         linux = {
+            ["0.62.0"] = {
+                url    = "https://github.com/yhirose/cpp-httplib/archive/refs/tags/v0.62.0.tar.gz",
+                sha256 = "7bba5949c56e772236432f69da03197fd4c12dc443455b9d81f6a05575431fc8",
+            },
             ["0.53.1"] = {
                 url    = "https://github.com/yhirose/cpp-httplib/archive/refs/tags/v0.53.1.tar.gz",
                 sha256 = "185af9587e270de9a3bfee234c6740f02e82265da33c7a41f97e02ee42f979d2",
             },
         },
         macosx = {
+            ["0.62.0"] = {
+                url    = "https://github.com/yhirose/cpp-httplib/archive/refs/tags/v0.62.0.tar.gz",
+                sha256 = "7bba5949c56e772236432f69da03197fd4c12dc443455b9d81f6a05575431fc8",
+            },
             ["0.53.1"] = {
                 url    = "https://github.com/yhirose/cpp-httplib/archive/refs/tags/v0.53.1.tar.gz",
                 sha256 = "185af9587e270de9a3bfee234c6740f02e82265da33c7a41f97e02ee42f979d2",
             },
         },
         windows = {
+            ["0.62.0"] = {
+                url    = "https://github.com/yhirose/cpp-httplib/archive/refs/tags/v0.62.0.tar.gz",
+                sha256 = "7bba5949c56e772236432f69da03197fd4c12dc443455b9d81f6a05575431fc8",
+            },
             ["0.53.1"] = {
                 url    = "https://github.com/yhirose/cpp-httplib/archive/refs/tags/v0.53.1.tar.gz",
                 sha256 = "185af9587e270de9a3bfee234c6740f02e82265da33c7a41f97e02ee42f979d2",
