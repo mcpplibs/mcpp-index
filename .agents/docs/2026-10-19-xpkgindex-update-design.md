@@ -469,15 +469,80 @@ Lua 注释/长字符串保留、修改原子性、实际候选选择、旧版本
 - Linux 生成的计划与 Windows CRLF checkout 必须可互用：仅描述符计划摘要按 LF 规范化，实际追加仍逐字保留 checkout 的旧版本块；资源 SHA256 永不规范化。
 - 候选 CI 保留 verbose 编译、link response 与 CDB 证据，用于分辨安装资源、包配置和工具链问题。
 
-### 13.1 当前真实验证进度（2026-10-20 JST）
+### 13.1 最终验证记录（2026-10-20 JST）
 
-- 工具 draft：[openxlings/xpkgindex-update #1](https://github.com/openxlings/xpkgindex-update/pull/1)；标准 src 布局、简约 README、45 项回归测试与六种 OS/Python CI 组合。
-- 接入 draft：[mcpp-index #543](https://github.com/mcpplibs/mcpp-index/pull/543)；真实 propose draft：[mcpp-index #544](https://github.com/mcpplibs/mcpp-index/pull/544)，hiredis 1.5.0，重复 propose 返回 pending。
-- OpenMP 23 的 runtimes 入口修复已在候选四个平台/工具链组合实际通过，新旧版本本地测试通过。
-- Windows hiredis 的失败根因是上游 AI 配置中的 symlink 导致源码遍历 Access denied；生成七个独立 C 包装翻译单元后，真实 hiredis draft PR 的四个候选构建/运行 jobs 全通过。libuv 1.53 另需 synchronization 链接库，正在全量 CI 验证。
-- Quill 13.1 的安装适配、新旧 nanodbc 的 locale/ODBC 头修复已有本地验证；全量 CI 继续验证各平台。
-- 用户要求继续逐库适配升级：mcr 0.2 移除了 JSON API，测试保留旧版 JSON 断言并对新版验证 typed response/body/options；安装配方仅对 0.2.0 回补 libc++20 缺少的 join_with/enumerate，已有本地实际测试。
-- 旧版 muduo/llama.cpp 在 LLVM23 缺少标准头，人工补充编译参数，本地实际测试通过。工具本身仍只追加版本，不自动修改构建配方。
-- 用户明确允许暂时忽略 wellwei/libmysqlclient 的源不可用：原始扫描 error 留在 plan，单独强制 gate 仅接受该包/仓库/路径的确切 GitHub 404；libmysqlclient 和依赖它的 mysql-connector-cpp 消费者在 summary 明示 NOT TESTED，不冒充构建通过。其他错误仍失败；上游恢复后删除此临时策略。
-- 旧版本保留与 82 包声明覆盖审计通过；工具最新提交 416a954 的 14 个 checks 全部成功。接入及端到端 PR 的最终完整回归仍在进行。
-- 开发期不发布稳定标签、不启用定时写入、不合并 PR；最终验收要求除上述用户批准的源不可用豁免外，所有实际候选矩阵和既有 CI gates 通过。
+- 工具 draft：[openxlings/xpkgindex-update #1](https://github.com/openxlings/xpkgindex-update/pull/1)，开发分支 `dev/mcpp-index-integration`，提交 `416a954c67dba4cdf52a033a71ee88fdec0acf1d`。45 项测试，Linux/macOS/Windows × Python 3.11/3.13，打包、CLI 和 Action smoke；push/PR 合计 14 checks 成功。
+- 接入 draft：[mcpp-index #543](https://github.com/mcpplibs/mcpp-index/pull/543)，分支 `test/xpkgindex-update`，最终提交 `582fc31a51a95984207bf4076bf8049ded349956`。74 个执行的 checks 成功；两个既有的条件性通知/发布任务按原规则跳过。
+- [候选 CI](https://github.com/mcpplibs/mcpp-index/actions/runs/39296649657)：扫描 + 52/52 真实候选构建、运行及 mcpp.lock 版本确认成功；52 份候选日志/锁文件 artifact 齐全。
+- [完整回归 CI](https://github.com/mcpplibs/mcpp-index/actions/runs/39296649642)：19 个执行 jobs 成功，覆盖 13 个现有消费者回归分片（Linux 默认/GCC 三份、LLVM 六份、macOS 两份、Windows 两份），以及 lint、镜像、选择、图形副作用、计时与失败归属检查。
+- 真实 propose draft：[mcpp-index #544](https://github.com/mcpplibs/mcpp-index/pull/544)，最终提交 `8e72ea8011cd6bc794880aba2c33522bd404b465`。20 个执行 checks 成功；相对测试基线仅追加 hiredis 1.5.0 的三平台版本块，共 12 行。重复 propose 返回 pending，不重复创建 PR。
+- [端到端候选 CI](https://github.com/mcpplibs/mcpp-index/actions/runs/39296667503) 和 [消费者 CI](https://github.com/mcpplibs/mcpp-index/actions/runs/39296667523) 均成功；候选固定为 1.5.0，四种平台/工具链实际构建运行通过。
+- 82 个 GitHub 直连描述符全部声明；独立 guard 对 254 个已有描述符的历史版本条目保留检查通过。扫描结果：63 up-to-date、13 update-ready、4 pinned-snapshot、1 pinned-version-map、1 已批准源故障。
+
+人工兼容适配与自动追加逻辑分开：
+
+| 包 | 最终适配 | 真实验证 |
+|---|---|---|
+| FreeType | 追加 HVF 驱动源码的兼容 glob | 新 2.15 四种组合成功；旧 2.13.3 消费回归成功 |
+| OpenMP | LLVM 23 改用 runtimes CMake 入口；工具定位支持 Windows Python 位于 payload 根目录 | 新 23.1.3 四种组合成功；旧 22.1.8 各支持平台回归成功，Windows 实际构建及运行通过 |
+| hiredis | 七个独立 C 包装翻译单元，避免 Windows 遍历上游 AI 配置 symlink 时 Access denied；不删改上游资源 | 新 1.5 四种组合和端到端 CI 成功；旧 1.2 本地构建运行成功 |
+| libuv | Windows 加 synchronization 链接库 | 新 1.53 四种组合成功 |
+| nanodbc | 标准 locale 头；macOS 明确使用 libiodbc 头，旧版测试不再空跑 | 新 3.0.7 四种组合成功；旧 2.14 的 Linux LLVM23/macOS/Windows 消费回归成功 |
+| Quill | 生成模块时移除未启用的 QUILL_IMPORT_STD 块，避免扫描器把 inactive import std 视为入口 | 新 13.1 四种组合成功；旧 13.0 回归成功 |
+| mcr | 0.2 移除 JSON API，保留旧版 JSON 断言，新增 typed response/body/options 断言；仅对 0.2.0 回补 libc++20 不具备的 join_with/enumerate | 新 0.2 四种组合成功；旧 0.1.5 回归成功 |
+| muduo / llama.cpp | 显式补标准头；llama.cpp 仅在 Linux 普通实现源注入 cstdlib/cerrno，避免改变 Mac/Windows 编译环境 | 旧版本全平台现有消费者回归成功；llama.cpp Windows 与 LLVM23 日志均输出 PASS |
+
+临时源故障豁免：用户明确允许暂时忽略 wellwei/libmysqlclient 不可用。原 error 留在 plan；强制 gate 仅接受该包/仓库/路径的确切 HTTP 404。libmysqlclient 和依赖它的 mysql-connector-cpp 在 summary 标为 NOT TESTED，不计作成功构建。其他扫描或构建失败仍失败；上游恢复/迁移后删除 `tests/autoupdate/source_outage.py` 及对应 workflow 步骤。
+
+补充自审：CI 对新增描述符不读取不存在的基线文件；新增包由普通消费者验证，若有更新候选仍执行候选 CI；删除任何已有描述符直接失败。真实临时 Git 仓库回归已验证新增包可审计、初始版本不误判为 bump、历史描述符不能删除，且已加入扫描 CI。
+
+本轮未迁移 xim-pkgindex 的真实包；共用静态版本追加逻辑与 adapter 边界已有 fixture 验证，带 latest.ref 的变更明确拒绝，等待独立策略。自动更新可验证版本/资源/构建，不能保证 API 向后兼容；mcr 0.2 是实际例子，始终保留人工 review/merge。
+
+三个 PR 均保持 draft；不发布稳定标签、不启用定时写入、不合并。运行中的旧提交已取消，失败历史及修复依据保留；最终结论仅依据以上最终提交的完整 CI。
+
+## 14. 共享资源优化及合并验证（2026-10-20）
+
+用户授权 CI 成功后 squash 合并工具与索引 PR，并实际触发更新验证、合入成功更新。
+
+### 14.1 一份资源，多平台引用
+
+```lua
+local versions = {
+    ["1.5.0"] = {
+        url = "https://github.com/redis/hiredis/archive/refs/tags/v1.5.0.tar.gz",
+        sha256 = "eec7ef8641d221e144a58d5ef8d733c8c75c7fd487097a233aacb4fa33981cfb",
+    },
+}
+
+package = {
+    -- 身份、构建配置与 extensions 保持原结构
+    xpm = {
+        linux = { -- 已有版本块保持原文
+            ["1.5.0"] = versions["1.5.0"],
+        },
+        macosx = { ["1.5.0"] = versions["1.5.0"] },
+        windows = { ["1.5.0"] = versions["1.5.0"] },
+    },
+}
+```
+
+- 所有参与平台的完整资源相同时，共用一份前置版本定义；URL 不同，即便 SHA 相同，也不混用来源。
+- 后续版本追加到同一个共享表；旧的内联条目不迁移、不覆盖、不重排。名称与现有局部变量冲突时选择新名称。
+- 支持字面量局部表、字面量字符串索引引用和已有整个平台共享表。不执行 Lua，不猜测动态表达式。
+- 版本保留检查同时保护引用源码及引用指向的资源定义；仅保留引用、修改背后的 URL/SHA 同样失败。
+- 拒绝共享表重绑、直接变更、外部调用和后续 package 访问；无法静态解析的历史版本资源明确报错，不能从版本比较中静默消失。
+- 所有平台与资源先验证；生成后再次静态解析，确认每个平台的新条目确实指向已验证 URL/SHA，最后原子写入。
+
+### 14.2 自审与实施证据
+
+- 工具回归增至 59 项；覆盖连续追加、共享定义被改、变量重绑/变更、平台资源差异、名称冲突、不可解析前缀、动态历史资源等。
+- 13 个真实候选生成结果均只有一份 URL/SHA，三平台引用同一资源；旧版本保留和 Lua 平台一致性检查通过。固定客户端 2026.10.1.2 对全部候选的三平台解析均成功。
+- 索引 CI 的真实 Git 基线回归同时覆盖：新增描述符不误判为版本 bump、历史描述符不能删除、共享版本引用能生成精确候选构建矩阵。
+- README 精简为正式项目入口，详细 CLI/config/shared-table 内容放在 docs/usage.md。
+- 工具 PR #1 已 squash 合并为 `23c5e04948c55e606bc56ee2c649ddd4849b7ec6`；索引 Action 固定到此真实合并提交。
+
+### 14.3 合并后的真实更新验证
+
+先等待索引候选与现有消费者 CI 全部成功，再 squash 合并 #543。将 #544 同步到 main 基线，以工具重新生成共享格式并验证后合入。随后手动触发 main 上的 Action，使用可选 package 输入限定一个真实更新包；从 artifact 取回同一份固定计划，由已合并的 CLI 创建针对 main 的更新 PR，等待实际构建、运行、锁文件及旧版本保留检查成功后 squash 合入。
+
+写 PR 使用本地已有授权，不新建长期 token secret。现有 libmysqlclient 源故障豁免继续明确保留，不改变其历史版本。此节是实施时的计划及已核实证据，最终合并与 CI 结果另见汇报和 PR 记录。
