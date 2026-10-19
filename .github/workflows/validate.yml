@@ -1499,6 +1499,10 @@ jobs:
         run: |
           "$MCPP" index update
 
+      - name: Install nanodbc macOS development headers
+        if: runner.os == 'macOS' && contains(format(' {0} ', env.MEMBERS), ' nanodbc ')
+        run: brew install libiodbc
+
       - name: mcpp test (workspace or affected members)
         shell: bash
         env:
