@@ -58,7 +58,7 @@ python -m xpkgindex_update apply --plan plan.json --package compat:foo
 ## workflow 与认证
 
 扫描和构建 job 只有读取权限。只有默认分支的 `propose` job 获取
-`contents: write`、`pull-requests: write`、`actions: write`，
+`contents: write`、`pull-requests: write`、`actions: write`、`statuses: write`，
 使用固定 CLI 消费原始扫描 artifact，不依赖本地用户 token 或长期 secret。
 组织和仓库须允许 GitHub Actions 创建 PR。GitHub 的对应开关也允许审批，
 但此 workflow 不会审批或合并 PR。
@@ -74,6 +74,10 @@ python -m xpkgindex_update apply --plan plan.json --package compat:foo
 下一轮能为已有 bot PR 补齐未成功发出的 CI dispatch，不重复提 PR；已有运行（包括失败）不会被静默重跑。
 [中央配置](../../.github/xpkgindex-update.yml) 的 `max_prs` 限制每轮新 PR 数量。
 更新分支上的 CI 不会递归创建 PR。
+
+提案 job 等待四类 dispatch CI 的真实结果，并将 `xpkgindex-update/ci` 汇总状态写到 PR 的同一 head。
+只有四类均成功才标绿；失败、取消、超时或 head 不一致均不能通过。PR 中的状态链接指向含各 CI 运行链接的提案报告。
+GitHub 自动产生的原生 PR 审批请求无需批准；验证使用显式 dispatch 和该汇总状态。
 
 暂时保留 `wellwei/libmysqlclient` 源故障豁免：扫描错误仍记录，受影响消费者标为
 **NOT TESTED**，不计为成功构建。
