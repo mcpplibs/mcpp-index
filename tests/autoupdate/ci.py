@@ -229,44 +229,12 @@ def experiment(consumer: Path, output: Path):
             text = text.replace(f'"*/{name}.c"',
                 json.dumps((payload / "hiredis-1.5.0" / f"{name}.c").as_posix()))
         manifest.write_text(text, encoding="utf-8")
-        probe.write_text('''#include <filesystem>
-#include <cstdio>
-#include <exception>
-int main() {
-    namespace fs = std::filesystem;
-    try {
-        fs::path generic(ROOT_PATH);
-        auto native = generic;
-        native.make_preferred();
-        for (const auto& root : {generic, native}) {
-            std::printf("ROOT %s\\n", root.string().c_str());
-            std::fflush(stdout);
-            std::error_code ec, entry_error;
-            fs::recursive_directory_iterator it(root, fs::directory_options::follow_directory_symlink, ec), end;
-            for (; !ec && it != end; it.increment(ec)) {
-                auto regular = it->is_regular_file(entry_error);
-                if (entry_error) std::printf("ENTRY ERROR %s: %s\\n", it->path().string().c_str(), entry_error.message().c_str());
-                if (!regular || it->path().extension() != ".c") continue;
-                auto relative = it->path().lexically_relative(root);
-                std::printf("FILE %s relative=%s generic=%s\\n", it->path().string().c_str(), relative.string().c_str(), relative.generic_string().c_str());
-                std::fflush(stdout);
-            }
-            std::printf("WALK ERROR %d %s\\n", ec.value(), ec.message().c_str());
-            std::fflush(stdout);
-        }
-    } catch (const std::exception& error) {
-        std::fprintf(stderr, "EXCEPTION %s\\n", error.what());
-        return 1;
-    }
-}
-'''.replace('ROOT_PATH', json.dumps(payload.as_posix())), encoding="utf-8")
         with (output / "absolute-sources.log").open("w", encoding="utf-8") as log:
             result = subprocess.run([mcpp, "test", "--verbose", "--cache", "off"], cwd=consumer,
                                     stdout=log, stderr=subprocess.STDOUT)
             print("absolute sources bypassing glob expansion:", result.returncode)
     finally:
         root_manifest.write_bytes(root_source)
-        probe.write_bytes(source)
         manifest.unlink(missing_ok=True)
 
 
