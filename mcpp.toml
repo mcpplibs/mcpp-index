@@ -172,6 +172,7 @@ members = [
     "tests/examples/websocket-features",
     "tests/examples/websocket-tls",
     "tests/examples/tray",
+    "tests/examples/xsimd",
     "tests/examples/xxhash",
     "tests/examples/yaml-cpp",
     "tests/examples/yaml-cpp-v080",

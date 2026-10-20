@@ -1,0 +1,8 @@
+# xsimd test project: exercise the default architecture selected from the
+# consumer's compiler flags, plus load/store and useful batch operations.
+[package]
+name = "xsimd-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+xsimd = "14.3.0"
