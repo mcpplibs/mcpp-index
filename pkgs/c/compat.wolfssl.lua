@@ -43,6 +43,18 @@ package = {
     repo        = "https://github.com/wolfSSL/wolfssl",
     type        = "package",
 
+    -- Upstream's release tags carry a suffix: v5.9.4-stable, not v5.9.4.
+    -- The updater substitutes ${version} into `tag` and then uses ${tag} in
+    -- the URL. Candidate CI is what catches a release that changes the
+    -- transcribed source list or CMake defaults; when that happens the
+    -- descriptor needs a manual recipe update before the bump PR can pass.
+    extensions = {
+        autoupdate = {
+            tag = "v${version}-stable",
+            url = "https://github.com/wolfSSL/wolfssl/archive/refs/tags/${tag}.tar.gz",
+        },
+    },
+
     xpm = {
         -- No CN mirror has been published to gitcode/mcpp-res yet, so this
         -- uses the repository's plain-string upstream fallback rather than

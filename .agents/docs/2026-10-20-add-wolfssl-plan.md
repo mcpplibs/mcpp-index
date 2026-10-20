@@ -31,6 +31,16 @@
   Curve25519/Ed25519 and system CA-store loading are off in CMake's default
   configuration and stay off here.
 
+## Automatic updates
+
+`extensions.autoupdate` is declared with `tag = "v${version}-stable"` and
+`url = "https://github.com/wolfSSL/wolfssl/archive/refs/tags/${tag}.tar.gz"`.
+The suffix is upstream's actual release-tag shape. The recipe also pins
+upstream's default source list and an options.h snapshot, so a release can
+add or remove translation units or change CMake defaults; candidate CI is
+what detects that, and the bump PR then needs a manual recipe update (the
+"upgrades requiring recipe changes" case in `docs/automatic-updates.md`).
+
 ## Feature evaluation
 
 No source-gated `features` are offered. CMake's optional components would
