@@ -1,3 +1,10 @@
+local versions = {
+    ["1.6.59"] = {
+        url = "https://github.com/pnggroup/libpng/archive/refs/tags/v1.6.59.tar.gz",
+        sha256 = "2540302a1844ad2b2b501977abecfa850f265f97b78f065a712ab4074a89f5b5",
+    },
+}
+
 -- compat.libpng — PNG reference library (libpng 1.6.43).
 -- ~15 C source files, depends on compat.zlib.
 -- EUI-NEO uses libpng for PNG image encoding/decoding.
@@ -30,18 +37,21 @@ package = {
                 url    = "https://github.com/pnggroup/libpng/archive/refs/tags/v1.6.43.tar.gz",
                 sha256 = "fecc95b46cf05e8e3fc8a414750e0ba5aad00d89e9fdf175e94ff041caf1a03a",
             },
+            ["1.6.59"] = versions["1.6.59"],
         },
         macosx = {
             ["1.6.43"] = {
                 url    = "https://github.com/pnggroup/libpng/archive/refs/tags/v1.6.43.tar.gz",
                 sha256 = "fecc95b46cf05e8e3fc8a414750e0ba5aad00d89e9fdf175e94ff041caf1a03a",
             },
+            ["1.6.59"] = versions["1.6.59"],
         },
         windows = {
             ["1.6.43"] = {
                 url    = "https://github.com/pnggroup/libpng/archive/refs/tags/v1.6.43.tar.gz",
                 sha256 = "fecc95b46cf05e8e3fc8a414750e0ba5aad00d89e9fdf175e94ff041caf1a03a",
             },
+            ["1.6.59"] = versions["1.6.59"],
         },
     },
 
