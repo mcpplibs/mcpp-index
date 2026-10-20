@@ -278,3 +278,9 @@ on `main` — no new mcpp release required. Browse online at: https://mcpplibs.g
 | External build system (`install()`-driven) | `pkgs/c/compat.openblas.lua` (Make), `compat.openssl.lua` (Perl Configure + Make) | `tests/examples/openblas/`, `openssl/` | `docs/superpowers/specs/2026-07-26-openssl-asio-tls-design.md` / #124 |
 | A feature pulling in a dependency (cross-package) | the `ssl` feature of `pkgs/c/chriskohlhoff.asio.lua` → `compat.openssl` | `tests/examples/asio-ssl/` | same as above |
 | Multi-component upstream flattened into one lib | `pkgs/c/compat.recastnavigation.lua` (five upstream CMake targets → a base build plus `crowd` / `tilecache` / `debug-utils`; `debug-utils` `implies` `tilecache`) | `tests/examples/recastnavigation/`, `recastnavigation-features/` | `.agents/docs/2026-08-29-add-recastnavigation-plan.md` |
+
+## Automatic version updates
+
+See [Automatic updates](automatic-updates.md) for declarations, the daily bot workflow,
+permissions and exact-candidate CI. Normal package PRs include the declaration when eligible
+and leave the root READMEs and site configuration unchanged.

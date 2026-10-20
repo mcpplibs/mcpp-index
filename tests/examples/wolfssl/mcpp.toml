@@ -1,0 +1,11 @@
+# compat.wolfssl test project. It asserts the configuration surface a consumer
+# cannot see without the options.h snapshot (TLS 1.3 and AES-GCM present), then
+# exercises real crypto: a SHA-256 known-answer vector, an AES-256-GCM
+# round trip (including tag rejection), the RNG, and an ECC P-256 key pair.
+# `compat` redirect inherited from the workspace root.
+[package]
+name = "wolfssl-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+wolfssl = "5.9.4"

@@ -9,6 +9,13 @@ package = {
     repo        = "https://github.com/mcpplibs/cmp",
     type        = "package",
 
+    extensions = {
+        autoupdate = {
+            tag = "v${version}",
+            url = "https://github.com/mcpplibs/cmp/releases/download/${tag}/cmp-${version}.tar.gz",
+        },
+    },
+
     xpm = {
         linux = {
             ["0.1.0"] = {

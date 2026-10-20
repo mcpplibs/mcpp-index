@@ -9,6 +9,13 @@ package = {
     repo        = "https://github.com/libevent/libevent",
     type        = "package",
 
+    extensions = {
+        autoupdate = {
+            tag = "release-${version}-stable",
+            url = "https://github.com/libevent/libevent/archive/refs/tags/${tag}.tar.gz",
+        },
+    },
+
     xpm = {
         linux = {
             deps = { "xim:cmake@latest" },

@@ -1,3 +1,10 @@
+local versions = {
+    ["1.53.0"] = {
+        url = "https://github.com/libuv/libuv/archive/refs/tags/v1.53.0.tar.gz",
+        sha256 = "279f3f67a24bb9921fe999ca6cd5e332fade8d515873ef9ba054b70e70a31d9e",
+    },
+}
+
 -- compat.libuv — libuv 1.48.0, multi-platform async I/O library.
 --
 -- Shape A (C-source compat): the exact per-OS source sets from upstream's own
@@ -26,24 +33,34 @@ package = {
     repo        = "https://github.com/libuv/libuv",
     type        = "package",
 
+    extensions = {
+        autoupdate = {
+            tag = "v${version}",
+            url = "https://github.com/libuv/libuv/archive/refs/tags/${tag}.tar.gz",
+        },
+    },
+
     xpm = {
         linux = {
             ["1.48.0"] = {
                 url    = "https://github.com/libuv/libuv/archive/refs/tags/v1.48.0.tar.gz",
                 sha256 = "8c253adb0f800926a6cbd1c6576abae0bc8eb86a4f891049b72f9e5b7dc58f33",
             },
+            ["1.53.0"] = versions["1.53.0"],
         },
         macosx = {
             ["1.48.0"] = {
                 url    = "https://github.com/libuv/libuv/archive/refs/tags/v1.48.0.tar.gz",
                 sha256 = "8c253adb0f800926a6cbd1c6576abae0bc8eb86a4f891049b72f9e5b7dc58f33",
             },
+            ["1.53.0"] = versions["1.53.0"],
         },
         windows = {
             ["1.48.0"] = {
                 url    = "https://github.com/libuv/libuv/archive/refs/tags/v1.48.0.tar.gz",
                 sha256 = "8c253adb0f800926a6cbd1c6576abae0bc8eb86a4f891049b72f9e5b7dc58f33",
             },
+            ["1.53.0"] = versions["1.53.0"],
         },
     },
 
@@ -109,7 +126,9 @@ package = {
             -- it. Unfixable package-side otherwise without shadowing
             -- event_loop.cpp. Regression: PR #195 windows workspace leg.
             cflags  = { "-DWIN32_LEAN_AND_MEAN", "-D_WIN32_WINNT=0x0602", "-D_CRT_DECLARE_NONSTDC_NAMES=0", "-DNDEBUG" },
-            ldflags = { "-lpsapi", "-luser32", "-ladvapi32", "-liphlpapi", "-luserenv", "-lws2_32", "-ldbghelp", "-lole32", "-lshell32" },
+            -- libuv 1.53 uses WaitOnAddress/WakeByAddressSingle; match its
+            -- upstream synchronization.lib dependency. Also safe for 1.48.
+            ldflags = { "-lpsapi", "-luser32", "-ladvapi32", "-liphlpapi", "-luserenv", "-lws2_32", "-ldbghelp", "-lole32", "-lshell32", "-lsynchronization" },
         },
     },
 }

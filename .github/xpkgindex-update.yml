@@ -1,0 +1,3 @@
+version: 1
+adapter: mcpp-index
+max_prs: 3

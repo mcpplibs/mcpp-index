@@ -10,6 +10,13 @@ package = {
     namespace  = "aimol",
     maintainers = {"Aimol-l"},
 
+    extensions = {
+        autoupdate = {
+            tag = "v${version}",
+            url = "https://github.com/Aimol-l/Tensorvia-cpu/releases/download/${tag}/tensorvia-cpu-${version}.tar.gz",
+        },
+    },
+
     xpm = {
         linux   = {
             ['0.2.3'] = { url = "https://github.com/Aimol-l/Tensorvia-cpu/releases/download/v0.2.3/tensorvia-cpu-0.2.3.tar.gz", sha256 = "8476d2fa27eb47a8e9d50b3ef3b974cad8923f4fdebd4d3f6d45355cc6a534f7" },

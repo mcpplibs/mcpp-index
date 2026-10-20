@@ -10,6 +10,13 @@ package = {
     licenses = {"Apache-2.0 WITH LLVM-exception"},
     repo = "https://github.com/llvm/llvm-project/tree/main/openmp",
     type = "package",
+    extensions = {
+        autoupdate = {
+            tag = "llvmorg-${version}",
+            url = "https://github.com/llvm/llvm-project/releases/download/${tag}/llvm-project-${version}.src.tar.xz",
+        },
+    },
+
     xpm = {
         linux = {
             deps = { "xim:cmake@latest", "xim:python@3.13.12" },
@@ -67,6 +74,7 @@ local function tool(dep, name)
     if info then
         for _, candidate in ipairs({
             path.join(info.bin or info.path or "", name),
+            path.join(info.path or "", name), -- Windows Python lives at the payload root.
             path.join(info.path or "", "CMake.app", "Contents", "bin", name),
         }) do
             if os.isfile(candidate) then return candidate end
@@ -121,9 +129,13 @@ function install()
         options = options .. " -DCMAKE_C_COMPILER=/usr/bin/cc -DCMAKE_CXX_COMPILER=/usr/bin/c++"
             .. " -DCMAKE_ASM_COMPILER=/usr/bin/cc -DCMAKE_MAKE_PROGRAM=/usr/bin/make"
     end
-    local configure = quote(cmake) .. " -S " .. quote(path.join(prefix, "openmp"))
+    -- LLVM 23 removed openmp's legacy standalone entry point. The runtimes
+    -- entry point also supports the preserved LLVM 22 source release.
+    local configure = quote(cmake) .. " -S " .. quote(path.join(prefix, "runtimes"))
         .. " -B " .. quote(build) .. " -DCMAKE_BUILD_TYPE=Release"
         .. " -DCMAKE_INSTALL_PREFIX=" .. quote(output)
+        .. " -DLLVM_ENABLE_RUNTIMES=openmp -DLLVM_INCLUDE_TESTS=OFF"
+        .. " -DOPENMP_INSTALL_LIBDIR=lib"
         .. " -DPython3_EXECUTABLE=" .. quote(python)
         .. " -DOPENMP_ENABLE_LIBOMPTARGET=OFF -DOPENMP_ENABLE_OMPT_TOOLS=OFF"
         .. " -DLIBOMP_OMPT_SUPPORT=OFF -DLIBOMP_USE_ITT_NOTIFY=OFF" .. options
@@ -133,8 +145,8 @@ function install()
         -- The Visual Studio generator can omit the archive of upstream's
         -- source-less ompimp target. The DLL link already produced an import
         -- library for these exact exports; give install() its expected name.
-        local expected = path.join(build, "runtime", "src", "Release", "libomp.lib")
-        local linked = path.join(build, "runtime", "src", "Release", "libomp.dll.lib")
+        local expected = path.join(build, "openmp", "runtime", "src", "Release", "libomp.lib")
+        local linked = path.join(build, "openmp", "runtime", "src", "Release", "libomp.dll.lib")
         if not os.isfile(expected) and os.isfile(linked) then
             os.cp(linked, expected)
         end

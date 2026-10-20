@@ -37,6 +37,13 @@ package = {
     repo        = "https://github.com/Thalhammer/jwt-cpp",
     type        = "package",
 
+    extensions = {
+        autoupdate = {
+            tag = "v${version}",
+            url = "https://github.com/Thalhammer/jwt-cpp/archive/refs/tags/${tag}.tar.gz",
+        },
+    },
+
     xpm = {
         linux = {
             ["0.7.2"] = {

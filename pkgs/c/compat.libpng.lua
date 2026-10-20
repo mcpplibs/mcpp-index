@@ -17,6 +17,13 @@ package = {
     repo        = "https://github.com/pnggroup/libpng",
     type        = "package",
 
+    extensions = {
+        autoupdate = {
+            tag = "v${version}",
+            url = "https://github.com/pnggroup/libpng/archive/refs/tags/${tag}.tar.gz",
+        },
+    },
+
     xpm = {
         linux = {
             ["1.6.43"] = {

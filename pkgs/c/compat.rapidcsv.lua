@@ -30,6 +30,13 @@ package = {
     repo        = "https://github.com/d99kris/rapidcsv",
     type        = "package",
 
+    extensions = {
+        autoupdate = {
+            tag = "v${version}",
+            url = "https://github.com/d99kris/rapidcsv/archive/refs/tags/${tag}.tar.gz",
+        },
+    },
+
     xpm = {
         linux = {
             ["9.07"] = {

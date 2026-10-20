@@ -56,6 +56,13 @@ int main() {
 
 #else
 
-int main() { return 0; } // non-linux: dependency is cfg-gated out, nothing to test
+#include <nanodbc/nanodbc.h>
+
+// Also exercise real allocation, linking and destruction on macOS/Windows.
+// No database driver or running database is needed for an idle connection.
+int main() {
+    nanodbc::connection connection;
+    return connection.connected() ? 1 : 0;
+}
 
 #endif

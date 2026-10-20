@@ -99,6 +99,13 @@ package = {
     repo        = "https://github.com/ArthurSonzogni/FTXUI",
     type        = "package",
 
+    extensions = {
+        autoupdate = {
+            tag = "v${version}",
+            url = "https://github.com/ArthurSonzogni/FTXUI/archive/refs/tags/${tag}.tar.gz",
+        },
+    },
+
     xpm = {
         linux = {
             ["6.1.9"] = {

@@ -10,7 +10,8 @@
 -- ODBC driver manager and cannot run without one:
 --
 --   * windows — the SDK's odbc32 is always there; just link it.
---   * macOS   — iODBC is part of the OS; just link it.
+--   * macOS   — link the OS iODBC runtime. Its development headers are no
+--     longer in recent SDKs; install Homebrew libiodbc for those headers.
 --   * linux   — the manager (unixODBC) is a third-party library, and mcpp's
 --     runtime closure rejects binaries whose NEEDED libodbc.so.2 only exists
 --     on the host. compat.unixodbc therefore builds the manager STATICALLY
@@ -39,6 +40,13 @@ package = {
     licenses    = {"MIT"},
     repo        = "https://github.com/nanodbc/nanodbc",
     type        = "package",
+
+    extensions = {
+        autoupdate = {
+            tag = "v${version}",
+            url = "https://github.com/nanodbc/nanodbc/archive/refs/tags/${tag}.tar.gz",
+        },
+    },
 
     xpm = {
         linux = {
@@ -82,6 +90,7 @@ package = {
 #define MCPP_NANODBC_CHAR_TRAITS_H
 #include <cstdio>
 #include <cstring>
+#include <locale> // nanodbc 2.14 uses wstring_convert; codecvt no longer includes locale in libc++ 23.
 #include <string>
 #if defined(_LIBCPP_VERSION)
 namespace std {
@@ -142,7 +151,12 @@ struct char_traits<unsigned char> {
             cxxflags = { "-fpermissive" },
         },
         macosx = {
-            -- iODBC driver manager, part of the OS.
+            -- iODBC runtime is in the OS, but recent SDKs omit sql.h.
+            -- Homebrew's keg-only development headers (Apple Silicon/Intel).
+            include_dirs = {
+                "/opt/homebrew/opt/libiodbc/include",
+                "/usr/local/opt/libiodbc/include",
+            },
             ldflags = { "-liodbc" },
         },
         windows = {

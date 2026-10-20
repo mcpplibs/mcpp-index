@@ -5,15 +5,13 @@
 # not exist must throw nanodbc::database_error carrying the manager's own
 # diagnostics.
 #
-# Gated to linux: windows (-lodbc32, Windows SDK) and macOS (-liodbc) are
-# declared in the descriptor for consumers but are not exercised by this
-# index's CI -- the linux leg is the one where the system driver manager is
-# guaranteed present.
+# Windows uses the SDK driver manager. macOS uses the system iODBC runtime
+# and requires libiodbc development headers (brew install libiodbc).
 [package]
 name = "nanodbc-tests"
 version = "0.1.0"
 
-[target.'cfg(linux)'.dependencies.compat]
+[dependencies.compat]
 nanodbc = "2.14.0"
 
 [target.'cfg(linux)'.build]

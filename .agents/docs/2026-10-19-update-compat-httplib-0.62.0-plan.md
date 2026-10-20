@@ -25,6 +25,16 @@ No GitCode configuration or token is available in this environment. The new
 entries use plain upstream URLs, as allowed by `docs/cn-mirror.md`; the
 existing 0.53.1 entries are untouched.
 
+## Automatic updates
+
+The descriptor declares `package.extensions.autoupdate` with the
+`v${version}` tag template and the GitHub tag-archive URL, so future releases
+are proposed by `openxlings/xpkgindex-update` without manual descriptor edits.
+Since all three platforms use the same archive, the new version's URL and
+SHA-256 live once in a leading `local versions` table and each platform
+references `versions["0.62.0"]`, matching the updater's append-only layout.
+The historical `0.53.1` entries remain byte-for-byte unchanged.
+
 ## Recipe and compatibility
 
 - The upstream CMake `option(...)` set is byte-for-byte the same in 0.53.1 and
@@ -49,8 +59,8 @@ existing 0.53.1 entries are untouched.
 
 ## Validation
 
-- `mcpp xpkg parse pkgs/c/compat.httplib.lua` -> `parse OK`, listing `0.62.0`
-  and `0.53.1` on all three platforms.
+- `mcpp xpkg parse --all-os pkgs/c/compat.httplib.lua` -> `parse OK` for
+  linux, macosx and windows with `0.62.0` and `0.53.1` resolved on each.
 - Windows, local mcpp 2026.10.11.1 (CI pins 2026.10.1.2 in
   `.github/workflows/validate.yml`), LLVM 23.1.3 / MSVC 14.44.35207:
   - `mcpp test -p httplib` -> 1 passed; 0 failed.
