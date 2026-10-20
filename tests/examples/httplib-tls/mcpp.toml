@@ -3,4 +3,4 @@ name = "httplib-tls-tests"
 version = "0.1.0"
 
 [dependencies.compat]
-httplib = { version = "0.53.1", features = ["tls"] }
+httplib = { version = "0.62.0", features = ["tls"] }

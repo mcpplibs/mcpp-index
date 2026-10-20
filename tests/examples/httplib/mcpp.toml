@@ -3,4 +3,4 @@ name = "httplib-tests"
 version = "0.1.0"
 
 [dependencies.compat]
-httplib = "0.53.1"
+httplib = "0.62.0"
