@@ -171,6 +171,7 @@ members = [
     "tests/examples/wil",
     "tests/examples/websocket-features",
     "tests/examples/websocket-tls",
+    "tests/examples/wolfssl",
     "tests/examples/tray",
     "tests/examples/xsimd",
     "tests/examples/xxhash",
