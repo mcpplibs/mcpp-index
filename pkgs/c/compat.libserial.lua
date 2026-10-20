@@ -18,7 +18,7 @@
 -- compat.libaio. (Single-platform `xpm` is why platform-version-parity stays
 -- quiet: it only compares platforms that both carry versions.)
 --
--- TWO CONSUMER-VISIBLE DEFECTS ARE FIXED HERE. The first: src/libserial/SerialPortConstants.h
+-- THREE CONSUMER-VISIBLE DEFECTS ARE FIXED HERE. The first: src/libserial/SerialPortConstants.h
 -- declares `using DataBuffer = std::vector<uint8_t>;` but includes neither
 -- <cstdint> nor <stdint.h>. On gcc 16.1.0 / libstdc++ this compiles only by
 -- accident of transitive includes — a bare consumer that opens the header first
@@ -42,6 +42,15 @@
 -- function pointers and decayed arguments it is called with) and adds the
 -- <type_traits> it needs, asserting each match count so an upstream change
 -- fails the install instead of silently skipping the fix.
+--
+-- The third: SerialPortConstants.h guards the 2-4 Mbaud Linux enum values with
+-- `#if __MAX_BAUD > B2000000`. __MAX_BAUD is a glibc bits/termios.h detail;
+-- musl deliberately does not define it, so strict Clang configurations (for
+-- example -Wundef -Werror) reject the public header on aarch64-linux-musl.
+-- The checked-in patch pkgs/c/patches/libserial/0001-guard-musl-max-baud.patch
+-- tests the macro before comparing it. install() applies it with `git apply`
+-- before the result_of rewrite, and fails loudly when the upstream context no
+-- longer matches instead of shipping an unpatched payload.
 --
 -- NO FEATURE. The three TUs are the whole library; upstream's optional parts
 -- are the GoogleTest suite (test/, its own main()), the SIP Python bindings
@@ -69,6 +78,8 @@ package = {
                     CN     = "https://gitcode.com/mcpp-res/libserial/releases/download/1.0.0/libserial-1.0.0.tar.gz",
                 },
                 sha256 = "063142d6bfe08898316e9a6055f2ddeedef56de06f7cfc8dcdfecc6efabf4bdd",
+                -- 1: apply the musl __MAX_BAUD patch in install().
+                revision = 1,
             },
         },
     },
@@ -115,14 +126,52 @@ package = {
     },
 }
 
-import("xim.libxpkg.pkginfo")
+local descriptor_dir = debug.getinfo(1, "S").source:match("^@(.*)/[^/]+$")
 
--- See the header note: the C++20-removed std::result_of in SerialPort.h.
--- Patched in the unpacked tree, which is then moved into the install dir as
--- its single wrap level so the `*/src` globs keep matching (compat.ftxui /
--- taskflow.taskflow do the same).
+import("xim.libxpkg.pkginfo")
+import("xim.libxpkg.log")
+
+-- See the header notes: apply the tracked musl __MAX_BAUD patch, fix the
+-- C++20-removed std::result_of in SerialPort.h, then move the unpacked tree
+-- into the install dir as its single wrap level so the `*/src` globs keep
+-- matching (compat.ftxui / taskflow.taskflow do the same).
 function install()
     local wrap = "libserial-" .. pkginfo.version()
+
+    local function quote(value)
+        return "'" .. tostring(value):gsub("'", "'\\''") .. "'"
+    end
+
+    if not descriptor_dir then
+        log.error("compat.libserial: cannot locate the descriptor directory")
+        return false
+    end
+    local musl_patch = path.join(descriptor_dir,
+        "patches/libserial/0001-guard-musl-max-baud.patch")
+    if not os.isfile(musl_patch) then
+        log.error("compat.libserial: patch file not found: %s", musl_patch)
+        return false
+    end
+    -- The unpacked payload lives under this checkout's ignored .mcpp/ tree in
+    -- local tests. Without an explicit non-repository git-dir, git discovers
+    -- mcpp-index's .git and silently skips the ignored target ("Skipped
+    -- patch"). A nonexistent git-dir keeps `git apply` in plain-file mode.
+    local apply_command = "git -C " .. quote(wrap)
+        .. " --git-dir=/__mcpp_no_git_dir__ apply --whitespace=nowarn "
+        .. quote(musl_patch)
+    local applied, apply_result = pcall(os.exec, apply_command)
+    if not applied or not apply_result then
+        log.error("compat.libserial: failed to apply %s", musl_patch)
+        return false
+    end
+    local constants = path.join(wrap, "src/libserial/SerialPortConstants.h")
+    local constants_text = io.readfile(constants)
+    local patched_marker = "#if defined(__MAX_BAUD) && __MAX_BAUD > B2000000"
+    if not constants_text or not constants_text:find(patched_marker, 1, true) then
+        log.error("compat.libserial: patch did not reach %s", constants)
+        return false
+    end
+
     local function patch(relative, before, after, expected)
         local source = path.join(wrap, relative)
         local content = io.readfile(source)

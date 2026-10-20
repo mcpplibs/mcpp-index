@@ -141,3 +141,35 @@ libstdc++ 仍保留(仅弃用告警),libc++ 在 C++20 及以上直接删掉,于�
 
 **另**:原分支合并 main 时把 CHANGELOG 中 `openkal-llvm-runtime 0.15.4` 与
 `openkal-linux 0.16.1 / openkal-musl 0.20.1` 两条误删,已按 main 恢复。
+
+## 11. 维护者追加(2026-10-20):aarch64 musl 的 `__MAX_BAUD`
+
+**现象**:aarch64-linux-musl 配合严格 Clang 告警配置时,
+`src/libserial/SerialPortConstants.h` 的 `#if __MAX_BAUD > B2000000` 报
+`'__MAX_BAUD' is not defined, evaluates to 0 [-Werror,-Wundef]`。
+
+**根因**:`__MAX_BAUD` 是 glibc `bits/termios.h` 的私有辅助宏。musl 1.2.5 定义了
+`B2000000` 到 `B4000000`,但没有定义 `__MAX_BAUD`。上游把“该 libc 的最高波特率”
+误写成所有 Linux libc 都保证的宏。
+
+**补丁**:`pkgs/c/patches/libserial/0001-guard-musl-max-baud.patch` 由 git 生成,
+把条件改为 `#if defined(__MAX_BAUD) && __MAX_BAUD > B2000000`。
+`compat.libserial` 的 install hook 从描述符自身路径找到补丁,并以
+`git apply` 打入解包树;应用后读取 `SerialPortConstants.h` 断言新文本确实存在,
+避免 git 在仓库内发现父级 `.git` 后“Skipped patch”却仍返回成功。
+
+版本资源提升为 `revision = 1`,让已经安装过 revision 0 的用户重新执行 install hook。
+install hook 同时显式导入 `xim.libxpkg.log`。
+
+**验证**:
+
+- 纯 aarch64 musl 头 + Clang 22.1.8:
+  `-Wundef -Werror=undef` 对原式报上述错误,补丁式通过。
+- 用打补丁后的实际 `SerialPortConstants.h` 配合 aarch64 musl 与 libc++ 头编译,
+  `-Wundef -Werror=undef` 通过。
+- 清掉本包缓存后,mcpp `2026.10.1.2` 冷安装并通过
+  `mcpp test -p libserial --cache off`;安装目录中的头已包含守卫,安装标记为
+  `revision: 1`。
+- OpenKal 的完整 aarch64-linux-musl 图在此之前还会先停在
+  `linux/serial.h: file not found`;这是 OpenKal C 环境没有提供 Linux UAPI 的另一问题,
+  不属于本补丁处理的 `__MAX_BAUD` 缺陷。

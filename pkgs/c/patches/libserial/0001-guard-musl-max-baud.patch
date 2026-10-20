@@ -1,0 +1,13 @@
+diff --git a/src/libserial/SerialPortConstants.h b/src/libserial/SerialPortConstants.h
+index 4f05bd5..c75ee67 100644
+--- a/src/libserial/SerialPortConstants.h
++++ b/src/libserial/SerialPortConstants.h
+@@ -216,7 +216,7 @@ namespace LibSerial
+         BAUD_1000000 = B1000000,
+         BAUD_1152000 = B1152000,
+         BAUD_1500000 = B1500000,
+-#if __MAX_BAUD > B2000000
++#if defined(__MAX_BAUD) && __MAX_BAUD > B2000000
+         BAUD_2000000 = B2000000,
+         BAUD_2500000 = B2500000,
+         BAUD_3000000 = B3000000,
