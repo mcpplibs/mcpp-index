@@ -9,6 +9,38 @@
 
 ### Added
 
+- **`compat.httplib` 0.62.0。** 在 `0.53.1` 之外新增版本键(旧键保留)。仍是纯头文件 Form B:
+  归档根目录仍只有一份 `httplib.h`(747,115 → 846,648 字节,增量是 SSE 客户端、WebSocket
+  辅助与加固,全部落在头内,不引入 define、源文件或链接依赖),描述符的内联构建无需改动。
+  上游 CMake 的 `option()` 集合与 `target_link_libraries` 在 0.53.1→0.62.0 之间逐项相同
+  (两版实测 diff),三平台 ldflags 照旧。0.62.0 上游认识 wolfSSL/MbedTLS 后端,但本索引
+  没有对应的 compat 包,`tls` 仍只接 OpenSSL,不新增 feature。实测(Windows / mcpp
+  2026.10.11.1 / LLVM 23.1.3 + MSVC 14.44):`mcpp xpkg parse` OK;`httplib`、`httplib-zlib`、
+  `httplib-brotli`、`httplib-no-exceptions` 各 1 passed。`httplib-tls` 与 `httplib-zstd`
+  在本机都止步于依赖安装、未编到本包:`compat.openssl` 3.5.1 的 Windows 安装钩子需要带
+  `Locale::Maketext::Simple` 的 Perl,而本机没有 Perl;`compat.zstd` 1.5.7 的上游 tag 归档含
+  符号链接 `tests/cli-tests/bin/unzstd -> zstd`,Windows 上 xlings 无法创建。两项都与本次
+  改版无关,交 CI 裁决。六个测试成员同步改到 0.62.0。
+- **`compat.wolfssl` 5.9.4。** wolfSSL(TLS/crypto)以 C 源码 compat 形态收录,上游最新稳定
+  tag 为 `v5.9.4-stable`。上游的 autotools/CMake 都会在编译前生成 `wolfssl/options.h`,而内联
+  描述符无法运行 configure,因此把该步骤的两项输出原样带入:`sources` 逐条抄自上游 CMake 默认
+  的 `generate_lib_src_list()`(5.9.4 的 `src/ssl_*.c`、`src/bio.c`、`src/x509*.c`、
+  `src/pk*.c`、`src/conf.c` 由 `src/ssl.c` `#include`,故不单列;`wolfcrypt/src/{evp,
+  evp_pk,asn_tsp,asm,ecc_fp}.c` 同理);`generated_files` 写入
+  `mcpp_generated/wolfssl/options.h`,即 CMake 默认选项生成的配置头,平台探测改写为
+  `_WIN32`/`__linux__`/`__SIZEOF_INT128__`/x86_64/aarch64 分支。描述符通过 `cflags` 与
+  default-implied feature 同时下发 `WOLFSSL_USE_OPTIONS_H`,库与消费者编译同一份配置,
+  结构体布局和功能集不会分叉。默认功能集:TLS 1.3/1.2、AES-GCM、ChaCha20-Poly1305、ECC、
+  DH、RSA-PSS、SHA-2/3/SHAKE、ML-KEM,并保留 CMake 的加固默认值(`NO_OLD_TLS`/`NO_DES3`/
+  `NO_RC4`/`NO_MD5`/`NO_MD4`/`NO_DSA`/`NO_PSK`);Curve25519/Ed25519 与系统 CA 读取在
+  CMake 默认配置里本就关闭,本包保持一致。CN 镜像尚未发布到 `mcpp-res`,按先例用纯字符串
+  url 回退 GLOBAL。实测(Windows / mcpp 2026.10.17.1 / LLVM):
+  `mcpp xpkg parse --all-os pkgs/c/compat.wolfssl.lua` 三平台 `parse OK`(38 sources,
+  2 include dirs,1 generated file);冷 `mcpp test -p wolfssl` →
+  `test result ok. 1 passed; 0 failed`(头文件版本串、SHA-256 KAT、AES-256-GCM 往返及
+  坏 tag 拒绝、RNG、P-256 密钥导出)。新增成员 `tests/examples/wolfssl`;linux/macOS
+  两腿交 CI 裁决。
+
 - **`compat.soci` 4.1.4。** SOCI(C++ 数据库访问层)以 C++ 源码 compat 形态收录:上游 `src/core`
   的 22 个 TU 与 sqlite3 后端的 10 个 TU 编入**同一个 lib** —— 上游 CMake 把它们拆成
   `soci_core`/`soci_sqlite3` 两个库,但 mcpp 的 `sources` 是每包一张表,且没有后端的 core 连
