@@ -125,51 +125,15 @@ package = {
     },
 }
 
-local descriptor_dir = debug.getinfo(1, "S").source:match("^@(.*)/[^/]+$")
-
 import("xim.libxpkg.pkginfo")
 import("xim.libxpkg.log")
 
--- See the header notes: apply the tracked musl __MAX_BAUD patch, fix the
--- C++20-removed std::result_of in SerialPort.h, then move the unpacked tree
--- into the install dir as its single wrap level so the `*/src` globs keep
--- matching (compat.ftxui / taskflow.taskflow do the same).
+-- See the header notes: fix the musl __MAX_BAUD guard and the C++20-removed
+-- std::result_of in SerialPort.h, then move the unpacked tree into the install
+-- dir as its single wrap level so the `*/src` globs keep matching
+-- (compat.ftxui / taskflow.taskflow do the same).
 function install()
     local wrap = "libserial-" .. pkginfo.version()
-
-    local function quote(value)
-        return "'" .. tostring(value):gsub("'", "'\\''") .. "'"
-    end
-
-    if not descriptor_dir then
-        log.error("compat.libserial: cannot locate the descriptor directory")
-        return false
-    end
-    local musl_patch = path.join(descriptor_dir,
-        "patches/libserial/0001-guard-musl-max-baud.patch")
-    if not os.isfile(musl_patch) then
-        log.error("compat.libserial: patch file not found: %s", musl_patch)
-        return false
-    end
-    -- The unpacked payload lives under this checkout's ignored .mcpp/ tree in
-    -- local tests. Without an explicit non-repository git-dir, git discovers
-    -- mcpp-index's .git and silently skips the ignored target ("Skipped
-    -- patch"). A nonexistent git-dir keeps `git apply` in plain-file mode.
-    local apply_command = "git -C " .. quote(wrap)
-        .. " --git-dir=/__mcpp_no_git_dir__ apply --whitespace=nowarn "
-        .. quote(musl_patch)
-    local applied, apply_result = pcall(os.exec, apply_command)
-    if not applied or not apply_result then
-        log.error("compat.libserial: failed to apply %s", musl_patch)
-        return false
-    end
-    local constants = path.join(wrap, "src/libserial/SerialPortConstants.h")
-    local constants_text = io.readfile(constants)
-    local patched_marker = "#if defined(__MAX_BAUD) && __MAX_BAUD > B2000000"
-    if not constants_text or not constants_text:find(patched_marker, 1, true) then
-        log.error("compat.libserial: patch did not reach %s", constants)
-        return false
-    end
 
     local function patch(relative, before, after, expected)
         local source = path.join(wrap, relative)
