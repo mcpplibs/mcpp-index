@@ -1,3 +1,10 @@
+local versions = {
+    ["3.0.8"] = {
+        url = "https://github.com/nanodbc/nanodbc/archive/refs/tags/v3.0.8.tar.gz",
+        sha256 = "bbb8ec400f0f84a7f6d61d4a4360e4c90eece6add3735e6b0b451ab90ca76f3e",
+    },
+}
+
 -- Form B inline descriptor for nanodbc — a small C++ wrapper for the native
 -- C ODBC API. One header, one implementation TU; MIT; frozen upstream
 -- (v2.14.0, March 2022, no commits since), so a single version is the whole
@@ -58,18 +65,21 @@ package = {
                 url    = "https://github.com/nanodbc/nanodbc/archive/refs/tags/v2.14.0.tar.gz",
                 sha256 = "56228372042b689beccd96b0ac3476643ea85b3f57b3f23fb11ca4314e68b9a5",
             },
+            ["3.0.8"] = versions["3.0.8"],
         },
         macosx = {
             ["2.14.0"] = {
                 url    = "https://github.com/nanodbc/nanodbc/archive/refs/tags/v2.14.0.tar.gz",
                 sha256 = "56228372042b689beccd96b0ac3476643ea85b3f57b3f23fb11ca4314e68b9a5",
             },
+            ["3.0.8"] = versions["3.0.8"],
         },
         windows = {
             ["2.14.0"] = {
                 url    = "https://github.com/nanodbc/nanodbc/archive/refs/tags/v2.14.0.tar.gz",
                 sha256 = "56228372042b689beccd96b0ac3476643ea85b3f57b3f23fb11ca4314e68b9a5",
             },
+            ["3.0.8"] = versions["3.0.8"],
         },
     },
 
