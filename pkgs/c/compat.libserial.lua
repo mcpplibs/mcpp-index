@@ -47,9 +47,9 @@
 -- `#if __MAX_BAUD > B2000000`. __MAX_BAUD is a glibc bits/termios.h detail;
 -- musl deliberately does not define it, so strict Clang configurations (for
 -- example -Wundef -Werror) reject the public header on aarch64-linux-musl.
--- install() rewrites the guard to test the macro before comparing it. The
--- rewrite is embedded here, like the result_of fix below, because an index
--- publishes descriptors rather than arbitrary sidecar files under pkgs/.
+-- install() tests the five public B* constants instead, so musl retains the
+-- enum members that SerialPort.cpp references unconditionally. The rewrite
+-- is embedded here, like the result_of fix below.
 --
 -- NO FEATURE. The three TUs are the whole library; upstream's optional parts
 -- are the GoogleTest suite (test/, its own main()), the SIP Python bindings
@@ -155,7 +155,7 @@ function install()
 
     if not patch("src/libserial/SerialPortConstants.h",
                  "#if __MAX_BAUD > B2000000",
-                 "#if defined(__MAX_BAUD) && __MAX_BAUD > B2000000", 1) then return false end
+                 "#if defined(B2000000) && defined(B2500000) && defined(B3000000) && defined(B3500000) && defined(B4000000)", 1) then return false end
 
     local header = "src/libserial/SerialPort.h"
     if not patch(header, "typename std::result_of<Fn(Args...)>::type",
