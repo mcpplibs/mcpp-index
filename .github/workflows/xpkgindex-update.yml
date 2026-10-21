@@ -50,7 +50,7 @@ jobs:
           persist-credentials: false
       - name: Use the pinned updater source
         run: echo "PYTHONPATH=$PWD/.updater/src" >> "$GITHUB_ENV"
-      - name: All GitHub-direct descriptors are declared; published versions are unchanged
+      - name: All GitHub-direct descriptors are declared; published versions are preserved
         id: coverage
         env:
           BASE: ${{ github.event.pull_request.base.sha || 'origin/main' }}
@@ -72,10 +72,15 @@ jobs:
         env:
           PLAN: ${{ steps.scan.outputs.plan }}
           OUTCOME: ${{ steps.scan.outcome }}
-        run: python tests/autoupdate/source_outage.py scan-gate --plan "$PLAN" --outcome "$OUTCOME"
+        run: |
+          if [[ -z "$PLAN" ]]; then
+            echo "::error::the updater scan produced no plan; inspect the previous step"
+            exit 1
+          fi
+          python tests/autoupdate/source_outage.py scan-gate --plan "$PLAN" --outcome "$OUTCOME"
       - name: Plan actual candidate build/run jobs
         id: matrix
-        if: always() && steps.scan.outputs.plan != ''
+        if: always() && steps.scan.outputs.plan != '' && steps.scan.outcome != 'skipped'
         env:
           PLAN: ${{ steps.scan.outputs.plan }}
           BASE: ${{ github.event.pull_request.base.sha || 'origin/main' }}

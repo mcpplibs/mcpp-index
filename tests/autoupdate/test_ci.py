@@ -62,3 +62,41 @@ class BaselineTests(unittest.TestCase):
                 old.unlink()
                 with self.assertRaisesRegex(RuntimeError, "existing descriptors removed"):
                     ci.audit("HEAD", root / "coverage.json")
+
+    def test_revision_allows_packaging_fix_but_not_resource_drift(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            pkgs = root / "pkgs/f"
+            pkgs.mkdir(parents=True)
+            descriptor_path = pkgs / "compat.old.lua"
+            descriptor_path.write_text(descriptor("old"))
+            for args in (("init",), ("add", "."),
+                         ("-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-m", "baseline")):
+                subprocess.run(["git", *args], cwd=root, check=True, capture_output=True)
+            baseline = descriptor_path.read_text()
+            with patch.object(ci, "ROOT", root):
+                # A revision bump is the documented way to replace an installed
+                # payload without inventing a new upstream version.
+                descriptor_path.write_text(baseline.replace(
+                    'sha256 = "' + "a" * 64 + '",',
+                    'sha256 = "' + "a" * 64 + '",\n   revision = 1,'))
+                ci.audit("HEAD", root / "coverage.json")
+
+                # A resource change without that bump is still rejected.
+                descriptor_path.write_text(baseline.replace("a" * 64, "b" * 64))
+                with self.assertRaisesRegex(RuntimeError, "without a revision bump"):
+                    ci.audit("HEAD", root / "coverage.json")
+
+                # Revisions are monotonic; replacing revision 1 with 0 would
+                # make an installed client treat the old payload as current.
+                descriptor_path.write_text(baseline.replace(
+                    'sha256 = "' + "a" * 64 + '",',
+                    'sha256 = "' + "a" * 64 + '",\n   revision = 1,'))
+                subprocess.run(["git", "add", "."], cwd=root, check=True, capture_output=True)
+                subprocess.run(["git", "-c", "user.name=Test", "-c", "user.email=test@example.com",
+                                "commit", "-m", "revision 1"], cwd=root, check=True, capture_output=True)
+                descriptor_path.write_text(baseline.replace(
+                    'sha256 = "' + "a" * 64 + '",',
+                    'sha256 = "' + "a" * 64 + '",\n   revision = 0,'))
+                with self.assertRaisesRegex(RuntimeError, "revision decreased"):
+                    ci.audit("HEAD", root / "coverage.json")

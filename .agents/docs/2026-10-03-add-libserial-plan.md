@@ -152,11 +152,12 @@ libstdc++ 仍保留(仅弃用告警),libc++ 在 C++20 及以上直接删掉,于�
 `B2000000` 到 `B4000000`,但没有定义 `__MAX_BAUD`。上游把“该 libc 的最高波特率”
 误写成所有 Linux libc 都保证的宏。
 
-**补丁**:`pkgs/c/patches/libserial/0001-guard-musl-max-baud.patch` 由 git 生成,
-把条件改为 `#if defined(__MAX_BAUD) && __MAX_BAUD > B2000000`。
-`compat.libserial` 的 install hook 从描述符自身路径找到补丁,并以
-`git apply` 打入解包树;应用后读取 `SerialPortConstants.h` 断言新文本确实存在,
-避免 git 在仓库内发现父级 `.git` 后“Skipped patch”却仍返回成功。
+**补丁**:`compat.libserial` 的 install hook 直接在解包树中把条件改为
+`#if defined(__MAX_BAUD) && __MAX_BAUD > B2000000`,并沿用该 hook 已有的
+匹配次数断言(1 次),上游上下文变化时让安装失败而不是悄悄跳过。
+改写内嵌在描述符中,不新增 `pkgs/**` 下的旁路文件:索引发布的是描述符本身,
+且 `xpkgindex --strict` 会把 `pkgs/` 下的非 Lua 历史文件计入包增长后无法与
+Lua 描述符树对齐。
 
 版本资源提升为 `revision = 1`,让已经安装过 revision 0 的用户重新执行 install hook。
 install hook 同时显式导入 `xim.libxpkg.log`。

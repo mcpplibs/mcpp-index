@@ -47,10 +47,9 @@
 -- `#if __MAX_BAUD > B2000000`. __MAX_BAUD is a glibc bits/termios.h detail;
 -- musl deliberately does not define it, so strict Clang configurations (for
 -- example -Wundef -Werror) reject the public header on aarch64-linux-musl.
--- The checked-in patch pkgs/c/patches/libserial/0001-guard-musl-max-baud.patch
--- tests the macro before comparing it. install() applies it with `git apply`
--- before the result_of rewrite, and fails loudly when the upstream context no
--- longer matches instead of shipping an unpatched payload.
+-- install() rewrites the guard to test the macro before comparing it. The
+-- rewrite is embedded here, like the result_of fix below, because an index
+-- publishes descriptors rather than arbitrary sidecar files under pkgs/.
 --
 -- NO FEATURE. The three TUs are the whole library; upstream's optional parts
 -- are the GoogleTest suite (test/, its own main()), the SIP Python bindings
@@ -189,6 +188,10 @@ function install()
         io.writefile(source, patched)
         return true
     end
+
+    if not patch("src/libserial/SerialPortConstants.h",
+                 "#if __MAX_BAUD > B2000000",
+                 "#if defined(__MAX_BAUD) && __MAX_BAUD > B2000000", 1) then return false end
 
     local header = "src/libserial/SerialPort.h"
     if not patch(header, "typename std::result_of<Fn(Args...)>::type",

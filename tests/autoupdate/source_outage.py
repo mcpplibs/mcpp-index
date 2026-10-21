@@ -34,6 +34,17 @@ def report(message):
             stream.write("\n- **NOT TESTED — source outage:** " + message + "\n")
 
 
+def read_plan(path: Path | None) -> dict:
+    if path is None:
+        raise RuntimeError("scan produced no plan; the scan step did not run or failed before writing one")
+    if not path.is_file():
+        raise RuntimeError(f"scan plan is not a file: {path}")
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise RuntimeError(f"cannot read scan plan {path}: {exc}") from exc
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("command", choices=("scan-gate", "members"))
@@ -41,7 +52,7 @@ def main():
     parser.add_argument("--outcome")
     args = parser.parse_args()
     if args.command == "scan-gate":
-        gate(json.loads(args.plan.read_text(encoding="utf-8")), args.outcome)
+        gate(read_plan(args.plan), args.outcome)
     else:
         selected = os.environ["MEMBERS"].split()
         skipped = [member for member in selected if member in MEMBERS]

@@ -37,7 +37,9 @@ jobs:
         # --strict turns the growth reconciliation warning into an error: if
         # the replayed history disagrees with the tree, the curve on the site
         # would be wrong, and that is worth failing a pull request over.
-        run: xpkgindex generate . --output /tmp/site --offline --strict | tee /tmp/build.log
+        run: |
+          set -o pipefail
+          xpkgindex generate . --output /tmp/site --offline --strict 2>&1 | tee /tmp/build.log
 
       - name: No warnings
         # A duplicate slug or an unparsable descriptor already fails above.
