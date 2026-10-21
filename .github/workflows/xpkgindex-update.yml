@@ -50,7 +50,7 @@ jobs:
           persist-credentials: false
       - name: Use the pinned updater source
         run: echo "PYTHONPATH=$PWD/.updater/src" >> "$GITHUB_ENV"
-      - name: All GitHub-direct descriptors are declared; published versions are unchanged
+      - name: All GitHub-direct descriptors are declared; published versions are preserved
         id: coverage
         env:
           BASE: ${{ github.event.pull_request.base.sha || 'origin/main' }}
@@ -59,8 +59,27 @@ jobs:
           python tests/autoupdate/ci.py audit --base "$BASE" --output coverage.json
           python tests/autoupdate/ci.py selection --base "$BASE" --output selected-package.txt
           echo "package=$(cat selected-package.txt)" >> "$GITHUB_OUTPUT"
+      # A PR tests the versions in its diff. Discovering future upstream
+      # releases here also tested unrelated packages on a packaging-only PR.
+      # matrix() derives every added version from the diff, including PRs that
+      # change more than one descriptor. Scheduled/manual scans remain global.
+      - name: Prepare the PR candidate plan
+        id: pr-plan
+        if: github.event_name == 'pull_request'
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          Path("build-plan.json").write_text(json.dumps({
+              "format": 1, "adapter": "mcpp-index",
+              "base_commit": os.environ["GITHUB_SHA"], "packages": [],
+          }))
+          PY
+          echo "plan=build-plan.json" >> "$GITHUB_OUTPUT"
       - name: Discover and download real upstream candidates
         id: scan
+        if: github.event_name != 'pull_request'
         continue-on-error: true # The mandatory gate below accepts only the approved source outage.
         uses: openxlings/xpkgindex-update@6c0bee2941e36132bc2ac3d1f7edbef8b5790320
         with:
@@ -68,16 +87,21 @@ jobs:
           token: ${{ github.token }}
           package: ${{ inputs.package || steps.coverage.outputs.package }}
       - name: Reject all scan failures except the approved unavailable source
-        if: always()
+        if: always() && steps.scan.outcome != 'skipped'
         env:
           PLAN: ${{ steps.scan.outputs.plan }}
           OUTCOME: ${{ steps.scan.outcome }}
-        run: python tests/autoupdate/source_outage.py scan-gate --plan "$PLAN" --outcome "$OUTCOME"
+        run: |
+          if [[ -z "$PLAN" ]]; then
+            echo "::error::the updater scan produced no plan; inspect the previous step"
+            exit 1
+          fi
+          python tests/autoupdate/source_outage.py scan-gate --plan "$PLAN" --outcome "$OUTCOME"
       - name: Plan actual candidate build/run jobs
         id: matrix
-        if: always() && steps.scan.outputs.plan != ''
+        if: always() && (steps.pr-plan.outputs.plan != '' || steps.scan.outputs.plan != '')
         env:
-          PLAN: ${{ steps.scan.outputs.plan }}
+          PLAN: ${{ steps.pr-plan.outputs.plan || steps.scan.outputs.plan }}
           BASE: ${{ github.event.pull_request.base.sha || 'origin/main' }}
         run: |
           python tests/autoupdate/ci.py matrix --plan "$PLAN" --base "$BASE" --output matrix.json

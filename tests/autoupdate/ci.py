@@ -13,7 +13,7 @@ import sys
 import tomllib
 from pathlib import Path
 
-from xpkgindex_update.manifest import assert_preserved, inventory, version_blocks
+from xpkgindex_update.manifest import inventory, version_blocks
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -34,13 +34,50 @@ def audit(base: str, output: Path):
     for info in infos:
         if info["path"] in previous:
             before = subprocess.check_output(["git", "show", f"{base}:{info['path']}"], cwd=ROOT).decode()
-            assert_preserved(before, info["text"])
+            # `revision` exists to replace a payload under an unchanged
+            # version, so it must be allowed to change that version block.
+            # Applying the updater's byte-for-byte append-only guard here would
+            # reject every packaging fix; audit the invariants this workflow
+            # owns instead.
+            old = version_blocks(before)
+            new = version_blocks(info["text"])
+            for plat, entries in old.items():
+                if not set(entries) <= set(new.get(plat, {})):
+                    raise RuntimeError(f"existing version removed: {info['id']} {plat}")
+                if list(entries) != [key for key in new[plat] if key in entries]:
+                    raise RuntimeError(f"existing version order changed: {info['id']} {plat}")
+                for version in entries:
+                    old_entry = old[plat][version]
+                    new_entry = new[plat][version]
+                    old_revision = _literal_field(old_entry, "revision")
+                    new_revision = _literal_field(new_entry, "revision")
+                    if old_entry == new_entry:
+                        continue
+                    if old_revision is None:
+                        revision_advanced = new_revision is not None
+                    else:
+                        revision_advanced = (new_revision is not None
+                                             and new_revision > old_revision)
+                    if not revision_advanced:
+                        if old_revision is not None and new_revision is not None:
+                            raise RuntimeError(
+                                f"existing version revision decreased: "
+                                f"{info['id']} {plat}/{version}")
+                        raise RuntimeError(
+                            f"existing version changed without a revision bump: "
+                            f"{info['id']} {plat}/{version}")
         if info["direct"]:
             if info["autoupdate"] is None:
                 raise RuntimeError(f"missing autoupdate: {info['id']}")
             records.append({k: info[k] for k in ("id", "path", "direct", "autoupdate")})
     output.write_text(json.dumps({"covered": len(records), "packages": records}, indent=2))
-    print(f"All {len(records)} GitHub-direct descriptors declared; all existing versions unchanged.")
+    print(f"All {len(records)} GitHub-direct descriptors declared; all existing versions preserved.")
+
+
+def _literal_field(source: str, name: str) -> int | None:
+    """Read one integer from a literal version block without executing Lua."""
+    match = re.search(rf"(?m)^\s*{re.escape(name)}\s*=\s*(\d+)\s*,?\s*$", source)
+    return int(match.group(1)) if match else None
 
 
 def selection(base: str, output: Path):
