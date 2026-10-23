@@ -50,16 +50,28 @@ static_assert(ORT_API_VERSION == 25, "ONNX Runtime SDK headers must match 1.25.1
 #endif
 ]=] },
         linux = { runtime = {
+            deploy = {
+                { from = "onnxruntime-linux-x64-1.25.1/LICENSE", to = "licenses/onnxruntime" },
+                { from = "onnxruntime-linux-x64-1.25.1/ThirdPartyNotices.txt", to = "licenses/onnxruntime" },
+            },
             libraries = { "onnxruntime", "stdc++" },
             link_library_dirs = { "onnxruntime-linux-x64-1.25.1/lib" },
             library_dirs = { "onnxruntime-linux-x64-1.25.1/lib" },
         } },
         macosx = { runtime = {
+            deploy = {
+                { from = "onnxruntime-osx-arm64-1.25.1/LICENSE", to = "licenses/onnxruntime" },
+                { from = "onnxruntime-osx-arm64-1.25.1/ThirdPartyNotices.txt", to = "licenses/onnxruntime" },
+            },
             libraries = { "onnxruntime" },
             link_library_dirs = { "onnxruntime-osx-arm64-1.25.1/lib" },
             library_dirs = { "onnxruntime-osx-arm64-1.25.1/lib" },
         } },
         windows = { runtime = {
+            deploy = {
+                { from = "onnxruntime-win-x64-1.25.1/LICENSE", to = "licenses/onnxruntime" },
+                { from = "onnxruntime-win-x64-1.25.1/ThirdPartyNotices.txt", to = "licenses/onnxruntime" },
+            },
             libraries = { "onnxruntime" },
             link_library_dirs = { "onnxruntime-win-x64-1.25.1/lib" },
             library_dirs = { "onnxruntime-win-x64-1.25.1/lib" },

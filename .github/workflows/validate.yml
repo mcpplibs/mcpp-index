@@ -1518,10 +1518,10 @@ jobs:
         run: |
           "$MCPP" index update
 
-      - name: Installed mwrap archive and actual project template
+      - name: Installed mwrap archive, project template and relocated deployment
         if: contains(format(' {0} ', env.MEMBERS), ' onnxruntime-cpu ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP"
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --deploy
 
       - name: Report temporarily untestable consumers of the unavailable MySQL source
         shell: bash
