@@ -431,7 +431,7 @@ env:
   # one module map of what it reaches; every unit of an ELF target is compiled
   # position-independent; `mcpp pack` states its build; `[build] jobs` bounds
   # `test` and `pack` (#751, #753).
-  MCPP_VERSION: "2026.10.21.1"
+  MCPP_VERSION: "2026.10.24.1"
 
 jobs:
   lint:
@@ -1522,6 +1522,11 @@ jobs:
         if: contains(format(' {0} ', env.MEMBERS), ' onnxruntime-cpu ') && matrix.toolchain == 'default'
         shell: bash
         run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --deploy
+
+      - name: Installed llama.cpp-m archive and actual CPU project template
+        if: contains(format(' {0} ', env.MEMBERS), ' llamacpp-cpu ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package ggml-org.llamacpp@b10069.3 --legacy-exact-key
 
       - name: Report temporarily untestable consumers of the unavailable MySQL source
         shell: bash

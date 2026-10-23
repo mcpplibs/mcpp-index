@@ -150,6 +150,10 @@ Run Linux tests locally and repeat release gates in CI; cover Windows/macOS in
 native CI. Distinguish build-only checks from executed GUI, provider and hardware
 tests. Validate cold index consumption and runtime deployment, including libraries
 loaded dynamically rather than appearing on a link line.
+When a runtime SDK ships LICENSE and third-party notices, declare their deployment
+alongside the runtime files. Verify those bytes in a relocated consumer bundle;
+automatic license discovery may copy LICENSE while omitting additional notices.
+Use `runtime.deploy` for explicit relative destinations without changing the engine.
 
 Each repository's PR retains checkpoint commits. Record commands and actual
 results, inspect the final dependency/ABI/API graph, and wait for every relevant

@@ -118,6 +118,10 @@ capability 选择不会自动移除别的 provider 对象，不能用它掩盖�
 须验证启用后的真实行为，以及不启用时不编译/获取可选依赖。只看到符号常量或配置名称不证明后端可用。
 Linux 本地执行；Windows/macOS 用原生 CI，缺少真实设备时明确报告 build-only/未执行项。
 
+共享 SDK 还须验收 `mcpp pack` 后的搬迁运行与运行库闭包；显式通过 `runtime.deploy` 部署
+LICENSE 和 ThirdPartyNotices 等通知，并与解析到的 SDK 原文件逐字节比较。
+不能把安装目录中的运行成功当作可分发包已验收，也不能靠修改 mcpp 引擎绕过库的部署声明。
+
 每个新建或重构的 -m 库至少提供一个默认 mcpp 快捷模板。实际执行 `mcpp new --template <完整包身份>@<版本>`，
 再 build/run 生成工程。当前 `{{self.name}}` 是完整包选择器，应写 `"{{self.name}}"` 为单个依赖 key，
 不能再放到另一层 namespace 表中；版本用 self.version，所需 feature 显式声明。

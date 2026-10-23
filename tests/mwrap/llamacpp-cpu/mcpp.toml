@@ -1,0 +1,10 @@
+[package]
+name = "llamacpp-cpu"
+version = "b10069.3"
+description = "Install the immutable llama.cpp-m archive and exercise the CPU API"
+
+[indices]
+ggml-org = { path = "../../.." }
+
+[dependencies.ggml-org]
+llamacpp = "b10069.3"

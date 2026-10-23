@@ -12,20 +12,20 @@ package = {
     xpm = {
         linux = {
             ["1.25.1"] = {
-                url = "https://github.com/mcpplibs/onnxruntime-m/archive/de3a0a9da143f4ae52eb5e1a0302ba3fdf623b6d.tar.gz",
-                sha256 = "24d4bc26d2f426e3643f21d289d92e7a23b3ba54524a099a1079c1c490915251",
+                url = "https://github.com/mcpplibs/onnxruntime-m/archive/2c3495fb2f6a108404871aaee996b1b104635e0a.tar.gz",
+                sha256 = "26a89e349d3eb01e339d3c091ff0371ccc4401026f94698bef8e607ad27bc407",
             },
         },
         macosx = {
             ["1.25.1"] = {
-                url = "https://github.com/mcpplibs/onnxruntime-m/archive/de3a0a9da143f4ae52eb5e1a0302ba3fdf623b6d.tar.gz",
-                sha256 = "24d4bc26d2f426e3643f21d289d92e7a23b3ba54524a099a1079c1c490915251",
+                url = "https://github.com/mcpplibs/onnxruntime-m/archive/2c3495fb2f6a108404871aaee996b1b104635e0a.tar.gz",
+                sha256 = "26a89e349d3eb01e339d3c091ff0371ccc4401026f94698bef8e607ad27bc407",
             },
         },
         windows = {
             ["1.25.1"] = {
-                url = "https://github.com/mcpplibs/onnxruntime-m/archive/de3a0a9da143f4ae52eb5e1a0302ba3fdf623b6d.tar.gz",
-                sha256 = "24d4bc26d2f426e3643f21d289d92e7a23b3ba54524a099a1079c1c490915251",
+                url = "https://github.com/mcpplibs/onnxruntime-m/archive/2c3495fb2f6a108404871aaee996b1b104635e0a.tar.gz",
+                sha256 = "26a89e349d3eb01e339d3c091ff0371ccc4401026f94698bef8e607ad27bc407",
             },
         },
     },

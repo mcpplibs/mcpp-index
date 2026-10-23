@@ -102,7 +102,10 @@ mcpp new viewer --template mcpplibs.mwrap.opencv@5.0.0:window
 
 使用最新已测试稳定 mcpp，在清单、CI、模板与例子中精确固定。核查源码前更新 remote main。
 Linux 本地执行，CI 重跑发布门槛；Windows/macOS 原生 CI。区分编译验证与实际 GUI/设备/GPU 运行，
-覆盖冷索引消费和动态加载库的运行时分发。每仓库一个 PR，保留 checkpoint commits；
+覆盖冷索引消费和动态加载库的运行时分发。SDK 附带 LICENSE 与第三方通知时，通过
+`runtime.deploy` 显式声明它们的相对部署位置，并在搬迁后的消费方分发包中校验字节；
+自动许可证收集可能只复制 LICENSE 而遗漏其他通知，无需为此修改引擎。
+每仓库一个 PR，保留 checkpoint commits；
 逐项核查最终 API/ABI/依赖图，并等待相关 CI 全通过后报告合入与发布就绪。
 
 ## 候选索引的跨 namespace 测试

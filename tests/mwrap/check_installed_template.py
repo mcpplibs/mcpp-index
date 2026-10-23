@@ -18,6 +18,9 @@ def main():
     parser.add_argument("--toolchain", default="llvm@23.1.3")
     parser.add_argument("--package", default="mcpplibs.mwrap.onnxruntime@1.25.1")
     parser.add_argument("--deploy", action="store_true", help="pack, relocate and run the consumer; verify SDK notices")
+    parser.add_argument("--run-arg", action="append", default=[])
+    parser.add_argument("--legacy-exact-key", action="store_true",
+                        help="allow only mcpp's nonnumeric exact-version diagnostic; fail other build warnings")
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[2]
     identity, version = args.package.rsplit("@", 1)
@@ -44,10 +47,29 @@ def main():
         assert actual_version == version, dependency
         if isinstance(dependency, dict):
             assert "path" not in dependency and "git" not in dependency, dependency
-        for command in ([args.mcpp, "build", "--strict", "--toolchain", args.toolchain],
-                        [args.mcpp, "run", "--toolchain", args.toolchain]):
+        build = [args.mcpp, "build", "--toolchain", args.toolchain]
+        if not args.legacy_exact_key:
+            build.append("--strict")
+        else:
+            assert not version[0].isdigit(), "This exception is only for upstream nonnumeric release keys"
+        for command in (build, [args.mcpp, "run", "--toolchain", args.toolchain] +
+                        (["--", *args.run_arg] if args.run_arg else [])):
             print("+", " ".join(command), flush=True)
-            subprocess.run(command, cwd=project, env=env, check=True)
+            if args.legacy_exact_key and command is build:
+                # This is a supported exact index key, not a numeric range.
+                # --strict promotes its planner warning to an error. Preserve
+                # that upstream identity, but reject every other warning,
+                # including module/ABI compatibility degradations.
+                result = subprocess.run(command, cwd=project, env=env, text=True,
+                                        stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                print(result.stdout, end="", flush=True)
+                result.check_returncode()
+                allowed = f"[dependencies] {identity} = '{version}' is not a version RANGE "
+                for line in result.stdout.splitlines():
+                    if "warning:" in line:
+                        assert line.split("warning:", 1)[1].strip().startswith(allowed), line
+            else:
+                subprocess.run(command, cwd=project, env=env, check=True)
         print("Verified real indexed archive installation and unmodified template consumer", flush=True)
         if args.deploy:
             mode = "self-contained" if sys.platform.startswith("linux") else "vendored"
