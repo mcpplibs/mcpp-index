@@ -23,3 +23,9 @@ tests/examples/*/imgui.ini
 __pycache__/
 *.pyc
 tests/openkal-work/
+
+# mwrap consumer build/fetch artifacts
+tests/mwrap/*/target/
+tests/mwrap/*/.mcpp/
+tests/mwrap/*/compile_commands.json
+tests/mwrap/*/mcpp.lock

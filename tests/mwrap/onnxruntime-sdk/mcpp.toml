@@ -1,0 +1,10 @@
+[package]
+name = "onnxruntime-sdk"
+version = "1.25.1"
+description = "Exercise the official ONNX Runtime SDK through the local index"
+
+[indices]
+compat = { path = "../../.." }
+
+[dependencies.compat]
+onnxruntime = "1.25.1"
