@@ -8,7 +8,7 @@
 
 ```
 pkgs/<x>/<name>.lua          描述符。<x> 取完整包名首字母(compat.* → c,nlohmann.json → n,imgui → i)
-mcpp.toml                    workspace 清单(members 列表)+ 根级 [workspace.indices] compat = { path = "." },
+mcpp.toml                    workspace 清单(members 列表)+ 根级 [indices] compat = { path = "." },
                              由成员继承(相对路径按 workspace 根解析,mcpp ≥ 0.0.97)
 tests/examples/<member>/     每库测试工程(workspace 成员;<member> 为包名去前缀,模块包为
   mcpp.toml                  <name>-module)。消费 compat 的成员不写 [indices];消费其他
@@ -93,7 +93,7 @@ namespace = "mcpplibs",      name = "capi.lua"  -- 短名仍带点
 
 测试面要验证的是 **checkout 里的描述符**,而不是已发布的远程索引,这靠 `[indices]` 把命名空间重定向到本仓完成。
 
-**根级继承**:workspace 根的 `mcpp.toml` 声明 `[workspace.indices] compat = { path = "." }`,相对路径按 **workspace 根**解析(mcpp ≥ 0.0.97,[mcpp#224](https://github.com/mcpp-community/mcpp/issues/224)),成员直接继承,不必各写一份 `path = "../../.."`。
+**根级继承**:workspace 根的 `mcpp.toml` 声明 `[indices] compat = { path = "." }`,相对路径按 **workspace 根**解析(mcpp ≥ 0.0.97,[mcpp#224](https://github.com/mcpp-community/mcpp/issues/224)),成员直接继承,不必各写一份 `path = "../../.."`。
 
 **为什么只有一条,而且是 `compat`**:
 

@@ -240,5 +240,5 @@ members = [
 # asio itself comes from the published index while its `ssl` feature dep,
 # compat.openssl, resolves from this checkout — which is what lets an
 # unmerged compat descriptor be tested through a feature that activates it.
-[workspace.indices]
+[indices]
 compat = { path = "." }

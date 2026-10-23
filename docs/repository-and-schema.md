@@ -8,7 +8,7 @@ Module wrapper descriptors use `pkgs/mwrap/<full-identity>.lua` and their consum
 
 ```
 pkgs/<x>/<name>.lua          descriptors. <x> is the initial of the full package name (compat.* → c, nlohmann.json → n, imgui → i)
-mcpp.toml                    workspace manifest (the members list) + the root-level [workspace.indices] compat = { path = "." },
+mcpp.toml                    workspace manifest (the members list) + the root-level [indices] compat = { path = "." },
                              inherited by members (relative paths resolve against the workspace root, mcpp >= 0.0.97)
 tests/examples/<member>/     one test project per library (a workspace member; <member> is the package name minus its
   mcpp.toml                  prefix, or <name>-module for module packages). Members consuming compat write no
@@ -110,7 +110,7 @@ resolves.
 What the test surface has to validate is **the descriptors in the checkout**, not the published remote index, and
 `[indices]` is what redirects a namespace into this repository to make that happen.
 
-**Root-level inheritance**: the workspace root's `mcpp.toml` declares `[workspace.indices] compat = { path = "." }`, whose
+**Root-level inheritance**: the workspace root's `mcpp.toml` declares `[indices] compat = { path = "." }`, whose
 relative path resolves against the **workspace root** (mcpp >= 0.0.97,
 [mcpp#224](https://github.com/mcpp-community/mcpp/issues/224)), and members inherit it directly instead of each
 writing their own `path = "../../.."`.
