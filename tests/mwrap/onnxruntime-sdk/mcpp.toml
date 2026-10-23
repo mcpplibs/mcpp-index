@@ -8,3 +8,6 @@ compat = { path = "../../.." }
 
 [dependencies.compat]
 onnxruntime = "1.25.1"
+
+[target.x86_64-linux-gnu]
+cxx_runtime = "toolchain-coupled"
