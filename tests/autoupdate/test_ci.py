@@ -2,6 +2,7 @@
 import json
 import subprocess
 import tempfile
+import tomllib
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -24,6 +25,56 @@ def descriptor(name):
 
 
 class BaselineTests(unittest.TestCase):
+    def test_commit_snapshot_is_manual_but_historical_bytes_are_still_guarded(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            path = root / "pkgs/mwrap/mcpplibs.mwrap.example.lua"
+            path.parent.mkdir(parents=True)
+            original = '''package = {
+spec="1", namespace="mcpplibs.mwrap", name="example",
+xpm={linux={["1.0.0"]={
+url="https://github.com/acme/example/archive/1111111111111111111111111111111111111111.tar.gz",
+sha256="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+}}},
+}'''
+            path.write_text(original)
+            for args in (("init",), ("add", "."),
+                         ("-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-m", "baseline")):
+                subprocess.run(["git", *args], cwd=root, check=True, capture_output=True)
+            with patch.object(ci, "ROOT", root):
+                report = root / "coverage.json"
+                ci.audit("HEAD", report)
+                self.assertEqual(len(json.loads(report.read_text())["manual"]), 1)
+                path.write_text(original.replace("a" * 64, "b" * 64))
+                with self.assertRaisesRegex(RuntimeError, "without a revision bump"):
+                    ci.audit("HEAD", report)
+                path.write_text(original)
+                release = path.with_name("mcpplibs.mwrap.release.lua")
+                release.write_text(original.replace('name="example"', 'name="release"').replace(
+                    'archive/1111111111111111111111111111111111111111', 'archive/refs/tags/v1.0.0'))
+                with self.assertRaisesRegex(RuntimeError, "missing autoupdate"):
+                    ci.audit("HEAD", report)
+
+    def test_mwrap_candidate_uses_its_actual_member_and_qualified_dependency(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "tests/mwrap/example"
+            (source / "tests").mkdir(parents=True)
+            (source / "mcpp.toml").write_text(
+                '[package]\nname="consumer"\nversion="0.1.0"\n'
+                '[dependencies]\n"mcpplibs.mwrap.example"="1.0.0"\n')
+            (source / "tests/probe.cpp").write_text('int main() { return 0; }\n')
+            plan = root / "plan.json"
+            plan.write_text(json.dumps({"packages": [
+                {"id": "mcpplibs.mwrap:example", "candidate": "1.0.1"}]}))
+            with patch.object(ci, "ROOT", root):
+                self.assertEqual(ci.direct_member("mcpplibs.mwrap:example"), "example")
+                dest = root / "candidate"
+                ci.prepare(plan, "mcpplibs.mwrap:example", dest)
+                result = tomllib.loads((dest / "mcpp.toml").read_text())
+                self.assertEqual(result["dependencies"]["mcpplibs.mwrap.example"], "1.0.1")
+                self.assertEqual((dest / "tests/probe.cpp").read_text(), 'int main() { return 0; }\n')
+
     def test_added_descriptor_and_removed_historical_descriptor(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

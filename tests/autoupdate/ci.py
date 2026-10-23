@@ -24,8 +24,28 @@ def base_descriptors(base: str) -> set[str]:
     return {name for name in files.splitlines() if name.endswith(".lua")}
 
 
+def immutable_commit_snapshot(info: dict) -> bool:
+    """Commit archives have no release-version substitution to automate."""
+    urls = []
+    for platform in info["platforms"].values():
+        for value in platform["entries"].values():
+            entry = value.plain()
+            if "ref" in entry:
+                continue
+            url = entry.get("url")
+            if isinstance(url, dict):
+                url = url.get("GLOBAL")
+            if not isinstance(url, str):
+                return False
+            urls.append(url)
+    return bool(urls) and all(re.fullmatch(
+        r"https://github\.com/[^/]+/[^/]+/archive/[0-9a-fA-F]{40}(?:[0-9a-fA-F]{24})?\.(?:tar\.gz|zip)",
+        url) for url in urls)
+
+
 def audit(base: str, output: Path):
     records = []
+    manual = []
     previous = base_descriptors(base)
     infos = inventory(ROOT)
     removed = previous - {info["path"] for info in infos}
@@ -68,10 +88,15 @@ def audit(base: str, output: Path):
                             f"{info['id']} {plat}/{version}")
         if info["direct"]:
             if info["autoupdate"] is None:
+                if immutable_commit_snapshot(info):
+                    manual.append({"id": info["id"], "path": info["path"],
+                                   "reason": "immutable commit archive; update requires a reviewed source revision"})
+                    continue
                 raise RuntimeError(f"missing autoupdate: {info['id']}")
             records.append({k: info[k] for k in ("id", "path", "direct", "autoupdate")})
-    output.write_text(json.dumps({"covered": len(records), "packages": records}, indent=2))
-    print(f"All {len(records)} GitHub-direct descriptors declared; all existing versions preserved.")
+    output.write_text(json.dumps({"covered": len(records), "packages": records, "manual": manual}, indent=2))
+    print(f"All {len(records)} updateable GitHub-direct descriptors declared; "
+          f"{len(manual)} immutable snapshots require manual updates; all existing versions preserved.")
 
 
 def _literal_field(source: str, name: str) -> int | None:
@@ -89,13 +114,14 @@ def selection(base: str, output: Path):
 def direct_member(identity: str) -> str | None:
     namespace, name = identity.split(":", 1)
     candidates = []
-    for path in (ROOT / "tests/examples").glob("*/mcpp.toml"):
-        text = path.read_text(encoding="utf-8")
-        # Metadata-only selection; prepare() and the lock assertion verify actual resolution.
-        if re.search(rf"(?m)^\s*{re.escape(name)}\s*=", text) and (
-            f"dependencies.{namespace}]" in text or f"dependencies.{namespace}." in text
-        ):
-            candidates.append(path.parent.name)
+    for category in ("examples", "mwrap"):
+        for path in (ROOT / "tests" / category).glob("*/mcpp.toml"):
+            deps = tomllib.loads(path.read_text(encoding="utf-8")).get("dependencies", {})
+            nested = deps
+            for part in namespace.split("."):
+                nested = nested.get(part, {}) if isinstance(nested, dict) else {}
+            if (f"{namespace}.{name}" in deps or name in deps.get(namespace, {}) or name in nested):
+                candidates.append(path.parent.name)
     if not candidates:
         return None
     return min(candidates, key=lambda value: (len(value), value))
@@ -159,12 +185,13 @@ def prepare(plan: Path, identity: str, output: Path):
     member = direct_member(identity)
     output.mkdir(parents=True, exist_ok=True)
     if member:
-        source = ROOT / "tests/examples" / member
+        paths = [ROOT / "tests" / category / member for category in ("examples", "mwrap")]
+        source = next(path for path in paths if (path / "mcpp.toml").is_file())
         shutil.copytree(source, output, dirs_exist_ok=True,
                         ignore=shutil.ignore_patterns("target", ".mcpp", "mcpp.lock"))
         text = (output / "mcpp.toml").read_text(encoding="utf-8")
         text, replacements = re.subn(
-            rf'(?m)^(\s*{re.escape(name)}\s*=\s*(?:\{{\s*version\s*=\s*)?")[^"]+(".*)$',
+            rf'(?m)^(\s*(?:{re.escape(name)}|"{re.escape(namespace)}\.{re.escape(name)}")\s*=\s*(?:\{{\s*version\s*=\s*)?")[^"]+(".*)$',
             lambda m: m[1] + version + m[2], text)
         if not replacements:
             raise RuntimeError("candidate dependency was not replaced")
