@@ -66,9 +66,12 @@ description: Use when adding a new third-party library/package to the mcpp-index
 6. **编写测试工程(workspace 成员)**：mwrap 使用 `tests/mwrap/<member>/`，传统包使用 `tests/examples/<short>/`(`short` 为包名去除 `compat.`/`mcpplibs.`
    前缀后的结果;公开模块包用 `<name>-module`),并把它加进仓根 `mcpp.toml` 的 `[workspace].members`。
    - 包含 `mcpp.toml` 与 `tests/*.cpp`,后者须包含**可失败的有效断言**(`return ok ? 0 : 1`)。
-   - 成员声明**恰好一条** `[indices] <ns> = { path = "../../.." }`,把所消费命名空间重定向到
-     本 checkout(公开模块包用 `default`,即内建 mcpplibs 命名空间;mcpp ≥ 0.0.97)。
-     单条是硬约束:xlings 对 >1 个项目级 index repo 静默失败(mcpp#238);根级集中化待其修复。
+   - 普通成员用一条 `[indices] <ns> = { path = "../../.." }` 将所消费命名空间重定向到 checkout。
+     不把同一个完整索引路径注册成多个 namespace：当前 xlings 会将同一实体报为歧义。
+     mwrap wrapper + compat SDK 的组合测试先运行 `python3 tests/prepare_mwrap_indices.py`，
+     再将两条 namespace 路由指向 `tests/mwrap/.indices/<namespace>` 中字节不变的测试视图。
+     `tests/run_members.sh` 自动准备这些视图；它们不提交、不发布，也不改变 pkgs/mwrap 的正式布局。
+     正常发布布局另由 `tests/mwrap/check_installed_template.py` 在独立 MCPP_HOME 中使用单一完整索引验收。
    - 非全平台包按 `[target.'cfg(...)'.dependencies]` 门控依赖,测试源码在被门控掉的平台上
      编译为 no-op `main`(`#ifdef __linux__ … #else int main(){return 0;} #endif` 模式)。
    - 如需测试 feature,依赖采用长式声明 `name = { version = "…", features = ["…"] }`。

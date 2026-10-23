@@ -1,0 +1,14 @@
+[package]
+name = "onnxruntime-cpu"
+version = "1.25.1"
+description = "Install the immutable mwrap archive and execute CPU inference"
+
+[indices]
+"mcpplibs.mwrap" = { path = "../.indices/mcpplibs.mwrap" }
+compat = { path = "../.indices/compat" }
+
+[dependencies."mcpplibs.mwrap"]
+onnxruntime = "1.25.1"
+
+[target.x86_64-linux-gnu]
+cxx_runtime = "toolchain-coupled"

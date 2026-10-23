@@ -10,6 +10,7 @@ mcpp = ">=2026.10.21.1"
 
 [workspace]
 members = [
+    "tests/mwrap/onnxruntime-cpu",
     "tests/mwrap/onnxruntime-sdk",
     "tests/examples/abseil",
     "tests/examples/archive",

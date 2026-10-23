@@ -29,3 +29,4 @@ tests/mwrap/*/target/
 tests/mwrap/*/.mcpp/
 tests/mwrap/*/compile_commands.json
 tests/mwrap/*/mcpp.lock
+tests/mwrap/.indices/

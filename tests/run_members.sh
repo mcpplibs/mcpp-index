@@ -112,6 +112,12 @@ if [ -n "$shard" ]; then
 fi
 
 [ -n "$cache" ] && export MCPP_BUILD_CACHE="$cache"
+for m in "${members[@]}"; do
+    if [ -d "tests/mwrap/$m" ]; then
+        python3 tests/prepare_mwrap_indices.py || exit $?
+        break
+    fi
+done
 echo "cache mode: ${MCPP_BUILD_CACHE:-global (default)}"
 
 rows=$(mktemp)

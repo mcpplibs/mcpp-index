@@ -104,3 +104,13 @@ mcpp new viewer --template mcpplibs.mwrap.opencv@5.0.0:window
 Linux 本地执行，CI 重跑发布门槛；Windows/macOS 原生 CI。区分编译验证与实际 GUI/设备/GPU 运行，
 覆盖冷索引消费和动态加载库的运行时分发。每仓库一个 PR，保留 checkpoint commits；
 逐项核查最终 API/ABI/依赖图，并等待相关 CI 全通过后报告合入与发布就绪。
+
+## 候选索引的跨 namespace 测试
+
+固定客户端按请求 namespace 分别路由；同一个完整 checkout 注册两次会让 xlings 报项目候选歧义。
+本地 wrapper/SDK 组合测试先执行 tests/prepare_mwrap_indices.py，再分别指向 tests/mwrap/.indices 中的测试视图。
+各描述符字节不变并记录源 SHA256，视图之间不重复登记实体。它们是不提交、不发布的构建输出，不是新的发布格式。
+
+正常安装由 tests/mwrap/check_installed_template.py 独立验证：把完整 pkgs/index.toml 发布布局放进独立 MCPP_HOME 的单一内置索引，
+下载真实且带校验的源码归档，执行 mcpp new，再原样构建/运行生成清单，不替换为 path 依赖。
+Git 与发布的 pkgs/mwrap 目录始终一致。

@@ -154,3 +154,9 @@ loaded dynamically rather than appearing on a link line.
 Each repository's PR retains checkpoint commits. Record commands and actual
 results, inspect the final dependency/ABI/API graph, and wait for every relevant
 CI check before reporting merge/release readiness.
+
+## Candidate index tests across namespaces
+
+The pinned client routes each requested namespace independently. Registering the same full checkout twice makes xlings report duplicate project candidates. Local wrapper/SDK tests therefore call tests/prepare_mwrap_indices.py and route each namespace to a test-only view under tests/mwrap/.indices. Every descriptor is copied unchanged and its source SHA256 is recorded; no aliases share a descriptor. These views are ignored build outputs, not a publication format.
+
+Normal installed consumers are tested independently by tests/mwrap/check_installed_template.py: it copies the complete pkgs/index.toml publication layout into one isolated built-in index, downloads the real checksummed source archive, runs mcpp new and builds/runs the generated manifest without a path substitution. The Git and published pkgs/mwrap directory layout remains identical.
