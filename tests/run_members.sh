@@ -66,10 +66,10 @@ done
 if [ "$all" = 1 ]; then
     while IFS= read -r m; do
         [ -n "$m" ] || continue
-        [ -d "tests/examples/$m" ] || continue
+        if [ ! -d "tests/examples/$m" ] && [ ! -d "tests/mwrap/$m" ]; then continue; fi
         members+=("$m")
-    done < <(grep -o 'tests/examples/[A-Za-z0-9._-]*' mcpp.toml \
-             | sed 's|tests/examples/||' | sort -u)
+    done < <(grep -oE 'tests/(examples|mwrap)/[A-Za-z0-9._-]+' mcpp.toml \
+             | sed -E 's|tests/(examples|mwrap)/||' | sort -u)
 fi
 
 if [ "${#members[@]}" -eq 0 ]; then

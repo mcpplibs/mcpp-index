@@ -5,8 +5,12 @@
 # `mcpp test --workspace` (or `mcpp test -p <member>`). "Eat our own dog food."
 # See .agents/docs/2026-06-29-mcpp-native-workspace-ci-design.md and
 # mcpp .agents/docs/2026-06-30-workspace-test-and-zero-shell-index-design.md.
+[workspace.package]
+mcpp = ">=2026.10.21.1"
+
 [workspace]
 members = [
+    "tests/mwrap/onnxruntime-sdk",
     "tests/examples/abseil",
     "tests/examples/archive",
     "tests/examples/argparse",
@@ -236,5 +240,5 @@ members = [
 # asio itself comes from the published index while its `ssl` feature dep,
 # compat.openssl, resolves from this checkout — which is what lets an
 # unmerged compat descriptor be tested through a feature that activates it.
-[indices]
+[workspace.indices]
 compat = { path = "." }

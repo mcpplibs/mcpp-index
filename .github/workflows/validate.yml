@@ -431,7 +431,7 @@ env:
   # one module map of what it reaches; every unit of an ELF target is compiled
   # position-independent; `mcpp pack` states its build; `[build] jobs` bounds
   # `test` and `pack` (#751, #753).
-  MCPP_VERSION: "2026.10.1.2"
+  MCPP_VERSION: "2026.10.21.1"
 
 jobs:
   lint:
@@ -837,27 +837,28 @@ jobs:
                 # members list, so that alone must NOT force a full run:
                 # select the added members; anything else in this file
                 # (indices, settings) affects everyone → full.
-                if ! diff -q <(git show "$base:mcpp.toml" | grep -v 'tests/examples/') \
-                             <(grep -v 'tests/examples/' mcpp.toml) >/dev/null; then
+                if ! diff -q <(git show "$base:mcpp.toml" | grep -vE 'tests/(examples|mwrap)/') \
+                             <(grep -vE 'tests/(examples|mwrap)/' mcpp.toml) >/dev/null; then
                   widen "mcpp.toml non-member change"
                 fi
-                for p in $(comm -13 <(git show "$base:mcpp.toml" | grep -o 'tests/examples/[A-Za-z0-9._-]*' | sort -u) \
-                                    <(grep -o 'tests/examples/[A-Za-z0-9._-]*' mcpp.toml | sort -u)); do
-                  add "${p#tests/examples/}"
+                for p in $(comm -13 <(git show "$base:mcpp.toml" | grep -oE 'tests/(examples|mwrap)/[A-Za-z0-9._-]+' | sort -u) \
+                                    <(grep -oE 'tests/(examples|mwrap)/[A-Za-z0-9._-]+' mcpp.toml | sort -u)); do
+                  add "${p##*/}"
                 done ;;
-              tests/examples/*)
-                m=${f#tests/examples/}; m=${m%%/*}
+              tests/examples/*|tests/mwrap/*)
+                m=${f#tests/}; m=${m#*/}; m=${m%%/*}
                 # A deleted/renamed member dir implies a mcpp.toml edit,
                 # which already forces a full run above.
-                [ -d "tests/examples/$m" ] && add "$m" ;;
+                if [ -d "tests/examples/$m" ] || [ -d "tests/mwrap/$m" ]; then add "$m"; fi ;;
               pkgs/*.lua|pkgs/*/*.lua)
                 # A DELETED descriptor is in the diff but not on disk, and its
                 # CN urls are gone with it — nothing left to reach.
                 if [ -f "$f" ]; then pkgsel="$pkgsel $f"; fi
-                lib=$(basename "$f" .lua); lib=${lib#compat.}
+                lib=$(basename "$f" .lua); lib=${lib##*.}
                 hit=0
-                for mt in tests/examples/*/mcpp.toml; do
-                  if grep -q "$lib" "$mt"; then add "$(basename "$(dirname "$mt")")"; hit=1; fi
+                for mt in tests/examples/*/mcpp.toml tests/mwrap/*/mcpp.toml; do
+                  [ -f "$mt" ] || continue
+                  if grep -Fq "$lib" "$mt"; then add "$(basename "$(dirname "$mt")")"; hit=1; fi
                 done
                 [ "$hit" = 1 ] || echo "note: no workspace member exercises $f" ;;
               # tools/ holds OFFLINE descriptor-generation and publishing
@@ -1607,7 +1608,7 @@ jobs:
             echo "::group::$log"
             tail -80 "$log"
             echo "::endgroup::"
-          done < <(find tests/examples "$HOME/.mcpp/registry" -name 'mcpp_*_build.log' 2>/dev/null)
+          done < <(find tests/examples tests/mwrap "$HOME/.mcpp/registry" -name 'mcpp_*_build.log' 2>/dev/null)
           [ "$found" = 1 ] || echo "no install() build logs found"
 
   # ── Where the time went ───────────────────────────────────────────────
