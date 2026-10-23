@@ -34,7 +34,7 @@ def main():
             print("+", " ".join(command), flush=True)
             subprocess.run(command, cwd=temporary, env=env, check=True)
         project = temporary / "installed-quickstart"
-        manifest = tomllib.loads((project / "mcpp.toml").read_text())
+        manifest = tomllib.loads((project / "mcpp.toml").read_text(encoding="utf-8"))
         dependency = manifest["dependencies"][identity]
         actual_version = dependency if isinstance(dependency, str) else dependency["version"]
         assert actual_version == version, dependency

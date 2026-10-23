@@ -10,6 +10,7 @@ package = {
     xpm = {
         linux = {
             ["2025.1"] = {
+                revision = 1,
                 url    = {
                     GLOBAL = "https://xorg.freedesktop.org/releases/individual/proto/xorgproto-2025.1.tar.gz",
                     CN     = "https://gitcode.com/mcpp-res/xorgproto/releases/download/2025.1/xorgproto-2025.1.tar.gz",
@@ -29,7 +30,8 @@ package = {
             ["mcpp_generated/xorgproto_empty.c"] = "int mcpp_compat_xorgproto_headers_anchor(void) { return 0; }\n",
         },
         sources = {"mcpp_generated/xorgproto_empty.c"},
-        targets = { ["xorgproto"] = { kind = "lib" } },
+        -- X11, Xau, Xdmcp and their consumers can be separate shared images.
+        targets = { ["xorgproto"] = { kind = "lib", linkage = "shared" } },
         deps    = {},
     },
 }

@@ -17,7 +17,7 @@ def main():
     root = Path(__file__).resolve().parents[1]
     namespaces = {name: [] for name in ("compat", "mcpplibs.mwrap")}
     for source in sorted((root / "pkgs").glob("*/*.lua")):
-        match = re.search(r'^\s*namespace\s*=\s*[\'"]([^\'"]+)[\'"]', source.read_text(), re.M)
+        match = re.search(r'^\s*namespace\s*=\s*[\'"]([^\'"]+)[\'"]', source.read_text(encoding="utf-8"), re.M)
         if match and match[1] in namespaces:
             namespaces[match[1]].append(source)
     for namespace, sources in namespaces.items():
