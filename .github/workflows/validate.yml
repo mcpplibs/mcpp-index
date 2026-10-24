@@ -1550,6 +1550,12 @@ jobs:
         run: |
           "$MCPP" index update
 
+      - name: Namespace-isolated mwrap test indices
+        shell: bash
+        run: |
+          python3 tests/test_prepare_mwrap_indices.py
+          python3 tests/prepare_mwrap_indices.py
+
       - name: Complete candidate index for the cross-namespace host-tool consumer
         if: contains(format(' {0} ', env.MEMBERS), ' grpc-tools ')
         shell: bash

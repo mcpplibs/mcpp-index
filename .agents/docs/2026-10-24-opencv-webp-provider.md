@@ -66,3 +66,22 @@ the shared resource slice, three build jobs and the whole-host pressure guard.
 Descriptor parsing, naming, version parity and duplicate-version checks pass.
 Native CI still needs the new exact source and index heads; the previous OpenCV
 16baa03 matrix completed all five jobs successfully.
+
+## Namespace-isolated validation views
+
+Validation run 40076826208 failed on Linux default, Linux LLVM and macOS shards:
+both compat and mcpplibs.mwrap project aliases exposed complete indices, so
+xlings rejected duplicate ORT/OpenCV candidates. The existing view preparer was
+not registered in the workspace workflow. Validation now prepares namespace-only
+views before consumers and replaces each owned scratch view in full, including
+stale categories left by earlier complete-index copies. Publication paths and
+descriptor bytes are unchanged; no client engine changes are required.
+
+The regression fixture seeds a cross-namespace descriptor in an old category,
+rebuilds twice and verifies unique candidates plus exact source bytes/provenance.
+It passes and runs before preparation in CI. A separate actual consumer with a
+fresh MCPP_HOME installed the immutable ORT wrapper, CPU SDK and LLVM23.1.3,
+then passed inference and public_surface under strict mode (2 tests, 103.25s).
+Log: /tmp/mwrap-disjoint-view-consumer.log. The test used the shared eight-core,
+32 GiB resource slice, two build jobs and whole-host 80% pressure guard. Native
+workspace CI on the new index commit remains required.

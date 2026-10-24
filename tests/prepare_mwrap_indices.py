@@ -22,6 +22,14 @@ def main():
             namespaces[match[1]].append(source)
     for namespace, sources in namespaces.items():
         view = root / "tests/mwrap/.indices" / namespace
+        # These are generated scratch views. Clear older complete-index copies
+        # too; cleaning only pkgs/view leaves stale categories and ambiguous
+        # namespace candidates in another project alias.
+        assert view.parent.resolve().is_relative_to(root / "tests/mwrap"), view
+        if view.is_symlink():
+            view.unlink()
+        elif view.exists():
+            shutil.rmtree(view)
         payload = view / "pkgs/view"
         payload.mkdir(parents=True, exist_ok=True)
         expected = {source.name for source in sources}
