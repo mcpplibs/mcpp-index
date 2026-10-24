@@ -10,20 +10,20 @@ package = {
     xpm = {
         linux = {
             ["1.92.8"] = {
-                url = "https://github.com/mcpplibs/imgui-m/archive/c753c95404f4e7c4b2bd80e5a8a349771bae0c01.tar.gz",
-                sha256 = "ed8755746e86601162834bae93148e2536089f11fa238ae6dde4250ba8a73db2",
+                url = "https://github.com/mcpplibs/imgui-m/archive/eeaa5164ecd801f316c8097ae8e43b03ae457550.tar.gz",
+                sha256 = "ccc22557b3d9e9ecae56a17d1ec3d7ef362ae7fcb429a2ec3a91f16f75e7d1a4",
             },
         },
         macosx = {
             ["1.92.8"] = {
-                url = "https://github.com/mcpplibs/imgui-m/archive/c753c95404f4e7c4b2bd80e5a8a349771bae0c01.tar.gz",
-                sha256 = "ed8755746e86601162834bae93148e2536089f11fa238ae6dde4250ba8a73db2",
+                url = "https://github.com/mcpplibs/imgui-m/archive/eeaa5164ecd801f316c8097ae8e43b03ae457550.tar.gz",
+                sha256 = "ccc22557b3d9e9ecae56a17d1ec3d7ef362ae7fcb429a2ec3a91f16f75e7d1a4",
             },
         },
         windows = {
             ["1.92.8"] = {
-                url = "https://github.com/mcpplibs/imgui-m/archive/c753c95404f4e7c4b2bd80e5a8a349771bae0c01.tar.gz",
-                sha256 = "ed8755746e86601162834bae93148e2536089f11fa238ae6dde4250ba8a73db2",
+                url = "https://github.com/mcpplibs/imgui-m/archive/eeaa5164ecd801f316c8097ae8e43b03ae457550.tar.gz",
+                sha256 = "ccc22557b3d9e9ecae56a17d1ec3d7ef362ae7fcb429a2ec3a91f16f75e7d1a4",
             },
         },
     },

@@ -19,3 +19,6 @@
 
 顶层 Apache-2.0 不替代上游许可，也不将上游版权归给封装作者。
 参考 [Apache 官方应用说明](https://www.apache.org/licenses/LICENSE-2.0#apply)。
+
+上游文档固定字节校验时，用 `.gitattributes` 的 `upstream/** -text` 禁用 Git 换行转换，
+同时验证 Windows checkout 的文档 hash。

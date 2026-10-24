@@ -10,20 +10,20 @@ package = {
     xpm = {
         linux = {
             ["b10069"] = {
-                url = "https://github.com/mcpplibs/llama.cpp-m/archive/3a8ea85219463e1c02c6d1484d75e1edf27d574c.tar.gz",
-                sha256 = "1f1acaff030ffd1dc25b276dc5af0d38499ee4eea0107df5ae3600188eb4bf52",
+                url = "https://github.com/mcpplibs/llama.cpp-m/archive/70f3735b450b16a079c4eb0123184cfe5fd88185.tar.gz",
+                sha256 = "1aa091ee6b84029d2b28a76737a0771182441d9afc665295b6780d1ae99dc499",
             },
         },
         macosx = {
             ["b10069"] = {
-                url = "https://github.com/mcpplibs/llama.cpp-m/archive/3a8ea85219463e1c02c6d1484d75e1edf27d574c.tar.gz",
-                sha256 = "1f1acaff030ffd1dc25b276dc5af0d38499ee4eea0107df5ae3600188eb4bf52",
+                url = "https://github.com/mcpplibs/llama.cpp-m/archive/70f3735b450b16a079c4eb0123184cfe5fd88185.tar.gz",
+                sha256 = "1aa091ee6b84029d2b28a76737a0771182441d9afc665295b6780d1ae99dc499",
             },
         },
         windows = {
             ["b10069"] = {
-                url = "https://github.com/mcpplibs/llama.cpp-m/archive/3a8ea85219463e1c02c6d1484d75e1edf27d574c.tar.gz",
-                sha256 = "1f1acaff030ffd1dc25b276dc5af0d38499ee4eea0107df5ae3600188eb4bf52",
+                url = "https://github.com/mcpplibs/llama.cpp-m/archive/70f3735b450b16a079c4eb0123184cfe5fd88185.tar.gz",
+                sha256 = "1aa091ee6b84029d2b28a76737a0771182441d9afc665295b6780d1ae99dc499",
             },
         },
     },

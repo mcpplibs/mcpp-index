@@ -133,3 +133,11 @@ Apache-2.0, mcpp-community authors/NOTICE, pinned upstream document hashes and
 explicit notice deployment. Negative local cases reject wrong wrapper license,
 missing attribution, changed upstream bytes and missing NOTICE deployment.
 Native CI and final archive/installed-consumer verification are still pending.
+
+Windows Godot CI exposed Git autoCRLF rewriting the pinned upstream README.
+The guard correctly rejected its changed bytes. All seven repositories now
+set upstream/** -text -whitespace: original bytes and original whitespace are
+preserved, rather than normalizing or weakening the document hash check.
+A local checkout-index test with core.autocrlf=true passes the release guard
+for all seven repositories. Exact-head native CI is restarted for the corrected
+commits; the earlier failed run is retained as failure evidence.

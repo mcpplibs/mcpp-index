@@ -29,3 +29,6 @@ thin `compat.*` consumers and repositories with vendored upstream sources.
 
 Root Apache-2.0 does not replace upstream licensing or claim upstream copyright.
 See the [Apache license application instructions](https://www.apache.org/licenses/LICENSE-2.0#apply).
+
+For byte-pinned upstream documents, disable Git newline conversion with
+`upstream/** -text` in `.gitattributes`; verify checkout hashes on Windows too.
