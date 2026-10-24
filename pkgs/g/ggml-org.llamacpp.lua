@@ -70,8 +70,8 @@ package = {
             -- Candidate b10069.3 adds runnable templates; immutable source
             -- bytes are verified before the release tag exists.
             ["b10069.3"] = {
-                url = "https://github.com/mcpplibs/llama.cpp-m/archive/f5a046c332a0929281692a102c5819bc2d40f172.tar.gz",
-                sha256 = "543c19018aa05a7e6813f692a3535b6c5953842fdd70041e63266b5864435ddd",
+                url = "https://github.com/mcpplibs/llama.cpp-m/archive/5028a1aa4f741db4dbd86d6ebd1928ef21027147.tar.gz",
+                sha256 = "9b21c35c17e801ceee1165960eefbf7280ad50e14aaf3ea5603fbf2c4ab911de",
             },
             ["b10069.2"] = {
                 url = {
@@ -96,8 +96,8 @@ package = {
             -- Candidate b10069.3 adds runnable templates; immutable source
             -- bytes are verified before the release tag exists.
             ["b10069.3"] = {
-                url = "https://github.com/mcpplibs/llama.cpp-m/archive/f5a046c332a0929281692a102c5819bc2d40f172.tar.gz",
-                sha256 = "543c19018aa05a7e6813f692a3535b6c5953842fdd70041e63266b5864435ddd",
+                url = "https://github.com/mcpplibs/llama.cpp-m/archive/5028a1aa4f741db4dbd86d6ebd1928ef21027147.tar.gz",
+                sha256 = "9b21c35c17e801ceee1165960eefbf7280ad50e14aaf3ea5603fbf2c4ab911de",
             },
             ["b10069.2"] = {
                 url = {
@@ -122,8 +122,8 @@ package = {
             -- Candidate b10069.3 adds runnable templates; immutable source
             -- bytes are verified before the release tag exists.
             ["b10069.3"] = {
-                url = "https://github.com/mcpplibs/llama.cpp-m/archive/f5a046c332a0929281692a102c5819bc2d40f172.tar.gz",
-                sha256 = "543c19018aa05a7e6813f692a3535b6c5953842fdd70041e63266b5864435ddd",
+                url = "https://github.com/mcpplibs/llama.cpp-m/archive/5028a1aa4f741db4dbd86d6ebd1928ef21027147.tar.gz",
+                sha256 = "9b21c35c17e801ceee1165960eefbf7280ad50e14aaf3ea5603fbf2c4ab911de",
             },
             ["b10069.2"] = {
                 url = {

@@ -1,0 +1,10 @@
+[package]
+name = "imgui-headless"
+version = "1.92.8.1"
+description = "Consume the immutable ImGui wrapper and render actual headless draw data"
+
+[indices]
+ocornut = { path = "../../.." }
+
+[dependencies]
+"ocornut.imgui" = "1.92.8.1"

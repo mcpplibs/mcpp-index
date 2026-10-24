@@ -104,6 +104,20 @@ description: Use when adding a new third-party library/package to the mcpp-index
   用户明确要求整理文档或说明确有变化时才改入口文档。新增包通常也不改 `.xpkgindex.json`。
 - 详细字段、例外和认证机制见 [自动更新文档](../../../docs/zh/automatic-updates.md)。
 
+## -m 仓库 README
+
+新增或重构 `<库名>-m` 时，README 使用统一简洁风格，原则上每种语言不超过 100 行。
+顺序为一句定位、快捷模板、依赖与最小 import 用法、关键平台/能力边界、详细文档与许可证链接。
+架构、完整矩阵、后端细节、排错与验证历史进入 docs/；不向 README 追加 checkpoint、长表格或徽章墙。
+保留候选版本状态、必要 SDK/设备前提与关键限制，不靠超长行压缩，不为此增加用户审批。
+检查行数、示例身份/版本和文档链接；已有翻译保持结构对应。完整规则见 docs/zh/mwrap.md。
+
+## 本地测试资源
+
+所有本地测试及子进程合计不得超过本机有效 CPU/内存的 80%，默认预留更多余量。
+先检查负载，限制构建并发和重型任务数量；使用 MCPP_JOBS，必要时用共享 cgroup/slice 约束整个进程树。
+不能为各并发任务分别分配 80%；接近上限时减少本任务并发，不停止用户其他进程，不跳过验证。
+
 ## feature 与模板
 
 当前 manifest feature 支持 sources、defines、flags、implies、forward、requires/provides；可选依赖写在

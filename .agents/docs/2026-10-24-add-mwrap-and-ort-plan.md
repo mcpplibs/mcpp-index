@@ -17,3 +17,22 @@ The real wrapper archive de3a0a9 was downloaded twice and pinned as SHA256 24d4b
 The unchanged full-index installed-template flow passed in a fresh home: real wrapper/SDK archives and LLVM were installed, mcpp new rendered the default inference project, and its original dependency resolved and ran Identity inference. The updater audit now implements the documented immutable-commit exception rather than demanding a fake release template. All 14 updater adapter tests and the full real audit passed (85 automatic declarations, one manual snapshot), retaining historical-byte guards. Candidate selection/preparation also recognizes tests/mwrap and fully qualified dependency keys.
 
 Cross-platform CI correction: namespace-view metadata is explicitly decoded as UTF-8 on Windows. The ecosystem Vulkan check also exposed two header/runtime adapter anchors defaulting to static while reachable from several shared images; their providers now default to shared form, with explicit packaging revision 1 on current entries and unchanged source URLs/hashes. The consumer can still choose linkage. Llama Vulkan CI pins this candidate index commit rather than requiring the PR to merge first.
+
+## Existing-wrapper template archive checkpoint
+
+- All six -m repositories now use concise root READMEs (normally <=100 lines per language), with detailed usage under docs/. The bilingual mwrap spec and authoring skill record the shared structure and the local aggregate resource limit.
+- Added immutable candidate versions for FFmpeg 8.1.2.1, ImGui 1.92.8.1 and gRPC/runtime-plugin-rule 1.83.0.1. Published older version blocks are unchanged. Existing package/module identities remain compatible. ImGui and gRPC now declare tag-based automatic update URLs; coupled gRPC manifests are still version-checked by source CI.
+- CPU/headless workspace consumers live in tests/mwrap/{ffmpeg-cpu,imgui-headless,grpc-cpu}/tests, so mcpp test executes their behavior checks rather than merely building an application. Windows gRPC explicitly remains unavailable with the declared OpenSSL provider.
+- Each candidate's full-commit archive was downloaded twice with identical SHA256. Updated the unpublished ORT/llama candidates to include the reviewed README revisions. Archive references at this checkpoint:
+
+- onnxruntime-m: `576c780bfcbd792c7f4194942c90324f183a48aa`, SHA256 `3654811f65b98ade75b5e46fe59a0c4479d815aa7fa9aceff9f9cc3fffd8ddc1`.
+- llama.cpp-m: `5028a1aa4f741db4dbd86d6ebd1928ef21027147`, SHA256 `9b21c35c17e801ceee1165960eefbf7280ad50e14aaf3ea5603fbf2c4ab911de`.
+- imgui-m: `ffebf83be99ba0eec2677cc197dea3316a72b501`, SHA256 `9aab8af876c6c9eaed887b0d84bf3bb733db1d28613cbd5083845d83f675a92f`.
+- grpc-m: `839b61e94fff14892a1dfb2c211a4a8e66342239`, SHA256 `b16dffb45c6f4b09de49a5229f2ec7db98bcfb5609447271d85db8387aeabdd4`.
+- ffmpeg-m: `1e8bce6ee12c50e43058245df42515ffbabfc78f`, SHA256 `595b5bcca166583dd082ae911f7e9ed279a3e8899e9564f0901e084737c89ab2`.
+
+Local evidence: OpenCV LLVM/GCC all-module strict tests each pass fourteen binaries; the GCC ORT adapter fix also passes actual CPU-profile inference. FFmpeg's managed-NASM default template strictly builds and decodes three generated frames. The full index audit covers 90 automatic declarations plus one manual snapshot and preserves all historical version blocks; fourteen updater regressions and changed-descriptor all-platform grammar/name/syntax checks pass.
+
+The new complete-index ImGui archive/template check is running in a fresh MCPP_HOME. Final fresh-archive checks for changed source revisions, the new workspace test entries and native CI are not yet complete. gRPC's cold installed-template check has its own Linux/macOS jobs with a 210-minute limit; it does not consume a workspace shard's existing 90-minute allowance. No release readiness is inferred from source CI or archive checksums alone.
+
+Local heavy commands run serially in mwrap-tests.slice with CPUQuota=1600%, MemoryHigh=28 GiB, MemoryMax=32 GiB, TasksMax=512, taskset 0-15 and MCPP_JOBS=6 on this 32-logical-CPU/62-GiB host. Check current available resources and disk before each check; retain at least 6 GiB free during builds. No engine change, merge or tag is included.

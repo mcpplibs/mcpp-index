@@ -1221,6 +1221,38 @@ jobs:
           "$MCPP" self config --mirror GLOBAL 2>/dev/null || true
           bash tests/check_graphics_install_side_effects.sh
 
+  grpc-installed-template:
+    name: installed gRPC template (${{ matrix.platform }})
+    needs: select
+    if: needs.select.outputs.members == '__ALL__' || contains(format(' {0} ', needs.select.outputs.members), ' grpc-cpu ')
+    runs-on: ${{ matrix.os }}
+    # A fresh SDK + protoc/plugin + gRPC build is independent of the timed
+    # workspace shards. It must not consume their shared 90-minute allowance.
+    timeout-minutes: 210
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux
+            os: ubuntu-latest
+            suffix: linux-x86_64
+            toolchain: gcc@16.1.0
+          - platform: macos
+            os: macos-15
+            suffix: macosx-arm64
+            toolchain: llvm@23.1.3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pinned mcpp
+        shell: bash
+        run: |
+          archive="mcpp-${MCPP_VERSION}-${{ matrix.suffix }}.tar.gz"
+          curl -L -fsS -o "$archive" "https://github.com/mcpp-community/mcpp/releases/download/v${MCPP_VERSION}/$archive"
+          tar -xzf "$archive"
+          echo "MCPP=$PWD/mcpp-${MCPP_VERSION}-${{ matrix.suffix }}/bin/mcpp" >> "$GITHUB_ENV"
+      - name: Immutable archive, default scaffold, strict build and loopback RPC
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package grpc.grpc@1.83.0.1 --toolchain "${{ matrix.toolchain }}"
+
   workspace:
     # The shard suffix appears only when the platform is actually split, and
     # the toolchain only when it is not mcpp's default — so the existing job
@@ -1527,6 +1559,16 @@ jobs:
         if: contains(format(' {0} ', env.MEMBERS), ' llamacpp-cpu ') && matrix.toolchain == 'default'
         shell: bash
         run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package ggml-org.llamacpp@b10069.3 --legacy-exact-key
+
+      - name: Installed FFmpeg wrapper archive and actual default project template
+        if: contains(format(' {0} ', env.MEMBERS), ' ffmpeg-cpu ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package ffmpeg.ffmpeg@8.1.2.1
+
+      - name: Installed ImGui wrapper archive and actual headless default template
+        if: contains(format(' {0} ', env.MEMBERS), ' imgui-headless ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package ocornut.imgui@1.92.8.1
 
       - name: Report temporarily untestable consumers of the unavailable MySQL source
         shell: bash

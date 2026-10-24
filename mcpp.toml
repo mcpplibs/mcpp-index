@@ -12,6 +12,9 @@ mcpp = ">=2026.10.21.1"
 members = [
     "tests/mwrap/onnxruntime-cpu",
     "tests/mwrap/llamacpp-cpu",
+    "tests/mwrap/ffmpeg-cpu",
+    "tests/mwrap/imgui-headless",
+    "tests/mwrap/grpc-cpu",
     "tests/mwrap/onnxruntime-sdk",
     "tests/examples/abseil",
     "tests/examples/archive",

@@ -108,6 +108,24 @@ Capabilities select and validate providers; they do **not** remove another
 provider's object files from the link. Avoid duplicate implementations before
 they enter the graph. Record ABI, runtime, CPU baseline and SDK constraints.
 
+## README style
+
+Every `<library>-m` repository uses a consistent, concise entry page, normally
+**no more than 100 lines**. Existing translations follow the same structure and
+length target and stay aligned.
+
+Use this order: project name and one-sentence purpose; quickstart template;
+existing-project dependency and minimal import example; essential capability and
+platform boundaries; links to detailed docs, examples and the license. Show full
+package identities and directly runnable commands first.
+
+Move architecture, complete feature/API matrices, backend setup, troubleshooting,
+validation evidence and history into `docs/`. Avoid badge walls, repeated
+navigation, large tables, implementation essays and appended checkpoint logs.
+Do not meet the target with excessively long lines or by removing prerequisites.
+State unpublished-candidate status and important device/SDK requirements briefly.
+The line target is an editorial guideline, not an additional user approval gate.
+
 ## Every -m package ships a runnable template
 
 At least one default `templates/<name>/template.toml` and project skeleton is
@@ -134,6 +152,19 @@ Declare required features explicitly and keep the library version tied to
 project. A source candidate may use an isolated preseeded installed-package
 fixture, but must verify the rendered identity/version before applying local
 dependency overrides. Also test the release archive includes the templates.
+
+## Local test resource budget
+
+Local tests must collectively stay below **80%** of the machine's effective CPU
+and memory resources, accounting for affinity and container/cgroup limits.
+Reserve additional desktop headroom by default. This covers concurrent tests,
+dependency builds, code generation, compilers and AST subprocesses together.
+
+Check load and available memory before heavy work, limit build jobs and concurrent
+heavy tasks, and monitor usage. A task-specific cgroup/systemd slice can enforce
+aggregate limits on Linux; MCPP_JOBS controls build concurrency. Reduce this
+task's concurrency near the budget, without stopping unrelated user processes
+or dropping validation gates.
 
 ## Index and verification
 
