@@ -35,8 +35,9 @@
 --     but would be inlined into function 'VP8L32bToPlanar_SSE41' that is
 --     compiled without support for 'ssse3'
 --
--- Upstream's CMake answers this with a PER-FILE `-msse4.1`, which mcpp has no
--- field for. Adding it package-wide instead would let clang emit SSE4.1 in the
+-- Upstream's CMake answers this with a per-file `-msse4.1`. Current mcpp
+-- supports scoped flags; this recipe retains its original baseline profile.
+-- Adding that flag package-wide would let clang emit SSE4.1 in the
 -- BASELINE translation units too, past libwebp's own runtime CPU dispatch — an
 -- artifact that SIGILLs on a pre-2008 CPU rather than falling back. So this
 -- package takes the other half of upstream's mechanism: `HAVE_CONFIG_H` plus a
