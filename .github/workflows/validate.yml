@@ -1550,6 +1550,16 @@ jobs:
         run: |
           "$MCPP" index update
 
+      - name: Complete candidate index for the cross-namespace host-tool consumer
+        if: contains(format(' {0} ', env.MEMBERS), ' grpc-tools ')
+        shell: bash
+        run: python3 tests/prepare_builtin_index.py --home "$MCPP_HOME"
+
+      - name: Installed OpenCV archive, image template and relocated deployment
+        if: contains(format(' {0} ', env.MEMBERS), ' opencv-cpu ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.opencv@5.0.0.1 --deploy
+
       - name: Installed mwrap archive, project template and relocated deployment
         if: contains(format(' {0} ', env.MEMBERS), ' onnxruntime-cpu ') && matrix.toolchain == 'default'
         shell: bash
@@ -1569,6 +1579,11 @@ jobs:
         if: contains(format(' {0} ', env.MEMBERS), ' imgui-headless ') && matrix.toolchain == 'default'
         shell: bash
         run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package ocornut.imgui@1.92.8.1
+
+      - name: Installed Godot wrapper archive and actual standalone math template
+        if: contains(format(' {0} ', env.MEMBERS), ' godot-math ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package godotengine.godot-cpp-m@10.0.0-rc1.1
 
       - name: Report temporarily untestable consumers of the unavailable MySQL source
         shell: bash

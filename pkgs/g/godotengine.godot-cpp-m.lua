@@ -72,8 +72,20 @@ package = {
     repo        = "https://github.com/mcpplibs/godot-cpp-m",
     type        = "package",
 
+    extensions = {
+        autoupdate = {
+            tag = "v${version}",
+            url = "https://github.com/mcpplibs/godot-cpp-m/archive/refs/tags/${tag}.tar.gz",
+        },
+    },
+
     xpm = {
         linux = {
+            -- Immutable candidate: runnable template; SDK stays 10.0.0-rc1.
+            ["10.0.0-rc1.1"] = {
+                url = "https://github.com/mcpplibs/godot-cpp-m/archive/40f72d5533a9bc29b17e62ae8a6c84b3dc593071.tar.gz",
+                sha256 = "79f15b4f70b0ef07e8b751c928f9e3fd7a6b32703f09b177ad02cdfd676a7f33",
+            },
             ["10.0.0-rc1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/godot-cpp-m/archive/refs/tags/v10.0.0-rc1.tar.gz",
@@ -90,6 +102,11 @@ package = {
             },
         },
         macosx = {
+            -- Immutable candidate: runnable template; SDK stays 10.0.0-rc1.
+            ["10.0.0-rc1.1"] = {
+                url = "https://github.com/mcpplibs/godot-cpp-m/archive/40f72d5533a9bc29b17e62ae8a6c84b3dc593071.tar.gz",
+                sha256 = "79f15b4f70b0ef07e8b751c928f9e3fd7a6b32703f09b177ad02cdfd676a7f33",
+            },
             ["10.0.0-rc1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/godot-cpp-m/archive/refs/tags/v10.0.0-rc1.tar.gz",
@@ -106,6 +123,11 @@ package = {
             },
         },
         windows = {
+            -- Immutable candidate: runnable template; SDK stays 10.0.0-rc1.
+            ["10.0.0-rc1.1"] = {
+                url = "https://github.com/mcpplibs/godot-cpp-m/archive/40f72d5533a9bc29b17e62ae8a6c84b3dc593071.tar.gz",
+                sha256 = "79f15b4f70b0ef07e8b751c928f9e3fd7a6b32703f09b177ad02cdfd676a7f33",
+            },
             ["10.0.0-rc1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/godot-cpp-m/archive/refs/tags/v10.0.0-rc1.tar.gz",

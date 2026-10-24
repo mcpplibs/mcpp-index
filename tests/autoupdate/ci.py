@@ -190,7 +190,7 @@ def matrix(plan: Path, output: Path, base: str):
     print(f"Candidate matrix: {len(jobs)} real build/run jobs.")
 
 
-def prepare(plan: Path, identity: str, output: Path):
+def prepare(plan: Path, identity: str, output: Path, home: Path | None = None):
     record = next(r for r in json.loads(plan.read_text(encoding="utf-8"))["packages"] if r["id"] == identity)
     namespace, name = identity.split(":", 1)
     version = record["candidate"]
@@ -233,7 +233,14 @@ def prepare(plan: Path, identity: str, output: Path):
         defines += ''.join(f'#define MCR_EXPECT_{key} {int(value)}\n'
                            for key, value in zip(("MAJOR", "MINOR", "PATCH"), parts))
         api.write_text(defines + api.read_text(encoding="utf-8"), encoding="utf-8")
-    text += f'\n[indices]\n"{namespace}" = {{ path = {json.dumps(str(ROOT).replace(chr(92), "/"))} }}\n'
+    if home is None:
+        text += f'\n[indices]\n"{namespace}" = {{ path = {json.dumps(str(ROOT).replace(chr(92), "/"))} }}\n'
+    else:
+        # Coupled tool/runtime packages cross namespaces. One complete built-in
+        # index resolves all of them without project-alias cache collisions.
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+        from prepare_builtin_index import prepare as prepare_index
+        prepare_index(ROOT, home)
     (output / "mcpp.toml").write_text(text)
     print(f"Prepared {identity}@{version} in {output}")
 
@@ -270,6 +277,7 @@ def main():
     parser.add_argument("--package")
     parser.add_argument("--output", type=Path)
     parser.add_argument("--consumer", type=Path)
+    parser.add_argument("--home", type=Path)
     args = parser.parse_args()
     if args.command == "audit":
         audit(args.base, args.output)
@@ -278,7 +286,7 @@ def main():
     elif args.command == "matrix":
         matrix(args.plan, args.output, args.base)
     elif args.command == "prepare":
-        prepare(args.plan, args.package, args.output)
+        prepare(args.plan, args.package, args.output, args.home)
     elif args.command == "diagnostics":
         diagnostics(args.consumer, args.output)
     else:

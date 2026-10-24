@@ -108,6 +108,37 @@ sha256="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
             with patch.object(ci, "ROOT", root):
                 self.assertEqual(ci.direct_member("ocornut:imgui"), "headless")
 
+    def test_coupled_consumer_uses_one_complete_builtin_index(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "tests/mwrap/tools"
+            source.mkdir(parents=True)
+            (source / "mcpp.toml").write_text(
+                '[package]\nname="tools"\nversion="0.1.0"\n'
+                '[indices]\ngrpc={path="../../.."}\n'
+                '[dependencies]\n"grpc.grpc-plugin"="1.83.0.1"\n'
+                '[build-dependencies]\n"mcpplibs.grpcgen"={version="1.83.0.1",host-module=true}\n')
+            (root / "index.toml").write_text('[index]\nname="mcpplibs"\n')
+            package = root / "pkgs/mwrap/example.lua"
+            package.parent.mkdir(parents=True)
+            package.write_bytes(b'-- unchanged descriptor bytes\n')
+            home = root / "home"
+            stale = home / "indices/mcpplibs/pkgs/old.lua"
+            stale.parent.mkdir(parents=True)
+            stale.write_text('-- stale')
+            plan = root / "plan.json"
+            plan.write_text(json.dumps({"packages": [
+                {"id": "mcpplibs:grpcgen", "candidate": "1.83.0.1"}]}))
+            with patch.object(ci, "ROOT", root):
+                dest = root / "consumer"
+                ci.prepare(plan, "mcpplibs:grpcgen", dest, home)
+                manifest = tomllib.loads((dest / "mcpp.toml").read_text())
+                self.assertNotIn("indices", manifest)
+                self.assertIn("grpc.grpc-plugin", manifest["dependencies"])
+                self.assertIn("mcpplibs.grpcgen", manifest["build-dependencies"])
+                self.assertEqual((home / "indices/mcpplibs/pkgs/mwrap/example.lua").read_bytes(), package.read_bytes())
+                self.assertFalse(stale.exists())
+
     def test_added_descriptor_and_removed_historical_descriptor(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

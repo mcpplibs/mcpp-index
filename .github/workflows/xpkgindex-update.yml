@@ -156,9 +156,11 @@ jobs:
           if [[ "$RUNNER_OS" == Windows ]]; then
             echo "PYTHONPATH=$(cygpath -m "$PWD/.updater/src")" >> "$GITHUB_ENV"
             echo "CONSUMER=$(cygpath -m "$RUNNER_TEMP/candidate-consumer")" >> "$GITHUB_ENV"
+            echo "CANDIDATE_MCPP_HOME=$(cygpath -m "$HOME/.mcpp")" >> "$GITHUB_ENV"
           else
             echo "PYTHONPATH=$PWD/.updater/src" >> "$GITHUB_ENV"
             echo "CONSUMER=$RUNNER_TEMP/candidate-consumer" >> "$GITHUB_ENV"
+            echo "CANDIDATE_MCPP_HOME=$HOME/.mcpp" >> "$GITHUB_ENV"
           fi
       - name: Append the candidate and prepare its existing consumer test
         shell: bash
@@ -167,7 +169,7 @@ jobs:
           PACKAGE: ${{ matrix.id }}
         run: |
           python -m xpkgindex_update apply --plan .candidate-plan/build-plan.json --package "$PACKAGE"
-          python tests/autoupdate/ci.py prepare --plan .candidate-plan/build-plan.json --package "$PACKAGE" --output "$CONSUMER"
+          python tests/autoupdate/ci.py prepare --plan .candidate-plan/build-plan.json --package "$PACKAGE" --output "$CONSUMER" --home "$CANDIDATE_MCPP_HOME"
           git diff -- pkgs
       - uses: actions/cache/restore@v4
         with:
@@ -195,7 +197,7 @@ jobs:
           root="$RUNNER_TEMP/$root"
           mkdir -p "$HOME/.mcpp/registry"
           cp -a "$root/registry/." "$HOME/.mcpp/registry/"
-          echo "MCPP_HOME=$HOME/.mcpp" >> "$GITHUB_ENV"
+          echo "MCPP_HOME=$CANDIDATE_MCPP_HOME" >> "$GITHUB_ENV"
           if [[ "$RUNNER_OS" == Windows ]]; then
             echo "MCPP=$(cygpath -m "$root/bin/mcpp.exe")" >> "$GITHUB_ENV"
           else

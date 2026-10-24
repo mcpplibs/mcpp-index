@@ -72,6 +72,9 @@ description: Use when adding a new third-party library/package to the mcpp-index
      再将两条 namespace 路由指向 `tests/mwrap/.indices/<namespace>` 中字节不变的测试视图。
      `tests/run_members.sh` 自动准备这些视图；它们不提交、不发布，也不改变 pkgs/mwrap 的正式布局。
      正常发布布局另由 `tests/mwrap/check_installed_template.py` 在独立 MCPP_HOME 中使用单一完整索引验收。
+     运行库/插件/host-module 多 namespace 耦合时，优先用 `tests/prepare_builtin_index.py --home <独立测试 home>`
+     安装唯一完整内置索引，成员以空 `[indices]` 覆盖旧 workspace 路由。自动更新候选 CI 同样采用此方式，
+     避免项目别名缓存相互污染；这是测试准备，不是发布 staging 或目录转换。
    - 非全平台包按 `[target.'cfg(...)'.dependencies]` 门控依赖,测试源码在被门控掉的平台上
      编译为 no-op `main`(`#ifdef __linux__ … #else int main(){return 0;} #endif` 模式)。
    - 如需测试 feature,依赖采用长式声明 `name = { version = "…", features = ["…"] }`。

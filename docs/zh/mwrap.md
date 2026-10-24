@@ -128,6 +128,7 @@ Linux 本地执行，CI 重跑发布门槛；Windows/macOS 原生 CI。区分编
 覆盖冷索引消费和动态加载库的运行时分发。SDK 附带 LICENSE 与第三方通知时，通过
 `runtime.deploy` 显式声明它们的相对部署位置，并在搬迁后的消费方分发包中校验字节；
 自动许可证收集可能只复制 LICENSE 而遗漏其他通知，无需为此修改引擎。
+vendored 静态实现同样需要显式部署，不能依赖共享库扫描发现通知。保留许可/版权文件的来源路径，避免不同组件的同名 LICENSE 相互覆盖。
 每仓库一个 PR，保留 checkpoint commits；
 逐项核查最终 API/ABI/依赖图，并等待相关 CI 全通过后报告合入与发布就绪。
 
@@ -140,3 +141,5 @@ Linux 本地执行，CI 重跑发布门槛；Windows/macOS 原生 CI。区分编
 正常安装由 tests/mwrap/check_installed_template.py 独立验证：把完整 pkgs/index.toml 发布布局放进独立 MCPP_HOME 的单一内置索引，
 下载真实且带校验的源码归档，执行 mcpp new，再原样构建/运行生成清单，不替换为 path 依赖。
 Git 与发布的 pkgs/mwrap 目录始终一致。
+
+运行库、插件、构建模块耦合的测试可能同时依赖多个候选 namespace。使用 `python3 tests/prepare_builtin_index.py --home <独立测试目录>`，将完整且字节不变的候选布局放入该测试 home 的唯一内置索引；成员用空 `[indices]` 覆盖旧 workspace 路由。自动更新候选 CI 同样使用此模式。不要将同一个完整 checkout 注册为多个项目别名。这只是测试 home 准备，不需要发布 staging、路径转换或修改 mcpp 引擎。

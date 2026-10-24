@@ -17,7 +17,7 @@ def main():
     parser.add_argument("--mcpp", default="mcpp")
     parser.add_argument("--toolchain", default="llvm@23.1.3")
     parser.add_argument("--package", default="mcpplibs.mwrap.onnxruntime@1.25.1")
-    parser.add_argument("--deploy", action="store_true", help="pack, relocate and run the consumer; verify SDK notices")
+    parser.add_argument("--deploy", action="store_true", help="pack, relocate and run the consumer; verify declared notices")
     parser.add_argument("--run-arg", action="append", default=[])
     parser.add_argument("--legacy-exact-key", action="store_true",
                         help="allow only mcpp's nonnumeric exact-version diagnostic; fail other build warnings")
@@ -80,20 +80,37 @@ def main():
             bundle = project / "target/dist/deployment-audit"
             relocated = temporary / "relocated/bundle"
             shutil.copytree(bundle, relocated, symlinks=True)
-            notices = list(relocated.rglob("licenses/onnxruntime/ThirdPartyNotices.txt"))
-            assert len(notices) == 1 and notices[0].stat().st_size, notices
-            installed = []
-            for entry in json.loads((project / "compile_commands.json").read_text(encoding="utf-8")):
-                arguments = entry["arguments"]
-                for number, argument in enumerate(arguments):
-                    directory = (arguments[number + 1] if argument in ("-I", "/I") else
-                                 argument[2:] if argument.startswith(("-I", "/I")) else "")
-                    include = Path(directory)
-                    if directory and (include / "onnxruntime_c_api.h").is_file():
-                        installed.append(include.parent / "ThirdPartyNotices.txt")
-            expected = hashlib.sha256(notices[0].read_bytes()).hexdigest()
-            assert any(p.is_file() and hashlib.sha256(p.read_bytes()).hexdigest() == expected
-                       for p in installed), installed
+            if identity == "mcpplibs.mwrap.onnxruntime":
+                notices = list(relocated.rglob("licenses/onnxruntime/ThirdPartyNotices.txt"))
+                assert len(notices) == 1 and notices[0].stat().st_size, notices
+                installed = []
+                for entry in json.loads((project / "compile_commands.json").read_text(encoding="utf-8")):
+                    arguments = entry["arguments"]
+                    for number, argument in enumerate(arguments):
+                        directory = (arguments[number + 1] if argument in ("-I", "/I") else
+                                     argument[2:] if argument.startswith(("-I", "/I")) else "")
+                        include = Path(directory)
+                        if directory and (include / "onnxruntime_c_api.h").is_file():
+                            installed.append(include.parent / "ThirdPartyNotices.txt")
+                expected = hashlib.sha256(notices[0].read_bytes()).hexdigest()
+                assert any(p.is_file() and hashlib.sha256(p.read_bytes()).hexdigest() == expected
+                           for p in installed), installed
+            elif identity == "mcpplibs.mwrap.opencv":
+                commands = json.loads((project / "compile_commands.json").read_text(encoding="utf-8"))
+                sources = [Path(item["file"]).parent.parent for item in commands
+                           if Path(item["file"]).name == "core.cppm"]
+                source = next(path for path in sources if (path / "upstream/opencv/LICENSE").is_file())
+                notices = [source / "LICENSE", *[path for path in (source / "upstream/opencv").rglob("*")
+                           if path.is_file() and any(word in path.name for word in ("LICENSE", "COPYING", "COPYRIGHT", "NOTICE"))]]
+                roots = list(relocated.rglob("licenses/opencv"))
+                assert len(roots) == 1, f"Missing OpenCV runtime license tree: {roots}"
+                for notice in notices:
+                    copied = roots[0] / notice.relative_to(source)
+                    assert copied.is_file(), f"Missing retained OpenCV notice: {copied}"
+                    assert copied.read_bytes() == notice.read_bytes(), copied
+                print(f"Verified {len(notices)} byte-identical wrapper/upstream license files", flush=True)
+            else:
+                raise ValueError(f"No deployment acceptance contract for {identity}")
             runtime_env = {key: value for key, value in os.environ.items()
                            if key not in {"MCPP_HOME", "XLINGS_HOME", "LD_LIBRARY_PATH", "LD_PRELOAD",
                                           "DYLD_LIBRARY_PATH", "DYLD_FALLBACK_LIBRARY_PATH"}}
@@ -123,7 +140,12 @@ def main():
                     resolved = line.split("=>", 1)[1].strip().split(" ", 1)[0]
                     if resolved.startswith("/"):
                         assert Path(resolved).resolve().is_relative_to(relocated.resolve()), line
-            print("Verified relocated inference bundle and byte-identical SDK notices", flush=True)
+            if identity == "mcpplibs.mwrap.opencv":
+                encoded = (empty_home / "out.png").read_bytes()
+                assert encoded[:8] == b"\x89PNG\r\n\x1a\n", "Relocated template did not create a PNG"
+                assert int.from_bytes(encoded[16:20], "big") == 64
+                assert int.from_bytes(encoded[20:24], "big") == 64
+            print("Verified relocated application bundle and byte-identical notices", flush=True)
 
 
 if __name__ == "__main__":

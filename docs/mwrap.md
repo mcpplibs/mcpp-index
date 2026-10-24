@@ -185,6 +185,9 @@ When a runtime SDK ships LICENSE and third-party notices, declare their deployme
 alongside the runtime files. Verify those bytes in a relocated consumer bundle;
 automatic license discovery may copy LICENSE while omitting additional notices.
 Use `runtime.deploy` for explicit relative destinations without changing the engine.
+Vendored static implementations need this too: shared-library discovery does not
+find their notices. Preserve retained license/copyright files under distinct source
+paths so unrelated LICENSE basenames cannot overwrite one another.
 
 Each repository's PR retains checkpoint commits. Record commands and actual
 results, inspect the final dependency/ABI/API graph, and wait for every relevant
@@ -195,3 +198,5 @@ CI check before reporting merge/release readiness.
 The pinned client routes each requested namespace independently. Registering the same full checkout twice makes xlings report duplicate project candidates. Local wrapper/SDK tests therefore call tests/prepare_mwrap_indices.py and route each namespace to a test-only view under tests/mwrap/.indices. Every descriptor is copied unchanged and its source SHA256 is recorded; no aliases share a descriptor. These views are ignored build outputs, not a publication format.
 
 Normal installed consumers are tested independently by tests/mwrap/check_installed_template.py: it copies the complete pkgs/index.toml publication layout into one isolated built-in index, downloads the real checksummed source archive, runs mcpp new and builds/runs the generated manifest without a path substitution. The Git and published pkgs/mwrap directory layout remains identical.
+
+Coupled runtime/plugin/build-module consumers may require several candidate namespaces at once. Use `python3 tests/prepare_builtin_index.py --home <isolated-test-home>` to install the complete unchanged candidate layout as the test home's single built-in index; the member uses an empty `[indices]` table to override legacy workspace redirects. Updater candidate CI uses this mode too. Do not register the same full checkout through multiple project aliases. This is test-home preparation only: no publication staging, path conversion or mcpp engine change is required.

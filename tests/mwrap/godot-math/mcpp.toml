@@ -1,0 +1,10 @@
+[package]
+name = "godot-math"
+version = "10.0.0-rc1.1"
+description = "Run the immutable godot-cpp module wrapper without an engine"
+
+[indices]
+godotengine = { path = "../../.." }
+
+[dependencies]
+"godotengine.godot-cpp-m" = "10.0.0-rc1.1"

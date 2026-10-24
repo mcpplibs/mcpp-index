@@ -38,8 +38,8 @@ package = {
         linux = {
             -- Immutable candidate; published upstream versions remain unchanged.
             ["1.83.0.1"] = {
-                url = "https://github.com/mcpplibs/grpc-m/archive/839b61e94fff14892a1dfb2c211a4a8e66342239.tar.gz",
-                sha256 = "b16dffb45c6f4b09de49a5229f2ec7db98bcfb5609447271d85db8387aeabdd4",
+                url = "https://github.com/mcpplibs/grpc-m/archive/0d11b22399875f2847f04609fd4fccb50fda5410.tar.gz",
+                sha256 = "8a4ff91f60ac6c58e3bdb9d18f67617865f948343afff9e94b855cf82612251a",
             },
             ["1.83.0"] = {
                 url = {
@@ -52,8 +52,8 @@ package = {
         macosx = {
             -- Immutable candidate; published upstream versions remain unchanged.
             ["1.83.0.1"] = {
-                url = "https://github.com/mcpplibs/grpc-m/archive/839b61e94fff14892a1dfb2c211a4a8e66342239.tar.gz",
-                sha256 = "b16dffb45c6f4b09de49a5229f2ec7db98bcfb5609447271d85db8387aeabdd4",
+                url = "https://github.com/mcpplibs/grpc-m/archive/0d11b22399875f2847f04609fd4fccb50fda5410.tar.gz",
+                sha256 = "8a4ff91f60ac6c58e3bdb9d18f67617865f948343afff9e94b855cf82612251a",
             },
             ["1.83.0"] = {
                 url = {
@@ -66,8 +66,8 @@ package = {
         windows = {
             -- Immutable candidate; published upstream versions remain unchanged.
             ["1.83.0.1"] = {
-                url = "https://github.com/mcpplibs/grpc-m/archive/839b61e94fff14892a1dfb2c211a4a8e66342239.tar.gz",
-                sha256 = "b16dffb45c6f4b09de49a5229f2ec7db98bcfb5609447271d85db8387aeabdd4",
+                url = "https://github.com/mcpplibs/grpc-m/archive/0d11b22399875f2847f04609fd4fccb50fda5410.tar.gz",
+                sha256 = "8a4ff91f60ac6c58e3bdb9d18f67617865f948343afff9e94b855cf82612251a",
             },
             ["1.83.0"] = {
                 url = {

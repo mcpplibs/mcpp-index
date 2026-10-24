@@ -1,4 +1,5 @@
 #if defined(MCPP_TEST_GRPC)
+#include <string>
 import grpc;
 int main() {
     if (!grpc::Status::OK.ok()) return 1;

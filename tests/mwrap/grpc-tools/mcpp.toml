@@ -4,8 +4,8 @@ version = "1.83.0.1"
 description = "Resolve the indexed gRPC plugin and host rule, and verify the built host binary"
 
 [indices]
-grpc = { path = "../.indices/grpc" }
-mcpplibs = { path = "../.indices/mcpplibs" }
+# CI and isolated validation install the whole checkout into the test home's
+# built-in index. Keep this empty to override the legacy workspace redirect.
 
 [dependencies]
 "grpc.grpc-plugin" = { version = "1.83.0.1", tools = ["grpc_cpp_plugin"] }
