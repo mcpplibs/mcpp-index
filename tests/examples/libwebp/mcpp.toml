@@ -5,4 +5,4 @@ name = "libwebp-tests"
 version = "0.1.0"
 
 [dependencies.compat]
-libwebp = "1.5.0"
+libwebp = { version = "1.5.0", features = ["demux", "mux"] }
