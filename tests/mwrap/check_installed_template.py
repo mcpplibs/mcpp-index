@@ -100,7 +100,8 @@ def main():
                 sources = [Path(item["file"]).parent.parent for item in commands
                            if Path(item["file"]).name == "core.cppm"]
                 source = next(path for path in sources if (path / "upstream/opencv/LICENSE").is_file())
-                notices = [source / "LICENSE", *[path for path in (source / "upstream/opencv").rglob("*")
+                notices = [source / "LICENSE", source / "port/licenses/UPSTREAM_SOURCE_NOTICES.txt",
+                           *[path for path in (source / "upstream/opencv").rglob("*")
                            if path.is_file() and any(word in path.name for word in ("LICENSE", "COPYING", "COPYRIGHT", "NOTICE"))]]
                 roots = list(relocated.rglob("licenses/opencv"))
                 assert len(roots) == 1, f"Missing OpenCV runtime license tree: {roots}"

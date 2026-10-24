@@ -47,3 +47,22 @@ The initial local unittest invocation lacked the workflow's pinned-updater
 PYTHONPATH; the successful rerun uses /tmp/mwrap-updater-6c0bee/src.
 Native CI results are required on the final source/index commits; these local
 checks do not certify Windows/macOS/musl behavior by inference.
+
+## Embedded notice supplement and updated archive
+
+Candidate 019eaadb4c2212246cf20e29447bb1ef960333ba was independently downloaded
+twice with SHA256 e265add2c6ed3aa9e6dba677a8731e8a385e5f8419093336a18fbdab54be5661.
+It adds the SDK inline-helper/value-operator checkpoint and a deterministic
+embedded source notice supplement. The original fourteen named OpenCV notices
+remain; the additional supplement preserves source comment bytes and locations.
+Both installed-template and WebP deployment helpers require that supplement.
+
+The fresh-home archive test strictly built and ran the consumer (2m55s), packed
+a release bundle (1m34s), and ran it after relocation with an empty HOME and
+cleared runtime overrides. Image/animation/XMP checks and the bundled ELF loader
+closure passed. All fifteen OpenCV plus three WebP notices match the installed
+source bytes. Log: /tmp/mwrap-notices-archive-deployment.log. This local test used
+the shared resource slice, three build jobs and the whole-host pressure guard.
+Descriptor parsing, naming, version parity and duplicate-version checks pass.
+Native CI still needs the new exact source and index heads; the previous OpenCV
+16baa03 matrix completed all five jobs successfully.

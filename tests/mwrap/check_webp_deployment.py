@@ -56,7 +56,8 @@ def main():
             assert (notices[0] / name).read_bytes() == (sdk / name).read_bytes(), name
         source = next(Path(entry["file"]).parent.parent for entry in entries
                       if Path(entry["file"]).name == "core.cppm")
-        originals = [source / "LICENSE", *[path for path in (source / "upstream/opencv").rglob("*")
+        originals = [source / "LICENSE", source / "port/licenses/UPSTREAM_SOURCE_NOTICES.txt",
+                     *[path for path in (source / "upstream/opencv").rglob("*")
                      if path.is_file() and any(word in path.name for word in ("LICENSE", "COPYING", "COPYRIGHT", "NOTICE"))]]
         notices = list(relocated.rglob("licenses/opencv"))
         assert len(notices) == 1, f"Missing/ambiguous OpenCV notices: {notices}"
