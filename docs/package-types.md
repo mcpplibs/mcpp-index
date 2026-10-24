@@ -1,5 +1,8 @@
 # Library shapes and descriptor templates
 
+Module wrappers preserve upstream APIs under `mcpplibs.mwrap.<lib>`. Use `pkgs/mwrap/<lib>.lua`; see [the wrapper specification](mwrap.md). Every -m repository has English and Chinese READMEs.
+
+
 **English** | [简体中文](zh/package-types.md)
 
 Before writing a descriptor, work out which shape the library belongs to, then pick the matching template. Every path

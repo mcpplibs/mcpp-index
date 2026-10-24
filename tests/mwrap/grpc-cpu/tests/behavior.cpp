@@ -1,6 +1,6 @@
 #if defined(MCPP_TEST_GRPC)
 #include <string>
-import grpc;
+import mcpplibs.mwrap.grpc;
 int main() {
     if (!grpc::Status::OK.ok()) return 1;
     const grpc::Status error(grpc::StatusCode::INVALID_ARGUMENT, "indexed module");

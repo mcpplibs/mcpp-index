@@ -57,7 +57,7 @@ description: Use when adding a new third-party library/package to the mcpp-index
    以保证字节一致(sha 相同)。**在不具备 `mcpp-res` 写权限时**,不应构造镜像表,而应使用纯字符串形式
    `url = "<GLOBAL 上游 release>"`(lint 允许此形式,CN 用户将回退至上游源),镜像由维护者后续补充。详见
    [docs/zh/cn-mirror.md](../../../docs/zh/cn-mirror.md)。
-4. **编写描述符**：传统包使用 `pkgs/<x>/<name>.lua`，`mcpplibs.mwrap` 包使用 `pkgs/mwrap/<完整包身份>.lua`。
+4. **编写描述符**：传统包使用 `pkgs/<x>/<name>.lua`，`mcpplibs.mwrap` 包使用 `pkgs/mwrap/<lib>.lua`。
    - 目录 `<x>` **取完整包名首字母**(`compat.eigen` 对应 `pkgs/c/`,`nlohmann.json` 对应 `pkgs/n/`),
      而非短名。mwrap 是明确的分类例外，文件平铺于 pkgs/mwrap；当前客户端 fallback 按声明身份扫描一级分类目录，不要求目录名为单字母。不增加 pkgs/mwrap/o 等额外层级，也不转换发布路径。
    - `xpm` 须覆盖三平台(linux/macosx/windows),每个版本包含 `url = { GLOBAL=…, CN=… }` 与 `sha256`。
@@ -111,13 +111,17 @@ description: Use when adding a new third-party library/package to the mcpp-index
   用户明确要求整理文档或说明确有变化时才改入口文档。新增包通常也不改 `.xpkgindex.json`。
 - 详细字段、例外和认证机制见 [自动更新文档](../../../docs/zh/automatic-updates.md)。
 
+新 wrapper 使用完整 `mcpplibs.mwrap.<lib>` 身份；描述符短名为 `pkgs/mwrap/<lib>.lua`，文件内声明完整 namespace。
+所有依赖、模板和 import 显示完整前缀，不推广 `mwrap.<lib>` 简写。Godot 使用 `godot_cpp`。
+新身份首发版本等于上游版本；独立 tag 使用 `mwrap-${version}`，后续封装修订才加单个数字尾号。
+不要移动旧 tag 或将新发布回填旧身份；updater 必须隔离两套 tag 序列。
+
 ## -m 仓库 README
 
-新增或重构 `<库名>-m` 时，README 使用统一简洁风格，原则上每种语言不超过 100 行。
-顺序为一句定位、快捷模板、依赖与最小 import 用法、关键平台/能力边界、详细文档与许可证链接。
-架构、完整矩阵、后端细节、排错与验证历史进入 docs/；不向 README 追加 checkpoint、长表格或徽章墙。
-保留候选版本状态、必要 SDK/设备前提与关键限制，不靠超长行压缩，不为此增加用户审批。
-检查行数、示例身份/版本和文档链接；已有翻译保持结构对应。完整规则见 docs/zh/mwrap.md。
+新增或重构 `<库名>-m` 时，默认英文 README.md，必须提供 README.zh.md，顶部双向链接。
+保留原栏目层级、语义与顺序再精简，每语言通常不超过约 100 行；缺少翻译必须补齐。
+中英版本、依赖/import/模板命令、平台条件和支持边界保持一致，长示例和矩阵转入 docs 并链接。
+完整规则见 docs/zh/mwrap.md，不强制将所有库重排成同一套栏目。
 
 ## 本地测试资源
 

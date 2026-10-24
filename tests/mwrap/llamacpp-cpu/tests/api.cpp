@@ -1,9 +1,9 @@
 import std;
-import llamacpp;
+import mcpplibs.mwrap.llamacpp;
 
 int main() {
-    static_assert(LLAMA_DEFAULT_SEED == 0xFFFFFFFFu);
-    static_assert(LLAMA_TOKEN_NULL == llama_token{-1});
+    static_assert(mcpplibs::mwrap::llamacpp::macros::LLAMA_DEFAULT_SEED == 0xFFFFFFFFu);
+    static_assert(mcpplibs::mwrap::llamacpp::macros::LLAMA_TOKEN_NULL == llama_token{-1});
 
     llama_backend_init();
 

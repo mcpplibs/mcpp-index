@@ -1,6 +1,6 @@
 [package]
 name = "opencv-webp"
-version = "5.0.0.1"
+version = "5.0.0"
 description = "Consume the OpenCV archive with optional WebP image, animation and metadata support"
 
 [indices]
@@ -8,4 +8,4 @@ description = "Consume the OpenCV archive with optional WebP image, animation an
 # An explicit empty table overrides the legacy workspace redirect.
 
 [dependencies]
-"mcpplibs.mwrap.opencv" = { version = "5.0.0.1", features = ["imgcodecs-webp"] }
+"mcpplibs.mwrap.opencv" = { version = "5.0.0", features = ["imgcodecs-webp"] }

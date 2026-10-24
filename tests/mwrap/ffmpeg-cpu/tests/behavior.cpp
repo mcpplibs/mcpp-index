@@ -1,5 +1,5 @@
 import std;
-import ffmpeg.av;
+import mcpplibs.mwrap.ffmpeg.av;
 
 int main() {
     if (std::string_view(av_version_info()) != "8.1.2") return 1;

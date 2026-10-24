@@ -1,6 +1,6 @@
 [package]
 name = "opencv-cpu"
-version = "5.0.0.1"
+version = "5.0.0"
 description = "Install the OpenCV mwrap archive and run a generated image pipeline"
 
 [indices]
@@ -8,4 +8,4 @@ description = "Install the OpenCV mwrap archive and run a generated image pipeli
 # An explicit empty table overrides the legacy workspace redirect.
 
 [dependencies]
-"mcpplibs.mwrap.opencv" = { version = "5.0.0.1", features = ["imgproc", "imgcodecs-png", "imgcodecs-jpeg"] }
+"mcpplibs.mwrap.opencv" = { version = "5.0.0", features = ["imgproc", "imgcodecs-png", "imgcodecs-jpeg"] }

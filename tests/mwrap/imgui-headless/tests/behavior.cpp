@@ -1,5 +1,5 @@
 import std;
-import imgui.core;
+import mcpplibs.mwrap.imgui.core;
 
 int main() {
     struct Context {
@@ -17,7 +17,7 @@ int main() {
     for (int frame = 0; frame < 3; ++frame) {
         ImGui::NewFrame();
         ImGui::Begin("Indexed ImGui");
-        ImGui::TextUnformatted("Hello from import imgui.core");
+        ImGui::TextUnformatted("Hello from import mcpplibs.mwrap.imgui.core");
         ImGui::End();
         ImGui::Render();
     }

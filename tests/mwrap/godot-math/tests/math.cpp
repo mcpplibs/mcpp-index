@@ -1,5 +1,5 @@
 import std;
-import godot_cpp;
+import mcpplibs.mwrap.godot_cpp;
 
 int main() {
     const godot::Vector2 vector(3, 4);

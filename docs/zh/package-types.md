@@ -1,5 +1,8 @@
 # 库形态与描述符模板
 
+模块封装统一使用 `mcpplibs.mwrap.<lib>`，描述符位于 `pkgs/mwrap/<lib>.lua`；见 [mwrap 规范](mwrap.md)。每个 -m 仓库必须提供默认英文与中文 README。
+
+
 [English](../package-types.md) | **简体中文**
 
 编写描述符前,应先判定库所属的形态,再选用对应模板。`mcpp = {}` 内的所有路径均为**相对 verdir 的 GLOB**:

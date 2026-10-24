@@ -61,6 +61,12 @@ again at `5.0.1`. Revisions start at **1**: never publish both `5.0.0` and
 `5.0.0.0`, which compare equally. Do not use an unrelated wrapper `0.x` version
 or change the upstream patch number to describe a wrapper fix.
 
+The first release of a new mwrap identity uses the upstream version without a
+wrapper suffix. Existing legacy package identities keep their published bytes.
+Use the independent repository tag series `mwrap-${version}` (for example,
+`mwrap-8.1.2`); it does not alter the package version. Never move an existing tag.
+Select this exact tag series in automatic updates rather than GitHub latest.
+
 Record upstream identity separately in `[package.metadata.mwrap]` and source
 pins. A wrapper revision does not excuse undocumented breaking interface changes.
 Non-numeric/prerelease upstream schemes need an explicit mapping preserving
@@ -110,21 +116,17 @@ they enter the graph. Record ABI, runtime, CPU baseline and SDK constraints.
 
 ## README style
 
-Every `<library>-m` repository uses a consistent, concise entry page, normally
-**no more than 100 lines**. Existing translations follow the same structure and
-length target and stay aligned.
+Every `<library>-m` repository has an English `README.md` and a Chinese
+`README.zh.md`, linked to each other at the top. Both normally stay within
+100 lines. Add the missing translation when modernizing a wrapper.
 
-Use this order: project name and one-sentence purpose; quickstart template;
-existing-project dependency and minimal import example; essential capability and
-platform boundaries; links to detailed docs, examples and the license. Show full
-package identities and directly runnable commands first.
-
-Move architecture, complete feature/API matrices, backend setup, troubleshooting,
-validation evidence and history into `docs/`. Avoid badge walls, repeated
-navigation, large tables, implementation essays and appended checkpoint logs.
-Do not meet the target with excessively long lines or by removing prerequisites.
-State unpublished-candidate status and important device/SDK requirements briefly.
-The line target is an editorial guideline, not an additional user approval gate.
+Preserve the existing section hierarchy, order, useful badges and language
+navigation, then shorten the prose. Translate headings while preserving their
+meaning. A shared style does not require replacing every library's layout.
+Keep quickstart commands, dependency/import examples, versions, platform
+conditions and support limits equivalent in both languages. Move long examples,
+architecture and full matrices into docs and link them from the original section.
+Do not meet the target with long lines or missing prerequisites.
 
 ## Every -m package ships a runnable template
 
@@ -168,10 +170,17 @@ or dropping validation gates.
 
 ## Index and verification
 
-Descriptors live directly in `pkgs/mwrap/<qualified-name>.lua`; consumers live in
+Descriptors live directly in `pkgs/mwrap/<lib>.lua`; consumers live in
 `tests/mwrap/<member>/`. Do not add an extra alphabetic directory level. The
 existing client scans immediate subdirectories of `pkgs` by declared identity,
 and publication copies `pkgs` unchanged: no staging path conversion is needed.
+The category already identifies wrappers: use short filenames such as
+`pkgs/mwrap/ffmpeg.lua`, while declaring `namespace = "mcpplibs.mwrap"` and
+`name = "ffmpeg"`. Filenames do not define identity. Dependencies, template
+selectors and module imports display the complete `mcpplibs.mwrap.ffmpeg`.
+`mwrap.ffmpeg` is a different namespace, not a supported abbreviation.
+Godot uses `mcpplibs.mwrap.godot_cpp`; the repository remains godot-cpp-m.
+
 Register consumers as workspace members and cover them in selection/sharding,
 lint, mirrors, search and the site. Traditional providers remain under compat.
 

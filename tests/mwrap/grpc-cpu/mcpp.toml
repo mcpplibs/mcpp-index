@@ -1,6 +1,6 @@
 [package]
 name = "grpc-cpu"
-version = "1.83.0.1"
+version = "1.83.0"
 description = "Consume the immutable gRPC wrapper revision and check module status semantics"
 
 [indices]
@@ -8,7 +8,7 @@ description = "Consume the immutable gRPC wrapper revision and check module stat
 # An explicit empty table overrides the legacy workspace redirect.
 
 [target.'cfg(unix)'.dependencies]
-"grpc.grpc" = "1.83.0.1"
+"mcpplibs.mwrap.grpc" = "1.83.0"
 
 [target.'cfg(unix)'.build]
 defines = ["MCPP_TEST_GRPC"]

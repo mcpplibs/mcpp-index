@@ -55,20 +55,8 @@ package = {
     repo        = "https://github.com/mcpplibs/grpc-m",
     type        = "package",
 
-    extensions = {
-        autoupdate = {
-            tag = "v${version}",
-            url = "https://github.com/mcpplibs/grpc-m/archive/refs/tags/${tag}.tar.gz",
-        },
-    },
-
     xpm = {
         linux = {
-            -- Immutable candidate; published upstream versions remain unchanged.
-            ["1.83.0.1"] = {
-                url = "https://github.com/mcpplibs/grpc-m/archive/0d11b22399875f2847f04609fd4fccb50fda5410.tar.gz",
-                sha256 = "8a4ff91f60ac6c58e3bdb9d18f67617865f948343afff9e94b855cf82612251a",
-            },
             ["1.83.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/grpc-m/archive/refs/tags/v1.83.0-4.tar.gz",
@@ -78,11 +66,6 @@ package = {
             },
         },
         macosx = {
-            -- Immutable candidate; published upstream versions remain unchanged.
-            ["1.83.0.1"] = {
-                url = "https://github.com/mcpplibs/grpc-m/archive/0d11b22399875f2847f04609fd4fccb50fda5410.tar.gz",
-                sha256 = "8a4ff91f60ac6c58e3bdb9d18f67617865f948343afff9e94b855cf82612251a",
-            },
             ["1.83.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/grpc-m/archive/refs/tags/v1.83.0-4.tar.gz",

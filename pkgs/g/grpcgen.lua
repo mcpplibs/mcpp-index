@@ -36,10 +36,10 @@ package = {
 
     xpm = {
         linux = {
-            -- Immutable candidate; published upstream versions remain unchanged.
+            -- Host packaging revision from the same verified source as mwrap.grpc 1.83.0.
             ["1.83.0.1"] = {
-                url = "https://github.com/mcpplibs/grpc-m/archive/0d11b22399875f2847f04609fd4fccb50fda5410.tar.gz",
-                sha256 = "8a4ff91f60ac6c58e3bdb9d18f67617865f948343afff9e94b855cf82612251a",
+                url = "https://github.com/mcpplibs/grpc-m/archive/f3035f79989e9d3a8c3810ac74a2fe97fe266b1e.tar.gz",
+                sha256 = "475df00140ef669453f19e71e519b7a9b6c2e012e11a22cacc4d0c54862f5e8b",
             },
             ["1.83.0"] = {
                 url = {
@@ -50,10 +50,10 @@ package = {
             },
         },
         macosx = {
-            -- Immutable candidate; published upstream versions remain unchanged.
+            -- Host packaging revision from the same verified source as mwrap.grpc 1.83.0.
             ["1.83.0.1"] = {
-                url = "https://github.com/mcpplibs/grpc-m/archive/0d11b22399875f2847f04609fd4fccb50fda5410.tar.gz",
-                sha256 = "8a4ff91f60ac6c58e3bdb9d18f67617865f948343afff9e94b855cf82612251a",
+                url = "https://github.com/mcpplibs/grpc-m/archive/f3035f79989e9d3a8c3810ac74a2fe97fe266b1e.tar.gz",
+                sha256 = "475df00140ef669453f19e71e519b7a9b6c2e012e11a22cacc4d0c54862f5e8b",
             },
             ["1.83.0"] = {
                 url = {
@@ -64,10 +64,10 @@ package = {
             },
         },
         windows = {
-            -- Immutable candidate; published upstream versions remain unchanged.
+            -- Host packaging revision from the same verified source as mwrap.grpc 1.83.0.
             ["1.83.0.1"] = {
-                url = "https://github.com/mcpplibs/grpc-m/archive/0d11b22399875f2847f04609fd4fccb50fda5410.tar.gz",
-                sha256 = "8a4ff91f60ac6c58e3bdb9d18f67617865f948343afff9e94b855cf82612251a",
+                url = "https://github.com/mcpplibs/grpc-m/archive/f3035f79989e9d3a8c3810ac74a2fe97fe266b1e.tar.gz",
+                sha256 = "475df00140ef669453f19e71e519b7a9b6c2e012e11a22cacc4d0c54862f5e8b",
             },
             ["1.83.0"] = {
                 url = {

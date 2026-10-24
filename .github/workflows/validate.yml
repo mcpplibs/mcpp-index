@@ -1216,7 +1216,7 @@ jobs:
           tar -xzf "$archive"
           echo "MCPP=$PWD/mcpp-${MCPP_VERSION}-${{ matrix.suffix }}/bin/mcpp" >> "$GITHUB_ENV"
       - name: Immutable archive, default scaffold, strict build and loopback RPC
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package grpc.grpc@1.83.0.1 --toolchain "${{ matrix.toolchain }}"
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.grpc@1.83.0 --toolchain "${{ matrix.toolchain }}"
 
   workspace:
     # The shard suffix appears only when the platform is actually split, and
@@ -1535,7 +1535,7 @@ jobs:
       - name: Installed OpenCV archive, image template and relocated deployment
         if: contains(format(' {0} ', env.MEMBERS), ' opencv-cpu ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.opencv@5.0.0.1 --deploy
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.opencv@5.0.0 --deploy
 
       - name: Installed mwrap archive, project template and relocated deployment
         if: contains(format(' {0} ', env.MEMBERS), ' onnxruntime-cpu ') && matrix.toolchain == 'default'
@@ -1545,22 +1545,22 @@ jobs:
       - name: Installed llama.cpp-m archive and actual CPU project template
         if: contains(format(' {0} ', env.MEMBERS), ' llamacpp-cpu ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package ggml-org.llamacpp@b10069.3 --legacy-exact-key
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.llamacpp@b10069 --legacy-exact-key
 
       - name: Installed FFmpeg wrapper archive and actual default project template
         if: contains(format(' {0} ', env.MEMBERS), ' ffmpeg-cpu ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package ffmpeg.ffmpeg@8.1.2.1
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.ffmpeg@8.1.2
 
       - name: Installed ImGui wrapper archive and actual headless default template
         if: contains(format(' {0} ', env.MEMBERS), ' imgui-headless ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package ocornut.imgui@1.92.8.1
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.imgui@1.92.8
 
       - name: Installed Godot wrapper archive and actual standalone math template
         if: contains(format(' {0} ', env.MEMBERS), ' godot-math ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package godotengine.godot-cpp-m@10.0.0-rc1.1
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.godot_cpp@10.0.0-rc1
 
       - name: Report temporarily untestable consumers of the unavailable MySQL source
         shell: bash

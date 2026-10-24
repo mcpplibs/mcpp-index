@@ -1,6 +1,6 @@
 [package]
 name = "ffmpeg-cpu"
-version = "8.1.2.1"
+version = "8.1.2"
 description = "Consume the immutable FFmpeg wrapper revision and decode a real raw frame"
 
 [indices]
@@ -8,4 +8,4 @@ description = "Consume the immutable FFmpeg wrapper revision and decode a real r
 # An explicit empty table overrides the legacy workspace redirect.
 
 [dependencies]
-"ffmpeg.ffmpeg" = "8.1.2.1"
+"mcpplibs.mwrap.ffmpeg" = "8.1.2"

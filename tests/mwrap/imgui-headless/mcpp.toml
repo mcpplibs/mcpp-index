@@ -1,6 +1,6 @@
 [package]
 name = "imgui-headless"
-version = "1.92.8.1"
+version = "1.92.8"
 description = "Consume the immutable ImGui wrapper and render actual headless draw data"
 
 [indices]
@@ -8,4 +8,4 @@ description = "Consume the immutable ImGui wrapper and render actual headless dr
 # An explicit empty table overrides the legacy workspace redirect.
 
 [dependencies]
-"ocornut.imgui" = "1.92.8.1"
+"mcpplibs.mwrap.imgui" = "1.92.8"

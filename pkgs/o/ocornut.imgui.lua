@@ -19,20 +19,8 @@ package = {
     repo        = "https://github.com/mcpplibs/imgui-m",
     type        = "package",
 
-    extensions = {
-        autoupdate = {
-            tag = "${version}",
-            url = "https://github.com/mcpplibs/imgui-m/archive/refs/tags/${tag}.tar.gz",
-        },
-    },
-
     xpm = {
         linux = {
-            -- Immutable candidate; published upstream versions remain unchanged.
-            ["1.92.8.1"] = {
-                url = "https://github.com/mcpplibs/imgui-m/archive/ffebf83be99ba0eec2677cc197dea3316a72b501.tar.gz",
-                sha256 = "9aab8af876c6c9eaed887b0d84bf3bb733db1d28613cbd5083845d83f675a92f",
-            },
             ["1.92.8"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/imgui-m/archive/refs/tags/1.92.8.tar.gz",
@@ -42,11 +30,6 @@ package = {
             },
         },
         macosx = {
-            -- Immutable candidate; published upstream versions remain unchanged.
-            ["1.92.8.1"] = {
-                url = "https://github.com/mcpplibs/imgui-m/archive/ffebf83be99ba0eec2677cc197dea3316a72b501.tar.gz",
-                sha256 = "9aab8af876c6c9eaed887b0d84bf3bb733db1d28613cbd5083845d83f675a92f",
-            },
             ["1.92.8"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/imgui-m/archive/refs/tags/1.92.8.tar.gz",
@@ -56,11 +39,6 @@ package = {
             },
         },
         windows = {
-            -- Immutable candidate; published upstream versions remain unchanged.
-            ["1.92.8.1"] = {
-                url = "https://github.com/mcpplibs/imgui-m/archive/ffebf83be99ba0eec2677cc197dea3316a72b501.tar.gz",
-                sha256 = "9aab8af876c6c9eaed887b0d84bf3bb733db1d28613cbd5083845d83f675a92f",
-            },
             ["1.92.8"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/imgui-m/archive/refs/tags/1.92.8.tar.gz",
