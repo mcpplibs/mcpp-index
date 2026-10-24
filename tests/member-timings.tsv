@@ -6,6 +6,8 @@
 # Linux wrapper measurements: run 40111394389 (2026-10-25); job
 # 120923966425 exhausted 90m after passing the earlier members. Per-member
 # times and completed installed-check step durations are both included.
+# Windows wrapper measurements: run 40121911805; job 120955178624
+# exhausted 90m during legacy opencv-module, while completed checks passed.
 linux	grpc-codegen	3463
 linux	grpc-module	1771
 linux	protobuf-protoc	885
@@ -44,3 +46,8 @@ linux	imgui-headless	168
 linux	llamacpp-cpu	264
 linux	opencv-cpu	737
 linux	opencv-webp	855
+windows	ffmpeg-cpu	928
+windows	godot-math	1347
+windows	llamacpp-cpu	288
+windows	opencv-cpu	1101
+windows	opencv-webp	1104

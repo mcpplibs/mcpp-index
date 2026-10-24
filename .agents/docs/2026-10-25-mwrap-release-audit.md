@@ -117,3 +117,29 @@ both examples and mwrap, and missing/incomplete plans fail instead of reporting
 empty success.
 YAML parsing and whitespace checks pass. New source/index final CI remains a
 required gate; neither the actual GCC failure nor timeout is counted passing.
+
+
+## Windows installed-consumer budget (2026-10-25)
+
+The a9f567e index run passed all four default Linux slices (25.4/38.7/50.2/60.0
+minutes), every LLVM slice, macOS and the other Windows slice, but Windows job
+120955178624 reached its unchanged 90-minute cap in legacy opencv-module.
+Its completed installed/archive and workspace checks passed; cancellation is
+not accepted as a pass. Completed final-archive checks include normal and WebP
+relocation/notices. Log: /tmp/mwrap-a9f567e-windows-shard-cancelled.log.
+
+Windows' newly added consumers were still priced at the 90s default. Actual
+member plus installed-template/deployment costs are ffmpeg-cpu 928s,
+godot-math 1347s, llamacpp-cpu 288s, opencv-cpu 1101s and opencv-webp 1104s.
+Other short consumers remain conservatively priced by the default. The same
+26-member assignment reprices the old two slices at 6175/4222s; using these
+measured rows the existing formula chooses three, at 3890/3251/3256s. Maximum
+expected work drops from 102.9 to 64.8min, retaining every test and the 90min
+cap. The three real-Lua/coverage/invalid-plan regressions and diff checks pass.
+Evidence: /tmp/mwrap-index-windows-shard-measurements.json and
+/tmp/mwrap-index-windows-shard-budget-comparison.json.
+
+Only timing rows and this record change. Source 5056249 and all package
+resources stay identical, so its successful exact-archive Linux normal/WebP
+acceptance and native source CI evidence remain applicable. The index requires
+new final-head CI; the canceled run is not substituted for that requirement.
