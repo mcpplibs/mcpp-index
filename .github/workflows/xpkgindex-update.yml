@@ -213,6 +213,9 @@ jobs:
           PACKAGE: ${{ matrix.id }}
         run: |
           "$MCPP" index update
+          # Refresh replaces the candidate with the published snapshot.
+          # Apply the candidate last, to both descriptor reader and installer.
+          python tests/prepare_builtin_index.py --home "$MCPP_HOME"
           if [[ "$TOOLCHAIN" != default ]]; then
             "$MCPP" toolchain install "$TOOLCHAIN"
             "$MCPP" toolchain default "$TOOLCHAIN"

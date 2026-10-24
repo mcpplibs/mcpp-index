@@ -68,3 +68,11 @@ Each candidate below was downloaded twice with matching SHA256. Existing publish
 | grpc-m | `0d11b22399875f2847f04609fd4fccb50fda5410` | `8a4ff91f60ac6c58e3bdb9d18f67617865f948343afff9e94b855cf82612251a` |
 | imgui-m | `ffebf83be99ba0eec2677cc197dea3316a72b501` | `9aab8af876c6c9eaed887b0d84bf3bb733db1d28613cbd5083845d83f675a92f` |
 | godot-cpp-m | `40f72d5533a9bc29b17e62ae8a6c84b3dc593071` | `79f15b4f70b0ef07e8b751c928f9e3fd7a6b32703f09b177ad02cdfd676a7f33` |
+
+## Refresh ordering and final archive evidence
+
+On 815c647, updater candidate jobs for FFmpeg/llama failed because the workflow prepared the candidate and then ran mcpp index update, replacing it with the published snapshot. This is a fixture ordering bug, not missing package support. An actual pinned-client reproduction installed the candidate first, refreshed, and then correctly failed to resolve 8.1.2.1 against the published 8.1.2 entry. Preparing the complete candidate after refresh restored real archive/template lookup. The workflow now reapplies the fixture after registry setup/index refresh; no engine or low-level registry configuration changes are needed. All seventeen updater regressions still pass.
+
+The final OpenCV 5da7fc8 archive passed strict GCC 16.1.0 image/scalar consumption in a new home (152.96 seconds). Its actual fresh default template built strictly, packed in release/self-contained mode and ran after relocation with clean HOME/runtime paths. All fourteen wrapper/upstream notices matched their installed source bytes; the relocated application generated a valid 64x64 PNG and the Linux loader resolved every file-backed dependency within the bundle. The previous 52f4c8f package was independently shown to lack that license tree, so the new deployment gate detects the real packaging regression.
+
+The final Godot 40f72d5 archive/default math template also passed strict fresh-home LLVM build and execution (3m29s build); it printed vector length five and cross product (0,0,1). Source native CI was already green on all three targets. Current OpenCV/gRPC/index native heads remain under validation. No merge, tag or release is included.
