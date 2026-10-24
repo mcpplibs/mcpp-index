@@ -114,17 +114,29 @@ def selection(base: str, output: Path):
 def direct_member(identity: str) -> str | None:
     namespace, name = identity.split(":", 1)
     candidates = []
+    def dependency_tables(table):
+        for key, value in table.items():
+            if not isinstance(value, dict):
+                continue
+            if key in {"dependencies", "build-dependencies"}:
+                yield value
+            else:
+                yield from dependency_tables(value)
     for category in ("examples", "mwrap"):
         for path in (ROOT / "tests" / category).glob("*/mcpp.toml"):
-            deps = tomllib.loads(path.read_text(encoding="utf-8")).get("dependencies", {})
-            nested = deps
-            for part in namespace.split("."):
-                nested = nested.get(part, {}) if isinstance(nested, dict) else {}
-            if (f"{namespace}.{name}" in deps or name in deps.get(namespace, {}) or name in nested):
-                candidates.append(path.parent.name)
+            manifest = tomllib.loads(path.read_text(encoding="utf-8"))
+            for deps in dependency_tables(manifest):
+                nested = deps
+                for part in namespace.split("."):
+                    nested = nested.get(part, {}) if isinstance(nested, dict) else {}
+                if (f"{namespace}.{name}" in deps or name in deps.get(namespace, {}) or name in nested):
+                    candidates.append((category, path.parent.name))
+                    break
     if not candidates:
         return None
-    return min(candidates, key=lambda value: (len(value), value))
+    # A wrapper's dedicated consumer covers its current declared platforms;
+    # old examples may intentionally be gated to just one OS or feature.
+    return min(candidates, key=lambda value: (value[0] != "mwrap", len(value[1]), value[1]))[1]
 
 
 def matrix(plan: Path, output: Path, base: str):
@@ -185,7 +197,7 @@ def prepare(plan: Path, identity: str, output: Path):
     member = direct_member(identity)
     output.mkdir(parents=True, exist_ok=True)
     if member:
-        paths = [ROOT / "tests" / category / member for category in ("examples", "mwrap")]
+        paths = [ROOT / "tests" / category / member for category in ("mwrap", "examples")]
         source = next(path for path in paths if (path / "mcpp.toml").is_file())
         shutil.copytree(source, output, dirs_exist_ok=True,
                         ignore=shutil.ignore_patterns("target", ".mcpp", "mcpp.lock"))

@@ -75,6 +75,39 @@ sha256="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
                 self.assertEqual(result["dependencies"]["mcpplibs.mwrap.example"], "1.0.1")
                 self.assertEqual((dest / "tests/probe.cpp").read_text(), 'int main() { return 0; }\n')
 
+    def test_candidate_discovers_target_and_build_dependencies(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "tests/mwrap/tools"
+            source.mkdir(parents=True)
+            (source / "mcpp.toml").write_text(
+                '[package]\nname="tools"\nversion="0.1.0"\n'
+                '[target.\'cfg(unix)\'.dependencies.grpc]\ngrpc="1.83.0"\n'
+                '[build-dependencies]\n"mcpplibs.grpcgen"={version="1.83.0",host-module=true}\n')
+            with patch.object(ci, "ROOT", root):
+                self.assertEqual(ci.direct_member("grpc:grpc"), "tools")
+                self.assertEqual(ci.direct_member("mcpplibs:grpcgen"), "tools")
+                self.assertIsNone(ci.direct_member("grpc:grpc-plugin"))
+                plan = root / "plan.json"
+                plan.write_text(json.dumps({"packages": [
+                    {"id": "mcpplibs:grpcgen", "candidate": "1.83.0.1"}]}))
+                dest = root / "candidate"
+                ci.prepare(plan, "mcpplibs:grpcgen", dest)
+                result = tomllib.loads((dest / "mcpp.toml").read_text())
+                self.assertEqual(result["build-dependencies"]["mcpplibs.grpcgen"]["version"], "1.83.0.1")
+
+    def test_dedicated_mwrap_consumer_precedes_shorter_legacy_example(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for category, name in (("examples", "old"), ("mwrap", "headless")):
+                source = root / "tests" / category / name
+                source.mkdir(parents=True)
+                (source / "mcpp.toml").write_text(
+                    '[package]\nname="consumer"\nversion="0.1.0"\n'
+                    '[dependencies]\n"ocornut.imgui"="1.92.8.1"\n')
+            with patch.object(ci, "ROOT", root):
+                self.assertEqual(ci.direct_member("ocornut:imgui"), "headless")
+
     def test_added_descriptor_and_removed_historical_descriptor(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
