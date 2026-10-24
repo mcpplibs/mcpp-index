@@ -42,3 +42,35 @@ No merge or release has occurred at this checkpoint. Formal archive URLs and
 verified byte-identical CN mirrors replace commit snapshots only after release.
 Full current-head source/index CI, final ecosystem review, merge/tag consistency,
 GitCode asset fetch and installed published-index templates remain required.
+
+
+## README layout refinement and local installation evidence
+
+The user refined the common opening: title, one-sentence introduction, one line
+combining languages/upstream/Releases/mcpp/Index, badges, optional detailed
+introduction, then the original quickstart section. Characteristics is omitted;
+actual mcpp manifest feature switches may use a concise table. The repetitive
+fixed tool-version/index-publication paragraph is removed. Pages may be shorter
+than the relaxed 100–150-line target. Canonical English/Chinese layout documents
+are docs/mwrap-readme.md and docs/zh/mwrap-readme.md; the main spec and skill link
+them. All fourteen pages follow this order and the release guard allows 150 lines.
+
+Subsequent actual local results: OpenCV all-modules/software SIMD 38 programs
+pass; gRPC two programs pass after the resource-safe retry; llama 117 unit tests
+pass; ORT cold SDK installation, export audit and actual generated Identity model
+inference pass. The complete unchanged candidate index with pkgs/mwrap/ffmpeg.lua
+also creates the unmodified FFmpeg project from its real checksummed archive and
+runs generated-media encode/decode (three frames). This is actual short-filename
+index discovery, not only a descriptor parser result. Seven independent GitCode
+mirror repositories are initialized; release assets are not uploaded yet.
+
+README-only commits require new exact-head CI and archive pins. Earlier green
+heads remain historical evidence; no merge or release is inferred from them.
+
+
+Final opening refinement: the upstream link label is exactly Upstream. Modules
+precedes Getting started/Quick start/Install, lists verified complete import
+statements with descriptions, and ends with a More Modules API blockquote link.
+All fourteen READMEs have been checked against actual module declarations and
+local link destinations; usage documents no longer label modules with legacy
+names. These documentation changes retain the tested implementation bodies.

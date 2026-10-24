@@ -10,20 +10,20 @@ package = {
     xpm = {
         linux = {
             ["8.1.2"] = {
-                url = "https://github.com/mcpplibs/ffmpeg-m/archive/776160a829d062a8889271062409d7961a1703f1.tar.gz",
-                sha256 = "b0e182f1f11e644ede2e1717a57508ddb0b41fe910da2b0ac00b2b5c2c913193",
+                url = "https://github.com/mcpplibs/ffmpeg-m/archive/572091c02606f66e47318176d25e7d821baaaae6.tar.gz",
+                sha256 = "4167c0501ca9b9cf3bcbc2cd78485fc007bceca07f5aa4bf41097c56d14d148a",
             },
         },
         macosx = {
             ["8.1.2"] = {
-                url = "https://github.com/mcpplibs/ffmpeg-m/archive/776160a829d062a8889271062409d7961a1703f1.tar.gz",
-                sha256 = "b0e182f1f11e644ede2e1717a57508ddb0b41fe910da2b0ac00b2b5c2c913193",
+                url = "https://github.com/mcpplibs/ffmpeg-m/archive/572091c02606f66e47318176d25e7d821baaaae6.tar.gz",
+                sha256 = "4167c0501ca9b9cf3bcbc2cd78485fc007bceca07f5aa4bf41097c56d14d148a",
             },
         },
         windows = {
             ["8.1.2"] = {
-                url = "https://github.com/mcpplibs/ffmpeg-m/archive/776160a829d062a8889271062409d7961a1703f1.tar.gz",
-                sha256 = "b0e182f1f11e644ede2e1717a57508ddb0b41fe910da2b0ac00b2b5c2c913193",
+                url = "https://github.com/mcpplibs/ffmpeg-m/archive/572091c02606f66e47318176d25e7d821baaaae6.tar.gz",
+                sha256 = "4167c0501ca9b9cf3bcbc2cd78485fc007bceca07f5aa4bf41097c56d14d148a",
             },
         },
     },

@@ -38,8 +38,8 @@ package = {
         linux = {
             -- Host packaging revision from the same verified source as mwrap.grpc 1.83.0.
             ["1.83.0.1"] = {
-                url = "https://github.com/mcpplibs/grpc-m/archive/f3035f79989e9d3a8c3810ac74a2fe97fe266b1e.tar.gz",
-                sha256 = "475df00140ef669453f19e71e519b7a9b6c2e012e11a22cacc4d0c54862f5e8b",
+                url = "https://github.com/mcpplibs/grpc-m/archive/72281792e3ed20f7a1b832efa98be7176bb80170.tar.gz",
+                sha256 = "9842a747bdf81d7625ff6c2cc611d92a2be46f786374d79dc84a569985ed631d",
             },
             ["1.83.0"] = {
                 url = {
@@ -52,8 +52,8 @@ package = {
         macosx = {
             -- Host packaging revision from the same verified source as mwrap.grpc 1.83.0.
             ["1.83.0.1"] = {
-                url = "https://github.com/mcpplibs/grpc-m/archive/f3035f79989e9d3a8c3810ac74a2fe97fe266b1e.tar.gz",
-                sha256 = "475df00140ef669453f19e71e519b7a9b6c2e012e11a22cacc4d0c54862f5e8b",
+                url = "https://github.com/mcpplibs/grpc-m/archive/72281792e3ed20f7a1b832efa98be7176bb80170.tar.gz",
+                sha256 = "9842a747bdf81d7625ff6c2cc611d92a2be46f786374d79dc84a569985ed631d",
             },
             ["1.83.0"] = {
                 url = {
@@ -66,8 +66,8 @@ package = {
         windows = {
             -- Host packaging revision from the same verified source as mwrap.grpc 1.83.0.
             ["1.83.0.1"] = {
-                url = "https://github.com/mcpplibs/grpc-m/archive/f3035f79989e9d3a8c3810ac74a2fe97fe266b1e.tar.gz",
-                sha256 = "475df00140ef669453f19e71e519b7a9b6c2e012e11a22cacc4d0c54862f5e8b",
+                url = "https://github.com/mcpplibs/grpc-m/archive/72281792e3ed20f7a1b832efa98be7176bb80170.tar.gz",
+                sha256 = "9842a747bdf81d7625ff6c2cc611d92a2be46f786374d79dc84a569985ed631d",
             },
             ["1.83.0"] = {
                 url = {

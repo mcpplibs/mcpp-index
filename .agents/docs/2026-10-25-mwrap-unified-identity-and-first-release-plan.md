@@ -7,7 +7,7 @@
 
 用户最新确认：对外依赖、模板命令与 C++ 模块 import 显示完整 `mcpplibs` 前缀。
 索引文件名省略完整 namespace 前缀，统一为 `pkgs/mwrap/<lib>.lua`；文件内仍声明完整身份。
-README 在原有布局与栏目上精简，不再整页替换成同一套新结构；所有 `xxx-m` 仓库必须默认英文并提供中文 README。
+README 在有用原布局与栏目上精简，简短定位保留单句，详细概览移到 badges 后、快速开始前，不再整页替换成同一套新结构；所有 `xxx-m` 仓库必须默认英文并提供中文 README。
 Godot 命名已由用户确认：`mcpplibs.mwrap.godot_cpp`，不再作为待定建议。
 七个封装库均新增 `mcpplibs.mwrap` 身份，旧身份、已发布版本、校验值与资源保留。
 新 mwrap 身份首次发版直接使用所封装的上游版本，不机械继承旧封装修订尾号。
@@ -116,7 +116,7 @@ gRPC 的 protoc/plugin/代码生成规则仍为工具包，不为“统一七个
 OpenCV→FFmpeg 的实现依赖仍使用对应 compat 供应者；OpenCV→ORT 继续遵守既定所有权与 ABI 边界。
 同一程序不得因为新旧 wrapper 混用而链接两份相同上游实现。迁移说明提示整体迁移；必要时配置阶段明确拒绝冲突，不承诺旧/新模块任意混合。
 
-## 4. README：保留原结构再精简
+## 4. mwrap / xxx-m README 布局规范
 
 所有 `xxx-m` 仓库（不限于本轮七库）必须满足：
 
@@ -124,26 +124,35 @@ OpenCV→FFmpeg 的实现依赖仍使用对应 compat 供应者；OpenCV→ORT �
 - 两份 README 顶部提供双向语言链接：英文页链接 `简体中文`，中文页链接 `English`。
 - 两种语言都必须包含相同的核心能力、依赖/模板命令、版本、平台前提和限制；代码和命令保持一致。
 - 缺少中文版本的仓库必须补齐；已有中文为主的默认页，应按原布局提供英文默认页，并将中文内容整理到中文页。
-- 每种语言通常约 100 行以内；英文与中文不要求字数或行数机械相等，不能只翻译标题而省略关键限制。
+- 每种语言通常约 100–150 行以内；英文与中文不要求字数或行数机械相等，不能只翻译标题而省略关键限制。
+
+正式维护入口为 mcpp-index 的 `docs/mwrap-readme.md` 与 `docs/zh/mwrap-readme.md`；
+mwrap 总规范与 authoring skill 引用这份布局规范，不各自复制整套规则。
+语言切换、`[Upstream](上游地址)`、Releases、mcpp、Index 合并成一行导航。
+页首只有一句话介绍；较详细的介绍置于 badges 下方、Modules 前方，不增加 Characteristics 标题。
+不添加固定的 `Use mcpp 2026.10.24.1. The new mwrap identity becomes installable after index publication.` 描述；
+精确工具 pin 在 `.xlings.json`、CI 和详细构建说明维护，必要执行条件在对应栏目简述。
+存在实际 mcpp `[features]` / `[feature-deps.*]` 控制项时可用“精确名称 + 用途”短表格，
+不是将普通产品能力当成 mcpp features；没有这些控制项就不强造 Features 栏目。
 
 “统一风格”约束语言、密度和可用性，不强制七库采用完全相同的标题或顺序。
-基线使用各 PR 当前 base 的 README（含对应翻译）；保留项目标题、logo/少量有效 badge、语言入口、原一级/二级栏目及顺序。
+基线使用各 PR 当前 base 的 README（含对应翻译）；保留项目标题、logo/少量有效 badge、语言入口及有用原栏目顺序；省略 Characteristics / 核心特性标题，详细概览放在 badges 后、快速开始前。
 保留布局不要求保留中文栏目标题在英文页中：标题和正文按页面语言翻译，栏目语义、层级与顺序保持对应。
 修正失效链接、CI 仓库地址、license 标签等事实错误，不为保留外观继续展示错误信息。
-每种语言通常控制在约 100 行以内；完整矩阵、长示例、平台细节移到 docs，并在原栏目保留短摘要和链接。
+每种语言通常控制在约 100–150 行以内；完整矩阵、长示例、平台细节移到 docs，并在原栏目保留短摘要和链接。
 不通过压成超长行、删除必需前提或把所有内容塞入折叠块来满足行数。
 
 | 仓库 | 已核查的原 README 结构 | 精简方式 |
 |---|---|---|
-| OpenCV | badge/CI → Characteristics → Getting started → Modules → Features → Examples → Build and toolchains → License | 保留栏目与模块/feature 摘要，快速开始使用新模板，完整矩阵链接 docs |
-| FFmpeg | badge/CI → 核心特性 → 快速开始 → 模块一览 → 示例 → 工具链与运行时 → License | 原约 86 行，重点修订身份、版本与示例，避免不必要重排 |
-| ImGui | badge/CI → 核心特性 → 快速开始 → 模块一览 → Features → 示例 → 工具链与运行时 → License | 原约 101 行，压缩重复说明，保留 headless/window/docking 区别 |
+| OpenCV | 单句简介/单行导航/badges/详细介绍 → Getting started → Modules → Features → Examples → Build and toolchains → License | 保留栏目与模块/feature 摘要，快速开始使用新模板，完整矩阵链接 docs |
+| FFmpeg | 单句简介/单行导航/badges/详细介绍 → 快速开始 → 模块一览 → 示例 → 工具链与运行时 → License | 原约 86 行，重点修订身份、版本与示例，避免不必要重排 |
+| ImGui | 单句简介/单行导航/badges/详细介绍 → 快速开始 → 模块一览 → Features → 示例 → 工具链与运行时 → License | 原约 101 行，压缩重复说明，保留 headless/window/docking 区别 |
 | llama.cpp | Add The Package → Minimal CPU Program → CPU/Metal/Vulkan Chat → Supported Boundary | 各后端栏目保留，长命令与 shader 原理转 docs，CPU 默认模板无模型资产也能运行 |
 | gRPC | Quick Start → Two ways to use it → Code generation → More control → Platform support → Features → Build/test → License | 保留两种使用方式和代码生成栏目，构建内部说明转 docs，平台限制不删 |
 | Godot | Install → Macros → hashfuncs shim → Example → Regenerating → Tests → License | 长 shim/扩展示例转 docs，原栏目保留摘要；独立 math 和引擎加载分清 |
 | ORT | 原基线仅两行占位 | 没有成熟布局可恢复，沿用候选已建立的入门结构，与生态字体、代码块和链接风格对齐 |
 
-验收时并排查看 base 与新 README：栏目/顺序、badge 与语言入口、关键示例、约 100 行、实际命令均核对。
+验收时并排查看 base 与新 README：栏目/顺序、badge 与语言入口、关键示例、约 100–150 行、实际命令均核对。
 中英文必须同步；根据当前 checkout，OpenCV 和 gRPC 已有 `README.zh.md`，ORT、llama.cpp、FFmpeg、ImGui、Godot 五库需要新增中文页。
 这里是补齐翻译，不是重新设计整页布局；ORT 的占位基线例外只影响栏目设计，不豁免英文默认和中文支持。
 中英 README 的双向链接、文档锚点、badge、许可证链接应分别验证；不能假设标题翻译后的锚点相同。
@@ -190,7 +199,8 @@ tests/
 | 文件 / 入口 | 必须更新的内容 |
 |---|---|
 | `docs/mwrap.md`、`docs/zh/mwrap.md` | 正式规范唯一来源；七库统一完整身份，`pkgs/mwrap/<lib>.lua`，无字母子目录，首次上游原版本、独立 mwrap tag、API/macros 与兼容边界 |
-| 上述规范的 README 小节 | 明确 `README.md` 默认英文、`README.zh.md` 必须提供且双向链接；保留原布局/栏目再精简；约 100 行是每语言编辑目标，删除强制统一标题顺序的旧要求 |
+| `docs/mwrap-readme.md`、`docs/zh/mwrap-readme.md` | mwrap / xxx-m 布局规范，明确英文默认/中文必备、语言/上游/项目链接单行导航、单句简介与 badges 后详细介绍、合并重复概览、去除固定提示、实际 mcpp feature 表格及约 100–150 行 |
+| 上述规范的 README 小节 | 明确 `README.md` 默认英文、`README.zh.md` 必须提供且双向链接；保留原布局/栏目再精简；约 100–150 行是每语言编辑目标，删除强制统一标题顺序的旧要求 |
 | `docs/repository-and-schema.md`、`docs/zh/repository-and-schema.md` | 将 `<完整身份>.lua` 改为 `<lib>.lua`；说明文件名、分类目录与声明身份的区别；源码与发布布局一致 |
 | `docs/package-types.md`、`docs/zh/package-types.md` | 核对 wrapper / compat / native / host-tool 分类说明及交叉链接，示例采用完整 FQN 与新目录规则 |
 | `README.md`、`README.zh-CN.md` 及站点包列表入口 | 核对规范导航与示例；存在旧 mwrap 路径或旧 wrapper 身份时同步更新，避免全站重复维护规范正文 |
@@ -282,7 +292,7 @@ Godot RC release 标为 prerelease；llama 的非 semver tag 不因含字母就�
 | 身份 | 七库 manifest、descriptor、lock、安装日志均命中唯一完整 mwrap FQN；无旧身份误命中 |
 | 缩短文件名 | `<lib>.lua` 携带完整身份，path/Git/发布归档发现均通过；lint/updater/站点按声明身份处理 |
 | 源码模块 | 根/子模块 import、内部依赖、API namespace 与原类型身份正确；五库不能只替换 manifest 名字 |
-| README | 七库各有英文 `README.md` 和中文 `README.zh.md`，顶部互链；与原 base 布局并排检查，原栏目语义/顺序保留，每语言约 100 行，命令、版本、平台限制和链接一致 |
+| README | 七库各有英文 `README.md` 和中文 `README.zh.md`，顶部互链；与原 base 布局并排检查，原栏目语义/顺序保留，每语言约 100–150 行，命令、版本、平台限制和链接一致 |
 | 快捷模板 | 七库默认 `mcpp new --template <完整FQN>@<首发版本>` 原样生成、build/run；窗口/视频/ORT 等附加模板分别验证 |
 | 共存边界 | 新旧描述符均可发现，旧资源 hash 不变；应用不误链接两份 SDK；实际新包消费不依赖旧模块别名 |
 | gRPC 工具链 | protoc、plugin、rule、runtime 版本一致；host 与 target 区分；正式发布资源无悬空依赖 |
@@ -304,7 +314,7 @@ Godot RC release 标为 prerelease；llama 的非 semver tag 不因含字母就�
 2. 七库全部建立新 mwrap 身份，旧 descriptor 与已发布历史原样保留；同身份 descriptor 不重复。
 3. 首发包版本使用上游原版本；Godot 新 short name 已确认 `godot_cpp`，llama 保持 `llamacpp`。
 4. 为避开已有上游同名 tag，统一新 `mwrap-${version}` tag；release 展示上游版本，绝不覆盖旧 tag。
-5. 所有 `xxx-m` 仓库必须默认英文 `README.md`，提供中文 `README.zh.md` 并顶部互链；保留原布局再精简，每语言通常约 100 行；ORT 占位基线不豁免双语要求。
+5. 所有 `xxx-m` 仓库必须默认英文 `README.md`，提供中文 `README.zh.md` 并顶部互链；保留原布局再精简，每语言通常约 100–150 行；ORT 占位基线不豁免双语要求。
 6. 索引中英规范、schema/包分类文档与现有 authoring skill 必须同步，详见 §5.1。
 7. 本轮只交付本文。review 通过后再更新代码；所有新检查通过后库逐个 squash/release，最后统一更新与合入索引。
 
@@ -335,3 +345,41 @@ Godot RC release 标为 prerelease；llama 的非 semver tag 不因含字母就�
 审查结论：本次需求已纳入方案，未发现必须修改 mcpp 引擎才能落地的命名或目录需求。
 独立 `mwrap-${version}` tag 仍是为保留旧发布提出的方案建议，待用户 review；Godot 命名和 README 双语规则已是确认要求。
 代码、双语 README、规范/skill 和 CI 的实际完成情况在实施后逐项验收，本轮不提前宣称完成。
+
+
+## 12. README 布局补充确认
+
+- 这组规则作为 mwrap / xxx-m README 布局规范，适用于所有对应封装仓库。
+- Characteristics 是介绍栏目，其标题省略，详细内容放在 badges 后、快速开始前；不与 mcpp features 机制混淆。
+- Features 表格仅说明清单中实际可选的 mcpp feature 名称、作用与必要平台条件。
+- 英文默认、中文必备，语言切换/上游/Releases/mcpp/Index 单行导航，保留少量有效徽章与有用原栏目。
+- 删除固定工具版本/等待索引发布提示；必要版本约束移至构建/使用说明，不删除真实 SDK/设备前提。
+- 每语言通常约 100–150 行以内，允许更短，不为达到最低行数添加内容。
+- 正式中英布局规范、mwrap 总规范、authoring skill 与各库双语页需同步；本次实施据此执行。
+
+
+### 12.1 最新确认的固定页首顺序
+
+标题 → 一句话介绍 → 单行导航（English / 简体中文 / Upstream / Releases / mcpp / Index）
+→ badges → 可选详细介绍（无 Characteristics 标题）→ Modules → More Modules API 引用链接
+→ Getting started 或原有对应快速开始栏目。
+详细版介绍不挤进页首单句，也不放在 badges 上方。正文其余有用原栏目继续保留。
+本条替代本节早期“语言下面另起一行上游地址”及“全部介绍合并在页首”的布局建议；
+中英规范、skill 与七库 README 按同一最终顺序同步。
+
+
+### 12.2 Modules 与上游导航最终补充
+
+上游入口固定 `[Upstream](真实上游仓库URL)`，不使用 `Upstream: owner/repo`。
+Modules 位于 Getting started 前，核心模块按以下形式逐行列出，不用笼统的聚合说明替代：
+
+```text
+- `import mcpplibs.mwrap.opencv;`: 已启用模块聚合
+- `import mcpplibs.mwrap.opencv.core;`: Mat、类型与基础运算
+- `import mcpplibs.mwrap.opencv.imgproc;`: 图像处理
+
+> More Modules API -> [模块与 API](docs/usage.md)
+```
+
+只列实际存在的公共模块，使用完整前缀；有 feature 条件时明确说明。
+中英规范、skill 和七库双语页采用相同顺序；单模块库可列根模块及宏映射入口。

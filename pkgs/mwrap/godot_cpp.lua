@@ -10,20 +10,20 @@ package = {
     xpm = {
         linux = {
             ["10.0.0-rc1"] = {
-                url = "https://github.com/mcpplibs/godot-cpp-m/archive/4f6f0628b4df94f940ef7e0bdcde3f5df104b03a.tar.gz",
-                sha256 = "0ae5293a74eba9455652d5db1f0b8f3a0029ff0882b83fa01148af163903b25b",
+                url = "https://github.com/mcpplibs/godot-cpp-m/archive/daf32149f3ca87a6f8e8f1568913491fac7b353a.tar.gz",
+                sha256 = "824eff5f63f059525f0d55a750a54c2b544026677f2dffd418c9989e711850a9",
             },
         },
         macosx = {
             ["10.0.0-rc1"] = {
-                url = "https://github.com/mcpplibs/godot-cpp-m/archive/4f6f0628b4df94f940ef7e0bdcde3f5df104b03a.tar.gz",
-                sha256 = "0ae5293a74eba9455652d5db1f0b8f3a0029ff0882b83fa01148af163903b25b",
+                url = "https://github.com/mcpplibs/godot-cpp-m/archive/daf32149f3ca87a6f8e8f1568913491fac7b353a.tar.gz",
+                sha256 = "824eff5f63f059525f0d55a750a54c2b544026677f2dffd418c9989e711850a9",
             },
         },
         windows = {
             ["10.0.0-rc1"] = {
-                url = "https://github.com/mcpplibs/godot-cpp-m/archive/4f6f0628b4df94f940ef7e0bdcde3f5df104b03a.tar.gz",
-                sha256 = "0ae5293a74eba9455652d5db1f0b8f3a0029ff0882b83fa01148af163903b25b",
+                url = "https://github.com/mcpplibs/godot-cpp-m/archive/daf32149f3ca87a6f8e8f1568913491fac7b353a.tar.gz",
+                sha256 = "824eff5f63f059525f0d55a750a54c2b544026677f2dffd418c9989e711850a9",
             },
         },
     },

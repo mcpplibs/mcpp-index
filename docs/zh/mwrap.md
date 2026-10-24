@@ -78,10 +78,10 @@ capability 选择不会自动移除另一份实现对象文件，必须先防止
 
 ## README 风格
 
-所有 `<库名>-m` 仓库必须默认英文 `README.md`，提供中文 `README.zh.md`，顶部双向链接。
-每种语言通常不超过约 100 行；缺少中文的库必须补齐，版本、命令、平台前提和限制保持一致。
-保留原栏目语义、层级、顺序及少量有效徽章，再精简正文；英文页翻译栏目标题，不强制重排整页。
-长示例、架构和完整矩阵进入 docs，在原栏目保留摘要与链接；不靠超长行或删除前提压缩行数。
+遵循 [mwrap / xxx-m README 布局规范](mwrap-readme.md)：默认英文 README.md，必须提供中文
+README.zh.md，语言/上游/Releases/mcpp/Index 合为单行导航；每语言通常约 100–150 行以内，更短也可以。
+保留有用原栏目，页首只留一句介绍，较长说明放在 badges 下、Modules 前，不增加 Characteristics 标题；实际存在的 mcpp 清单 feature 开关
+可用简洁表格说明。省略固定工具版本/索引发布提示段，必要的命令前提在相关栏目说明。
 
 ## 每个 -m 包必须有可运行快捷模板
 
@@ -154,3 +154,5 @@ Git 与发布的 pkgs/mwrap 目录始终一致。
 Linux 消费方即使通过 C API 加载 C++ SDK，也要验证 C++ 运行时契约及异常路径。OpenCV/ORT 组合实测中，静态运行时与共享 SDK 运行时混用会使 typed catch 终止；选择 `cxx_runtime = "toolchain-coupled"` 后同一测试通过。模板必须声明已验证的契约，并执行一次类型化错误路径。
 
 生成清单、模块入口和配置头是构建输入；内容不变时保留时间戳，避免触碰公共配置头导致整份 vendored 实现重编。除了字节幂等，还应验证增量构建行为。
+
+README 导航统一使用 `[Upstream](上游地址)`；Modules 位于 Getting started 前，以完整 import 逐项列出核心模块，下方加 `> More Modules API` 文档链接。

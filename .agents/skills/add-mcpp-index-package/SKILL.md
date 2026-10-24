@@ -118,10 +118,10 @@ description: Use when adding a new third-party library/package to the mcpp-index
 
 ## -m 仓库 README
 
-新增或重构 `<库名>-m` 时，默认英文 README.md，必须提供 README.zh.md，顶部双向链接。
-保留原栏目层级、语义与顺序再精简，每语言通常不超过约 100 行；缺少翻译必须补齐。
-中英版本、依赖/import/模板命令、平台条件和支持边界保持一致，长示例和矩阵转入 docs 并链接。
-完整规则见 docs/zh/mwrap.md，不强制将所有库重排成同一套栏目。
+使用 [mwrap / xxx-m README 布局规范](../../../docs/zh/mwrap-readme.md)：默认英文 README.md，
+必须有中文 README.zh.md，顶部语言/上游/Releases/mcpp/Index 单行导航；一句简介后放 badges，较长介绍位于 badges 下、Modules 前，不增加 Characteristics 标题。保留其他有用原布局。表格只说明实际 mcpp manifest feature 开关，没有开关不强造 Features。
+省略重复的固定工具版本/索引发布提示段；每语言通常约 100–150 行以内，更短也可以。
+检查双语命令、版本、平台限制与链接一致，长示例和完整矩阵链接 docs，不隐藏必要前提。
 
 ## 本地测试资源
 
@@ -189,3 +189,5 @@ bash tests/run_members.sh <member>
 | 构建插件把模块命名为 `mcpp.rules.*`、`mcpp.plugins.*` 等保留名,或把命名空间取作 `rules`、`tools` 等 | 模块命名为 `mcpp.<自身命名空间>.*`;保留第二段属于 mcpp 项目(docs/zh/package-types.md §I),成员构建出现引擎的保留名警告即失败 |
 
 完成前应遵循 `verification-before-completion`:在声明“通过/完成”之前,须给出真实命令输出作为证据。
+
+README 导航统一使用 `[Upstream](上游地址)`；Modules 位于 Getting started 前，以完整 import 逐项列出核心模块，下方加 `> More Modules API` 文档链接。

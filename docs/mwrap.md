@@ -116,17 +116,13 @@ they enter the graph. Record ABI, runtime, CPU baseline and SDK constraints.
 
 ## README style
 
-Every `<library>-m` repository has an English `README.md` and a Chinese
-`README.zh.md`, linked to each other at the top. Both normally stay within
-100 lines. Add the missing translation when modernizing a wrapper.
-
-Preserve the existing section hierarchy, order, useful badges and language
-navigation, then shorten the prose. Translate headings while preserving their
-meaning. A shared style does not require replacing every library's layout.
-Keep quickstart commands, dependency/import examples, versions, platform
-conditions and support limits equivalent in both languages. Move long examples,
-architecture and full matrices into docs and link them from the original section.
-Do not meet the target with long lines or missing prerequisites.
+Follow the [mwrap / xxx-m README layout](mwrap-readme.md): English README.md,
+required Chinese README.zh.md, one navigation line for languages/upstream/releases/mcpp/index, and
+roughly 100–150 lines per language (shorter is welcome). Preserve useful existing
+sections; keep one introductory sentence and place longer detail below badges, followed by Modules and quickstart.
+Show actual mcpp manifest feature switches in a small table when applicable.
+Omit the fixed tool-version/index-publication boilerplate; keep necessary
+command-specific prerequisites in their relevant section.
 
 ## Every -m package ships a runnable template
 
@@ -215,3 +211,5 @@ Coupled runtime/plugin/build-module consumers may require several candidate name
 For Linux consumers loading a C++ SDK through a C API, verify the C++ runtime contract as well as successful calls. The OpenCV/ORT integration exposed uncaught typed exceptions when a static runtime was embedded alongside the shared SDK runtime; `cxx_runtime = "toolchain-coupled"` fixed the same test. Templates must encode the verified contract and exercise a typed error path.
 
 Generated files are build inputs. Preserve their timestamps when content is unchanged, including manifests, module facades and configuration headers; touching an unchanged common header can rebuild the entire vendored implementation. Verify both byte idempotence and incremental behavior.
+
+README navigation uses `[Upstream](upstream-url)`. Modules precedes Getting started with complete import bullets and a `> More Modules API` documentation link.
