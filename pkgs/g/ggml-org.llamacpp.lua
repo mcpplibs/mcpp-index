@@ -67,6 +67,12 @@ package = {
             -- consumer wanting a feature must be able to name the revision that
             -- has it, and one that cannot use the newer engine must still find a
             -- revision it can build.
+            -- Candidate b10069.3 adds runnable templates; immutable source
+            -- bytes are verified before the release tag exists.
+            ["b10069.3"] = {
+                url = "https://github.com/mcpplibs/llama.cpp-m/archive/5028a1aa4f741db4dbd86d6ebd1928ef21027147.tar.gz",
+                sha256 = "9b21c35c17e801ceee1165960eefbf7280ad50e14aaf3ea5603fbf2c4ab911de",
+            },
             ["b10069.2"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/llama.cpp-m/archive/refs/tags/b10069.2.tar.gz",
@@ -87,6 +93,12 @@ package = {
             },
         },
         macosx = {
+            -- Candidate b10069.3 adds runnable templates; immutable source
+            -- bytes are verified before the release tag exists.
+            ["b10069.3"] = {
+                url = "https://github.com/mcpplibs/llama.cpp-m/archive/5028a1aa4f741db4dbd86d6ebd1928ef21027147.tar.gz",
+                sha256 = "9b21c35c17e801ceee1165960eefbf7280ad50e14aaf3ea5603fbf2c4ab911de",
+            },
             ["b10069.2"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/llama.cpp-m/archive/refs/tags/b10069.2.tar.gz",
@@ -107,6 +119,12 @@ package = {
             },
         },
         windows = {
+            -- Candidate b10069.3 adds runnable templates; immutable source
+            -- bytes are verified before the release tag exists.
+            ["b10069.3"] = {
+                url = "https://github.com/mcpplibs/llama.cpp-m/archive/5028a1aa4f741db4dbd86d6ebd1928ef21027147.tar.gz",
+                sha256 = "9b21c35c17e801ceee1165960eefbf7280ad50e14aaf3ea5603fbf2c4ab911de",
+            },
             ["b10069.2"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/llama.cpp-m/archive/refs/tags/b10069.2.tar.gz",

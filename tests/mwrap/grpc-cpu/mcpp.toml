@@ -1,0 +1,14 @@
+[package]
+name = "grpc-cpu"
+version = "1.83.0.1"
+description = "Consume the immutable gRPC wrapper revision and check module status semantics"
+
+[indices]
+# Use the complete candidate built-in index prepared by tests/run_members.sh.
+# An explicit empty table overrides the legacy workspace redirect.
+
+[target.'cfg(unix)'.dependencies]
+"grpc.grpc" = "1.83.0.1"
+
+[target.'cfg(unix)'.build]
+defines = ["MCPP_TEST_GRPC"]

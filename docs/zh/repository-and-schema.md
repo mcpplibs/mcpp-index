@@ -2,6 +2,8 @@
 
 [English](../repository-and-schema.md) | **简体中文**
 
+模块封装描述符使用 `pkgs/mwrap/<完整身份>.lua`，消费者使用 `tests/mwrap/<member>/`，见 [mwrap 规范](mwrap.md)。分类目录平铺并原样发布。workspace 测试源码使用当前固定的 mcpp；`index.toml` 单独声明描述符兼容下限。
+
 ## 仓库布局
 
 ```

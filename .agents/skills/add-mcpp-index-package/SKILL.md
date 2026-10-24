@@ -1,6 +1,6 @@
 ---
 name: add-mcpp-index-package
-description: Use when adding a new third-party library/package to the mcpp-index repo — writing a pkgs/*/*.lua descriptor, setting up a GitCode CN mirror via gtc, adding a minimal example, and opening a green PR. Covers the four package shapes (C-source compat / header-only / C++23 module / external Form-A module repo), the GLOBAL+CN mirror table, lint rules, the feature (sources-only) gate, and local + CI verification.
+description: Use when adding a new third-party library/package to the mcpp-index repo — writing a descriptor, registering and running consumers, and opening a green PR. Includes traditional compat packages and mcpplibs.mwrap module adapters, source/runtime feature dependencies, runnable project templates, mirrors, and local plus CI verification.
 ---
 
 # 向 mcpp-index 新增一个库(标准作业流程)
@@ -19,6 +19,7 @@ description: Use when adding a new third-party library/package to the mcpp-index
 配套参考文档位于仓库 `docs/` 目录(英文为默认版本,中文版在 `docs/zh/`,内容对等),供人工与 agent 共同使用,
 可按需查阅(下列链接指向中文版):
 
+- [mwrap 规范](../../../docs/zh/mwrap.md) —— 为传统头文件库增加模块入口时读取；涵盖命名、上游版本尾号、目录、宏、feature 与必须运行的快捷模板。
 - [docs/zh/package-types.md](../../../docs/zh/package-types.md) —— 四种库形态的描述符模板与样例路径。
 - [docs/zh/cn-mirror.md](../../../docs/zh/cn-mirror.md) —— CN 镜像闭环,含无 `mcpp-res` 权限时的回退方案。
 - [docs/zh/automatic-updates.md](../../../docs/zh/automatic-updates.md) —— 自动更新适用条件、声明、每日 bot PR 和候选 CI。
@@ -56,18 +57,24 @@ description: Use when adding a new third-party library/package to the mcpp-index
    以保证字节一致(sha 相同)。**在不具备 `mcpp-res` 写权限时**,不应构造镜像表,而应使用纯字符串形式
    `url = "<GLOBAL 上游 release>"`(lint 允许此形式,CN 用户将回退至上游源),镜像由维护者后续补充。详见
    [docs/zh/cn-mirror.md](../../../docs/zh/cn-mirror.md)。
-4. **编写描述符** `pkgs/<x>/<name>.lua`。
+4. **编写描述符**：传统包使用 `pkgs/<x>/<name>.lua`，`mcpplibs.mwrap` 包使用 `pkgs/mwrap/<完整包身份>.lua`。
    - 目录 `<x>` **取完整包名首字母**(`compat.eigen` 对应 `pkgs/c/`,`nlohmann.json` 对应 `pkgs/n/`),
-     而非短名。放置错误将导致本地 path index 报 `not found in local index`。
+     而非短名。mwrap 是明确的分类例外，文件平铺于 pkgs/mwrap；当前客户端 fallback 按声明身份扫描一级分类目录，不要求目录名为单字母。不增加 pkgs/mwrap/o 等额外层级，也不转换发布路径。
    - `xpm` 须覆盖三平台(linux/macosx/windows),每个版本包含 `url = { GLOBAL=…, CN=… }` 与 `sha256`。
    - 版本号采用**裸版本**(如 `"1.2.3"`),不含前导 `v`;下载 URL 中可保留上游的 `…/v1.2.3.tar.gz` 形式。
-5. **识别可门控的可选组件并实现 feature**(参见下文“feature 机制”)。feature 仅能门控 **sources**。
-6. **编写测试工程(workspace 成员)** `tests/examples/<short>/`(`short` 为包名去除 `compat.`/`mcpplibs.`
+5. **识别可门控组件并实现 feature**（见下文）。核对 pinned mcpp 的 sources、defines、flags、implies、依赖转发和 feature-deps；不要沿用 0.0.68 的 sources-only 限制。
+6. **编写测试工程(workspace 成员)**：mwrap 使用 `tests/mwrap/<member>/`，传统包使用 `tests/examples/<short>/`(`short` 为包名去除 `compat.`/`mcpplibs.`
    前缀后的结果;公开模块包用 `<name>-module`),并把它加进仓根 `mcpp.toml` 的 `[workspace].members`。
    - 包含 `mcpp.toml` 与 `tests/*.cpp`,后者须包含**可失败的有效断言**(`return ok ? 0 : 1`)。
-   - 成员声明**恰好一条** `[indices] <ns> = { path = "../../.." }`,把所消费命名空间重定向到
-     本 checkout(公开模块包用 `default`,即内建 mcpplibs 命名空间;mcpp ≥ 0.0.97)。
-     单条是硬约束:xlings 对 >1 个项目级 index repo 静默失败(mcpp#238);根级集中化待其修复。
+   - 普通成员用一条 `[indices] <ns> = { path = "../../.." }` 将所消费命名空间重定向到 checkout。
+     不把同一个完整索引路径注册成多个 namespace：当前 xlings 会将同一实体报为歧义。
+     mwrap workspace 成员保留显式空 `[indices]` 表，由 `tests/run_members.sh` 将完整且字节不变的
+     checkout 索引放入测试 home 的唯一内置索引。未设置 MCPP_HOME 时使用 target/mwrap-test-home。
+     namespace 视图仅供隔离的单项目消费者；不能以独立项目通过证明混合 workspace 顺序可用。
+     正常发布布局另由 `tests/mwrap/check_installed_template.py` 在独立 MCPP_HOME 中使用单一完整索引验收。
+     运行库/插件/host-module 多 namespace 耦合时，优先用 `tests/prepare_builtin_index.py --home <独立测试 home>`
+     安装唯一完整内置索引，成员以空 `[indices]` 覆盖旧 workspace 路由。自动更新候选 CI 同样采用此方式，
+     避免项目别名缓存相互污染；这是测试准备，不是发布 staging 或目录转换。
    - 非全平台包按 `[target.'cfg(...)'.dependencies]` 门控依赖,测试源码在被门控掉的平台上
      编译为 no-op `main`(`#ifdef __linux__ … #else int main(){return 0;} #endif` 模式)。
    - 如需测试 feature,依赖采用长式声明 `name = { version = "…", features = ["…"] }`。
@@ -82,6 +89,10 @@ description: Use when adding a new third-party library/package to the mcpp-index
 12. **确认 CI 通过**:`workspace (linux|macos|windows)` 的选择性成员测试应仅选中本库对应成员并通过
     (日志中 `selected members: <member>`),`lint`(含 `mcpp xpkg parse`)与 `mirror-cn-reachable`
     覆盖新增描述符与 CN url。合并由维护者执行。
+
+加载 C++ SDK 的 Linux 消费者应验证运行时与 typed catch 契约，即使接口是 C API。
+已验证的 SDK 场景在模板中声明 `cxx_runtime = "toolchain-coupled"`，不能只用成功推理掩盖异常 ABI 冲突。
+模块适配生成器只写入实际变化的文件；复核公共头、manifest 和 facade 的时间戳幂等与增量构建。
 
 ## 自动更新与 PR 范围
 
@@ -100,30 +111,43 @@ description: Use when adding a new third-party library/package to the mcpp-index
   用户明确要求整理文档或说明确有变化时才改入口文档。新增包通常也不改 `.xpkgindex.json`。
 - 详细字段、例外和认证机制见 [自动更新文档](../../../docs/zh/automatic-updates.md)。
 
-## feature 机制
+## -m 仓库 README
 
-mcpp **0.0.68** 的包描述符 `features` 表**仅能门控 `sources`**;其余子字段会被解析器忽略(经 `manifest.cppm` 的
-features 解析逻辑确认)。
+新增或重构 `<库名>-m` 时，README 使用统一简洁风格，原则上每种语言不超过 100 行。
+顺序为一句定位、快捷模板、依赖与最小 import 用法、关键平台/能力边界、详细文档与许可证链接。
+架构、完整矩阵、后端细节、排错与验证历史进入 docs/；不向 README 追加 checkpoint、长表格或徽章墙。
+保留候选版本状态、必要 SDK/设备前提与关键限制，不靠超长行压缩，不为此增加用户审批。
+检查行数、示例身份/版本和文档链接；已有翻译保持结构对应。完整规则见 docs/zh/mwrap.md。
 
-```lua
-mcpp = {
-    sources  = { "*/core.c" },                 -- 默认始终编译
-    features = {
-        ["extra"] = { sources = { "*/extra.c" } },  -- 默认排除;请求 features=["extra"] 时编入同一 lib 目标
-    },
-}
-```
+## 本地测试资源
 
-- 消费侧声明:`dep = { version = "…", features = ["extra"] }`。
-- 既有实例:`compat.gtest` 的 `main`(gtest_main.cc)、`compat.cjson` 的 `utils`(cJSON_Utils.c)、`compat.eigen`
-  的 `blas`(`*/blas/*.cpp` 与 `*/blas/f2c/*.c`)。
-- 判定某可选组件能否实现为 feature 的准则:该组件是否为**额外的可编译源码**。若是,则可门控。纯头文件(如 Eigen 的
-  `unsupported/`,与核心共享 include 根,无法隐藏)不可门控;编译期 **define**(如 `EIGEN_MPL2_ONLY`、
-  `EIGEN_USE_BLAS`)当前无法由 feature 表携带,因而不可门控,应在描述符中加注释说明,待 mcpp 支持 define/cflags
-  后再实现。
-- glob 规则:支持 `*`(段内匹配)与 `**`(跨段匹配),因此 `*/blas/*.cpp`、`*/foo/**/*.c` 均合法。
-- **须进行负向验证**:在不启用 feature 时,对应的符号或源码应**确实缺失**(表现为链接期 `undefined reference`
-  或编译期找不到),以此证明门控确实生效,而非默认即被编入。
+所有本地测试及子进程合计不得超过本机有效 CPU/内存的 80%，默认预留更多余量。
+先检查负载，限制构建并发和重型任务数量；使用 MCPP_JOBS，必要时用共享 cgroup/slice 约束整个进程树。
+不能为各并发任务分别分配 80%；接近上限时减少本任务并发，不停止用户其他进程，不跳过验证。
+
+## feature 与模板
+
+当前 manifest feature 支持 sources、defines、flags、implies、forward、requires/provides；可选依赖写在
+`[feature-deps.<feature>]`，不将 deps 当成 manifest feature table 的有效成员。索引内联描述符的同类依赖
+仍使用其 Lua schema 的 deps 字段。以 CI 固定 mcpp 的 parser 为准，先运行 `mcpp xpkg parse`。
+
+feature 只增加能力，依赖图请求取并集。依赖声明支持 `default-features = false`；显式 features 仍激活，
+其他边的默认请求不会被取消。根项目没有 `--no-default-features` CLI。可选大依赖使用命名 feature 门控。
+后端命名沿用上游模块和正式供应者名，如 highgui-gtk3、videoio-ffmpeg、dnn-onnxruntime。
+capability 选择不会自动移除别的 provider 对象，不能用它掩盖两份同符号运行库。
+
+须验证启用后的真实行为，以及不启用时不编译/获取可选依赖。只看到符号常量或配置名称不证明后端可用。
+Linux 本地执行；Windows/macOS 用原生 CI，缺少真实设备时明确报告 build-only/未执行项。
+
+共享 SDK 还须验收 `mcpp pack` 后的搬迁运行与运行库闭包；显式通过 `runtime.deploy` 部署
+LICENSE 和 ThirdPartyNotices 等通知，并与解析到的 SDK 原文件逐字节比较。
+不能把安装目录中的运行成功当作可分发包已验收，也不能靠修改 mcpp 引擎绕过库的部署声明。
+
+每个新建或重构的 -m 库至少提供一个默认 mcpp 快捷模板。实际执行 `mcpp new --template <完整包身份>@<版本>`，
+再 build/run 生成工程。当前 `{{self.name}}` 是完整包选择器，应写 `"{{self.name}}"` 为单个依赖 key，
+不能再放到另一层 namespace 表中；版本用 self.version，所需 feature 显式声明。
+未发布候选可用隔离的已安装包 fixture，但必须先检查渲染身份和版本，再施加本地依赖覆盖。
+参见 [mwrap 规范](../../../docs/zh/mwrap.md)。
 
 ## 本地验证(与 CI 同版本)
 
@@ -135,22 +159,23 @@ MV=$(grep -oP 'MCPP_VERSION:\s*"\K[0-9.]+' .github/workflows/validate.yml)
 curl -L -fsS -o mcpp.tgz "https://github.com/mcpp-community/mcpp/releases/download/v$MV/mcpp-$MV-linux-x86_64.tar.gz"
 tar -xzf mcpp.tgz
 root="$PWD/mcpp-$MV-linux-x86_64"
-mkdir -p ~/.mcpp/registry && cp -a "$root/registry/." ~/.mcpp/registry/
+export MCPP_HOME="$PWD/target/package-validation-home"
+mkdir -p "$MCPP_HOME/registry" && cp -a "$root/registry/." "$MCPP_HOME/registry/"
 export MCPP="$root/bin/mcpp"
 export MCPP_VENDORED_XLINGS="$root/registry/bin/xlings"
 export MCPP_INDEX_MIRROR=GLOBAL          # CI 使用 GLOBAL;CN 由 mirror-cn-reachable 单独校验
-rm -rf "tests/examples/<member>/target" "tests/examples/<member>/.mcpp"   # 冷验证:自干净状态走完整管线
-"$MCPP" test -p <member>
+bash tests/run_members.sh <member>
 ```
 
 - 输出末尾应为 `test result ok`(测试二进制退出码非 0 即失败)。
+- 冷验证使用独立 worktree 和新测试 home；保留已有日志，不删除归属不明的构建目录。
 - 如需查看头文件或源码,解包结果位于 `tests/examples/<member>/.mcpp/.xlings/data/xpkgs/<idx>-x-<name>/<ver>/<wrap>/`。
 
 ## 常见错误与规避
 
 | 错误做法 | 正确做法 |
 |----------|----------|
-| 将 `compat.foo.lua` 置于 `pkgs/f/` | 置于 `pkgs/c/`,目录取完整包名首字母 |
+| 将 mwrap 也强制放到首字母桶，或增加 pkgs/mwrap/o 层级 | mwrap 平铺于 pkgs/mwrap；传统包仍按完整包名首字母分桶 |
 | 版本写作 `"v1.2.3"` | 采用裸版本 `"1.2.3"`,lint 会拦截前导 v |
 | CN 镜像上传经改动的包(与 GLOBAL 不一致) | 上传与 GLOBAL 相同的 tarball,sha 一致,以维持 GLOBAL/CN 一致性 |
 | 仅执行 `mcpp build` 而不 `run`,或示例缺少有效断言 | 实际运行,并以 `return ok ? 0 : 1` 断言 |

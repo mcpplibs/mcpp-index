@@ -67,10 +67,12 @@ end
 if #members == 0 then
     local toml = read_file("mcpp.toml") or error("cannot read mcpp.toml")
     local seen = {}
-    for name in toml:gmatch("tests/examples/([A-Za-z0-9._%-]+)") do
-        if name ~= "" and not seen[name] then
-            local probe = io.open("tests/examples/" .. name .. "/mcpp.toml", "r")
-            if probe then probe:close(); seen[name] = true; members[#members + 1] = name end
+    for _, category in ipairs({"examples", "mwrap"}) do
+        for name in toml:gmatch("tests/" .. category .. "/([A-Za-z0-9._%-]+)") do
+            if name ~= "" and not seen[name] then
+                local probe = io.open("tests/" .. category .. "/" .. name .. "/mcpp.toml", "r")
+                if probe then probe:close(); seen[name] = true; members[#members + 1] = name end
+            end
         end
     end
     table.sort(members)
@@ -172,6 +174,7 @@ end
 -- ── dependency signature, for affinity ────────────────────────────────────
 local function deps_of(member)
     local toml = read_file("tests/examples/" .. member .. "/mcpp.toml")
+        or read_file("tests/mwrap/" .. member .. "/mcpp.toml")
     if not toml then return {} end
     local set = {}
     -- The package names a member depends on. Deliberately crude: exact

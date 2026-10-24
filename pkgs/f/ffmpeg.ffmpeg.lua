@@ -15,9 +15,20 @@ package = {
     licenses    = {"MIT"},
     repo        = "https://github.com/mcpplibs/ffmpeg-m",
     type        = "package",
+    extensions = {
+        autoupdate = {
+            tag = "v${version}",
+            url = "https://github.com/mcpplibs/ffmpeg-m/archive/refs/tags/${tag}.tar.gz",
+        },
+    },
 
     xpm = {
         linux = {
+            -- Immutable candidate: wrapper/template revision; upstream SDK stays 8.1.2.
+            ["8.1.2.1"] = {
+                url = "https://github.com/mcpplibs/ffmpeg-m/archive/1e8bce6ee12c50e43058245df42515ffbabfc78f.tar.gz",
+                sha256 = "595b5bcca166583dd082ae911f7e9ed279a3e8899e9564f0901e084737c89ab2",
+            },
             ["8.1.2"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/ffmpeg-m/archive/refs/tags/v8.1.2.tar.gz",
@@ -27,6 +38,11 @@ package = {
             },
         },
         macosx = {
+            -- Immutable candidate: wrapper/template revision; upstream SDK stays 8.1.2.
+            ["8.1.2.1"] = {
+                url = "https://github.com/mcpplibs/ffmpeg-m/archive/1e8bce6ee12c50e43058245df42515ffbabfc78f.tar.gz",
+                sha256 = "595b5bcca166583dd082ae911f7e9ed279a3e8899e9564f0901e084737c89ab2",
+            },
             ["8.1.2"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/ffmpeg-m/archive/refs/tags/v8.1.2.tar.gz",
@@ -36,6 +52,11 @@ package = {
             },
         },
         windows = {
+            -- Immutable candidate: wrapper/template revision; upstream SDK stays 8.1.2.
+            ["8.1.2.1"] = {
+                url = "https://github.com/mcpplibs/ffmpeg-m/archive/1e8bce6ee12c50e43058245df42515ffbabfc78f.tar.gz",
+                sha256 = "595b5bcca166583dd082ae911f7e9ed279a3e8899e9564f0901e084737c89ab2",
+            },
             ["8.1.2"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/ffmpeg-m/archive/refs/tags/v8.1.2.tar.gz",
