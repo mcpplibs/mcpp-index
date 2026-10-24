@@ -20,6 +20,7 @@
 # Env:
 #   MCPP              path to the mcpp binary (default: `mcpp` on PATH)
 #   MCPP_TIMINGS      where to append `<seconds>\t<member>\t<ok|FAIL>` rows
+#   MCPP_HOME         test home; mwrap defaults to target/mwrap-test-home
 #
 # Exit status is non-zero if any member failed. The timing table is printed
 # regardless — a slow run is worth measuring even when it breaks.
@@ -114,7 +115,14 @@ fi
 [ -n "$cache" ] && export MCPP_BUILD_CACHE="$cache"
 for m in "${members[@]}"; do
     if [ -d "tests/mwrap/$m" ]; then
-        python3 tests/prepare_mwrap_indices.py || exit $?
+        # Mixing a full compat project alias with later namespace-only aliases
+        # reuses xlings candidates across workspace members. A single complete
+        # built-in candidate index avoids that order-dependent ambiguity.
+        export MCPP_HOME="${MCPP_HOME:-$PWD/target/mwrap-test-home}"
+        if [ ! -d "$MCPP_HOME/registry" ]; then
+            "$MCPP" index update || exit $?
+        fi
+        python3 tests/prepare_builtin_index.py --home "$MCPP_HOME" || exit $?
         break
     fi
 done

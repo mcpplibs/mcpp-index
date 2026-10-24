@@ -85,3 +85,29 @@ then passed inference and public_surface under strict mode (2 tests, 103.25s).
 Log: /tmp/mwrap-disjoint-view-consumer.log. The test used the shared eight-core,
 32 GiB resource slice, two build jobs and whole-host 80% pressure guard. Native
 workspace CI on the new index commit remains required.
+
+## Mixed workspace resolution correction
+
+Run 40087278903 / Linux LLVM shard 0/6 still failed ORT/OpenCV ambiguity after
+view preparation. The log confirms both preparations ran successfully before
+libwebp and llama.cpp consumers; the later mwrap consumers nevertheless saw
+cross-namespace candidates. The standalone fresh-home result above did not
+cover this mixed workspace ordering.
+
+A private-home fixture now reproduces the actual sequence: configure a legacy
+compat.zlib 1.3.2 consumer against the complete project index, then resolve ORT
+with the two namespace views. That second resolution fails with duplicate
+candidates. Keeping the same warmed home/workspace and changing only the ORT
+member to an explicit empty [indices] table succeeds: strict inference and
+public_surface both run (19.97s). The fixture installs the complete unchanged
+candidate layout into its built-in index; it does not edit the client engine
+or a user-global registry. Log: /tmp/mwrap-mixed-workspace-index.log.
+
+All ten mwrap workspace members now use that explicit empty table. CI installs
+the complete candidate built-in index after its published refresh, and the local
+member runner does the same for mwrap selections. An unset local MCPP_HOME
+selects target/mwrap-test-home, with bootstrap before copying the candidate;
+normal user's default home is not replaced. Static regression guards require
+mwrap members to retain their explicit override. Namespace-view tooling remains
+available to isolated single-project consumers, with its scope documented.
+New exact-head native workspace validation remains required.

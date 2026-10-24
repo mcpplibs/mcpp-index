@@ -5,10 +5,22 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import tomllib
 import unittest
 
 
 class NamespaceViews(unittest.TestCase):
+    def test_workspace_members_override_project_aliases(self):
+        root = Path(__file__).resolve().parents[1]
+        workspace = tomllib.loads((root / "mcpp.toml").read_text())["workspace"]["members"]
+        members = [root / member / "mcpp.toml" for member in workspace if member.startswith("tests/mwrap/")]
+        self.assertTrue(members)
+        for manifest in members:
+            with self.subTest(member=manifest.parent.name):
+                parsed = tomllib.loads(manifest.read_text())
+                self.assertIn("indices", parsed)
+                self.assertEqual(parsed["indices"], {})
+
     def test_rebuild_removes_cross_namespace_candidates(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

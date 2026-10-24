@@ -4,7 +4,8 @@ version = "10.0.0-rc1.1"
 description = "Run the immutable godot-cpp module wrapper without an engine"
 
 [indices]
-godotengine = { path = "../../.." }
+# Use the complete candidate built-in index prepared by tests/run_members.sh.
+# An explicit empty table overrides the legacy workspace redirect.
 
 [dependencies]
 "godotengine.godot-cpp-m" = "10.0.0-rc1.1"
