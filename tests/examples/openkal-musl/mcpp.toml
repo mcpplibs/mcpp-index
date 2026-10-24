@@ -1,0 +1,22 @@
+# openkal-musl test project: a C program whose C library is musl redirected
+# onto openkal, running the programs three reports were written with
+# (mcpplibs/openkal-linux#34, mcpplibs/openkal-musl#48, the stack and the
+# supplied stack). Linux only: the port's other systems are measured by its
+# own repository, and the candidate gate asks this member nothing elsewhere.
+[package]
+name    = "openkal-musl-tests"
+version = "0.1.0"
+
+[target.'cfg(os = "linux")'.dependencies.mcpplibs]
+openkal-musl = "0.21.0"
+
+[target.'cfg(os = "linux")'.build]
+cxxflags = ["-DHAVE_OPENKAL_MUSL=1"]
+
+# The test is C++ because the test runner discovers C++; what it exercises is
+# C, and the C++ runtime is the host's, as in the port's own examples/threads-cxx.
+[build]
+cxx_runtime = "host-coupled"
+
+[indices]
+mcpplibs = { path = "../../.." }
