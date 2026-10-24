@@ -12,20 +12,20 @@ package = {
     xpm = {
         linux = {
             ["5.0.0.1"] = {
-                url = "https://github.com/mcpplibs/opencv-m/archive/019eaadb4c2212246cf20e29447bb1ef960333ba.tar.gz",
-                sha256 = "e265add2c6ed3aa9e6dba677a8731e8a385e5f8419093336a18fbdab54be5661",
+                url = "https://github.com/mcpplibs/opencv-m/archive/becda22229cb5ed43d7ce098291cf7a4e5f7d15b.tar.gz",
+                sha256 = "67fdaec136e4acb4b0aa9d6a37c1c7952fa278180d82d6eab77dcac4211404ce",
             },
         },
         macosx = {
             ["5.0.0.1"] = {
-                url = "https://github.com/mcpplibs/opencv-m/archive/019eaadb4c2212246cf20e29447bb1ef960333ba.tar.gz",
-                sha256 = "e265add2c6ed3aa9e6dba677a8731e8a385e5f8419093336a18fbdab54be5661",
+                url = "https://github.com/mcpplibs/opencv-m/archive/becda22229cb5ed43d7ce098291cf7a4e5f7d15b.tar.gz",
+                sha256 = "67fdaec136e4acb4b0aa9d6a37c1c7952fa278180d82d6eab77dcac4211404ce",
             },
         },
         windows = {
             ["5.0.0.1"] = {
-                url = "https://github.com/mcpplibs/opencv-m/archive/019eaadb4c2212246cf20e29447bb1ef960333ba.tar.gz",
-                sha256 = "e265add2c6ed3aa9e6dba677a8731e8a385e5f8419093336a18fbdab54be5661",
+                url = "https://github.com/mcpplibs/opencv-m/archive/becda22229cb5ed43d7ce098291cf7a4e5f7d15b.tar.gz",
+                sha256 = "67fdaec136e4acb4b0aa9d6a37c1c7952fa278180d82d6eab77dcac4211404ce",
             },
         },
     },

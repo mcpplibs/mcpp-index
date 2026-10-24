@@ -122,3 +122,33 @@ result above and this exact legacy-root result verify distinct configurations.
 The bilingual specification and authoring skill now direct mwrap workspace
 members to the single built-in candidate and reserve namespace views for
 isolated projects. Skill validation and both index-view/member guards pass.
+
+## OpenCV qualified-API archive checkpoint
+
+The unpublished 5.0.0.1 candidate now pins OpenCV source commit
+becda22229cb5ed43d7ce098291cf7a4e5f7d15b on all three descriptor platforms.
+Two independent downloads agree on SHA256
+67fdaec136e4acb4b0aa9d6a37c1c7952fa278180d82d6eab77dcac4211404ce.
+The archive was compared with the source checkout, including all 2305 retained
+upstream files and the new module/generator/Windows fixture changes. Historical
+package identities, released archives and descriptors remain unchanged.
+
+The indexed CPU consumer additionally checks the original cv::details FP state
+API signatures, layout and RAII state restoration. This exercises qualified names
+added in this source checkpoint rather than accepting only older image APIs.
+The new descriptor passes the pinned resolver grammar, platform-version parity,
+package-name/reserved-namespace checks, and both index-routing regressions.
+
+A new independent-home archive acceptance has resolved this exact SHA and
+rendered the unmodified default template. Strict build, run, relocated deployment
+and notices/runtime-closure checks are still running at this checkpoint; rendering
+alone is not deployment acceptance. Log:
+/tmp/mwrap-becda22-template-deployment.log.
+
+The six companion -m PRs retain green checks on their current heads (4 ORT,
+8 llama.cpp, 2 FFmpeg, 6 gRPC, 4 ImGui, 3 Godot). OpenCV run 40098688445 on
+becda22 is still running its five native jobs. Index 0861946 validation has
+18 successful jobs and one running Linux workspace shard; its updater, site and
+OpenKAL checks pass. This pin change requires its own exact-head index CI.
+No source/index merge, release or tag is performed. Remaining OpenCV API/header
+classification and native CI gates still prevent a full-support readiness claim.

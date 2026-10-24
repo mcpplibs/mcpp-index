@@ -23,6 +23,19 @@ int main() {
         cv::norm(jpeg, gray, cv::NORM_INF) > 2) return 9;
     const auto value = cv::makePtr<int>(19);
     if (*value != 19) return 7;
+    // Exercise the qualified SDK names restored in the indexed candidate.
+    using FpState = cv::details::FPDenormalsModeState;
+    static_assert(sizeof(FpState) == 64);
+    static_assert(std::is_same_v<decltype(&cv::details::saveFPDenormalsState), int (*)(FpState&)>);
+    static_assert(std::is_same_v<decltype(&cv::details::restoreFPDenormalsState), bool (*)(const FpState&)>);
+    FpState before{}, after{};
+    cv::details::saveFPDenormalsState(before);
+    {
+        cv::details::FPDenormalsIgnoreHintScope scope(true);
+    }
+    cv::details::saveFPDenormalsState(after);
+    for (int i = 0; i < 16; ++i)
+        if (before.reserved[i] != after.reserved[i]) return 10;
     std::println("OpenCV {} archive: exact gray pixels, PNG/JPEG roundtrips and scalar contracts passed",
                  cv::getVersionString());
 }
