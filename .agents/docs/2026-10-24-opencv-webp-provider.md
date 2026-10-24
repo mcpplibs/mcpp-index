@@ -183,3 +183,31 @@ claimed. Pinned resolver parse, platform version parity, package/reserved-name
 checks, two routing regressions and seventeen updater tests pass. Final exact-head
 index/native CI and the requirement-by-requirement release review remain open.
 No merge, tag, release or mcpp engine change has been performed.
+
+## Native-profile review correction and final source alignment
+
+The c052ccf WebP archive now passes alpha/animation/XMP, release packing,
+relocated execution and eighteen exact notices. The source CI nevertheless
+correctly rejects 23 unreviewed native SSE implementation helpers that do not
+exist in the software-mode inventory. Source checkpoint
+71d0967124222f23999d57e4d514df6a4ed60834 adds exact source/feature/header-qualified
+review records and retains the strict unknown/stale checks. Local native SDK
+parity (1311/976 bytes), native 121-name review and preserved software 101-name
+review all pass. Log: /tmp/mwrap-native-entity-review.log.
+
+The index now pins that corrected source, SHA256
+d2c0b85536bf4cbb22c914cc055d63cb780cfb25492da3bdc53bd0a08022ed24.
+Both downloads agree (14319996 bytes); all 3716 files match the checkout and
+all 2305 retained SDK files remain unchanged. Archive-to-archive comparison
+shows exactly four changes: the source readiness ledger, CI artifact paths,
+entity-review records and their validator. Every implementation file, template,
+build recipe and selected license is byte-identical to the c052ccf archive that
+passed normal/WebP deployment. The comparison is recorded at
+/tmp/mwrap-release-candidates/opencv-reviewed-archive-equivalence.json.
+
+A fresh-home template/API/build/release/deployment acceptance for the corrected
+archive is running at /tmp/mwrap-71d0967-template-api-deployment.log. This result
+is not yet claimed; unchanged implementation evidence is distinguished from
+new audit-script/CI acceptance. Exact corrected-source and index HEAD CI remain
+required. The requirement ledger is .agents/docs/2026-10-25-mwrap-release-audit.md.
+No merge, tag, release or mcpp engine modification has been performed.
