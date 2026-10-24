@@ -9,6 +9,15 @@
 
 ### Added
 
+- **`openkal` 0.16.0 及随之移动的七个包。** 规范新增 `kal_task_start_sized`(栈大小的下限,
+  给不出时为 `kal_err_no_memory`)与 `KAL_TERM_PASS_INPUT`(环境不改写所输入的字节),
+  并补述关闭目录即结束其未读完的枚举。`openkal-linux` 0.17.0、`openkal-macos` 0.14.0、
+  `openkal-windows` 0.12.0、`openkal-emscripten` 0.5.0 实现三者;`openkal-opensbi` 0.8.3
+  只移动规范的锁定版本;`openkal-musl` 0.21.0 让线程得到所请求的栈并在 raw 模式下区分
+  回车与 Ctrl+J;`openkal-llvm-runtime` 0.15.5 移动 C 库的锁定版本。GLOBAL 为上游 tag 归档,
+  CN 为逐字节相同的 gitcode 资源,均按记录的 sha256 核对。
+  新增两个测试成员:`tests/examples/openkal`(规范在三平台、各实现在自身平台,以及新声明的 C
+  层行为)与 `tests/examples/openkal-musl`(三份报告的原始程序,Linux)。
 - **`compat.httplib` 0.62.0。** 在 `0.53.1` 之外新增版本键(旧键保留)。仍是纯头文件 Form B:
   归档根目录仍只有一份 `httplib.h`(747,115 → 846,648 字节,增量是 SSE 客户端、WebSocket
   辅助与加固,全部落在头内,不引入 define、源文件或链接依赖),描述符的内联构建无需改动。
@@ -181,6 +190,12 @@
   `yaml-cpp-v080`),都列入 `tests/openkal/members.toml` 在 openkal 上测量。
 
 ### Changed
+
+- **候选门只在消费者构建候选包的平台上调度它。** `tests/autoupdate/ci.py` 的
+  `member_platforms` 读取消费者清单:无条件依赖在三个平台调度;`cfg(os = ...)` 或
+  `cfg(windows)` 下的依赖只在该平台调度;其余条件(环境、架构)不调度任何宿主作业,由包自身仓库
+  在目标上测量。mcpp 只锁定宿主解析到的包,向另一平台的 runner 要平台包的锁定证明必然失败;
+  `test_ci.py` 覆盖了这条规则。
 
 - **站点的 openkal 分面改为两个取值:`openkal-ecosystem` 与 `openkal-compat`。** 原先的
   「openkal itself / runs on openkal / fails on openkal」是句子而不是名字。构成 openkal 的

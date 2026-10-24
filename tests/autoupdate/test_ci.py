@@ -215,3 +215,42 @@ sha256="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
                     'sha256 = "' + "a" * 64 + '",\n   revision = 0,'))
                 with self.assertRaisesRegex(RuntimeError, "revision decreased"):
                     ci.audit("HEAD", root / "coverage.json")
+
+
+class MemberPlatformTests(unittest.TestCase):
+    """A candidate is asked of the runners its consumer builds it on, and of no other."""
+
+    def member(self, root, text):
+        member = root / "tests/examples/probe"
+        member.mkdir(parents=True)
+        (member / "mcpp.toml").write_text(text, encoding="utf-8")
+
+    def test_conditions_select_runners(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.member(root, """[package]
+name = "probe"
+version = "0.1.0"
+
+[dependencies.acme]
+spec = "1.0.0"
+
+[target.'cfg(os = "linux")'.dependencies.acme]
+on-linux = "1.0.0"
+
+[target.'cfg(os = "macos")'.dependencies.acme]
+on-macos = "1.0.0"
+
+[target.'cfg(windows)'.dependencies.acme]
+on-windows = "1.0.0"
+
+[target.'cfg(all(os = "linux", env = "musl"))'.dependencies.acme]
+on-musl = "1.0.0"
+""")
+            with patch.object(ci, "ROOT", root):
+                self.assertEqual(ci.member_platforms("probe", "acme:spec"), {"linux", "macosx", "windows"})
+                self.assertEqual(ci.member_platforms("probe", "acme:on-linux"), {"linux"})
+                self.assertEqual(ci.member_platforms("probe", "acme:on-macos"), {"macosx"})
+                self.assertEqual(ci.member_platforms("probe", "acme:on-windows"), {"windows"})
+                self.assertEqual(ci.member_platforms("probe", "acme:on-musl"), set())
+                self.assertEqual(ci.member_platforms("probe", "other:spec"), set())

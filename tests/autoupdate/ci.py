@@ -139,6 +139,38 @@ def direct_member(identity: str) -> str | None:
     return min(candidates, key=lambda value: (value[0] != "mwrap", len(value[1]), value[1]))[1]
 
 
+# The runner platforms, by the spelling a member's `cfg(os = ...)` uses.
+_CFG_PLATFORMS = {"linux": "linux", "macos": "macosx", "windows": "windows"}
+
+
+def member_platforms(member: str, identity: str) -> set[str]:
+    """The runner platforms on which `member` builds `identity`.
+
+    A member that names the package unconditionally builds it everywhere. One
+    that names it under `[target.'cfg(...)']` builds it only where the condition
+    holds, and a lockfile proves a candidate only where it was built: mcpp locks
+    what the host resolves, so a platform package asked of another platform's
+    runner is a job that can only fail. A condition naming one operating system
+    (`os = "linux"`, `os = "macos"`, `windows`) selects that runner; any other
+    condition (an environment, an architecture, a family) selects none, because
+    no runner here builds for it and the package is measured by its own
+    repository on that target.
+    """
+    namespace, name = identity.split(":", 1)
+    manifest = tomllib.loads((ROOT / "tests/examples" / member / "mcpp.toml").read_text(encoding="utf-8"))
+    platforms: set[str] = set()
+    if name in manifest.get("dependencies", {}).get(namespace, {}):
+        platforms |= set(_CFG_PLATFORMS.values())
+    for condition, table in manifest.get("target", {}).items():
+        if name not in table.get("dependencies", {}).get(namespace, {}):
+            continue
+        spelled = re.fullmatch(r'cfg\(\s*(?:os\s*=\s*"(\w+)"|(windows))\s*\)', condition.strip())
+        if spelled:
+            platforms.add(_CFG_PLATFORMS.get(spelled.group(1) or spelled.group(2), ""))
+    platforms.discard("")
+    return platforms
+
+
 def matrix(plan: Path, output: Path, base: str):
     build_plan = json.loads(plan.read_text(encoding="utf-8"))
     # A normal bump PR already contains its candidate, so discovery says up-to-date.
@@ -174,7 +206,13 @@ def matrix(plan: Path, output: Path, base: str):
         member = direct_member(record["id"])
         if member is None and record["id"] not in ("compat:hiredis", "compat:libuv"):
             raise RuntimeError(f"no candidate consumer: {record['id']}")
+        applicable = member_platforms(member, record["id"]) if member else None
+        if applicable is not None and not applicable:
+            print(f"{record['id']}: {member} names it only for a target no runner builds; "
+                  "measured by its own repository on that target")
         for platform in [asset["platform"] for asset in record["assets"]]:
+            if applicable is not None and platform not in applicable:
+                continue
             rows = {
                 "linux": ("ubuntu-latest", "linux-x86_64", "tar.gz"),
                 "macosx": ("macos-15", "macosx-arm64", "tar.gz"),
