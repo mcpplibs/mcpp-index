@@ -1130,52 +1130,17 @@ jobs:
           echo "members=$MEMBERS" >> "$GITHUB_OUTPUT"
           cat /tmp/matrix.json
 
-      # The split is computed ONCE, here, and shipped to the runners as data.
-      # It used to run on each runner, which needed lua5.4 on all three
-      # platforms — windows has no apt or brew, and macOS's brew installs
-      # `lua`, not `lua5.4`, so every non-linux shard died with
-      # `lua5.4: command not found` after 16 seconds. Deciding once is also
-      # simply correct: one plan, not three runners each re-deriving it.
+      # Linux default and LLVM may advertise different shard counts. Plan
+      # every distinct platform/count pair, rather than reusing the first
+      # Linux split and leaving the extra LLVM entries empty.
       - name: Plan the shards
         id: plan_shards
         shell: bash
         run: |
           plan='${{ steps.fanout.outputs.members }}'
           [ "$plan" = "__ALL__" ] && plan=""
-          {
-            printf '{'
-            first=1
-            # `.shards`, NOT the number of matrix entries.
-            #
-            # These stopped being the same number the moment linux grew a
-            # second toolchain leg: the platform emits 2 x 3 = 6 entries while
-            # the split is still 3 ways, and every entry carries shard 0..2.
-            # Planning 6 ways and consuming three of them dropped 36 of 65
-            # members on the floor — silently, because a member that is never
-            # assigned is indistinguishable from one that passed. `ffmpeg`,
-            # `opencv-module*`, `catch2-v2` and `openssl` were among them, on
-            # the very run that added the leg meant to test them.
-            #
-            # `.shards` is the value emit() already wrote per entry and the
-            # same one the job reads for its own `matrix.shards`, so plan and
-            # consumer now read one number instead of two that agreed by
-            # accident.
-            for spec in linux:$(jq -r 'first(.include[]|select(.platform=="linux")).shards' /tmp/matrix.json) \
-                        macos:$(jq -r 'first(.include[]|select(.platform=="macos")).shards' /tmp/matrix.json) \
-                        windows:$(jq -r 'first(.include[]|select(.platform=="windows")).shards' /tmp/matrix.json); do
-              p=${spec%%:*}; n=${spec##*:}
-              [ "$first" = 1 ] || printf ','
-              first=0
-              printf '"%s":{' "$p"
-              for i in $(seq 0 $((n - 1))); do
-                [ "$i" = 0 ] || printf ','
-                m=$(lua5.4 tests/plan_shards.lua "$p" "$i" "$n" $plan)
-                printf '"%s":"%s"' "$i" "$m"
-              done
-              printf '}'
-            done
-            printf '}'
-          } > /tmp/plan.json
+          python3 tests/test_plan_matrix_shards.py
+          python3 tests/plan_matrix_shards.py /tmp/matrix.json $plan > /tmp/plan.json
           echo "plan=$(cat /tmp/plan.json)" >> "$GITHUB_OUTPUT"
           jq . /tmp/plan.json
 
@@ -1458,8 +1423,11 @@ jobs:
       # tests/plan_shards.lua). Arrives as data, so a runner needs no lua.
       - name: Take this shard's members
         shell: bash
+        env:
+          SHARD_PLAN: ${{ needs.select.outputs.plan }}
         run: |
-          mine='${{ fromJSON(needs.select.outputs.plan)[matrix.platform][format('{0}', matrix.shard)] }}'
+          mine=$(python3 tests/plan_matrix_shards.py --select \
+            '${{ matrix.platform }}' '${{ matrix.shards }}' '${{ matrix.shard }}' <<< "$SHARD_PLAN")
 
           # ── A member its toolchain cannot build, and why that lives HERE ──
           #

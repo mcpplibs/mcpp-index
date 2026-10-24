@@ -76,3 +76,44 @@ pack、搬迁运行和 18 份通知也通过。日志分别为
 
 最终源码审查修复为 `71d0967124222f23999d57e4d514df6a4ed60834`，归档 SHA256 `d2c0b85536bf4cbb22c914cc055d63cb780cfb25492da3bdc53bd0a08022ed24`。
 与已通过部署的 c052ccf 相比仅四个审计/CI/记录文件变化；实现、模板、构建配方和许可证逐字节一致。新归档的实际安装验收正在执行，未提前标为通过。
+
+
+## GCC root-import and CI shard corrections (2026-10-25)
+
+The 71d0967 source failed GCC's staged OpenCV/ORT configuration with missing
+bare detail.core/detail.matx BMI paths. Source checkpoint 52fa4a1 directly
+imports both producers before public core; 5056249 adds the explicit bilingual
+legacy module/macro migration table. The same warmed staged project fails
+again with the original root and passes actual ORT CPU/profile inference after
+restoring exact formal bytes. Logs: /tmp/mwrap-gcc-root-import-negative.log and
+/tmp/mwrap-gcc-root-import-ab.log. All 38 programs pass LLVM23/GCC16/LLVM22
+(128.68/238.24/790.55s), with unchanged seven SDK oracles and strict review gates.
+
+Final source 5056249212be1470de7fa7c85ea9fc805f72349d is independently downloaded
+twice, SHA256 9bb69f39be2bd135e83fe1d9afc6b3e00adeaa70a65be315bb29cc5a92e0e40d.
+All 3716 files match the checkout; all 2305 retained SDK files are unchanged.
+Against 71d0967 only the root aggregate, two usage documents and source ledger
+differ. Templates, provider recipes, notices and implementation bodies remain
+byte-identical, but changed interface inputs still require fresh archive and CI
+acceptance. Actual final-archive template/API/release/relocation is in progress;
+older passing bundles are not silently substituted.
+
+Index 9fce3e7's validate job 120923966425 reached its 90-minute cap while
+compiling the legacy opencv-module-dnn member. Prior members passed; updater,
+site and OpenKAL succeeded. The canceled shard combined 18 minutes of installed
+checks with previously unpriced grpc-cpu/grpc-tools/godot-math consumers and
+three legacy OpenCV consumers. Member and completed installed-step durations
+from the actual Linux jobs now price those wrappers in member-timings.tsv.
+For the same 26 selected members the old three-way assignment reprices to
+4588/3410/6486s; the revised four-way split is 4087/3523/3402/3472s. Thus the
+slowest estimated slice drops from 108.1 to 68.1 minutes without removing tests
+or raising the 90-minute cap.
+
+The matrix also advertised six LLVM slices while the emitted plan contained
+only the first/default Linux three-way split. Planning is now keyed by both
+platform and count; each toolchain consumes its advertised split. Three regressions exercise real Lua splits and verify different Linux counts
+each cover every selected member exactly once, full-workspace planning retains
+both examples and mwrap, and missing/incomplete plans fail instead of reporting
+empty success.
+YAML parsing and whitespace checks pass. New source/index final CI remains a
+required gate; neither the actual GCC failure nor timeout is counted passing.
