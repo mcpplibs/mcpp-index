@@ -1555,6 +1555,11 @@ jobs:
         shell: bash
         run: python3 tests/prepare_builtin_index.py --home "$MCPP_HOME"
 
+      - name: Installed OpenCV WebP archive and relocated consumer
+        if: contains(format(' {0} ', env.MEMBERS), ' opencv-webp ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_webp_deployment.py --mcpp "$MCPP"
+
       - name: Installed OpenCV archive, image template and relocated deployment
         if: contains(format(' {0} ', env.MEMBERS), ' opencv-cpu ') && matrix.toolchain == 'default'
         shell: bash

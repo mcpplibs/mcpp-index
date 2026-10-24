@@ -11,6 +11,7 @@ mcpp = ">=2026.10.21.1"
 [workspace]
 members = [
     "tests/mwrap/opencv-cpu",
+    "tests/mwrap/opencv-webp",
     "tests/mwrap/onnxruntime-cpu",
     "tests/mwrap/llamacpp-cpu",
     "tests/mwrap/ffmpeg-cpu",
