@@ -111,3 +111,14 @@ normal user's default home is not replaced. Static regression guards require
 mwrap members to retain their explicit override. Namespace-view tooling remains
 available to isolated single-project consumers, with its scope documented.
 New exact-head native workspace validation remains required.
+
+The first mixed fixture used [workspace.indices]. A second private-home fixture
+now uses the same legacy root [indices] form as repository CI: the two-view
+consumer again fails with ambiguous candidates, while its empty-table form
+passes inference/public_surface (17.42s). This run keeps CI's non-strict entry
+because the existing root form emits a deprecation warning; no diagnostic is
+suppressed. Log: /tmp/mwrap-legacy-workspace-index.log. The strict modern-root
+result above and this exact legacy-root result verify distinct configurations.
+The bilingual specification and authoring skill now direct mwrap workspace
+members to the single built-in candidate and reserve namespace views for
+isolated projects. Skill validation and both index-view/member guards pass.

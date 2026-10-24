@@ -68,9 +68,9 @@ description: Use when adding a new third-party library/package to the mcpp-index
    - 包含 `mcpp.toml` 与 `tests/*.cpp`,后者须包含**可失败的有效断言**(`return ok ? 0 : 1`)。
    - 普通成员用一条 `[indices] <ns> = { path = "../../.." }` 将所消费命名空间重定向到 checkout。
      不把同一个完整索引路径注册成多个 namespace：当前 xlings 会将同一实体报为歧义。
-     mwrap wrapper + compat SDK 的组合测试先运行 `python3 tests/prepare_mwrap_indices.py`，
-     再将两条 namespace 路由指向 `tests/mwrap/.indices/<namespace>` 中字节不变的测试视图。
-     `tests/run_members.sh` 自动准备这些视图；它们不提交、不发布，也不改变 pkgs/mwrap 的正式布局。
+     mwrap workspace 成员保留显式空 `[indices]` 表，由 `tests/run_members.sh` 将完整且字节不变的
+     checkout 索引放入测试 home 的唯一内置索引。未设置 MCPP_HOME 时使用 target/mwrap-test-home。
+     namespace 视图仅供隔离的单项目消费者；不能以独立项目通过证明混合 workspace 顺序可用。
      正常发布布局另由 `tests/mwrap/check_installed_template.py` 在独立 MCPP_HOME 中使用单一完整索引验收。
      运行库/插件/host-module 多 namespace 耦合时，优先用 `tests/prepare_builtin_index.py --home <独立测试 home>`
      安装唯一完整内置索引，成员以空 `[indices]` 覆盖旧 workspace 路由。自动更新候选 CI 同样采用此方式，
@@ -159,15 +159,16 @@ MV=$(grep -oP 'MCPP_VERSION:\s*"\K[0-9.]+' .github/workflows/validate.yml)
 curl -L -fsS -o mcpp.tgz "https://github.com/mcpp-community/mcpp/releases/download/v$MV/mcpp-$MV-linux-x86_64.tar.gz"
 tar -xzf mcpp.tgz
 root="$PWD/mcpp-$MV-linux-x86_64"
-mkdir -p ~/.mcpp/registry && cp -a "$root/registry/." ~/.mcpp/registry/
+export MCPP_HOME="$PWD/target/package-validation-home"
+mkdir -p "$MCPP_HOME/registry" && cp -a "$root/registry/." "$MCPP_HOME/registry/"
 export MCPP="$root/bin/mcpp"
 export MCPP_VENDORED_XLINGS="$root/registry/bin/xlings"
 export MCPP_INDEX_MIRROR=GLOBAL          # CI 使用 GLOBAL;CN 由 mirror-cn-reachable 单独校验
-rm -rf "tests/examples/<member>/target" "tests/examples/<member>/.mcpp"   # 冷验证:自干净状态走完整管线
-"$MCPP" test -p <member>
+bash tests/run_members.sh <member>
 ```
 
 - 输出末尾应为 `test result ok`(测试二进制退出码非 0 即失败)。
+- 冷验证使用独立 worktree 和新测试 home；保留已有日志，不删除归属不明的构建目录。
 - 如需查看头文件或源码,解包结果位于 `tests/examples/<member>/.mcpp/.xlings/data/xpkgs/<idx>-x-<name>/<ver>/<wrap>/`。
 
 ## 常见错误与规避

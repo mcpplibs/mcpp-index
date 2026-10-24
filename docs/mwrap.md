@@ -195,7 +195,9 @@ CI check before reporting merge/release readiness.
 
 ## Candidate index tests across namespaces
 
-The pinned client routes each requested namespace independently. Registering the same full checkout twice makes xlings report duplicate project candidates. Local wrapper/SDK tests therefore call tests/prepare_mwrap_indices.py and route each namespace to a test-only view under tests/mwrap/.indices. Every descriptor is copied unchanged and its source SHA256 is recorded; no aliases share a descriptor. These views are ignored build outputs, not a publication format.
+The pinned client can report duplicate candidates when a workspace mixes full project indices and namespace views. Mwrap workspace members retain an explicit empty `[indices]` table. `tests/run_members.sh` prepares one complete unchanged built-in candidate index before their tests; an unset MCPP_HOME uses the task-owned target/mwrap-test-home. CI prepares that candidate after refreshing the published registry. Keep the legacy workspace redirect semantics; `[workspace.indices]` merges entries and is not a mechanical spelling replacement.
+
+Namespace views created by tests/prepare_mwrap_indices.py remain available for isolated single-project consumers. Their descriptors preserve source bytes and SHA256 provenance. A standalone success does not certify a mixed workspace sequence. Views are ignored outputs, not a publication format.
 
 Normal installed consumers are tested independently by tests/mwrap/check_installed_template.py: it copies the complete pkgs/index.toml publication layout into one isolated built-in index, downloads the real checksummed source archive, runs mcpp new and builds/runs the generated manifest without a path substitution. The Git and published pkgs/mwrap directory layout remains identical.
 

@@ -134,9 +134,13 @@ vendored 静态实现同样需要显式部署，不能依赖共享库扫描发�
 
 ## 候选索引的跨 namespace 测试
 
-固定客户端按请求 namespace 分别路由；同一个完整 checkout 注册两次会让 xlings 报项目候选歧义。
-本地 wrapper/SDK 组合测试先执行 tests/prepare_mwrap_indices.py，再分别指向 tests/mwrap/.indices 中的测试视图。
-各描述符字节不变并记录源 SHA256，视图之间不重复登记实体。它们是不提交、不发布的构建输出，不是新的发布格式。
+固定客户端在同一 workspace 混用完整项目索引与 namespace 视图时可能报告候选歧义。
+mwrap 成员保留显式空 `[indices]` 表，`tests/run_members.sh` 先将完整且字节不变的候选索引放进测试 home 的唯一内置索引。
+未设置 MCPP_HOME 时使用任务自有的 target/mwrap-test-home；CI 在刷新已发布索引后准备候选。
+保留旧 workspace 重定向的语义；`[workspace.indices]` 会合并条目，不能仅视为同义语法替换。
+
+tests/prepare_mwrap_indices.py 的 namespace 视图仅供隔离的单项目消费者，描述符保留字节及源 SHA256。
+不能以独立项目通过证明混合 workspace 顺序可用。视图是不提交、不发布的输出，不是新的发布格式。
 
 正常安装由 tests/mwrap/check_installed_template.py 独立验证：把完整 pkgs/index.toml 发布布局放进独立 MCPP_HOME 的单一内置索引，
 下载真实且带校验的源码归档，执行 mcpp new，再原样构建/运行生成清单，不替换为 path 依赖。
