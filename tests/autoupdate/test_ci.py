@@ -225,6 +225,33 @@ class MemberPlatformTests(unittest.TestCase):
         member.mkdir(parents=True)
         (member / "mcpp.toml").write_text(text, encoding="utf-8")
 
+    def test_mwrap_host_tools_keep_all_native_candidate_jobs(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            member = root / "tests/mwrap/grpc-tools"
+            member.mkdir(parents=True)
+            (member / "mcpp.toml").write_text(
+                '[package]\nname="grpc-tools"\nversion="1.83.0.1"\n'
+                '[dependencies]\n"grpc.grpc-plugin"={version="1.83.0.1",tools=["grpc_cpp_plugin"]}\n'
+                '[build-dependencies]\n"mcpplibs.grpcgen"={version="1.83.0.1",host-module=true}\n')
+            plan = root / "plan.json"
+            plan.write_text(json.dumps({"packages": [
+                {"id": identity, "candidate": "1.83.0.1", "status": "existing-candidate",
+                 "assets": [{"platform": platform} for platform in ("linux", "macosx", "windows")]}
+                for identity in ("grpc:grpc-plugin", "mcpplibs:grpcgen")]}))
+            output = root / "matrix.json"
+            with patch.object(ci, "ROOT", root):
+                for identity in ("grpc:grpc-plugin", "mcpplibs:grpcgen"):
+                    self.assertEqual(ci.member_platforms("grpc-tools", identity),
+                                     {"linux", "macosx", "windows"})
+                ci.matrix(plan, output, None)
+                jobs = json.loads(output.read_text())["include"]
+                self.assertEqual(len(jobs), 8)
+                self.assertEqual({job["member"] for job in jobs}, {"grpc-tools"})
+                for identity in ("grpc:grpc-plugin", "mcpplibs:grpcgen"):
+                    self.assertEqual(sorted(job["platform"] for job in jobs if job["id"] == identity),
+                                     ["linux", "linux", "macosx", "windows"])
+
     def test_conditions_select_runners(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

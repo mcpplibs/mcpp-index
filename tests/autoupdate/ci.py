@@ -139,6 +139,22 @@ def direct_member(identity: str) -> str | None:
     return min(candidates, key=lambda value: (value[0] != "mwrap", len(value[1]), value[1]))[1]
 
 
+def member_manifest(member: str) -> Path:
+    for category in ("mwrap", "examples"):
+        path = ROOT / "tests" / category / member / "mcpp.toml"
+        if path.is_file():
+            return path
+    raise FileNotFoundError(f"consumer manifest not found: {member}")
+
+
+def names_dependency(deps: dict, namespace: str, name: str) -> bool:
+    nested = deps
+    for part in namespace.split("."):
+        nested = nested.get(part, {}) if isinstance(nested, dict) else {}
+    return (f"{namespace}.{name}" in deps
+            or name in deps.get(namespace, {}) or name in nested)
+
+
 # The runner platforms, by the spelling a member's `cfg(os = ...)` uses.
 _CFG_PLATFORMS = {"linux": "linux", "macos": "macosx", "windows": "windows"}
 
@@ -157,12 +173,14 @@ def member_platforms(member: str, identity: str) -> set[str]:
     repository on that target.
     """
     namespace, name = identity.split(":", 1)
-    manifest = tomllib.loads((ROOT / "tests/examples" / member / "mcpp.toml").read_text(encoding="utf-8"))
+    manifest = tomllib.loads(member_manifest(member).read_text(encoding="utf-8"))
     platforms: set[str] = set()
-    if name in manifest.get("dependencies", {}).get(namespace, {}):
+    if any(names_dependency(manifest.get(key, {}), namespace, name)
+           for key in ("dependencies", "build-dependencies")):
         platforms |= set(_CFG_PLATFORMS.values())
     for condition, table in manifest.get("target", {}).items():
-        if name not in table.get("dependencies", {}).get(namespace, {}):
+        if not any(names_dependency(table.get(key, {}), namespace, name)
+                   for key in ("dependencies", "build-dependencies")):
             continue
         spelled = re.fullmatch(r'cfg\(\s*(?:os\s*=\s*"(\w+)"|(windows))\s*\)', condition.strip())
         if spelled:
@@ -235,8 +253,7 @@ def prepare(plan: Path, identity: str, output: Path, home: Path | None = None):
     member = direct_member(identity)
     output.mkdir(parents=True, exist_ok=True)
     if member:
-        paths = [ROOT / "tests" / category / member for category in ("mwrap", "examples")]
-        source = next(path for path in paths if (path / "mcpp.toml").is_file())
+        source = member_manifest(member).parent
         shutil.copytree(source, output, dirs_exist_ok=True,
                         ignore=shutil.ignore_patterns("target", ".mcpp", "mcpp.lock"))
         text = (output / "mcpp.toml").read_text(encoding="utf-8")

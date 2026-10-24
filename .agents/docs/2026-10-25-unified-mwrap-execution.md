@@ -141,3 +141,20 @@ preserved, rather than normalizing or weakening the document hash check.
 A local checkout-index test with core.autocrlf=true passes the release guard
 for all seven repositories. Exact-head native CI is restarted for the corrected
 commits; the earlier failed run is retained as failure evidence.
+
+All five old/new same-upstream-version cache pairs now pass four alternating
+builds/runs with namespace/version lock checks: FFmpeg, OpenCV, ImGui, llama.cpp
+(GCC16) and gRPC. The gRPC cold-home retry provisions regular managed tool
+payloads instead of borrowing symlinks for tools whose installers record state.
+Evidence: /tmp/mwrap-grpc-cache-isolation-cold-tools.log and
+/tmp/mwrap-more-cache-isolation-results.json.
+
+Index CI at 69a2a3a exposed an integration failure with newly advanced main
+0292416: member_platforms still read only tests/examples, although direct_member
+selected tests/mwrap/grpc-tools. Main was merged without dropping its new
+OpenKAL entries or platform rules. Platform selection and preparation now share
+a manifest lookup over both consumer directories; fully qualified runtime and
+host-tool dependencies are recognized. Nineteen updater regression tests pass;
+the actual corrected plan retains all eight gRPC host-tool build/run jobs,
+including Linux default/LLVM, Windows and macOS, rather than silently skipping
+them. Earlier failed CI is not counted as a pass.
