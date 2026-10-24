@@ -191,3 +191,10 @@ bash tests/run_members.sh <member>
 完成前应遵循 `verification-before-completion`:在声明“通过/完成”之前,须给出真实命令输出作为证据。
 
 README 导航统一使用 `[Upstream](上游地址)`；Modules 位于 Getting started 前，以完整 import 逐项列出核心模块，下方加 `> More Modules API` 文档链接。
+
+### mwrap / xxx-m 许可
+
+遵守 [mwrap 许可规范](../../../docs/zh/mwrap-licensing.md)：封装默认 Apache-2.0，
+归属标签 mcpp-community；顶层 LICENSE/NOTICE、README badge、manifest 和新 wrapper 描述符保持一致。
+上游 README/许可证保留在 upstream/<lib>/，保留原字节和版权；不改写 compat provider 的原许可证。
+发布和部署必须携带适用通知；已发布更正追加修订尾号，不覆盖旧 tag、资源或 hash。

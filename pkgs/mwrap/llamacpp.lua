@@ -4,26 +4,26 @@ package = {
     namespace = "mcpplibs.mwrap",
     name = "llamacpp",
     description = "llama.cpp-m upstream-preserving C++23 module wrapper",
-    licenses = { "MIT" },
+    licenses = { "Apache-2.0" },
     repo = "https://github.com/mcpplibs/llama.cpp-m",
     type = "package",
     xpm = {
         linux = {
             ["b10069"] = {
-                url = "https://github.com/mcpplibs/llama.cpp-m/archive/0d55de134c5c16bc31b5fb1e91c5946236b8b829.tar.gz",
-                sha256 = "7c91fbb6f260906ef4bb730cef7cfe1329842d9cd39dbbeeb29b1b9ac8adbff1",
+                url = "https://github.com/mcpplibs/llama.cpp-m/archive/3a8ea85219463e1c02c6d1484d75e1edf27d574c.tar.gz",
+                sha256 = "1f1acaff030ffd1dc25b276dc5af0d38499ee4eea0107df5ae3600188eb4bf52",
             },
         },
         macosx = {
             ["b10069"] = {
-                url = "https://github.com/mcpplibs/llama.cpp-m/archive/0d55de134c5c16bc31b5fb1e91c5946236b8b829.tar.gz",
-                sha256 = "7c91fbb6f260906ef4bb730cef7cfe1329842d9cd39dbbeeb29b1b9ac8adbff1",
+                url = "https://github.com/mcpplibs/llama.cpp-m/archive/3a8ea85219463e1c02c6d1484d75e1edf27d574c.tar.gz",
+                sha256 = "1f1acaff030ffd1dc25b276dc5af0d38499ee4eea0107df5ae3600188eb4bf52",
             },
         },
         windows = {
             ["b10069"] = {
-                url = "https://github.com/mcpplibs/llama.cpp-m/archive/0d55de134c5c16bc31b5fb1e91c5946236b8b829.tar.gz",
-                sha256 = "7c91fbb6f260906ef4bb730cef7cfe1329842d9cd39dbbeeb29b1b9ac8adbff1",
+                url = "https://github.com/mcpplibs/llama.cpp-m/archive/3a8ea85219463e1c02c6d1484d75e1edf27d574c.tar.gz",
+                sha256 = "1f1acaff030ffd1dc25b276dc5af0d38499ee4eea0107df5ae3600188eb4bf52",
             },
         },
     },

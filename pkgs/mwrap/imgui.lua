@@ -4,26 +4,26 @@ package = {
     namespace = "mcpplibs.mwrap",
     name = "imgui",
     description = "imgui-m upstream-preserving C++23 module wrapper",
-    licenses = { "MIT" },
+    licenses = { "Apache-2.0" },
     repo = "https://github.com/mcpplibs/imgui-m",
     type = "package",
     xpm = {
         linux = {
             ["1.92.8"] = {
-                url = "https://github.com/mcpplibs/imgui-m/archive/a0ff50b0ac81afd15072af4b016df5566380b6a6.tar.gz",
-                sha256 = "515f5e586d113bb8e05da2565a0fbfe20f468737cba12b3ee321aab556112067",
+                url = "https://github.com/mcpplibs/imgui-m/archive/c753c95404f4e7c4b2bd80e5a8a349771bae0c01.tar.gz",
+                sha256 = "ed8755746e86601162834bae93148e2536089f11fa238ae6dde4250ba8a73db2",
             },
         },
         macosx = {
             ["1.92.8"] = {
-                url = "https://github.com/mcpplibs/imgui-m/archive/a0ff50b0ac81afd15072af4b016df5566380b6a6.tar.gz",
-                sha256 = "515f5e586d113bb8e05da2565a0fbfe20f468737cba12b3ee321aab556112067",
+                url = "https://github.com/mcpplibs/imgui-m/archive/c753c95404f4e7c4b2bd80e5a8a349771bae0c01.tar.gz",
+                sha256 = "ed8755746e86601162834bae93148e2536089f11fa238ae6dde4250ba8a73db2",
             },
         },
         windows = {
             ["1.92.8"] = {
-                url = "https://github.com/mcpplibs/imgui-m/archive/a0ff50b0ac81afd15072af4b016df5566380b6a6.tar.gz",
-                sha256 = "515f5e586d113bb8e05da2565a0fbfe20f468737cba12b3ee321aab556112067",
+                url = "https://github.com/mcpplibs/imgui-m/archive/c753c95404f4e7c4b2bd80e5a8a349771bae0c01.tar.gz",
+                sha256 = "ed8755746e86601162834bae93148e2536089f11fa238ae6dde4250ba8a73db2",
             },
         },
     },

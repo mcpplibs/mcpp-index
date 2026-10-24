@@ -1560,7 +1560,7 @@ jobs:
       - name: Installed Godot wrapper archive and actual standalone math template
         if: contains(format(' {0} ', env.MEMBERS), ' godot-math ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.godot_cpp@10.0.0-rc1
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.godot_cpp@10.0.0-rc1.1
 
       - name: Report temporarily untestable consumers of the unavailable MySQL source
         shell: bash

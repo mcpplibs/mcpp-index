@@ -97,3 +97,9 @@ and relevant links. They need not have identical line counts. Check translated
 heading anchors separately and keep reciprocal language links valid. Existing
 Chinese-only entry pages become English defaults with the corresponding Chinese
 content retained in `README.zh.md`, preserving their useful original layout.
+
+## License section
+
+Link root Apache-2.0 for the wrapper and retain the mcpp-community attribution
+in NOTICE. Link original upstream README/licenses under upstream/ and state
+that upstream components retain their own licenses. Follow the [licensing policy](mwrap-licensing.md).

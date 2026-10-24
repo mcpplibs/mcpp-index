@@ -38,7 +38,7 @@ Local logs: /tmp/mwrap-unified-{ffmpeg,imgui,godot}-local*.log;
 /tmp/mwrap-unified-llama-unit-final.log; /tmp/mwrap-unified-llama-local.log;
 /tmp/mwrap-unified-grpc-local-retry.log.
 
-No merge or release has occurred at this checkpoint. Formal archive URLs and
+At the initial implementation checkpoint no merge or release had occurred. Formal archive URLs and
 verified byte-identical CN mirrors replace commit snapshots only after release.
 Full current-head source/index CI, final ecosystem review, merge/tag consistency,
 GitCode asset fetch and installed published-index templates remain required.
@@ -48,7 +48,7 @@ GitCode asset fetch and installed published-index templates remain required.
 
 The user refined the common opening: title, one-sentence introduction, one line
 combining languages/upstream/Releases/mcpp/Index, badges, optional detailed
-introduction, then the original quickstart section. Characteristics is omitted;
+introduction, then Modules and the original quickstart section. Characteristics is omitted;
 actual mcpp manifest feature switches may use a concise table. The repetitive
 fixed tool-version/index-publication paragraph is removed. Pages may be shorter
 than the relaxed 100–150-line target. Canonical English/Chinese layout documents
@@ -86,3 +86,50 @@ LICENSE/ThirdPartyNotices.txt. Each uploaded CN resource was then fetched public
 and matched the same SHA256. The new SDK descriptor adds only the verified URL
 mirror table; SDK bytes, versions, ABI guards and runtime deployment stay intact.
 Evidence: /tmp/mwrap-ort-sdk-cn-records.json and /tmp/mwrap-mirror-ort-sdk.log.
+
+
+## Verified merge and publication checkpoint
+
+ORT, llama.cpp, Godot, ImGui and FFmpeg have now passed their exact PR-head CI
+and self-review and been squash merged. Their reviewed PR and squash trees are
+compared before tagging; squash-commit workflows remain separate release gates.
+OpenCV and gRPC still have active native CI at their frozen final PR heads.
+
+ORT 1.25.1 is formally published as mwrap-1.25.1. The GitHub source asset was
+downloaded twice, matched its published checksum, and matched every tracked
+squash-commit file. Its public GitCode mirror was fetched and matched the same
+SHA256, 75e35e39d45ae16462afce5c1a6bbacdd8e7bd8a23d4837f0308a4cdd989ceb0.
+Formal resource replacement is batched after the seven library releases; the
+current candidate index is not claimed to be published.
+
+Same-version cache tests alternate old/new/old/new identities in a fresh private
+home, building and running each consumer and checking lockfile namespace/version.
+FFmpeg, OpenCV and ImGui pass all four alternations. The immutable legacy llama
+b10069 archive fails LLVM23 compilation because its upstream header lacks getenv
+and atoi declarations. This is recorded as a legacy build failure, not a passed
+cache test; no historical archive or mcpp engine source is patched.
+
+Machine evidence: /tmp/mwrap-unified-merged-libraries.json,
+/tmp/mwrap-unified-tagged-libraries.json, /tmp/mwrap-unified-published-libraries.json,
+/tmp/mwrap-same-version-cache-results.json,
+/tmp/mwrap-more-cache-isolation-results.json.
+
+## User licensing correction
+
+The user added a common policy for all mwrap / xxx-m wrappers: Apache-2.0 wrapper
+license, mcpp-community attribution, original upstream README/license documents
+retained under upstream/. Automatic further tagging/publication has been stopped
+while seven repositories and the normative docs/skill are brought into alignment.
+ORT 1.25.1 has already been published; Godot 10.0.0-rc1 was tagged but its queued
+release workflow was cancelled. Those existing tags/assets will not be rewritten.
+Corrected versions use one wrapper revision suffix where a tag already exists.
+
+The seven license corrections are pushed. ORT #2, llama.cpp #6, FFmpeg #9,
+ImGui #14 and Godot #2 are follow-up PRs because their original identity PRs
+were already merged before the new policy instruction. OpenCV #1 and gRPC #8
+continue on their existing PRs. ORT now targets 1.25.1.1 and Godot 10.0.0-rc1.1,
+without changing either upstream SDK version. All seven release guards verify
+Apache-2.0, mcpp-community authors/NOTICE, pinned upstream document hashes and
+explicit notice deployment. Negative local cases reject wrong wrapper license,
+missing attribution, changed upstream bytes and missing NOTICE deployment.
+Native CI and final archive/installed-consumer verification are still pending.

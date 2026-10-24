@@ -8,4 +8,4 @@ description = "Run the immutable godot-cpp module wrapper without an engine"
 # An explicit empty table overrides the legacy workspace redirect.
 
 [dependencies]
-"mcpplibs.mwrap.godot_cpp" = "10.0.0-rc1"
+"mcpplibs.mwrap.godot_cpp" = "10.0.0-rc1.1"

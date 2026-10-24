@@ -156,3 +156,8 @@ Linux 消费方即使通过 C API 加载 C++ SDK，也要验证 C++ 运行时契
 生成清单、模块入口和配置头是构建输入；内容不变时保留时间戳，避免触碰公共配置头导致整份 vendored 实现重编。除了字节幂等，还应验证增量构建行为。
 
 README 导航统一使用 `[Upstream](上游地址)`；Modules 位于 Getting started 前，以完整 import 逐项列出核心模块，下方加 `> More Modules API` 文档链接。
+
+## 封装许可
+
+所有 mwrap / xxx-m 仓库遵守[许可规范](mwrap-licensing.md)：封装层默认 Apache-2.0，
+归属标识 mcpp-community，上游 README/许可证原样保留在 upstream/，已发布更正采用修订版。

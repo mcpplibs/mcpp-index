@@ -76,3 +76,8 @@ English · 简体中文 · [Upstream](upstream-url) · Releases · mcpp · Index
 中英文版本、命令、feature、平台限制和相关链接保持一致，无需行数机械相等。
 单独验证翻译后的标题锚点与双向链接。
 原本中文为主的默认页改为英文默认，同时在 `README.zh.md` 保留对应中文内容及有用布局。
+
+## 许可栏目
+
+封装链接顶层 Apache-2.0，NOTICE 标明 mcpp-community；链接 upstream/ 内保留的
+上游 README/许可证，并说明上游组件维持原有许可。遵守[许可规范](mwrap-licensing.md)。

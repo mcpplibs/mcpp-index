@@ -213,3 +213,9 @@ For Linux consumers loading a C++ SDK through a C API, verify the C++ runtime co
 Generated files are build inputs. Preserve their timestamps when content is unchanged, including manifests, module facades and configuration headers; touching an unchanged common header can rebuild the entire vendored implementation. Verify both byte idempotence and incremental behavior.
 
 README navigation uses `[Upstream](upstream-url)`. Modules precedes Getting started with complete import bullets and a `> More Modules API` documentation link.
+
+## Wrapper licensing
+
+All mwrap / xxx-m repositories follow the [licensing policy](mwrap-licensing.md):
+Apache-2.0 for wrapper contributions, mcpp-community attribution, original
+upstream README/licenses retained under upstream/, and immutable release corrections.
