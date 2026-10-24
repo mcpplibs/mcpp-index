@@ -90,6 +90,10 @@ description: Use when adding a new third-party library/package to the mcpp-index
     (日志中 `selected members: <member>`),`lint`(含 `mcpp xpkg parse`)与 `mirror-cn-reachable`
     覆盖新增描述符与 CN url。合并由维护者执行。
 
+加载 C++ SDK 的 Linux 消费者应验证运行时与 typed catch 契约，即使接口是 C API。
+已验证的 SDK 场景在模板中声明 `cxx_runtime = "toolchain-coupled"`，不能只用成功推理掩盖异常 ABI 冲突。
+模块适配生成器只写入实际变化的文件；复核公共头、manifest 和 facade 的时间戳幂等与增量构建。
+
 ## 自动更新与 PR 范围
 
 - 对公共 GitHub release/数字 tag、稳定下载模板、无需改变构建配方的包，主动添加

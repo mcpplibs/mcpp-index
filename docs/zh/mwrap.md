@@ -143,3 +143,7 @@ vendored 静态实现同样需要显式部署，不能依赖共享库扫描发�
 Git 与发布的 pkgs/mwrap 目录始终一致。
 
 运行库、插件、构建模块耦合的测试可能同时依赖多个候选 namespace。使用 `python3 tests/prepare_builtin_index.py --home <独立测试目录>`，将完整且字节不变的候选布局放入该测试 home 的唯一内置索引；成员用空 `[indices]` 覆盖旧 workspace 路由。自动更新候选 CI 同样使用此模式。不要将同一个完整 checkout 注册为多个项目别名。这只是测试 home 准备，不需要发布 staging、路径转换或修改 mcpp 引擎。
+
+Linux 消费方即使通过 C API 加载 C++ SDK，也要验证 C++ 运行时契约及异常路径。OpenCV/ORT 组合实测中，静态运行时与共享 SDK 运行时混用会使 typed catch 终止；选择 `cxx_runtime = "toolchain-coupled"` 后同一测试通过。模板必须声明已验证的契约，并执行一次类型化错误路径。
+
+生成清单、模块入口和配置头是构建输入；内容不变时保留时间戳，避免触碰公共配置头导致整份 vendored 实现重编。除了字节幂等，还应验证增量构建行为。
