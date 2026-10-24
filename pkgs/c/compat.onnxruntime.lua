@@ -3,7 +3,10 @@
 local version = "1.25.1"
 local function archive(name, sha256)
     return {
-        url = "https://github.com/microsoft/onnxruntime/releases/download/v" .. version .. "/" .. name,
+        url = {
+            GLOBAL = "https://github.com/microsoft/onnxruntime/releases/download/v" .. version .. "/" .. name,
+            CN = "https://gitcode.com/mcpp-res/onnxruntime-cpu-sdk/releases/download/" .. version .. "/" .. name,
+        },
         sha256 = sha256,
     }
 end

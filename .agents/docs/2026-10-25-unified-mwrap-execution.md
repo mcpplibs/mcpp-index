@@ -74,3 +74,15 @@ statements with descriptions, and ends with a More Modules API blockquote link.
 All fourteen READMEs have been checked against actual module declarations and
 local link destinations; usage documents no longer label modules with legacy
 names. These documentation changes retain the tested implementation bodies.
+
+
+## Official SDK CN mirror closure
+
+The official ONNX Runtime 1.25.1 CPU SDK is mirrored at
+https://gitcode.com/mcpp-res/onnxruntime-cpu-sdk/releases/tag/1.25.1 .
+Linux x64, macOS arm64 and Windows x64 archives were downloaded twice from the
+official release, matched their existing descriptor SHA256 values and retained
+LICENSE/ThirdPartyNotices.txt. Each uploaded CN resource was then fetched publicly
+and matched the same SHA256. The new SDK descriptor adds only the verified URL
+mirror table; SDK bytes, versions, ABI guards and runtime deployment stay intact.
+Evidence: /tmp/mwrap-ort-sdk-cn-records.json and /tmp/mwrap-mirror-ort-sdk.log.
