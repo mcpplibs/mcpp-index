@@ -54,8 +54,11 @@ def main():
         assert len(notices) == 1, f"Missing/ambiguous WebP notices: {notices}"
         for name in ("COPYING", "PATENTS", "AUTHORS"):
             assert (notices[0] / name).read_bytes() == (sdk / name).read_bytes(), name
-        source = next(Path(entry["file"]).parent.parent for entry in entries
-                      if Path(entry["file"]).name == "core.cppm")
+        # Public and detail producers share the basename core.cppm. Identify
+        # the actual archive root rather than depending on CDB entry order.
+        sources = (Path(entry["file"]).parent.parent for entry in entries
+                   if Path(entry["file"]).name == "core.cppm")
+        source = next(path for path in sources if (path / "upstream/opencv/LICENSE").is_file())
         originals = [source / "LICENSE", source / "port/licenses/UPSTREAM_SOURCE_NOTICES.txt",
                      *[path for path in (source / "upstream/opencv").rglob("*")
                      if path.is_file() and any(word in path.name for word in ("LICENSE", "COPYING", "COPYRIGHT", "NOTICE"))]]

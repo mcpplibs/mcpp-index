@@ -71,6 +71,18 @@ def main():
             else:
                 subprocess.run(command, cwd=project, env=env, check=True)
         print("Verified real indexed archive installation and unmodified template consumer", flush=True)
+        if identity == "mcpplibs.mwrap.opencv":
+            # Keep the rendered application/manifest unchanged. Reuse this
+            # fresh installation for the actual indexed API consumer as a test.
+            tests = project / "tests"
+            tests.mkdir(exist_ok=True)
+            consumer = tests / "mwrap_indexed_api.cpp"
+            assert not consumer.exists(), consumer
+            shutil.copyfile(root / "tests/mwrap/opencv-cpu/tests/pipeline.cpp", consumer)
+            command = [args.mcpp, "test", "mwrap_indexed_api", "--toolchain", args.toolchain, "--strict"]
+            print("+", " ".join(command), flush=True)
+            subprocess.run(command, cwd=project, env=env, check=True)
+            print("Verified indexed OpenCV API consumer after the unmodified template run", flush=True)
         if args.deploy:
             mode = "self-contained" if sys.platform.startswith("linux") else "vendored"
             command = [args.mcpp, "pack", "--toolchain", args.toolchain, "--mode", mode,

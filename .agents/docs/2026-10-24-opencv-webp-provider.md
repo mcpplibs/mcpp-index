@@ -152,3 +152,34 @@ becda22 is still running its five native jobs. Index 0861946 validation has
 OpenKAL checks pass. This pin change requires its own exact-head index CI.
 No source/index merge, release or tag is performed. Remaining OpenCV API/header
 classification and native CI gates still prevent a full-support readiness claim.
+
+## Final Mat conversion candidate archive
+
+The candidate now pins c052ccf15de43689c23b70952bb3c0a63779f71f on Linux,
+macOS and Windows, SHA256
+e7016133547422085b293800d102becfa6c5fc8bd3d0fa9f3a36b88ccf227674.
+Two independently downloaded archives are identical (14319338 bytes each).
+All 3716 tracked archive files match the source checkout byte-for-byte,
+including all 2305 retained SDK files. Source implementation checkpoint 93f2ce0
+repairs original Mat operand conversions; c052ccf adds capability documentation.
+The package remains an unpublished 5.0.0.1 candidate; historical descriptors
+and published resources are unchanged.
+
+The indexed CPU test now exercises typed-Mat addition, an exact original MatExpr
+assignment function pointer and affine-expression values, alongside image,
+scalar and FP contracts. Older cached candidates cannot satisfy these checks.
+Actual archive acceptance renders/builds/runs the unmodified default template,
+then copies this real consumer into a test in the same isolated home, reusing
+the same verified installation without changing its manifest or application.
+The consumer passes (2.46s). Release packing (4m41s), relocated isolated execution,
+ELF closure and all fifteen byte-identical OpenCV/wrapper notices pass.
+Log: /tmp/mwrap-c052ccf-template-api-deployment.log.
+
+WebP acceptance additionally selects the archive root by its retained SDK
+LICENSE instead of relying on the first core.cppm CDB entry: public and detail
+producers share that basename. The final fresh-home WebP deployment/18-notice
+check is running at /tmp/mwrap-c052ccf-webp-deployment.log; its result is not yet
+claimed. Pinned resolver parse, platform version parity, package/reserved-name
+checks, two routing regressions and seventeen updater tests pass. Final exact-head
+index/native CI and the requirement-by-requirement release review remain open.
+No merge, tag, release or mcpp engine change has been performed.

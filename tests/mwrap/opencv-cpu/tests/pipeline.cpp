@@ -36,6 +36,13 @@ int main() {
     cv::details::saveFPDenormalsState(after);
     for (int i = 0; i < 16; ++i)
         if (before.reserved[i] != after.reserved[i]) return 10;
+    cv::Mat_<float> left(2, 2, 3.f), right(2, 2, 4.f);
+    const cv::Mat sum = left + right;
+    if (sum.at<float>(0, 0) != 7.f) return 11;
+    cv::Mat_<float>& (*assign_expression)(cv::Mat_<float>&, const cv::MatExpr&) = &cv::operator+=<float>;
+    if (&assign_expression(left, right + right) != &left || left(0, 0) != 11.f) return 12;
+    const cv::Mat affine = left * 2 - right;
+    if (affine.at<float>(0, 0) != 18.f) return 13;
     std::println("OpenCV {} archive: exact gray pixels, PNG/JPEG roundtrips and scalar contracts passed",
                  cv::getVersionString());
 }
