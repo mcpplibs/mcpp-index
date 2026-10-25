@@ -345,3 +345,25 @@ regions and every tracked blob match the validated squash source. The sixth
 formal wrapper descriptor and the two independent 1.83.0.1 host-tool packaging
 entries now use those verified assets locally. Existing versions remain intact
 in the ad0f019-based audit; only OpenCV still uses a candidate source.
+
+
+All seven exact merge-commit workflows have now passed, including OpenCV
+Windows real ORT CPU/template execution in run 40155258597. Permanent source
+gate evidence is stored in [mwrap-source-gates](2026-10-25-mwrap-source-gates.json).
+OpenCV tag mwrap-5.0.0 and Release run 40163571662 also passed; published asset
+blob and GitCode mirror verification is still a separate remaining gate.
+
+
+All seven GitHub release assets and public GitCode mirrors now verify against
+their exact squash commits and archive hashes. Formal URL/hash/autoupdate
+entries replace every remaining commit candidate; ORT revision/floor 1 remains.
+The two appended gRPC host tool entries share the formal gRPC source archive.
+Permanent public resource evidence is in [mwrap-release-evidence](2026-10-25-mwrap-release-evidence.json).
+
+Final local checks pass on all 265 descriptors: Lua syntax, region URLs, atomic
+names, reserved namespaces, cross-package references, platform version parity,
+duplicate versions and the pinned mcpp resolver grammar. All seven updater
+configs, 19 updater regressions, four tag regressions and skill validation pass.
+The ad0f019-based audit preserves all existing versions, with zero remaining
+manual commit snapshots. Final remote index CI, ecosystem review/squash, actual
+index publication and artifact/Git installed consumers remain required.
