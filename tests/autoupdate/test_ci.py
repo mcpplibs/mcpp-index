@@ -33,6 +33,7 @@ class BaselineTests(unittest.TestCase):
             original = '''package = {
 spec="1", namespace="mcpplibs.mwrap", name="example",
 xpm={linux={["1.0.0"]={
+revision=1, floor=1,
 url="https://github.com/acme/example/archive/1111111111111111111111111111111111111111.tar.gz",
 sha256="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
 }}},

@@ -29,15 +29,19 @@ def immutable_commit_snapshot(info: dict) -> bool:
     urls = []
     for platform in info["platforms"].values():
         for value in platform["entries"].values():
-            entry = value.plain()
+            if value.kind != "table":
+                return False
+            entry = value.table()
             if "ref" in entry:
                 continue
+            # Inspect only the URL: revision/floor are valid numeric Lua
+            # fields that the updater's general plain() conversion rejects.
             url = entry.get("url")
-            if isinstance(url, dict):
-                url = url.get("GLOBAL")
-            if not isinstance(url, str):
+            if url is not None and url.kind == "table":
+                url = url.table().get("GLOBAL")
+            if url is None or url.kind != "string":
                 return False
-            urls.append(url)
+            urls.append(url.string())
     return bool(urls) and all(re.fullmatch(
         r"https://github\.com/[^/]+/[^/]+/archive/[0-9a-fA-F]{40}(?:[0-9a-fA-F]{24})?\.(?:tar\.gz|zip)",
         url) for url in urls)
