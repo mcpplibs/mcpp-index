@@ -297,3 +297,25 @@ Prepublication updater run 40150276617 at dc93f6b completed successfully: all
 12 actual candidate builds passed (four Godot stable SDK legs, eight gRPC host
 tool legs). Evidence: /tmp/mwrap-prepublication-twelve-candidate-ci-proof.json.
 This does not replace final formal-resource index CI.
+
+
+All seven current source PRs have passed exact-head native CI and self-review
+and are squash merged. OpenCV's five-platform run 40145824570 completed with
+success, including the last GCC real ORT CPU/template check, and PR #1 merged
+as `832664939561dfe058b73050c7704e307c811064`. The byte-pinned upstream notice
+and binary ONNX fixture were preserved; code whitespace checks pass. OpenCV
+and gRPC exact squash-commit CI remain required before their formal releases.
+
+
+Completion-audit gap: path/index-archive evidence alone does not prove Git
+index discovery. Added tests/mwrap/check_git_index_discovery.py for a fresh
+home with the supported [index.repos.mcpplibs] source="git" setting and no
+artifact fallback. It requires an actual Git checkout containing the expected
+merge commit, byte-identical seven short descriptors, real list/new for seven
+full identities, and rejection of an absent identity. Final execution remains
+pending the index merge; helper syntax/help alone is not acceptance.
+
+A preliminary project-index probe before publication checked out the current
+public main, which lacks the seven new packages; mcpp add accepted a selector
+with an unchecked warning. That is explicitly not discovery proof, and no
+engine modification or manual copying is used to turn it into a pass.
