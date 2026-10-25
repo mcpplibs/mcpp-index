@@ -158,3 +158,52 @@ host-tool dependencies are recognized. Nineteen updater regression tests pass;
 the actual corrected plan retains all eight gRPC host-tool build/run jobs,
 including Linux default/LLVM, Windows and macOS, rather than silently skipping
 them. Earlier failed CI is not counted as a pass.
+
+## Final user version instruction
+
+The user explicitly authorized overwriting problematic initial releases instead
+of adding wrapper suffixes: all seven target versions equal upstream exactly.
+ORT returns to 1.25.1 and Godot returns to 10.0.0-rc1. Earlier suffix decisions
+above are historical and superseded. Publication automation is stopped until
+corrected-commit gates and controlled replacement preflight are ready. Existing
+first-release metadata/assets are recorded before replacement for traceability.
+
+License deployment review also identified that the ORT SDK provider and wrapper
+both targeted licenses/onnxruntime/LICENSE with different licenses. Wrapper
+Apache-2.0 and NOTICE are moved into licenses/onnxruntime/wrapper; SDK MIT LICENSE
+and ThirdPartyNotices retain their own destination. The release guard and actual
+relocation acceptance verify these separate ownership paths.
+
+## Godot stable upgrade requested by user
+
+Switch the wrapper/provider target to 10.0.0 from upstream 10.0.0-stable, commit
+507ed9d840c01a3c5b2a39af8bb4000bfac30bf5. Follow its declared default Godot 4.7
+API (64-bit, single precision). Two independent upstream-only repacks match
+SHA256 66aaafb642e7a390482dc381818640b1d0e583da2ef0cc9709214bcd13b68264.
+Both public GLOBAL and CN SDK downloads match those bytes. Preserve the older
+compat versions, add 10.0.0 and a real header consumer, regenerate the wrapper
+from stable headers, and remove the obsolete linkage shim now fixed upstream.
+Legacy shim regeneration remains byte-identical; current stable compilation
+and new native CI remain required, not inferred from the old RC checks.
+
+Stable Godot local acceptance now passes: GCC16 and LLVM23 each run all three
+module/math/macro programs; a standalone original-header consumer passes; the
+summator shared GDExtension builds against the matching Godot 4.7 API. Source
+tests additionally instantiate the exported attributed template types via
+sizeof, and call the upstream out-of-line float/double hashes. The generated
+module reproduces exactly from the stable provider. Evidence:
+/tmp/mwrap-godot-stable-local-verified.log,
+/tmp/mwrap-godot-stable-local-results.json, /tmp/mwrap-godot-stable-sdk.json.
+
+Initial private-home failures involved incomplete borrowed compiler sysroots,
+not SDK build failures; complete managed Linux headers resolved them. The real
+GCC compile then exposed new diagnostic/attribute macros being mistaken for
+namespace declarations; parser regression and actual exported-type consumers
+now pass. Source/archive pins use the corrected committed heads, and source
+native CI is not substituted by old RC results.
+
+ORT first-release overwrite acceptance has an actual previous 1.25.1 installed
+in /tmp/mwrap-ort-overwrite-cache-check/home, with the original MIT root license
+and old source digest. After the authorized replacement, the same home will
+refresh and consume the corrected same-version source, checking its new license
+and actual inference. No wrapper version suffix is introduced.

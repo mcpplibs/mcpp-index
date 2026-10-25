@@ -51,3 +51,7 @@ windows	godot-math	1347
 windows	llamacpp-cpu	288
 windows	opencv-cpu	1101
 windows	opencv-webp	1104
+
+linux	godot-sdk	300
+macos	godot-sdk	300
+windows	godot-sdk	700

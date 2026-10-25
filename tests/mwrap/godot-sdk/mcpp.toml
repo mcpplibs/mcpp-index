@@ -1,0 +1,6 @@
+[package]
+name="godot-sdk"
+version="10.0.0"
+[indices]
+[dependencies.compat]
+godot-cpp="10.0.0"

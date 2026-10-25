@@ -19,6 +19,7 @@ members = [
     "tests/mwrap/grpc-cpu",
     "tests/mwrap/grpc-tools",
     "tests/mwrap/godot-math",
+    "tests/mwrap/godot-sdk",
     "tests/mwrap/onnxruntime-sdk",
     "tests/examples/abseil",
     "tests/examples/archive",

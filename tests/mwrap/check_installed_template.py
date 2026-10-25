@@ -16,7 +16,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--mcpp", default="mcpp")
     parser.add_argument("--toolchain", default="llvm@23.1.3")
-    parser.add_argument("--package", default="mcpplibs.mwrap.onnxruntime@1.25.1.1")
+    parser.add_argument("--package", default="mcpplibs.mwrap.onnxruntime@1.25.1")
     parser.add_argument("--deploy", action="store_true", help="pack, relocate and run the consumer; verify declared notices")
     parser.add_argument("--run-arg", action="append", default=[])
     parser.add_argument("--legacy-exact-key", action="store_true",
@@ -107,12 +107,28 @@ def main():
                 expected = hashlib.sha256(notices[0].read_bytes()).hexdigest()
                 assert any(p.is_file() and hashlib.sha256(p.read_bytes()).hexdigest() == expected
                            for p in installed), installed
+                sdk_license = notices[0].with_name("LICENSE")
+                assert sdk_license.is_file() and b"MIT License" in sdk_license.read_bytes(), sdk_license
+                assert any(p.with_name("LICENSE").is_file() and
+                           p.with_name("LICENSE").read_bytes() == sdk_license.read_bytes()
+                           for p in installed), "SDK MIT license changed or was overwritten"
+                commands = json.loads((project / "compile_commands.json").read_text(encoding="utf-8"))
+                wrapper = next(Path(item["file"]).parent.parent for item in commands
+                               if Path(item["file"]).name == "onnxruntime.cppm")
+                declared = tomllib.loads((wrapper / "mcpp.toml").read_text(encoding="utf-8"))["runtime"]["deploy"]
+                for entry in declared:
+                    source = wrapper / entry["from"]
+                    destination = notices[0].parent / Path(entry["to"]).relative_to("licenses/onnxruntime") / source.name
+                    assert destination.is_file() and destination.read_bytes() == source.read_bytes(), destination
+                assert b"Apache License" in (notices[0].parent / "wrapper/LICENSE").read_bytes()
+                assert b"mcpp-community" in (notices[0].parent / "wrapper/NOTICE").read_bytes()
+                print("Verified separate SDK MIT and wrapper Apache-2.0 licenses, NOTICE and retained upstream bytes", flush=True)
             elif identity == "mcpplibs.mwrap.opencv":
                 commands = json.loads((project / "compile_commands.json").read_text(encoding="utf-8"))
                 sources = [Path(item["file"]).parent.parent for item in commands
                            if Path(item["file"]).name == "core.cppm"]
                 source = next(path for path in sources if (path / "upstream/opencv/LICENSE").is_file())
-                notices = [source / "LICENSE", source / "port/licenses/UPSTREAM_SOURCE_NOTICES.txt",
+                notices = [source / "LICENSE", source / "NOTICE", source / "port/licenses/UPSTREAM_SOURCE_NOTICES.txt",
                            *[path for path in (source / "upstream/opencv").rglob("*")
                            if path.is_file() and any(word in path.name for word in ("LICENSE", "COPYING", "COPYRIGHT", "NOTICE"))]]
                 roots = list(relocated.rglob("licenses/opencv"))

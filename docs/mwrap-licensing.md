@@ -32,3 +32,9 @@ See the [Apache license application instructions](https://www.apache.org/license
 
 For byte-pinned upstream documents, disable Git newline conversion with
 `upstream/** -text` in `.gitattributes`; verify checkout hashes on Windows too.
+
+For this initial mwrap publication, the user explicitly authorized replacing
+the problematic first-release tags/assets instead of adding wrapper revisions.
+All seven package versions therefore equal upstream versions. Replacement is
+performed only after the corrected commit passes its gates; all download
+regions, checksums and installed-consumer checks must be synchronized.

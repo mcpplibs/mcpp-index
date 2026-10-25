@@ -219,3 +219,9 @@ README navigation uses `[Upstream](upstream-url)`. Modules precedes Getting star
 All mwrap / xxx-m repositories follow the [licensing policy](mwrap-licensing.md):
 Apache-2.0 for wrapper contributions, mcpp-community attribution, original
 upstream README/licenses retained under upstream/, and immutable release corrections.
+
+Initial-publication exception: when the user explicitly authorizes replacing a
+problematic first release before index publication, retain the exact upstream
+version and synchronize the replacement tag, source assets, mirrors and hashes.
+This execution has that authorization for its first mwrap releases; no revision
+suffix is added. Re-run current-commit CI and actual installed consumption.

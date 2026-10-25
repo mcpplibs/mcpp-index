@@ -161,3 +161,7 @@ README 导航统一使用 `[Upstream](上游地址)`；Modules 位于 Getting st
 
 所有 mwrap / xxx-m 仓库遵守[许可规范](mwrap-licensing.md)：封装层默认 Apache-2.0，
 归属标识 mcpp-community，上游 README/许可证原样保留在 upstream/，已发布更正采用修订版。
+
+首次发布收敛例外：用户已明确授权覆盖尚未进入正式索引的问题首发时，保持上游原始版本，
+同步替换 tag、源码资产、镜像和 hash，重新通过当前提交 CI 与真实安装验收。
+本轮七库已获此授权，不追加封装修订尾号。

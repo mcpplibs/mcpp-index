@@ -198,3 +198,7 @@ README 导航统一使用 `[Upstream](上游地址)`；Modules 位于 Getting st
 归属标签 mcpp-community；顶层 LICENSE/NOTICE、README badge、manifest 和新 wrapper 描述符保持一致。
 上游 README/许可证保留在 upstream/<lib>/，保留原字节和版权；不改写 compat provider 的原许可证。
 发布和部署必须携带适用通知；已发布更正追加修订尾号，不覆盖旧 tag、资源或 hash。
+
+首次发布收敛时，已有用户明确授权覆盖问题候选的，按上游原始版本替换候选发布，
+同步 tag、资产、镜像与 hash 并重验，不能再次以默认不可变策略要求加尾号或重复请求授权。
+这不隐含对其他已发布历史资源的覆盖权限。
