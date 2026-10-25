@@ -9,6 +9,11 @@
 
 ### Added
 
+- **`openkal-macos` 0.14.1、`openkal-musl` 0.21.1、`openkal-llvm-runtime` 0.15.6。** macOS 上
+  经 `fork` 复制的程序此前不能启动线程(`pthread_create` 返回 `EAGAIN`,
+  mcpplibs/openkal-musl#55):`kal_space_start` 只调用复制原语,而该系统的 `fork` 在原语前后
+  由系统库各部分加锁并在副本中更新自身状态。0.14.1 按系统库自身的顺序调用这些导出的部分;
+  0.21.1 与 0.15.6 移动锁定版本。两个 openkal 测试成员随之移动。GLOBAL/CN 与 sha256 的取法同上。
 - **`openkal` 0.16.0 及随之移动的七个包。** 规范新增 `kal_task_start_sized`(栈大小的下限,
   给不出时为 `kal_err_no_memory`)与 `KAL_TERM_PASS_INPUT`(环境不改写所输入的字节),
   并补述关闭目录即结束其未读完的枚举。`openkal-linux` 0.17.0、`openkal-macos` 0.14.0、
