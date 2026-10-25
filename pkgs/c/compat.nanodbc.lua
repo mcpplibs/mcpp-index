@@ -1,3 +1,10 @@
+local versions = {
+    ["3.0.8"] = {
+        url = "https://github.com/nanodbc/nanodbc/archive/refs/tags/v3.0.8.tar.gz",
+        sha256 = "bbb8ec400f0f84a7f6d61d4a4360e4c90eece6add3735e6b0b451ab90ca76f3e",
+    },
+}
+
 -- Form B inline descriptor for nanodbc — a small C++ wrapper for the native
 -- C ODBC API. One header, one implementation TU; MIT; frozen upstream
 -- (v2.14.0, March 2022, no commits since), so a single version is the whole
@@ -10,7 +17,8 @@
 -- ODBC driver manager and cannot run without one:
 --
 --   * windows — the SDK's odbc32 is always there; just link it.
---   * macOS   — iODBC is part of the OS; just link it.
+--   * macOS   — link the OS iODBC runtime. Its development headers are no
+--     longer in recent SDKs; install Homebrew libiodbc for those headers.
 --   * linux   — the manager (unixODBC) is a third-party library, and mcpp's
 --     runtime closure rejects binaries whose NEEDED libodbc.so.2 only exists
 --     on the host. compat.unixodbc therefore builds the manager STATICALLY
@@ -40,6 +48,13 @@ package = {
     repo        = "https://github.com/nanodbc/nanodbc",
     type        = "package",
 
+    extensions = {
+        autoupdate = {
+            tag = "v${version}",
+            url = "https://github.com/nanodbc/nanodbc/archive/refs/tags/${tag}.tar.gz",
+        },
+    },
+
     xpm = {
         linux = {
             ["2.14.0"] = {
@@ -50,18 +65,21 @@ package = {
                 url    = "https://github.com/nanodbc/nanodbc/archive/refs/tags/v2.14.0.tar.gz",
                 sha256 = "56228372042b689beccd96b0ac3476643ea85b3f57b3f23fb11ca4314e68b9a5",
             },
+            ["3.0.8"] = versions["3.0.8"],
         },
         macosx = {
             ["2.14.0"] = {
                 url    = "https://github.com/nanodbc/nanodbc/archive/refs/tags/v2.14.0.tar.gz",
                 sha256 = "56228372042b689beccd96b0ac3476643ea85b3f57b3f23fb11ca4314e68b9a5",
             },
+            ["3.0.8"] = versions["3.0.8"],
         },
         windows = {
             ["2.14.0"] = {
                 url    = "https://github.com/nanodbc/nanodbc/archive/refs/tags/v2.14.0.tar.gz",
                 sha256 = "56228372042b689beccd96b0ac3476643ea85b3f57b3f23fb11ca4314e68b9a5",
             },
+            ["3.0.8"] = versions["3.0.8"],
         },
     },
 
@@ -82,6 +100,7 @@ package = {
 #define MCPP_NANODBC_CHAR_TRAITS_H
 #include <cstdio>
 #include <cstring>
+#include <locale> // nanodbc 2.14 uses wstring_convert; codecvt no longer includes locale in libc++ 23.
 #include <string>
 #if defined(_LIBCPP_VERSION)
 namespace std {
@@ -142,7 +161,12 @@ struct char_traits<unsigned char> {
             cxxflags = { "-fpermissive" },
         },
         macosx = {
-            -- iODBC driver manager, part of the OS.
+            -- iODBC runtime is in the OS, but recent SDKs omit sql.h.
+            -- Homebrew's keg-only development headers (Apple Silicon/Intel).
+            include_dirs = {
+                "/opt/homebrew/opt/libiodbc/include",
+                "/usr/local/opt/libiodbc/include",
+            },
             ldflags = { "-liodbc" },
         },
         windows = {

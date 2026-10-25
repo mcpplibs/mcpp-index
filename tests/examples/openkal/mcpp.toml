@@ -1,0 +1,45 @@
+# openkal test project: the specification, the implementation for each runner,
+# and the packages that are consumed only for a target no runner here builds.
+#
+# What it protects. The specification resolves on every runner and its
+# declarations compile there; each implementation resolves, links and answers
+# on its own operating system; and the C-level behaviour of the round that
+# added the newest declarations holds on all three (tests/kal.cpp). A candidate
+# for one of these packages is built only where this manifest names it
+# (tests/autoupdate/ci.py, `member_platforms`): an implementation for another
+# system is not in the host's lock, so asking that runner would prove nothing.
+#
+# The last three entries are named under conditions no runner here builds for
+# --- a musl environment, WebAssembly, a 64-bit RISC-V machine --- so the
+# candidate gate schedules none of them, and their own repositories measure
+# them on their targets.
+[package]
+name    = "openkal-tests"
+version = "0.1.0"
+
+[dependencies.mcpplibs]
+openkal = "0.16.0"
+
+[target.'cfg(os = "linux")'.dependencies.mcpplibs]
+openkal-linux = "0.17.0"
+
+[target.'cfg(os = "macos")'.dependencies.mcpplibs]
+openkal-macos = "0.14.1"
+
+[target.'cfg(windows)'.dependencies.mcpplibs]
+openkal-windows = "0.12.0"
+
+[target.'cfg(all(os = "linux", env = "musl"))'.dependencies.mcpplibs]
+openkal-llvm-runtime = "0.15.6"
+
+[target.'cfg(arch = "wasm32")'.dependencies.mcpplibs]
+openkal-emscripten = "0.5.0"
+
+[target.'cfg(arch = "riscv64")'.dependencies.mcpplibs]
+openkal-opensbi = "0.8.3"
+
+# This member names mcpplibs packages, which the workspace root's single
+# redirect does not carry, so it states its own (mcpp.toml at the root says why
+# a member that needs another namespace declares its own table).
+[indices]
+mcpplibs = { path = "../../.." }

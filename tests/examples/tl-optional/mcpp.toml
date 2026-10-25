@@ -1,0 +1,8 @@
+# tl-optional test project: exercise the standard optional surface plus the
+# extensions that distinguish this library from std::optional.
+[package]
+name = "tl-optional-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+tl-optional = "1.1.0"

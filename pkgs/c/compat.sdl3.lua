@@ -116,9 +116,42 @@
 -- derived as above and confirmed by CI rather than locally — there is no way
 -- to compile either from here.
 --
--- CN mirror: `gitcode.com/mcpp-res/sdl3`, the upstream tarball re-hosted
--- BYTE-IDENTICALLY (verified: the mirror's sha256 equals the one declared
--- here). GLOBAL stays the default.
+-- ── 3.4.18: a patch bump that moved no source list ─────────────────────────
+--
+-- Everything above is a property of the SHAPE (config dispatcher, source
+-- lists), and 3.4.2 → 3.4.18 leaves the shape alone. Measured against both
+-- tarballs rather than assumed, because a patch does not imply a patch:
+--
+--   * `git diff --no-index --name-status` over `src/`: **4 files added, 0
+--     removed.** Two are Vulkan shader headers in a directory that is already
+--     globbed whole; the other two are `src/video/wayland/SDL_waylandutil.{c,h}`
+--     and wayland is off here — `src/video/wayland` appears in no list above.
+--     So no glob gains and none needs an entry.
+--   * the CHECKED-IN windows/macOS configs (`include/build_config/`) are
+--     byte-identical between the two tags — which is the whole reason the
+--     windows/macOS source lists above survive the bump, since they were
+--     derived from those headers.
+--   * `include/build_config/SDL_build_config.h.cmake` — the template the linux
+--     config was generated from — moves by three lines, neither of which
+--     reaches the generated block below: `HAVE__UITOA` was dropped (already
+--     `/* #undef */` here) and `SDL_EMSCRIPTEN_PERSISTENT_PATH_STRING` was
+--     added (emscripten only).
+--   * upstream's `CMakeLists.txt` selects the same sources: its diff touches
+--     no `.c`/`.cpp`/`.m` line except one re-indent.
+--
+-- ⚠️ The generated linux config is NOT regenerated, and that is deliberate: it
+-- is a frozen CMake output, so a macro 3.4.18 added and this file never learned
+-- about reads as "off" — the conservative direction, and the same one the
+-- original generation was trimmed in. Regenerating it means re-running the
+-- CMake invocation in the header above with the index toolchain and re-checking
+-- the seven `dlopen` names against packages, so it is worth doing when a define
+-- is actually needed, not per patch.
+--
+-- CN mirror: `gitcode.com/mcpp-res/sdl3` — 3.4.2 only. The upstream tarball
+-- re-hosted BYTE-IDENTICALLY (verified: the mirror's sha256 equals the one
+-- declared here). 3.4.18 is not mirrored yet, so its entry below declares the
+-- upstream url as a plain string and CN consumers fall back to GLOBAL; the
+-- mirror is a `mcpp-res` upload away. GLOBAL stays the default either way.
 package = {
     spec        = "1",
     namespace   = "compat",
@@ -127,6 +160,13 @@ package = {
     licenses    = {"Zlib"},
     repo        = "https://github.com/libsdl-org/SDL",
     type        = "package",
+
+    extensions = {
+        autoupdate = {
+            tag = "release-${version}",
+            url = "https://github.com/libsdl-org/SDL/archive/refs/tags/${tag}.tar.gz",
+        },
+    },
 
     xpm = {
         linux = {
@@ -137,6 +177,14 @@ package = {
                 },
                 sha256 = "515ee4ad6e910e0ad8d8bbccb24ac52dd16c419e23eea3fb83541d20130c7aaa",
             },
+            -- No CN mirror yet; plain-string url is the documented fallback
+            -- (compat.ftxui does the same for its un-mirrored 7.0.3). Flip to
+            -- { GLOBAL, CN } once uploaded — sha256 does not move, the mirror
+            -- re-hosts this archive byte-identically.
+            ["3.4.18"] = {
+                url    = "https://github.com/libsdl-org/SDL/archive/refs/tags/release-3.4.18.tar.gz",
+                sha256 = "c4b08b950bd29d83caae0ab8d884298d27046a9d30700fb42841c50992665c90",
+            },
         },
         macosx = {
             ["3.4.2"] = {
@@ -146,6 +194,11 @@ package = {
                 },
                 sha256 = "515ee4ad6e910e0ad8d8bbccb24ac52dd16c419e23eea3fb83541d20130c7aaa",
             },
+            -- No CN mirror yet; see the note on the linux block.
+            ["3.4.18"] = {
+                url    = "https://github.com/libsdl-org/SDL/archive/refs/tags/release-3.4.18.tar.gz",
+                sha256 = "c4b08b950bd29d83caae0ab8d884298d27046a9d30700fb42841c50992665c90",
+            },
         },
         windows = {
             ["3.4.2"] = {
@@ -154,6 +207,11 @@ package = {
                     CN     = "https://gitcode.com/mcpp-res/sdl3/releases/download/3.4.2/sdl3-3.4.2.tar.gz",
                 },
                 sha256 = "515ee4ad6e910e0ad8d8bbccb24ac52dd16c419e23eea3fb83541d20130c7aaa",
+            },
+            -- No CN mirror yet; see the note on the linux block.
+            ["3.4.18"] = {
+                url    = "https://github.com/libsdl-org/SDL/archive/refs/tags/release-3.4.18.tar.gz",
+                sha256 = "c4b08b950bd29d83caae0ab8d884298d27046a9d30700fb42841c50992665c90",
             },
         },
     },

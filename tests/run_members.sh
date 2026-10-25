@@ -20,6 +20,7 @@
 # Env:
 #   MCPP              path to the mcpp binary (default: `mcpp` on PATH)
 #   MCPP_TIMINGS      where to append `<seconds>\t<member>\t<ok|FAIL>` rows
+#   MCPP_HOME         test home; mwrap defaults to target/mwrap-test-home
 #
 # Exit status is non-zero if any member failed. The timing table is printed
 # regardless — a slow run is worth measuring even when it breaks.
@@ -66,10 +67,10 @@ done
 if [ "$all" = 1 ]; then
     while IFS= read -r m; do
         [ -n "$m" ] || continue
-        [ -d "tests/examples/$m" ] || continue
+        if [ ! -d "tests/examples/$m" ] && [ ! -d "tests/mwrap/$m" ]; then continue; fi
         members+=("$m")
-    done < <(grep -o 'tests/examples/[A-Za-z0-9._-]*' mcpp.toml \
-             | sed 's|tests/examples/||' | sort -u)
+    done < <(grep -oE 'tests/(examples|mwrap)/[A-Za-z0-9._-]+' mcpp.toml \
+             | sed -E 's|tests/(examples|mwrap)/||' | sort -u)
 fi
 
 if [ "${#members[@]}" -eq 0 ]; then
@@ -112,6 +113,19 @@ if [ -n "$shard" ]; then
 fi
 
 [ -n "$cache" ] && export MCPP_BUILD_CACHE="$cache"
+for m in "${members[@]}"; do
+    if [ -d "tests/mwrap/$m" ]; then
+        # Mixing a full compat project alias with later namespace-only aliases
+        # reuses xlings candidates across workspace members. A single complete
+        # built-in candidate index avoids that order-dependent ambiguity.
+        export MCPP_HOME="${MCPP_HOME:-$PWD/target/mwrap-test-home}"
+        if [ ! -d "$MCPP_HOME/registry" ]; then
+            "$MCPP" index update || exit $?
+        fi
+        python3 tests/prepare_builtin_index.py --home "$MCPP_HOME" || exit $?
+        break
+    fi
+done
 echo "cache mode: ${MCPP_BUILD_CACHE:-global (default)}"
 
 rows=$(mktemp)

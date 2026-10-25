@@ -9,6 +9,126 @@
 
 ### Added
 
+- **`openkal-macos` 0.14.1、`openkal-musl` 0.21.1、`openkal-llvm-runtime` 0.15.6。** macOS 上
+  经 `fork` 复制的程序此前不能启动线程(`pthread_create` 返回 `EAGAIN`,
+  mcpplibs/openkal-musl#55):`kal_space_start` 只调用复制原语,而该系统的 `fork` 在原语前后
+  由系统库各部分加锁并在副本中更新自身状态。0.14.1 按系统库自身的顺序调用这些导出的部分;
+  0.21.1 与 0.15.6 移动锁定版本。两个 openkal 测试成员随之移动。GLOBAL/CN 与 sha256 的取法同上。
+- **`openkal` 0.16.0 及随之移动的七个包。** 规范新增 `kal_task_start_sized`(栈大小的下限,
+  给不出时为 `kal_err_no_memory`)与 `KAL_TERM_PASS_INPUT`(环境不改写所输入的字节),
+  并补述关闭目录即结束其未读完的枚举。`openkal-linux` 0.17.0、`openkal-macos` 0.14.0、
+  `openkal-windows` 0.12.0、`openkal-emscripten` 0.5.0 实现三者;`openkal-opensbi` 0.8.3
+  只移动规范的锁定版本;`openkal-musl` 0.21.0 让线程得到所请求的栈并在 raw 模式下区分
+  回车与 Ctrl+J;`openkal-llvm-runtime` 0.15.5 移动 C 库的锁定版本。GLOBAL 为上游 tag 归档,
+  CN 为逐字节相同的 gitcode 资源,均按记录的 sha256 核对。
+  新增两个测试成员:`tests/examples/openkal`(规范在三平台、各实现在自身平台,以及新声明的 C
+  层行为)与 `tests/examples/openkal-musl`(三份报告的原始程序,Linux)。
+- **`compat.httplib` 0.62.0。** 在 `0.53.1` 之外新增版本键(旧键保留)。仍是纯头文件 Form B:
+  归档根目录仍只有一份 `httplib.h`(747,115 → 846,648 字节,增量是 SSE 客户端、WebSocket
+  辅助与加固,全部落在头内,不引入 define、源文件或链接依赖),描述符的内联构建无需改动。
+  上游 CMake 的 `option()` 集合与 `target_link_libraries` 在 0.53.1→0.62.0 之间逐项相同
+  (两版实测 diff),三平台 ldflags 照旧。0.62.0 上游认识 wolfSSL/MbedTLS 后端,但本索引
+  没有对应的 compat 包,`tls` 仍只接 OpenSSL,不新增 feature。实测(Windows / mcpp
+  2026.10.11.1 / LLVM 23.1.3 + MSVC 14.44):`mcpp xpkg parse` OK;`httplib`、`httplib-zlib`、
+  `httplib-brotli`、`httplib-no-exceptions` 各 1 passed。`httplib-tls` 与 `httplib-zstd`
+  在本机都止步于依赖安装、未编到本包:`compat.openssl` 3.5.1 的 Windows 安装钩子需要带
+  `Locale::Maketext::Simple` 的 Perl,而本机没有 Perl;`compat.zstd` 1.5.7 的上游 tag 归档含
+  符号链接 `tests/cli-tests/bin/unzstd -> zstd`,Windows 上 xlings 无法创建。两项都与本次
+  改版无关,交 CI 裁决。六个测试成员同步改到 0.62.0。
+- **`compat.wolfssl` 5.9.4。** wolfSSL(TLS/crypto)以 C 源码 compat 形态收录,上游最新稳定
+  tag 为 `v5.9.4-stable`。上游的 autotools/CMake 都会在编译前生成 `wolfssl/options.h`,而内联
+  描述符无法运行 configure,因此把该步骤的两项输出原样带入:`sources` 逐条抄自上游 CMake 默认
+  的 `generate_lib_src_list()`(5.9.4 的 `src/ssl_*.c`、`src/bio.c`、`src/x509*.c`、
+  `src/pk*.c`、`src/conf.c` 由 `src/ssl.c` `#include`,故不单列;`wolfcrypt/src/{evp,
+  evp_pk,asn_tsp,asm,ecc_fp}.c` 同理);`generated_files` 写入
+  `mcpp_generated/wolfssl/options.h`,即 CMake 默认选项生成的配置头,平台探测改写为
+  `_WIN32`/`__linux__`/`__SIZEOF_INT128__`/x86_64/aarch64 分支。描述符通过 `cflags` 与
+  default-implied feature 同时下发 `WOLFSSL_USE_OPTIONS_H`,库与消费者编译同一份配置,
+  结构体布局和功能集不会分叉。默认功能集:TLS 1.3/1.2、AES-GCM、ChaCha20-Poly1305、ECC、
+  DH、RSA-PSS、SHA-2/3/SHAKE、ML-KEM,并保留 CMake 的加固默认值(`NO_OLD_TLS`/`NO_DES3`/
+  `NO_RC4`/`NO_MD5`/`NO_MD4`/`NO_DSA`/`NO_PSK`);Curve25519/Ed25519 与系统 CA 读取在
+  CMake 默认配置里本就关闭,本包保持一致。CN 镜像尚未发布到 `mcpp-res`,按先例用纯字符串
+  url 回退 GLOBAL。实测(Windows / mcpp 2026.10.17.1 / LLVM):
+  `mcpp xpkg parse --all-os pkgs/c/compat.wolfssl.lua` 三平台 `parse OK`(38 sources,
+  2 include dirs,1 generated file);冷 `mcpp test -p wolfssl` →
+  `test result ok. 1 passed; 0 failed`(头文件版本串、SHA-256 KAT、AES-256-GCM 往返及
+  坏 tag 拒绝、RNG、P-256 密钥导出)。新增成员 `tests/examples/wolfssl`;linux/macOS
+  两腿交 CI 裁决。
+
+- **`compat.soci` 4.1.4。** SOCI(C++ 数据库访问层)以 C++ 源码 compat 形态收录:上游 `src/core`
+  的 22 个 TU 与 sqlite3 后端的 10 个 TU 编入**同一个 lib** —— 上游 CMake 把它们拆成
+  `soci_core`/`soci_sqlite3` 两个库,但 mcpp 的 `sources` 是每包一张表,且没有后端的 core 连
+  `session` 都开不了,所以拍平。两处"上游归档里没有、必须补"的东西:`3rdparty/sqlite3` 是**空的
+  git submodule**,由 `compat.sqlite3` 3.45.3 的依赖边替代(与 `compat.sqlitecpp` 同构);
+  SOCI 4.1 起 core 与后端共 12 个 TU 无条件 `#include <fmt/format.h>`,依赖刚落的 `compat.fmt`
+  12.2.0 —— **必须是普通形态,且这是实测**:先按「取 `fmtlib.fmt` 的头 + `FMT_HEADER_ONLY` 编进
+  自己的 TU」实现过,`mcpp test -p soci` 一路走到**链接期**才失败,
+  `lld-link: error: duplicate symbol … fmt::v12::detail::dragonbox::cache_accessor<double>::compute_mul`
+  (模块对象的 COMDAT 键与 header-only 的不相撞),换成编译库形态后无需任何 define。
+  三组 CMake PRIVATE 定义分别落地:`-DSOCI_SQLITE3_SOURCE=1` 进 `cxxflags`(缺它
+  `soci-sqlite3.h` 只给两句前置声明,每个 `sqlite3_*` 调用都报 "use of undeclared identifier" ——
+  消费者走的恰是**不定义**的那条路,所以它必须止步于本包);带引号的
+  `SOCI_LIB_PREFIX`/`SOCI_LIB_SUFFIX`/`SOCI_DEBUG_POSTFIX` 走 `-include` shim(引号穿不过
+  描述符 → mcpp → argv 管道,`compat.unixodbc` 撞过同一堵墙);`SOCI_HAVE_SQLITE3` 所在的
+  `soci-config.h` 是 CMake `file(GENERATE)` 产物、**不随 tarball 发布**,按「只开 sqlite3」
+  时的输出逐字节复刻进 `generated_files`。Boost 不做依赖:不加 `SOCI_USE_BOOST` 时全部源码不碰它。
+  其余七个后端**不做 feature**:它们的客户端库要么根本不在索引里(libpq / Oracle / DB2 /
+  Firebird),要么驱动管理器按平台来源天差地别而 feature 的 `deps` 没有平台门控(odbc 在 linux 靠
+  `compat.unixodbc` 源码构建、windows/macOS 靠系统 SDK);以后加后端是一行 `sources` 加一行
+  `deps`,不是重构。实测:`mcpp xpkg parse pkgs/c/compat.soci.lua` → `parse OK`;
+  `mcpp test -p soci` 冷验证 → `test result ok. 1 passed; 0 failed`(llvm 23.1.3 / MSVC ABI)——
+  `:memory:` 建表、绑定参数双向往返、rowset 迭代、`indicator` 区分 NULL、事务三条路径
+  (显式 `rollback()` / 出作用域未 commit 自动回滚 / `commit()`)、后端自带错误码与
+  `constraint_violation` 分类、`SOCI_VERSION` 精确断言。消费侧命令行另有两条旁证:实测**无
+  `-DNDEBUG`**(所以那批断言是活的,不是空测试)、**无 `-DSOCI_SQLITE3_SOURCE`**(私有定义
+  确实没外泄)。⚠️ 后端以 `soci::sqlite3` **工厂对象**取得:`session("sqlite3", …)` 会走 SOCI 的
+  动态加载器去 dlopen 一个本包故意不产出的 `libsoci_sqlite3.so`。⚠️ CN 镜像尚未发布到
+  `mcpp-res`,按先例用纯字符串 url 回退 GLOBAL,补传后 sha256 不变。新增成员
+  `tests/examples/soci`;linux/macOS 两腿交 CI 裁决。
+
+- **`compat.fmt` 12.2.0。** {fmt} 的**头文件形态**(`#include <fmt/format.h>` + 链接)收录,
+  即 `fmtlib.fmt`(模块形态)的非模块兄弟:同一个上游归档、同一个 sha256,身份却分开 ——
+  想要 `#include` 写法的工程不必为此背上一个自己从不 `import` 的模块 BMI。形态是编译库:
+  `sources` 直接抄上游默认 lib 的两份实现 TU(`*/src/format.cc`、`*/src/os.cc`,即 CMake 的
+  `add_library(fmt src/format.cc)` 加上 `FMT_OS` 默认 ON 的 `src/os.cc`),
+  `include_dirs = {"*/include"}`(前导 `*` 吃掉 `fmt-12.2.0/` 包装层)。没有
+  `generated_files`、没有 anchor,也不需要任何 define:`FMT_OS` 在 12.2.0 已不被头文件读取,
+  `FMT_SHARED`/`FMT_LIB_EXPORT` 是静态链路上不该定义的 DLL 词法,而 `src/fmt.cc` 是模块 unit,
+  归 `fmtlib.fmt`。上游那个**独立的** C API 静态库(`src/fmt-c.cc` + `include/fmt/fmt-c.h`)
+  按仓内 sources-only feature 收成 `features = { ["c-api"] = … }`,默认 OFF:只要 C++ 头的
+  消费者不付这个 TU。**门控经负向实测**:把 `tests/examples/fmt-c` 的依赖改回纯版本号,它在
+  **链接期**报 `lld-link: error: undefined symbol: fmt_vformat` 与 `fmt_vprint`(`fmt_arg`
+  的构造在头里是 `static inline`,未解析符号只可能是 fmt-c.cc 的),带 feature 时包构建报
+  3 units、不带报 2 units。⚠️ MSVC 的 `/utf-8` 属**消费侧**:上游标记它 PUBLIC 的唯一来源是
+  `chrono.h` 的 `"µs"` 字面量,而本包三个 TU 及它们包含的全部头(base.h / format.h /
+  format-inl.h)实测均为纯 ASCII;`cxxflags` 只作用于本包 TU,替消费侧表达不了,故不声明,
+  只写进描述符注释。⚠️ CN 镜像尚未发布到 `mcpp-res`,按 `compat.rapidcsv` 的先例用纯字符串
+  url 回退 GLOBAL;补传镜像后改回 `{ GLOBAL, CN }` 即可,sha256 不变。
+  实测:`mcpp xpkg parse pkgs/c/compat.fmt.lua` → `parse OK`;`mcpp test -p fmt` →
+  `test result ok. 2 passed; 0 failed`(format.cc 的编译库断言 + os.cc 的
+  `getpagesize`/pipe 往返),`mcpp test -p fmt-c` → `1 passed; 0 failed`;`.xpkg.lua` 快照
+  里就是本 checkout 这份带 `c-api` 表的描述符,证明解析没落到远端已发布索引。新增成员
+  `tests/examples/fmt` 与 `tests/examples/fmt-c`;linux/macOS 两腿交 CI 裁决。
+
+- **`compat.sdl3` 3.4.18。** 在 3.4.2 之外新增版本键(旧键保留,与 `compat.ftxui`
+  等既有做法一致)。**补丁号不等于补丁**:这份描述符里真正会失效的东西是源集与两份
+  签入 config,所以四处都按两个 tarball 实测过,而不是假定 —— `src/` 只增 4 个文件
+  (两个 Vulkan 着色器头落在已整目录 glob 的目录里;另两个是
+  `src/video/wayland/SDL_waylandutil.{c,h}`,wayland 本就不在任何列表里),签入的
+  windows/macOS config 与 3.4.2 **逐字节相同**(两个平台的源集正是从它们反推的,
+  所以这次抬版本它们照用),linux config 的模板只动三行(删掉的 `HAVE__UITOA` 本就
+  未定义,新增的 `SDL_EMSCRIPTEN_PERSISTENT_PATH_STRING` 只对 emscripten 有意义),
+  上游 `CMakeLists.txt` 的源选择未变(唯一的 `.c/.m` 命中行是缩进)。
+  ⚠️ 生成的 linux config **不重新生成**:它是冻结的 CMake 输出,3.4.18 新增而它不知道
+  的宏一律读作关闭 —— 与当初裁剪的方向一致,也与「config 只许声明索引真正打了包的
+  东西」同源。⚠️ CN 镜像 3.4.18 尚未发布到 `mcpp-res`,按 `compat.ftxui` 7.0.3 的先例
+  用纯字符串 url 回退到 GLOBAL(`list_cn_urls.lua` 明写忽略纯字符串 url,所以
+  `mirror-cn-reachable` 对这一条是空集);补传镜像后改回 `{ GLOBAL, CN }` 即可,
+  sha256 不变(镜像按原样重托管 tag 归档)。
+  实测:windows 本地 `mcpp test -p sdl3` 编完并跑通 —— 3.4.18 报出 3 个视频驱动,
+  dummy 窗口 320x240、定时器前进,`test result ok. 1 passed`。linux/macOS 两条腿由
+  CI 裁决:冻结的 linux config 是这次唯一没有被本地证伪的东西。
+
 - **`compat.libserial` 1.0.0。** LibSerial 的 `SerialPort`/`SerialStream` 以 compat
   形态收录:上游 CMake `LIBSERIAL_SOURCES` 的三个 TU 编成一个 lib,公开头经
   `include_dirs` 暴露。仅声明 `linux`(公开头以 `<termios.h>` 开头、实现触及
@@ -75,6 +195,12 @@
   `yaml-cpp-v080`),都列入 `tests/openkal/members.toml` 在 openkal 上测量。
 
 ### Changed
+
+- **候选门只在消费者构建候选包的平台上调度它。** `tests/autoupdate/ci.py` 的
+  `member_platforms` 读取消费者清单:无条件依赖在三个平台调度;`cfg(os = ...)` 或
+  `cfg(windows)` 下的依赖只在该平台调度;其余条件(环境、架构)不调度任何宿主作业,由包自身仓库
+  在目标上测量。mcpp 只锁定宿主解析到的包,向另一平台的 runner 要平台包的锁定证明必然失败;
+  `test_ci.py` 覆盖了这条规则。
 
 - **站点的 openkal 分面改为两个取值:`openkal-ecosystem` 与 `openkal-compat`。** 原先的
   「openkal itself / runs on openkal / fails on openkal」是句子而不是名字。构成 openkal 的

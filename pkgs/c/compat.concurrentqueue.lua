@@ -42,6 +42,13 @@ package = {
     repo        = "https://github.com/cameron314/concurrentqueue",
     type        = "package",
 
+    extensions = {
+        autoupdate = {
+            tag = "v${version}",
+            url = "https://github.com/cameron314/concurrentqueue/archive/refs/tags/${tag}.tar.gz",
+        },
+    },
+
     xpm = {
         linux = {
             ["1.0.5"] = {

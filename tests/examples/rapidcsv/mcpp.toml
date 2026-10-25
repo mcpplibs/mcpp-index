@@ -1,0 +1,17 @@
+# rapidcsv test project: parse a small in-memory CSV and assert the document
+# model (header names, typed cells, a whole column) plus quoted-field
+# semantics.
+#
+# `compat.rapidcsv` is spelled qualified so the workspace-root [indices]
+# redirect applies, and this member repeats the one-entry redirect itself
+# (same as etl/gsl): the dependency must resolve to THIS checkout's descriptor,
+# not to whatever the published remote index serves.
+[package]
+name    = "rapidcsv-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+rapidcsv = "9.07"
+
+[indices]
+compat = { path = "../../.." }

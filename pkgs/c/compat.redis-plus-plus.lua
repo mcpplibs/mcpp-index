@@ -1,3 +1,10 @@
+local versions = {
+    ["1.3.15"] = {
+        url = "https://github.com/sewenew/redis-plus-plus/archive/refs/tags/1.3.15.tar.gz",
+        sha256 = "e9288fda74f1501c62dd9ab7d6a8dc67de51aa4d5b7c71770baa51987a945941",
+    },
+}
+
 -- compat.redis-plus-plus — redis-plus-plus 1.3.13, C++ client for Redis.
 --
 -- Shape A (C++-source compat) with one small Shape-E trait: the single header
@@ -50,6 +57,13 @@ package = {
     repo        = "https://github.com/sewenew/redis-plus-plus",
     type        = "package",
 
+    extensions = {
+        autoupdate = {
+            tag = "${version}",
+            url = "https://github.com/sewenew/redis-plus-plus/archive/refs/tags/${tag}.tar.gz",
+        },
+    },
+
     xpm = {
         linux = {
             ["1.3.3"] = {
@@ -60,6 +74,7 @@ package = {
                 url    = "https://github.com/sewenew/redis-plus-plus/archive/refs/tags/1.3.13.tar.gz",
                 sha256 = "678a61898ed72f0c692102c7ce103a1bcae1e6ff85a4ad03e6002c1ba8fe1e08",
             },
+            ["1.3.15"] = versions["1.3.15"],
         },
         macosx = {
             ["1.3.3"] = {
@@ -70,6 +85,7 @@ package = {
                 url    = "https://github.com/sewenew/redis-plus-plus/archive/refs/tags/1.3.13.tar.gz",
                 sha256 = "678a61898ed72f0c692102c7ce103a1bcae1e6ff85a4ad03e6002c1ba8fe1e08",
             },
+            ["1.3.15"] = versions["1.3.15"],
         },
         windows = {
             ["1.3.3"] = {
@@ -80,6 +96,7 @@ package = {
                 url    = "https://github.com/sewenew/redis-plus-plus/archive/refs/tags/1.3.13.tar.gz",
                 sha256 = "678a61898ed72f0c692102c7ce103a1bcae1e6ff85a4ad03e6002c1ba8fe1e08",
             },
+            ["1.3.15"] = versions["1.3.15"],
         },
     },
 

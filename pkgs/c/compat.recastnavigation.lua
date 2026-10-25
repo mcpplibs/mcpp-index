@@ -58,6 +58,13 @@ package = {
     repo        = "https://github.com/recastnavigation/recastnavigation",
     type        = "package",
 
+    extensions = {
+        autoupdate = {
+            tag = "v${version}",
+            url = "https://github.com/recastnavigation/recastnavigation/archive/refs/tags/${tag}.tar.gz",
+        },
+    },
+
     xpm = {
         linux = {
             ["1.6.0"] = {

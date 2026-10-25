@@ -31,13 +31,15 @@ jobs:
           python-version: '3.12'
 
       - name: Install xpkgindex
-        run: pip install git+https://github.com/openxlings/xpkgindex.git
+        run: pip install -r .xpkgindex/requirements.txt
 
       - name: Build the site
         # --strict turns the growth reconciliation warning into an error: if
         # the replayed history disagrees with the tree, the curve on the site
         # would be wrong, and that is worth failing a pull request over.
-        run: xpkgindex generate . --output /tmp/site --offline --strict | tee /tmp/build.log
+        run: |
+          set -o pipefail
+          xpkgindex generate . --output /tmp/site --offline --strict 2>&1 | tee /tmp/build.log
 
       - name: No warnings
         # A duplicate slug or an unparsable descriptor already fails above.

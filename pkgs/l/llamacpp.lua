@@ -23,6 +23,13 @@ package = {
     repo        = "https://github.com/mcpplibs/llama.cpp-m",
     type        = "package",
 
+    extensions = {
+        autoupdate = {
+            tag = "v${version}",
+            url = "https://github.com/mcpplibs/llama.cpp-m/archive/refs/tags/${tag}.tar.gz",
+        },
+    },
+
     xpm = {
         linux = {
             ["0.1.0"] = {

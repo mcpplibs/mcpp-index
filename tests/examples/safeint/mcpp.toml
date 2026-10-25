@@ -1,0 +1,9 @@
+# SafeInt test project: one TU covers SafeInt.hpp and another covers the
+# independent safe_math.h API. Upstream forbids including both headers in the
+# same translation unit.
+[package]
+name = "safeint-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+safeint = "3.0.28a"

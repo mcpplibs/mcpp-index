@@ -86,6 +86,13 @@ package = {
     repo        = "https://github.com/boost-ext/ut",
     type        = "package",
 
+    extensions = {
+        autoupdate = {
+            tag = "v${version}",
+            url = "https://github.com/boost-ext/ut/archive/refs/tags/${tag}.tar.gz",
+        },
+    },
+
     xpm = {
         linux = {
             ["2.3.1"] = {

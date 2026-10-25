@@ -2,6 +2,8 @@
 
 [English](../repository-and-schema.md) | **简体中文**
 
+模块封装描述符使用 `pkgs/mwrap/<lib>.lua`，消费者使用 `tests/mwrap/<member>/`，见 [mwrap 规范](mwrap.md)。分类目录平铺并原样发布。workspace 测试源码使用当前固定的 mcpp；`index.toml` 单独声明描述符兼容下限。
+
 ## 仓库布局
 
 ```
@@ -227,3 +229,8 @@ bash tests/run_members.sh --all --cache local               # 绕过包构建缓
 | 外部构建系统(`install()` 驱动) | `pkgs/c/compat.openblas.lua`(Make)、`compat.openssl.lua`(Perl Configure + Make) | `tests/examples/openblas/`、`openssl/` | `docs/superpowers/specs/2026-07-26-openssl-asio-tls-design.md` / #124 |
 | feature 拉起依赖(跨包) | `pkgs/c/chriskohlhoff.asio.lua` 的 `ssl` feature → `compat.openssl` | `tests/examples/asio-ssl/` | 同上 |
 | 多组件上游拍平进单个库 | `pkgs/c/compat.recastnavigation.lua`(上游五个 CMake target → 核心构建 + `crowd`/`tilecache`/`debug-utils`;`debug-utils` `implies` `tilecache`) | `tests/examples/recastnavigation/`、`recastnavigation-features/` | `.agents/docs/2026-08-29-add-recastnavigation-plan.md` |
+
+## 自动版本更新
+
+[自动更新](automatic-updates.md)说明声明格式、每日 bot 流程、权限与真实候选 CI。
+普通包 PR 应为符合条件的包补齐声明，不改根 README 和站点配置。

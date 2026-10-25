@@ -32,8 +32,8 @@ int main() {
         std::printf("header says %d, library says %d — two different SDLs\n", compiled, linked);
         return 1;
     }
-    if (linked != SDL_VERSIONNUM(3, 4, 2)) {
-        std::printf("SDL version is %d, expected 3.4.2\n", linked);
+    if (linked != SDL_VERSIONNUM(3, 4, 18)) {
+        std::printf("SDL version is %d, expected 3.4.18\n", linked);
         return 2;
     }
 
@@ -119,7 +119,7 @@ int main() {
     SDL_DestroyWindow(window);
     SDL_Quit();
 
-    std::printf("compat.sdl3: ok (version 3.4.2, %d video drivers, dummy window 320x240, timer advances)\n",
+    std::printf("compat.sdl3: ok (version 3.4.18, %d video drivers, dummy window 320x240, timer advances)\n",
                 drivers);
     return 0;
 }

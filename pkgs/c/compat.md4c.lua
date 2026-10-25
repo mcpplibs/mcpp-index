@@ -13,6 +13,13 @@ package = {
     repo        = "https://github.com/mity/md4c",
     type        = "package",
 
+    extensions = {
+        autoupdate = {
+            tag = "release-${version}",
+            url = "https://github.com/mity/md4c/archive/refs/tags/${tag}.tar.gz",
+        },
+    },
+
     xpm = {
         linux = {
             ["0.5.3"] = {

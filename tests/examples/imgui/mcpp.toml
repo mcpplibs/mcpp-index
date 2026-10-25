@@ -4,4 +4,4 @@ name = "imgui-tests"
 version = "0.1.0"
 
 [dependencies.compat]
-imgui = "1.92.8"
+imgui = "1.93.0"

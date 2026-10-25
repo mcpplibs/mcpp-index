@@ -45,6 +45,13 @@ package = {
     repo        = "https://github.com/machinezone/IXWebSocket",
     type        = "package",
 
+    extensions = {
+        autoupdate = {
+            tag = "v${version}",
+            url = "https://github.com/machinezone/IXWebSocket/archive/refs/tags/${tag}.tar.gz",
+        },
+    },
+
     xpm = {
         -- CN mirror not published yet (no mcpp-res write access here);
         -- plain-string url keeps lint green and lets CN users fall back to

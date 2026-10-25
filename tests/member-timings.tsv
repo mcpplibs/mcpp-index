@@ -1,16 +1,13 @@
-# <platform>\t<member>\t<seconds> — the HEAVY members only, top 10 per
-# platform. Everything else is priced at plan_shards.lua's fixed default;
-# on linux the 57 members not listed here average 86s and are 31% of the
-# total, and listing them changes the slowest shard by 0 minutes.
-#
-# So: adding a test does NOT require touching this file. Refresh it when
-# a member becomes heavy enough to enter the top 10, or when one of these
-# numbers moves materially — download the member-timings artifact from a
-# full run and keep the top 10 per platform.
-#
-# Sources: run 31260545520; libmysqlclient / mysql-connector-cpp measured
-# from run 31266814148's linux default 0/3 step durations, whose shard was
-# cancelled at the 90m cap before its timings artifact could upload.
+# <platform>	<member>	<seconds> (tab-separated)
+# Measured heavy members; untimed members keep the planner's fixed 90s default.
+# Wrapper rows include installed archive/template/deployment checks executed
+# in the owning workspace shard, so those costs count toward its 90m budget.
+# Legacy sources: runs 31260545520 and 31266814148.
+# Linux wrapper measurements: run 40111394389 (2026-10-25); job
+# 120923966425 exhausted 90m after passing the earlier members. Per-member
+# times and completed installed-check step durations are both included.
+# Windows wrapper measurements: run 40121911805; job 120955178624
+# exhausted 90m during legacy opencv-module, while completed checks passed.
 linux	grpc-codegen	3463
 linux	grpc-module	1771
 linux	protobuf-protoc	885
@@ -41,3 +38,20 @@ windows	ffmpeg-module	526
 windows	protobuf-gzip	238
 windows	protobuf-protoc	152
 windows	protobuf-upb	151
+linux	ffmpeg-cpu	208
+linux	godot-math	758
+linux	grpc-cpu	1416
+linux	grpc-tools	480
+linux	imgui-headless	168
+linux	llamacpp-cpu	264
+linux	opencv-cpu	737
+linux	opencv-webp	855
+windows	ffmpeg-cpu	928
+windows	godot-math	1347
+windows	llamacpp-cpu	288
+windows	opencv-cpu	1101
+windows	opencv-webp	1104
+
+linux	godot-sdk	300
+macos	godot-sdk	300
+windows	godot-sdk	700

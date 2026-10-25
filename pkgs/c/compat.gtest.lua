@@ -1,3 +1,10 @@
+local versions = {
+    ["1.18.0"] = {
+        url = "https://github.com/google/googletest/archive/refs/tags/v1.18.0.tar.gz",
+        sha256 = "6e3191c1455468b3fc35a417fb565c1c5071aee1b7e7f85e30cf48a98d37d8b5",
+    },
+}
+
 -- M6.x glob-aware Form B descriptor for gtest.
 -- All paths inside `mcpp = {}` are GLOBS relative to the verdir
 -- (~/.mcpp/registry/data/xpkgs/<idx>-x-gtest/<ver>/).  `*` matches any
@@ -11,6 +18,13 @@ package = {
     licenses    = {"BSD-3-Clause"},
     repo        = "https://github.com/google/googletest",
     type        = "package",
+
+    extensions = {
+        autoupdate = {
+            tag = "v${version}",
+            url = "https://github.com/google/googletest/archive/refs/tags/${tag}.tar.gz",
+        },
+    },
 
     xpm = {
         linux = {
@@ -29,6 +43,7 @@ package = {
                 },
                 sha256 = "7b42b4d6ed48810c5362c265a17faebe90dc2373c885e5216439d37927f02926",
             },
+            ["1.18.0"] = versions["1.18.0"],
         },
         macosx = {
             ["1.17.0"] = {
@@ -46,6 +61,7 @@ package = {
                 },
                 sha256 = "7b42b4d6ed48810c5362c265a17faebe90dc2373c885e5216439d37927f02926",
             },
+            ["1.18.0"] = versions["1.18.0"],
         },
         windows = {
             ["1.17.0"] = {
@@ -63,6 +79,7 @@ package = {
                 },
                 sha256 = "7b42b4d6ed48810c5362c265a17faebe90dc2373c885e5216439d37927f02926",
             },
+            ["1.18.0"] = versions["1.18.0"],
         },
     },
 

@@ -141,3 +141,60 @@ libstdc++ 仍保留(仅弃用告警),libc++ 在 C++20 及以上直接删掉,于�
 
 **另**:原分支合并 main 时把 CHANGELOG 中 `openkal-llvm-runtime 0.15.4` 与
 `openkal-linux 0.16.1 / openkal-musl 0.20.1` 两条误删,已按 main 恢复。
+
+## 11. 维护者追加(2026-10-20):aarch64 musl 的 `__MAX_BAUD`
+
+**现象**:aarch64-linux-musl 配合严格 Clang 告警配置时,
+`src/libserial/SerialPortConstants.h` 的 `#if __MAX_BAUD > B2000000` 报
+`'__MAX_BAUD' is not defined, evaluates to 0 [-Werror,-Wundef]`。
+
+**根因**:`__MAX_BAUD` 是 glibc `bits/termios.h` 的私有辅助宏。musl 1.2.5 定义了
+`B2000000` 到 `B4000000`,但没有定义 `__MAX_BAUD`。上游把“该 libc 的最高波特率”
+误写成所有 Linux libc 都保证的宏。
+
+**补丁**:`compat.libserial` 的 install hook 直接在解包树中把条件改为
+`#if defined(B2000000) && defined(B2500000) && defined(B3000000) && defined(B3500000) && defined(B4000000)`,并沿用该 hook 已有的
+匹配次数断言(1 次),上游上下文变化时让安装失败而不是悄悄跳过。
+改写内嵌在描述符中,不新增 `pkgs/**` 下的旁路文件:索引发布的是描述符本身,
+且 `xpkgindex --strict` 会把 `pkgs/` 下的非 Lua 历史文件计入包增长后无法与
+Lua 描述符树对齐。
+
+版本资源提升为 `revision = 1`,让已经安装过 revision 0 的用户重新执行 install hook。
+install hook 同时显式导入 `xim.libxpkg.log`。
+
+**验证**:
+
+- 纯 aarch64 musl 头 + Clang 22.1.8:
+  `-Wundef -Werror=undef` 对原式报上述错误,补丁式通过。
+- 用打补丁后的实际 `SerialPortConstants.h` 配合 aarch64 musl 与 libc++ 头编译,
+  `-Wundef -Werror=undef` 通过。
+- 清掉本包缓存后,mcpp `2026.10.1.2` 冷安装并通过
+  `mcpp test -p libserial --cache off`;安装目录中的头已包含守卫,安装标记为
+  `revision: 1`。
+- OpenKal 的完整 aarch64-linux-musl 图在此之前还会先停在
+  `linux/serial.h: file not found`;这是 OpenKal C 环境没有提供 Linux UAPI 的另一问题,
+  不属于本补丁处理的 `__MAX_BAUD` 缺陷。
+
+
+## 12. 本地 review 后追加(2026-10-21):完整 musl 编译和 PR 候选范围
+
+仅为 `__MAX_BAUD` 加 `defined()` 仍会隐藏 2–4 Mbaud 枚举,而
+`SerialPort.cpp` 无条件使用这五个成员。因此改为检查五个公开的 `B*` 常量。
+新增 `baud_constants.cpp`,在宿主 glibc 上模拟缺少私有辅助宏的 libc,
+对五个枚举的公开值做编译期断言,保留原有 PTY 行为测试。
+
+自动更新工作流的 PR 路径只根据真实 diff 生成候选矩阵,不发现未修改包的未来版本。
+先创建带 format/adapter/base_commit 的空 plan,再由 `matrix(..., base)` 填入新增版本;
+仅修订 packaging 时矩阵为空,仍由常规 workspace 测试验证。本流程支持多包 PR,
+并保留 schedule / workflow_dispatch 的上游发现和失败闸门。
+
+**追加修复的验证**:
+
+- 清理本 worktree 的 libserial 安装目录后,使用 CI pin `2026.10.1.2` 执行
+  `mcpp test -p libserial --cache off`: `2 passed; 0 failed`。
+- 对实际 install hook 产物,使用 aarch64-linux-musl GCC 15.1.0,
+  `-std=c++23 -Wundef -Werror=undef -fsyntax-only` 检查三个完整源文件及新增回归测试,均通过。
+  这是交叉编译检查,未运行 aarch64 二进制。
+- 独立副本恢复旧的 `defined(__MAX_BAUD)` 条件后,新增回归测试按预期编译失败。
+- 自动更新的 12 个 Python 测试、全库 revision audit、libserial 描述符 Lua 语法和身份/镜像 lint 通过。
+- 按实际 PR diff 生成的候选矩阵为空,没有引入无关的未来版本测试。

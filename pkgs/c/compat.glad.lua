@@ -13,6 +13,13 @@ package = {
     repo        = "https://github.com/libigl/libigl-glad",
     type        = "package",
 
+    extensions = {
+        autoupdate = {
+            tag = "v${version}",
+            url = "https://github.com/libigl/libigl-glad/archive/refs/tags/${tag}.tar.gz",
+        },
+    },
+
     xpm = {
         linux = {
             ["0.0.0-651a425"] = {

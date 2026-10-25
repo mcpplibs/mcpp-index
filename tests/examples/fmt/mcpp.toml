@@ -1,0 +1,19 @@
+# {fmt} test project — the HEADER form: consume compat.fmt with
+# `#include <fmt/format.h>` and a link against the compiled library, and assert
+# that the package's own TUs (format.cc, os.cc) are what answers the calls
+# rather than header-only inlines. The module sibling (`import fmt;`) is a
+# different package with its own member, tests/examples/fmtlib.fmt.
+#
+# `compat.fmt` is spelled qualified so the workspace-root [indices] redirect
+# applies, and this member repeats the one-entry redirect itself (same as
+# rapidcsv/etl/gsl): the dependency must resolve to THIS checkout's descriptor,
+# not to whatever the published remote index serves.
+[package]
+name    = "fmt-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+fmt = "12.2.0"
+
+[indices]
+compat = { path = "../../.." }

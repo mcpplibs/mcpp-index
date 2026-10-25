@@ -36,7 +36,7 @@ jobs:
           python-version: '3.12'
 
       - name: Install xpkgindex
-        run: pip install git+https://github.com/openxlings/xpkgindex.git
+        run: pip install -r .xpkgindex/requirements.txt
 
       - name: Refresh cache
         env:

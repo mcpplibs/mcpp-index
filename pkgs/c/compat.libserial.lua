@@ -18,7 +18,7 @@
 -- compat.libaio. (Single-platform `xpm` is why platform-version-parity stays
 -- quiet: it only compares platforms that both carry versions.)
 --
--- TWO CONSUMER-VISIBLE DEFECTS ARE FIXED HERE. The first: src/libserial/SerialPortConstants.h
+-- THREE CONSUMER-VISIBLE DEFECTS ARE FIXED HERE. The first: src/libserial/SerialPortConstants.h
 -- declares `using DataBuffer = std::vector<uint8_t>;` but includes neither
 -- <cstdint> nor <stdint.h>. On gcc 16.1.0 / libstdc++ this compiles only by
 -- accident of transitive includes — a bare consumer that opens the header first
@@ -42,6 +42,14 @@
 -- function pointers and decayed arguments it is called with) and adds the
 -- <type_traits> it needs, asserting each match count so an upstream change
 -- fails the install instead of silently skipping the fix.
+--
+-- The third: SerialPortConstants.h guards the 2-4 Mbaud Linux enum values with
+-- `#if __MAX_BAUD > B2000000`. __MAX_BAUD is a glibc bits/termios.h detail;
+-- musl deliberately does not define it, so strict Clang configurations (for
+-- example -Wundef -Werror) reject the public header on aarch64-linux-musl.
+-- install() tests the five public B* constants instead, so musl retains the
+-- enum members that SerialPort.cpp references unconditionally. The rewrite
+-- is embedded here, like the result_of fix below.
 --
 -- NO FEATURE. The three TUs are the whole library; upstream's optional parts
 -- are the GoogleTest suite (test/, its own main()), the SIP Python bindings
@@ -69,6 +77,8 @@ package = {
                     CN     = "https://gitcode.com/mcpp-res/libserial/releases/download/1.0.0/libserial-1.0.0.tar.gz",
                 },
                 sha256 = "063142d6bfe08898316e9a6055f2ddeedef56de06f7cfc8dcdfecc6efabf4bdd",
+                -- 1: apply the musl __MAX_BAUD patch in install().
+                revision = 1,
             },
         },
     },
@@ -116,13 +126,15 @@ package = {
 }
 
 import("xim.libxpkg.pkginfo")
+import("xim.libxpkg.log")
 
--- See the header note: the C++20-removed std::result_of in SerialPort.h.
--- Patched in the unpacked tree, which is then moved into the install dir as
--- its single wrap level so the `*/src` globs keep matching (compat.ftxui /
--- taskflow.taskflow do the same).
+-- See the header notes: fix the musl __MAX_BAUD guard and the C++20-removed
+-- std::result_of in SerialPort.h, then move the unpacked tree into the install
+-- dir as its single wrap level so the `*/src` globs keep matching
+-- (compat.ftxui / taskflow.taskflow do the same).
 function install()
     local wrap = "libserial-" .. pkginfo.version()
+
     local function patch(relative, before, after, expected)
         local source = path.join(wrap, relative)
         local content = io.readfile(source)
@@ -140,6 +152,10 @@ function install()
         io.writefile(source, patched)
         return true
     end
+
+    if not patch("src/libserial/SerialPortConstants.h",
+                 "#if __MAX_BAUD > B2000000",
+                 "#if defined(B2000000) && defined(B2500000) && defined(B3000000) && defined(B3500000) && defined(B4000000)", 1) then return false end
 
     local header = "src/libserial/SerialPort.h"
     if not patch(header, "typename std::result_of<Fn(Args...)>::type",

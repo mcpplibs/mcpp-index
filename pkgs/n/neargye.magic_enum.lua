@@ -21,6 +21,13 @@ package = {
     repo        = "https://github.com/Neargye/magic_enum",
     type        = "package",
 
+    extensions = {
+        autoupdate = {
+            tag = "v${version}",
+            url = "https://github.com/Neargye/magic_enum/releases/download/${tag}/magic_enum-${tag}.tar.gz",
+        },
+    },
+
     xpm = {
         linux = {
             ["0.9.8"] = {

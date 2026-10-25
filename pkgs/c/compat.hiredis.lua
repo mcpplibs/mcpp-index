@@ -1,3 +1,10 @@
+local versions = {
+    ["1.5.0"] = {
+        url = "https://github.com/redis/hiredis/archive/refs/tags/v1.5.0.tar.gz",
+        sha256 = "eec7ef8641d221e144a58d5ef8d733c8c75c7fd487097a233aacb4fa33981cfb",
+    },
+}
+
 -- compat.hiredis — hiredis 1.2.0, minimal C client for Redis.
 --
 -- Shape A (C-source compat), same as compat.cjson / compat.zlib: the seven
@@ -34,24 +41,34 @@ package = {
     repo        = "https://github.com/redis/hiredis",
     type        = "package",
 
+    extensions = {
+        autoupdate = {
+            tag = "v${version}",
+            url = "https://github.com/redis/hiredis/archive/refs/tags/${tag}.tar.gz",
+        },
+    },
+
     xpm = {
         linux = {
             ["1.2.0"] = {
                 url    = "https://github.com/redis/hiredis/archive/refs/tags/v1.2.0.tar.gz",
                 sha256 = "82ad632d31ee05da13b537c124f819eb88e18851d9cb0c30ae0552084811588c",
             },
+            ["1.5.0"] = versions["1.5.0"],
         },
         macosx = {
             ["1.2.0"] = {
                 url    = "https://github.com/redis/hiredis/archive/refs/tags/v1.2.0.tar.gz",
                 sha256 = "82ad632d31ee05da13b537c124f819eb88e18851d9cb0c30ae0552084811588c",
             },
+            ["1.5.0"] = versions["1.5.0"],
         },
         windows = {
             ["1.2.0"] = {
                 url    = "https://github.com/redis/hiredis/archive/refs/tags/v1.2.0.tar.gz",
                 sha256 = "82ad632d31ee05da13b537c124f819eb88e18851d9cb0c30ae0552084811588c",
             },
+            ["1.5.0"] = versions["1.5.0"],
         },
     },
 
@@ -65,17 +82,12 @@ package = {
         -- `mcpp_generated/include` carries the `hiredis/`-prefixed wrappers.
         include_dirs = { "*", "mcpp_generated/include" },
 
-        -- Upstream CMakeLists' `hiredis_sources`, verbatim — identical across
-        -- every 1.x release.
-        sources = {
-            "*/alloc.c",
-            "*/async.c",
-            "*/hiredis.c",
-            "*/net.c",
-            "*/read.c",
-            "*/sds.c",
-            "*/sockcompat.c",
-        },
+        -- One wrapper per upstream TU preserves the original seven-source
+        -- build while bounding discovery to this generated directory.
+        -- hiredis 1.5 ships a .claude documentation symlink that Windows
+        -- cannot traverse; walking the whole archive stops before its C files.
+        -- No upstream file, installed metadata or archive is rewritten.
+        sources = { "mcpp_generated/src/*.c" },
 
         targets = { ["hiredis"] = { kind = "lib" } },
         deps    = {},
@@ -86,6 +98,13 @@ package = {
         -- skip the wrapper's own directory and land on the real headers via
         -- the `*` include dir (the flat `"..."` form would self-include).
         generated_files = {
+            ["mcpp_generated/src/alloc.c"]      = "#include <alloc.c>\n",
+            ["mcpp_generated/src/async.c"]      = "#include <async.c>\n",
+            ["mcpp_generated/src/hiredis.c"]    = "#include <hiredis.c>\n",
+            ["mcpp_generated/src/net.c"]        = "#include <net.c>\n",
+            ["mcpp_generated/src/read.c"]       = "#include <read.c>\n",
+            ["mcpp_generated/src/sds.c"]        = "#include <sds.c>\n",
+            ["mcpp_generated/src/sockcompat.c"] = "#include <sockcompat.c>\n",
             ["mcpp_generated/include/hiredis/hiredis.h"] = "#pragma once\n#include <hiredis.h>\n",
             ["mcpp_generated/include/hiredis/async.h"]   = "#pragma once\n#include <async.h>\n",
             -- redis-plus-plus's async build (event_loop.cpp) includes

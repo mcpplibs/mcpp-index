@@ -11,6 +11,13 @@ package = {
     repo        = "https://github.com/google/brotli",
     type        = "package",
 
+    extensions = {
+        autoupdate = {
+            tag = "v${version}",
+            url = "https://github.com/google/brotli/archive/refs/tags/${tag}.tar.gz",
+        },
+    },
+
     xpm = {
         linux = {
             ["1.2.0"] = {
