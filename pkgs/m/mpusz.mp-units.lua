@@ -62,8 +62,10 @@ package = {
         targets = { ["mp-units"] = { kind = "lib" } },
         deps = {},
         linux = {
-            -- 暂不支持 GCC：GCC 16.1 导入该模块时报 recursive lazy load（mpusz/mp-units#717）
-            requires = { "mcpp:c++-abi=libc++" },
+            -- 暂不支持 GCC：GCC 16.1 导入该模块时报 recursive lazy load（mpusz/mp-units#717）。
+            -- 约束的是编译器而不是 C++ 库：c++-abi 可以独立选择后（mcpp 2026.10.26.1，
+            -- llvm 加 gcc.libstdcxx），按编译器陈述。
+            requires = { "mcpp:compiler=llvm" },
         },
     },
 }
