@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Install real archives from the unchanged candidate index and run a template."""
+"""Install real archives from the candidate or published index and run an unmodified template."""
 import argparse
 import hashlib
 import json
@@ -18,6 +18,8 @@ def main():
     parser.add_argument("--toolchain", default="llvm@23.1.3")
     parser.add_argument("--package", default="mcpplibs.mwrap.onnxruntime@1.25.1")
     parser.add_argument("--deploy", action="store_true", help="pack, relocate and run the consumer; verify declared notices")
+    parser.add_argument("--published-index", action="store_true", help="refresh the real public index instead of staging this checkout")
+    parser.add_argument("--home", type=Path, help="reuse a dedicated test home across independent installed consumers")
     parser.add_argument("--run-arg", action="append", default=[])
     parser.add_argument("--legacy-exact-key", action="store_true",
                         help="allow only mcpp's nonnumeric exact-version diagnostic; fail other build warnings")
@@ -26,17 +28,20 @@ def main():
     identity, version = args.package.rsplit("@", 1)
     with tempfile.TemporaryDirectory(prefix="mwrap-installed-template-") as directory:
         temporary = Path(directory)
-        home = temporary / "home"
-        index = home / "indices/mcpplibs"
-        index.mkdir(parents=True)
-        # Exactly the publication layout, with all namespaces in one built-in
-        # index. No namespace views, source pre-seeding or dependency rewriting.
-        shutil.copytree(root / "pkgs", index / "pkgs")
-        shutil.copyfile(root / "index.toml", index / "index.toml")
+        home = args.home.resolve() if args.home else temporary / "home"
+        if not args.published_index:
+            index = home / "indices/mcpplibs"
+            index.mkdir(parents=True)
+            # Exactly the publication layout, with all namespaces in one built-in
+            # index. No namespace views, source pre-seeding or dependency rewriting.
+            shutil.copytree(root / "pkgs", index / "pkgs")
+            shutil.copyfile(root / "index.toml", index / "index.toml")
         env = dict(os.environ, MCPP_HOME=str(home))
-        commands = [[args.mcpp, "self", "config", "--mirror", "GLOBAL"],
-                    [args.mcpp, "new", "--list-templates", args.package],
-                    [args.mcpp, "new", "installed-quickstart", "--template", args.package]]
+        commands = [[args.mcpp, "self", "config", "--mirror", "GLOBAL"]]
+        if args.published_index:
+            commands.append([args.mcpp, "index", "update"])
+        commands += [[args.mcpp, "new", "--list-templates", args.package],
+                     [args.mcpp, "new", "installed-quickstart", "--template", args.package]]
         for command in commands:
             print("+", " ".join(command), flush=True)
             subprocess.run(command, cwd=temporary, env=env, check=True)

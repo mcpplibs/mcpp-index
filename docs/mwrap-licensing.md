@@ -38,3 +38,8 @@ the problematic first-release tags/assets instead of adding wrapper revisions.
 All seven package versions therefore equal upstream versions. Replacement is
 performed only after the corrected commit passes its gates; all download
 regions, checksums and installed-consumer checks must be synchronized.
+
+An authorized same-version replacement must also refresh incorrect installed
+payloads. Use the index packaging `revision` (and `floor` when the old payload
+is unusable); these are metadata integers, not package-version suffixes. Verify
+a real old-home build refresh and runtime result before declaring migration complete.

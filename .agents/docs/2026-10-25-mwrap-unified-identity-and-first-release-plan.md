@@ -233,10 +233,10 @@ tests/
 | Godot | `v10.0.0-rc1` | 有 |
 
 “新 mwrap 身份首次发版”不等于“Git 仓库没有历史版本”。已有 tag 的源码携带旧身份或旧接口，不能给新包复用这些归档。
-建议七库统一采用独立 tag 序列 `mwrap-${version}`：例如 `mwrap-8.1.2`、`mwrap-b10069`、`mwrap-10.0.0-rc1`。
-包 version 仍分别是 `8.1.2`、`b10069`、`10.0.0-rc1`；release title 使用 `mwrap.ffmpeg 8.1.2` 这类可辨认名称。
+建议七库统一采用独立 tag 序列 `mwrap-${version}`：例如 `mwrap-8.1.2`、`mwrap-b10069`、`mwrap-10.0.0`。
+包 version 仍分别是 `8.1.2`、`b10069`、`10.0.0`；release title 使用 `mwrap.ffmpeg 8.1.2` 这类可辨认名称。
 tag 的 mwrap 前缀用于隔离同仓库历史，不是额外封装版本尾号。ORT 也采用同一规则，避免每库一套规则。
-未来修订 tag 为 `mwrap-8.1.2.1` 等，已发布 tag、release asset 与 SHA256 永久不变。
+后续需要封装修订时最多追加一个尾号，例如 `mwrap-8.1.2.1`。一般发布资源保持不可变；本轮用户明确授权的错误首发覆盖按 §12.4 和 §12.6 执行，不能据此覆盖其他历史资源。
 updater 新 mwrap 配方只匹配新 tag 序列；旧配方不能把新 tag 当作旧 namespace 的后续版本自动提案。
 不能仅依赖 GitHub 的 latest release：同仓库混有旧序列与 mwrap 序列，必须显式筛选 tag、去除准确的 mwrap 前缀后再核对 manifest/package version。
 新增回归覆盖旧 tag 被新 updater 拒绝、新 tag 被旧 updater 忽略、`b10069` 精确版本及 Godot RC 的 prerelease 策略。
@@ -273,7 +273,7 @@ updater 新 mwrap 配方只匹配新 tag 序列；旧配方不能把新 tag 当�
 对已通过的 squash SHA 创建独立 mwrap tag；核查 tag 指向、manifest 首发版本、上游 pin、许可证与产物后发布。
 从实际 tag/release 下载正式归档，计算 SHA256、核对源码与打包闭包；GitHub/GitCode 镜像地址只有实际上传并验证后才写入。
 先建立可验证的发布物，再声称库已 release；不能只建空 release 或仍指向 PR commit。
-Godot RC release 标为 prerelease；llama 的非 semver tag 不因含字母就自动判为 prerelease。
+Godot `10.0.0-stable` 对应正式 release，不能继续标为 RC/prerelease；若未来发布实际 RC，才标为 prerelease。llama 的非 semver tag 不因含字母就自动判为 prerelease。
 发布源归档/选中 notices，并按现有受支持平台规则提供所需运行资源，不把上游 SDK 大二进制直接提交 Git。
 
 ### E. 最后统一更新并发布索引
@@ -384,7 +384,7 @@ Modules 位于 Getting started 前，核心模块按以下形式逐行列出，�
 只列实际存在的公共模块，使用完整前缀；有 feature 条件时明确说明。
 中英规范、skill 和七库双语页采用相同顺序；单模块库可列根模块及宏映射入口。
 
-### 12.3 通用许可规范补充
+### 12.3 通用许可规范补充（版本处理已由 §12.4、§12.5 替代）
 
 用户确认此规则适用于全部 mwrap / xxx-m：封装层默认 Apache-2.0，归属标识
 `mcpp-community`；上游 README 与 LICENSE/COPYING、适用通知原样保留在 `upstream/<lib>/`。
@@ -400,7 +400,7 @@ ORT 已发布的 1.25.1 和 Godot 已创建的 10.0.0-rc1 tag 保留，故两者
 ### 12.4 用户最终确认：首发覆盖，不加尾号
 
 用户明确指令：“不用追加小版本 覆盖就可以了 和 上游对齐 版本”。
-本轮七库全部使用上游原始版本，ORT 1.25.1、Godot 10.0.0-rc1；取消此前
+本轮七库全部使用上游原始版本，ORT 1.25.1；Godot 原 RC 目标随后由 §12.5 更新为稳定版 10.0.0。取消此前
 1.25.1.1 / 10.0.0-rc1.1 发布目标。已存在的本轮错误首发 tag/release/镜像
 在更正提交通过 CI、自我复核后按该授权覆盖，更新所有 URL/hash 并重新真实安装验证。
 此前关于本轮必须保留错误首发并加尾号的实施决定已被本条替代；不动无关历史旧身份。

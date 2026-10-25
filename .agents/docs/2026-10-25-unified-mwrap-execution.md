@@ -233,7 +233,9 @@ usable. Packaging metadata revision=1/floor=1 makes the library build refresh
 the actual old source; root Apache-2.0 and mcpp-community NOTICE were verified
 after automatic download. Public identity, version and tag remain unchanged.
 Evidence: /tmp/mwrap-ort-overwrite-cache-proof.json and
-/tmp/mwrap-ort-overwrite-cache-configure.log; real inference follows.
+/tmp/mwrap-ort-overwrite-cache-configure.log and
+/tmp/mwrap-ort-overwrite-cache-inference.log; the strict build and Identity CPU
+inference completed successfully with the refreshed source.
 
 Godot 10.0.0 stable source PR #2 passed all three exact-head native jobs and
 self-review and was squash merged as d7be0cd9dc8224ec8313e540b515a5aacfc1cf83.
