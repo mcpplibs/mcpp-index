@@ -15,15 +15,18 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--mcpp", default="mcpp")
     parser.add_argument("--toolchain", default="llvm@23.1.3")
+    parser.add_argument("--published-index", action="store_true", help="refresh the public index instead of staging this checkout")
+    parser.add_argument("--home", type=Path, help="reuse a dedicated test home")
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[2]
     with tempfile.TemporaryDirectory(prefix="mwrap-webp-deployment-") as directory:
         temporary = Path(directory)
-        home = temporary / "home"
-        index = home / "indices/mcpplibs"
-        index.mkdir(parents=True)
-        shutil.copytree(root / "pkgs", index / "pkgs")
-        shutil.copyfile(root / "index.toml", index / "index.toml")
+        home = args.home.resolve() if args.home else temporary / "home"
+        if not args.published_index:
+            index = home / "indices/mcpplibs"
+            index.mkdir(parents=True)
+            shutil.copytree(root / "pkgs", index / "pkgs")
+            shutil.copyfile(root / "index.toml", index / "index.toml")
         project = temporary / "consumer"
         shutil.copytree(root / "tests/mwrap/opencv-webp", project)
         manifest = project / "mcpp.toml"
@@ -34,8 +37,10 @@ def main():
         (project / "src").mkdir()
         shutil.copyfile(project / "tests/pipeline.cpp", project / "src/main.cpp")
         env = dict(os.environ, MCPP_HOME=str(home))
-        commands = [
-            [args.mcpp, "self", "config", "--mirror", "GLOBAL"],
+        commands = [[args.mcpp, "self", "config", "--mirror", "GLOBAL"]]
+        if args.published_index:
+            commands.append([args.mcpp, "index", "update"])
+        commands += [
             [args.mcpp, "build", "--toolchain", args.toolchain, "--strict"],
             [args.mcpp, "run", "--toolchain", args.toolchain],
             [args.mcpp, "pack", "--toolchain", args.toolchain, "--mode", "self-contained",
@@ -59,7 +64,7 @@ def main():
         sources = (Path(entry["file"]).parent.parent for entry in entries
                    if Path(entry["file"]).name == "core.cppm")
         source = next(path for path in sources if (path / "upstream/opencv/LICENSE").is_file())
-        originals = [source / "LICENSE", source / "port/licenses/UPSTREAM_SOURCE_NOTICES.txt",
+        originals = [source / "LICENSE", source / "NOTICE", source / "port/licenses/UPSTREAM_SOURCE_NOTICES.txt",
                      *[path for path in (source / "upstream/opencv").rglob("*")
                      if path.is_file() and any(word in path.name for word in ("LICENSE", "COPYING", "COPYRIGHT", "NOTICE"))]]
         notices = list(relocated.rglob("licenses/opencv"))

@@ -241,3 +241,39 @@ Godot 10.0.0 stable source PR #2 passed all three exact-head native jobs and
 self-review and was squash merged as d7be0cd9dc8224ec8313e540b515a5aacfc1cf83.
 Its new main CI remains a distinct release gate. ImGui 1.92.8 and FFmpeg 8.1.2
 formal GitHub/GitCode source assets are also publicly hash-verified.
+
+
+The current index scan exposed numeric revision/floor metadata being rejected
+by the updater's generic plain() conversion while classifying commit archives.
+The audit now reads only literal URL nodes for this classification, retaining
+historical-resource checks. Its real revision/floor fixture, all 19 updater
+regressions and the full current-tree audit pass; the new remote scan passes.
+
+Final public-index acceptance supports a shared dedicated fresh home for the
+seven unchanged default scaffolds and optional WebP relocation. The WebP audit
+also verifies wrapper NOTICE byte-for-byte. These are prepared checks, not a
+claim that final public-index acceptance has already completed.
+
+Completed task-owned architecture build outputs for OpenCV, gRPC and Godot were
+removed after checking for active compiler/build processes and tracked files.
+41 small build metadata files were preserved alongside all task logs; 8.7 GiB
+was freed. Evidence: /tmp/mwrap-completed-architecture-build-cleanup.json and
+/tmp/mwrap-completed-build-metadata.zip. No source or user cache was removed.
+
+
+Godot stable main CI now passes all three native jobs. The formal
+[mwrap-10.0.0 release](https://github.com/mcpplibs/godot-cpp-m/releases/tag/mwrap-10.0.0)
+is published (draft=false, prerelease=false) at squash commit
+`d7be0cd9dc8224ec8313e540b515a5aacfc1cf83`. GitHub and public GitCode
+source downloads both match SHA256
+`b5f6d13d018f2359913c6e6fba92e24810b1a1585f027547f4b20c5fd27eeec5`.
+This proves the stable wrapper publication; public-index installation remains
+part of the final index gate.
+
+
+gRPC PR #8 passed all six current-head checks, including real Linux/macOS RPC
+and advanced plan/submit examples, and was squash merged as
+`b7a918ef931c270040d0db8ae36478b2d58f8a8a`. Review accepted the one harmless
+empty line at the end of src/grpc.cppm; all other whitespace checks pass. The
+source commit was kept unchanged so its completed native CI remains exact.
+Its merge-commit CI and formal release are separate remaining gates.
