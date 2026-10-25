@@ -81,7 +81,7 @@ C++ 的 `import` 没有包选择器的省略规则，必须与实际 `export mod
 
 ## 3. 七库新身份与版本映射
 
-以下“当前版本”为现有未合入候选，不代表新 mwrap 已发布。上游版本依据当前源码 pin；本轮不顺带升级上游。
+以下“当前版本”为现有未合入候选，不代表新 mwrap 已发布。上游版本依据当前源码 pin；除用户指定 Godot 升级至 10.0.0-stable 外，本轮不顺带升级其他上游。
 
 | 仓库 / 现有 PR | 当前候选身份与版本 | 新完整身份 | mwrap 首发版本 | 描述符文件名 |
 |---|---|---|---|---|
@@ -91,12 +91,12 @@ C++ 的 `import` 没有包选择器的省略规则，必须与实际 `export mod
 | ffmpeg-m #8 | `ffmpeg.ffmpeg@8.1.2.1` | `mcpplibs.mwrap.ffmpeg` | `8.1.2` | `ffmpeg.lua` |
 | grpc-m #8 | `grpc.grpc@1.83.0.1` | `mcpplibs.mwrap.grpc` | `1.83.0` | `grpc.lua` |
 | imgui-m #13 | `ocornut.imgui@1.92.8.1` | `mcpplibs.mwrap.imgui` | `1.92.8` | `imgui.lua` |
-| godot-cpp-m #1 | `godotengine.godot-cpp-m@10.0.0-rc1.1` | `mcpplibs.mwrap.godot_cpp` | `10.0.0-rc1` | `godot_cpp.lua` |
+| godot-cpp-m #2 | `godotengine.godot-cpp-m@10.0.0-rc1.1`（既有基线） | `mcpplibs.mwrap.godot_cpp` | `10.0.0` | `godot_cpp.lua` |
 
 Godot short name 已确认为 `godot_cpp`：与原 module spelling 对应，适合直接作为 C++ 模块名的一段；
 仓库仍为 `godot-cpp-m`，供应者仍为 `compat.godot-cpp`。该映射在正式规范中明确记录。
 `llamacpp` 保留既有辨识名称，避免把 `llama.cpp` 的点误表达为额外 namespace。
-`b10069` 使用精确 pin，不承诺 semver 范围；Godot 仍为 prerelease，不标为稳定引擎兼容认证。
+`b10069` 使用精确 pin，不承诺 semver 范围；Godot 采用稳定 tag `10.0.0-stable`，包版本 `10.0.0`，固定上游默认 4.7 引擎 API；扩展构建不等于引擎加载认证。
 
 首发后的封装修复才追加单个修订尾号，例如 `8.1.2.1`、`b10069.1`；上游升级后重新从对应原始版本开始。
 新身份首发去尾号不表示可以将已经发布的同身份版本降级、覆盖或重用。
@@ -414,3 +414,12 @@ ORT 已发布的 1.25.1 和 Godot 已创建的 10.0.0-rc1 tag 保留，故两者
 供应包只增加上游 binding_generator.py 的 gen/ 输出，原始上游文件保持字节一致；
 两次生成 hash 一致，GLOBAL/CN 公共下载已核对。稳定版已将两个 hash 函数移到
 上游实现文件，删除本封装过时的 hashfuncs shim，重新生成完整模块并做原生验证。
+
+### 12.6 同版本覆盖后的缓存刷新
+
+实际 warm-home 测试证实仅改 URL/hash 不会立即替换已安装的同版本源码。
+ORT 对外仍为 `1.25.1`，索引该版本使用 `revision = 1, floor = 1` 标识本次
+正确打包并刷新错误旧缓存；这不是 package version 尾号，不改变依赖命令或 tag。
+旧源码安装 → 同版本新资源 → 构建自动重新安装已在实际 mcpp 2026.10.24.1
+验证，原先的 MIT/Microsoft 顶层许可被更正为封装 Apache-2.0/mcpp-community，
+原始上游许可仍保留，继续验证实际推理。mcpp 引擎源码保持只读。

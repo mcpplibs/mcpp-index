@@ -207,3 +207,35 @@ in /tmp/mwrap-ort-overwrite-cache-check/home, with the original MIT root license
 and old source digest. After the authorized replacement, the same home will
 refresh and consume the corrected same-version source, checking its new license
 and actual inference. No wrapper version suffix is introduced.
+
+The corrected ORT 1.25.1 commit has also passed real indexed-archive installation,
+Identity CPU inference, self-contained pack and isolated relocation. Acceptance
+checks both original SDK MIT/ThirdPartyNotices and distinct wrapper Apache-2.0,
+mcpp-community NOTICE and retained upstream documents byte-for-byte. Evidence:
+/tmp/mwrap-ort-upstream-aligned-deployment.log (exit 0).
+
+Godot native CI found an existing-home routing problem: copying a candidate
+built-in index did not change xlings' previously published catalog routing.
+The new SDK therefore appeared missing despite valid published source assets.
+The source CI now explicitly routes compat through a test-only namespace view
+of unchanged candidate descriptors for the root, extension and template. Final
+installed-index tests still consume the original complete publication layout.
+This changes no mcpp engine code or upstream implementation bytes.
+
+ORT authorized first-release replacement is now published and publicly fetched
+on both forges at version 1.25.1. New archive SHA256 is
+bec1f319d9869624b0efeb20c0376c1e429b07f6652f65536f17fca722458d6e.
+The recorded old GitHub release/tag and GitCode attachment were replaced only
+after corrected squash-commit CI and full archive checks. No version suffix.
+
+A real old-home test found that changing SHA alone leaves the installed source
+usable. Packaging metadata revision=1/floor=1 makes the library build refresh
+the actual old source; root Apache-2.0 and mcpp-community NOTICE were verified
+after automatic download. Public identity, version and tag remain unchanged.
+Evidence: /tmp/mwrap-ort-overwrite-cache-proof.json and
+/tmp/mwrap-ort-overwrite-cache-configure.log; real inference follows.
+
+Godot 10.0.0 stable source PR #2 passed all three exact-head native jobs and
+self-review and was squash merged as d7be0cd9dc8224ec8313e540b515a5aacfc1cf83.
+Its new main CI remains a distinct release gate. ImGui 1.92.8 and FFmpeg 8.1.2
+formal GitHub/GitCode source assets are also publicly hash-verified.
