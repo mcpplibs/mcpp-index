@@ -277,3 +277,23 @@ and advanced plan/submit examples, and was squash merged as
 empty line at the end of src/grpc.cppm; all other whitespace checks pass. The
 source commit was kept unchanged so its completed native CI remains exact.
 Its merge-commit CI and formal release are separate remaining gates.
+
+
+All seven GitHub repository topic lists now include mcpp-community, verified
+after mutation while preserving existing topics. README/manifest attribution
+continues to use that same label. Evidence: /tmp/mwrap-community-topics-proof.json.
+
+
+After merging newer index main ad0f019 locally, the earlier dc93f6b candidate
+validate/OpenKAL runs (40150276669/40150276638) were intentionally canceled to
+free queued Linux runners for exact merged-source CI. Their head/event/branch
+were checked first. This is not a passing final-index gate: all workflows must
+run again on the final formal-resource tree. The old observer ending on these
+cancellations is expected, not a new product test failure. The updater run was
+retained to finish its remaining host-tool candidates.
+
+
+Prepublication updater run 40150276617 at dc93f6b completed successfully: all
+12 actual candidate builds passed (four Godot stable SDK legs, eight gRPC host
+tool legs). Evidence: /tmp/mwrap-prepublication-twelve-candidate-ci-proof.json.
+This does not replace final formal-resource index CI.

@@ -6,6 +6,7 @@
   顶层 `NOTICE` 标明 `mcpp-community` contributors 以及封装贡献的适用范围。
 - 封装作者/归属标签统一 `mcpp-community`。这不改变仓库组织、包 namespace 或模块身份：
   对外仍是 `mcpplibs.mwrap.<lib>`。
+- GitHub 仓库 Topics 包含 `mcpp-community`，保留原有其他 topic；README 归属与 manifest 作者使用同一社区标识。
 - 上游原始 README、LICENSE/COPYING 及适用的 NOTICE、第三方通知放在 `upstream/<lib>/`，
   保留原始字节、作者与版权声明，记录固定来源和校验值。使用 `compat.*` 供应源码也保留这些上游文档。
 - 顶层 README 介绍封装，链接上游项目和保留文档；许可证链接/badge 表示封装 Apache-2.0，

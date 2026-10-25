@@ -205,3 +205,5 @@ README 导航统一使用 `[Upstream](上游地址)`；Modules 位于 Getting st
 
 同版本覆盖还需处理实际旧缓存：使用索引打包 revision/必要的 floor，并实测旧 home
 自动换入新载荷和运行；不要用增加 package version 尾号替代用户明确要求的版本对齐。
+
+仓库归属检查也包括 GitHub Topics 的 `mcpp-community`，更新时保留其他 topic；与 README 及 manifest 作者归属一致。

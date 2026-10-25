@@ -9,6 +9,8 @@ thin `compat.*` consumers and repositories with vendored upstream sources.
 - Use `mcpp-community` as the wrapper author/attribution label. This does not
   change repository organization, package namespace or import identity:
   `mcpplibs.mwrap.<lib>` remains the public module/package identity.
+- GitHub repositories include the `mcpp-community` topic, preserving any existing
+  topics; README attribution and manifest authors use the same community label.
 - Keep the original upstream README, LICENSE/COPYING and applicable NOTICE or
   third-party notices in `upstream/<lib>/`, preserving their bytes and authors.
   Record their pinned source and checksums. Provider-based wrappers keep these
