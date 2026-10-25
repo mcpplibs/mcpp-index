@@ -1,4 +1,4 @@
--- Immutable candidate for the new mwrap identity; formal release URLs follow after source CI.
+-- Immutable upstream-aligned mwrap source release; GLOBAL and CN bytes are identical.
 package = {
     spec = "1",
     namespace = "mcpplibs.mwrap",
@@ -7,23 +7,38 @@ package = {
     licenses = { "Apache-2.0" },
     repo = "https://github.com/mcpplibs/imgui-m",
     type = "package",
+    extensions = {
+        autoupdate = {
+            tag = "mwrap-${version}",
+            url = "https://github.com/mcpplibs/imgui-m/releases/download/${tag}/imgui-m-${version}.tar.gz",
+        },
+    },
     xpm = {
         linux = {
             ["1.92.8"] = {
-                url = "https://github.com/mcpplibs/imgui-m/archive/eeaa5164ecd801f316c8097ae8e43b03ae457550.tar.gz",
-                sha256 = "ccc22557b3d9e9ecae56a17d1ec3d7ef362ae7fcb429a2ec3a91f16f75e7d1a4",
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/imgui-m/releases/download/mwrap-1.92.8/imgui-m-1.92.8.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mwrap-imgui/releases/download/1.92.8/imgui-m-1.92.8.tar.gz",
+                },
+                sha256 = "dee8081f791484f5d16cac222f022c0bb62a541d6a62e8ce0a526e3a343adbcd",
             },
         },
         macosx = {
             ["1.92.8"] = {
-                url = "https://github.com/mcpplibs/imgui-m/archive/eeaa5164ecd801f316c8097ae8e43b03ae457550.tar.gz",
-                sha256 = "ccc22557b3d9e9ecae56a17d1ec3d7ef362ae7fcb429a2ec3a91f16f75e7d1a4",
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/imgui-m/releases/download/mwrap-1.92.8/imgui-m-1.92.8.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mwrap-imgui/releases/download/1.92.8/imgui-m-1.92.8.tar.gz",
+                },
+                sha256 = "dee8081f791484f5d16cac222f022c0bb62a541d6a62e8ce0a526e3a343adbcd",
             },
         },
         windows = {
             ["1.92.8"] = {
-                url = "https://github.com/mcpplibs/imgui-m/archive/eeaa5164ecd801f316c8097ae8e43b03ae457550.tar.gz",
-                sha256 = "ccc22557b3d9e9ecae56a17d1ec3d7ef362ae7fcb429a2ec3a91f16f75e7d1a4",
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/imgui-m/releases/download/mwrap-1.92.8/imgui-m-1.92.8.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mwrap-imgui/releases/download/1.92.8/imgui-m-1.92.8.tar.gz",
+                },
+                sha256 = "dee8081f791484f5d16cac222f022c0bb62a541d6a62e8ce0a526e3a343adbcd",
             },
         },
     },

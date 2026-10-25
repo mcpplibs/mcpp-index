@@ -319,3 +319,29 @@ A preliminary project-index probe before publication checked out the current
 public main, which lacks the seven new packages; mcpp add accepted a selector
 with an unchecked warning. That is explicitly not discovery proof, and no
 engine modification or manual copying is used to turn it into a pass.
+
+
+Five already published wrappers are now staged locally with their formal
+GitHub/GitCode URLs and matching hashes: ImGui, FFmpeg, ORT, llama.cpp and
+Godot. mcpp 2026.10.24.1 parses all five exact full identities/platform versions;
+all five autoupdate configurations and four tag-selection regressions pass.
+Historical-resource audit passes against ad0f019, with only OpenCV/gRPC still
+using commit candidates. The branch has not been pushed or declared ready:
+all seven formal assets and final index CI remain mandatory. Evidence:
+/tmp/mwrap-available-formal-descriptors-proof.json and
+/tmp/mwrap-partial-formal-resource-audit.json.
+
+
+gRPC squash commit b7a918ef931c270040d0db8ae36478b2d58f8a8a now passes
+both exact main workflows: CI 40151741673 and actual templates 40151741542.
+The final Linux advanced example completed successfully. Release preflight
+is verifying each of the 2,969 tracked archive files against that commit;
+no gRPC release/mirror is declared verified until the publication record exists.
+
+
+gRPC 1.83.0 is now formally published and publicly mirrored on GitCode.
+Its release archive SHA256 is `772403e3d2bc64d00998ba262ebb5edd8476603931e70cd2fea1a3257f6d42ca`. Both public
+regions and every tracked blob match the validated squash source. The sixth
+formal wrapper descriptor and the two independent 1.83.0.1 host-tool packaging
+entries now use those verified assets locally. Existing versions remain intact
+in the ad0f019-based audit; only OpenCV still uses a candidate source.
