@@ -367,3 +367,18 @@ configs, 19 updater regressions, four tag regressions and skill validation pass.
 The ad0f019-based audit preserves all existing versions, with zero remaining
 manual commit snapshots. Final remote index CI, ecosystem review/squash, actual
 index publication and artifact/Git installed consumers remain required.
+
+
+Final b0e9be4 index CI found a legacy macOS regression in workspace default
+shard 1/2 (job 121081914195): ggml-org.llamacpp b10069.2 implementation
+llama-mmap.cpp lacks explicit cstdlib declarations for posix_memalign/free.
+The new mwrap llama consumer passed. Existing Linux installation adaptation
+already supplies cstdlib/cerrno; extended that same source-scoped manifest
+adaptation to native macOS. Raw historical archive URLs/hash/version remain
+unchanged; macOS packaging revision/floor 1 refreshes installed old manifests.
+The actual Lua install hook was executed against the public legacy manifest,
+and both native tables parse with the expected ordinary-source-only flags.
+This is not a skipped legacy test: complete final-head CI must run again.
+The previous strict auto-merge observer was stopped before preparing this fix.
+At b0e9be4, site, updater and OpenKAL workflows passed; validate did not.
+Failure log: /tmp/mwrap-final-index-macos-default-1-failed.log.
