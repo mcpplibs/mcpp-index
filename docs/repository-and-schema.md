@@ -2,6 +2,8 @@
 
 **English** | [简体中文](zh/repository-and-schema.md)
 
+Module wrapper descriptors use `pkgs/mwrap/<lib>.lua` and their consumers use `tests/mwrap/<member>/`; see [the mwrap specification](mwrap.md). The category is flat and published unchanged. The workspace test source uses the current pinned mcpp; `index.toml` separately states the descriptor compatibility floor.
+
 ## Repository layout
 
 ```

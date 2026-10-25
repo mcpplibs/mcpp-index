@@ -24,8 +24,32 @@ def base_descriptors(base: str) -> set[str]:
     return {name for name in files.splitlines() if name.endswith(".lua")}
 
 
+def immutable_commit_snapshot(info: dict) -> bool:
+    """Commit archives have no release-version substitution to automate."""
+    urls = []
+    for platform in info["platforms"].values():
+        for value in platform["entries"].values():
+            if value.kind != "table":
+                return False
+            entry = value.table()
+            if "ref" in entry:
+                continue
+            # Inspect only the URL: revision/floor are valid numeric Lua
+            # fields that the updater's general plain() conversion rejects.
+            url = entry.get("url")
+            if url is not None and url.kind == "table":
+                url = url.table().get("GLOBAL")
+            if url is None or url.kind != "string":
+                return False
+            urls.append(url.string())
+    return bool(urls) and all(re.fullmatch(
+        r"https://github\.com/[^/]+/[^/]+/archive/[0-9a-fA-F]{40}(?:[0-9a-fA-F]{24})?\.(?:tar\.gz|zip)",
+        url) for url in urls)
+
+
 def audit(base: str, output: Path):
     records = []
+    manual = []
     previous = base_descriptors(base)
     infos = inventory(ROOT)
     removed = previous - {info["path"] for info in infos}
@@ -68,10 +92,15 @@ def audit(base: str, output: Path):
                             f"{info['id']} {plat}/{version}")
         if info["direct"]:
             if info["autoupdate"] is None:
+                if immutable_commit_snapshot(info):
+                    manual.append({"id": info["id"], "path": info["path"],
+                                   "reason": "immutable commit archive; update requires a reviewed source revision"})
+                    continue
                 raise RuntimeError(f"missing autoupdate: {info['id']}")
             records.append({k: info[k] for k in ("id", "path", "direct", "autoupdate")})
-    output.write_text(json.dumps({"covered": len(records), "packages": records}, indent=2))
-    print(f"All {len(records)} GitHub-direct descriptors declared; all existing versions preserved.")
+    output.write_text(json.dumps({"covered": len(records), "packages": records, "manual": manual}, indent=2))
+    print(f"All {len(records)} updateable GitHub-direct descriptors declared; "
+          f"{len(manual)} immutable snapshots require manual updates; all existing versions preserved.")
 
 
 def _literal_field(source: str, name: str) -> int | None:
@@ -89,16 +118,45 @@ def selection(base: str, output: Path):
 def direct_member(identity: str) -> str | None:
     namespace, name = identity.split(":", 1)
     candidates = []
-    for path in (ROOT / "tests/examples").glob("*/mcpp.toml"):
-        text = path.read_text(encoding="utf-8")
-        # Metadata-only selection; prepare() and the lock assertion verify actual resolution.
-        if re.search(rf"(?m)^\s*{re.escape(name)}\s*=", text) and (
-            f"dependencies.{namespace}]" in text or f"dependencies.{namespace}." in text
-        ):
-            candidates.append(path.parent.name)
+    def dependency_tables(table):
+        for key, value in table.items():
+            if not isinstance(value, dict):
+                continue
+            if key in {"dependencies", "build-dependencies"}:
+                yield value
+            else:
+                yield from dependency_tables(value)
+    for category in ("examples", "mwrap"):
+        for path in (ROOT / "tests" / category).glob("*/mcpp.toml"):
+            manifest = tomllib.loads(path.read_text(encoding="utf-8"))
+            for deps in dependency_tables(manifest):
+                nested = deps
+                for part in namespace.split("."):
+                    nested = nested.get(part, {}) if isinstance(nested, dict) else {}
+                if (f"{namespace}.{name}" in deps or name in deps.get(namespace, {}) or name in nested):
+                    candidates.append((category, path.parent.name))
+                    break
     if not candidates:
         return None
-    return min(candidates, key=lambda value: (len(value), value))
+    # A wrapper's dedicated consumer covers its current declared platforms;
+    # old examples may intentionally be gated to just one OS or feature.
+    return min(candidates, key=lambda value: (value[0] != "mwrap", len(value[1]), value[1]))[1]
+
+
+def member_manifest(member: str) -> Path:
+    for category in ("mwrap", "examples"):
+        path = ROOT / "tests" / category / member / "mcpp.toml"
+        if path.is_file():
+            return path
+    raise FileNotFoundError(f"consumer manifest not found: {member}")
+
+
+def names_dependency(deps: dict, namespace: str, name: str) -> bool:
+    nested = deps
+    for part in namespace.split("."):
+        nested = nested.get(part, {}) if isinstance(nested, dict) else {}
+    return (f"{namespace}.{name}" in deps
+            or name in deps.get(namespace, {}) or name in nested)
 
 
 # The runner platforms, by the spelling a member's `cfg(os = ...)` uses.
@@ -119,12 +177,14 @@ def member_platforms(member: str, identity: str) -> set[str]:
     repository on that target.
     """
     namespace, name = identity.split(":", 1)
-    manifest = tomllib.loads((ROOT / "tests/examples" / member / "mcpp.toml").read_text(encoding="utf-8"))
+    manifest = tomllib.loads(member_manifest(member).read_text(encoding="utf-8"))
     platforms: set[str] = set()
-    if name in manifest.get("dependencies", {}).get(namespace, {}):
+    if any(names_dependency(manifest.get(key, {}), namespace, name)
+           for key in ("dependencies", "build-dependencies")):
         platforms |= set(_CFG_PLATFORMS.values())
     for condition, table in manifest.get("target", {}).items():
-        if name not in table.get("dependencies", {}).get(namespace, {}):
+        if not any(names_dependency(table.get(key, {}), namespace, name)
+                   for key in ("dependencies", "build-dependencies")):
             continue
         spelled = re.fullmatch(r'cfg\(\s*(?:os\s*=\s*"(\w+)"|(windows))\s*\)', condition.strip())
         if spelled:
@@ -190,19 +250,19 @@ def matrix(plan: Path, output: Path, base: str):
     print(f"Candidate matrix: {len(jobs)} real build/run jobs.")
 
 
-def prepare(plan: Path, identity: str, output: Path):
+def prepare(plan: Path, identity: str, output: Path, home: Path | None = None):
     record = next(r for r in json.loads(plan.read_text(encoding="utf-8"))["packages"] if r["id"] == identity)
     namespace, name = identity.split(":", 1)
     version = record["candidate"]
     member = direct_member(identity)
     output.mkdir(parents=True, exist_ok=True)
     if member:
-        source = ROOT / "tests/examples" / member
+        source = member_manifest(member).parent
         shutil.copytree(source, output, dirs_exist_ok=True,
                         ignore=shutil.ignore_patterns("target", ".mcpp", "mcpp.lock"))
         text = (output / "mcpp.toml").read_text(encoding="utf-8")
         text, replacements = re.subn(
-            rf'(?m)^(\s*{re.escape(name)}\s*=\s*(?:\{{\s*version\s*=\s*)?")[^"]+(".*)$',
+            rf'(?m)^(\s*(?:{re.escape(name)}|"{re.escape(namespace)}\.{re.escape(name)}")\s*=\s*(?:\{{\s*version\s*=\s*)?")[^"]+(".*)$',
             lambda m: m[1] + version + m[2], text)
         if not replacements:
             raise RuntimeError("candidate dependency was not replaced")
@@ -232,7 +292,14 @@ def prepare(plan: Path, identity: str, output: Path):
         defines += ''.join(f'#define MCR_EXPECT_{key} {int(value)}\n'
                            for key, value in zip(("MAJOR", "MINOR", "PATCH"), parts))
         api.write_text(defines + api.read_text(encoding="utf-8"), encoding="utf-8")
-    text += f'\n[indices]\n"{namespace}" = {{ path = {json.dumps(str(ROOT).replace(chr(92), "/"))} }}\n'
+    if home is None:
+        text += f'\n[indices]\n"{namespace}" = {{ path = {json.dumps(str(ROOT).replace(chr(92), "/"))} }}\n'
+    else:
+        # Coupled tool/runtime packages cross namespaces. One complete built-in
+        # index resolves all of them without project-alias cache collisions.
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+        from prepare_builtin_index import prepare as prepare_index
+        prepare_index(ROOT, home)
     (output / "mcpp.toml").write_text(text)
     print(f"Prepared {identity}@{version} in {output}")
 
@@ -269,6 +336,7 @@ def main():
     parser.add_argument("--package")
     parser.add_argument("--output", type=Path)
     parser.add_argument("--consumer", type=Path)
+    parser.add_argument("--home", type=Path)
     args = parser.parse_args()
     if args.command == "audit":
         audit(args.base, args.output)
@@ -277,7 +345,7 @@ def main():
     elif args.command == "matrix":
         matrix(args.plan, args.output, args.base)
     elif args.command == "prepare":
-        prepare(args.plan, args.package, args.output)
+        prepare(args.plan, args.package, args.output, args.home)
     elif args.command == "diagnostics":
         diagnostics(args.consumer, args.output)
     else:

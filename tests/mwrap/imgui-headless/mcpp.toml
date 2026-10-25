@@ -1,0 +1,11 @@
+[package]
+name = "imgui-headless"
+version = "1.92.8"
+description = "Consume the immutable ImGui wrapper and render actual headless draw data"
+
+[indices]
+# Use the complete candidate built-in index prepared by tests/run_members.sh.
+# An explicit empty table overrides the legacy workspace redirect.
+
+[dependencies]
+"mcpplibs.mwrap.imgui" = "1.92.8"
