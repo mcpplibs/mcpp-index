@@ -1091,6 +1091,14 @@ jobs:
           # planner about toolchains is the larger one, and it needs a timing
           # table per leg that CI does not produce yet.
           lln=$(( ln + 3 ))
+          # A shard holds one member at least: a selective run of one member
+          # gave the llvm leg four shards, three of which set up a runner and
+          # built nothing.
+          if [ "$MEMBERS" != "__ALL__" ]; then
+            count=$(echo $MEMBERS | wc -w)
+            [ "$count" -lt 1 ] && count=1
+            [ "$lln" -gt "$count" ] && lln=$count
+          fi
           {
             printf '{"include":['
             # linux runs TWICE: once on mcpp's default toolchain and once on
