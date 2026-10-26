@@ -53,7 +53,8 @@ package = {
                 },
                 sha256 = "8517f65938a4faae9ccf8ebb36631a38c1cadfb5efa85d9a72e15b9e97d25155",
                 -- 1: Form B -> Form A (install() writes mcpp.toml + the module unit).
-                revision = 1,
+                -- 2: the module unit builds toml++ without its SSE2 path (TOML_ENABLE_SIMD 0).
+                revision = 2,
             },
         },
         macosx = {
@@ -64,7 +65,8 @@ package = {
                 },
                 sha256 = "8517f65938a4faae9ccf8ebb36631a38c1cadfb5efa85d9a72e15b9e97d25155",
                 -- 1: Form B -> Form A (install() writes mcpp.toml + the module unit).
-                revision = 1,
+                -- 2: the module unit builds toml++ without its SSE2 path (TOML_ENABLE_SIMD 0).
+                revision = 2,
             },
         },
         windows = {
@@ -75,7 +77,8 @@ package = {
                 },
                 sha256 = "8517f65938a4faae9ccf8ebb36631a38c1cadfb5efa85d9a72e15b9e97d25155",
                 -- 1: Form B -> Form A (install() writes mcpp.toml + the module unit).
-                revision = 1,
+                -- 2: the module unit builds toml++ without its SSE2 path (TOML_ENABLE_SIMD 0).
+                revision = 2,
             },
         },
     },
@@ -122,6 +125,13 @@ local MODULE_UNIT = [==[
 module;
 
 #define TOML_UNDEF_MACROS 0
+// No SSE2 path: <emmintrin.h> defines its intrinsics `static inline`, and
+// under the MSVC ABI clang gives such a function the same mangled name in
+// every module whose global module fragment includes it — a unit importing
+// both `std` (MSVC's library includes the intrinsics) and `tomlplusplus`
+// then fails with "definition with same mangled name". toml++ used SSE2
+// only to skip ASCII faster; the scalar path parses the same documents.
+#define TOML_ENABLE_SIMD 0
 // mcpp#797: a host-module compile is not given this package's include_dirs,
 // so reach the header relative to this file (src/modules/ -> include/).
 // Same file either way; restore `<toml++/toml.hpp>` once mcpp#797 is settled.
