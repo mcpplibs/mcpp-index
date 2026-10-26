@@ -223,6 +223,7 @@ members = [
     "tests/examples/mcr",
     "tests/examples/openkal",
     "tests/examples/openkal-musl",
+    "tests/examples/compiler-rt-builtins",
 ]
 
 # ── The index redirect, hoisted to the workspace root ───────────────────
