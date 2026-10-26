@@ -901,8 +901,8 @@ jobs:
           # packages of this index (tests/select_members.py says how the
           # graph is read). It replaced a substring search for the short name,
           # under which pkgs/o/os.lua selected 113 members and two consumed it.
+          python3 tests/test_select_members.py
           if [ -n "$descriptors" ]; then
-            python3 tests/test_select_members.py
             for m in $(python3 tests/select_members.py ${base:+--base "$base"} \
                          --cache "$RUNNER_TEMP/select-manifests.json" $descriptors); do
               add "$m"
