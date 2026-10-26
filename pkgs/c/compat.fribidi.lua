@@ -173,10 +173,17 @@ package = {
             -- Upstream's own, from lib/meson.build: without it every public
             -- symbol would be hidden and pango would fail to link.
             "-DFRIBIDI_BUILD",
-            -- pango is linked into shared objects, so the objects must be
-            -- position independent.
-            "-fPIC",
         },
+        -- pango is linked into shared objects, so the objects must be
+        -- position independent. Not on windows: PE/COFF has no such
+        -- distinction, and clang rejects -fPIC for the MSVC target.
+        linux  = { cflags = { "-fPIC" } },
+        macosx = { cflags = { "-fPIC" } },
+        -- This is a static library: under _WIN32 fribidi-common.h would make
+        -- every entry point __declspec(dllexport) (dllimport for consumers)
+        -- unless FRIBIDI_LIB_STATIC says otherwise. A consumer that includes
+        -- the headers on windows defines it too.
+        windows = { cflags = { "-DFRIBIDI_LIB_STATIC" } },
 
         targets = { fribidi = { kind = "lib" } },
     },
