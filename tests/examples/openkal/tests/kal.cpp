@@ -1,12 +1,15 @@
 // The C surface of openkal through the implementation for this system.
 //
-// One observation per declaration the newest round added, in the terms a
-// caller relies on: a context started with a least stack size is told at least
-// that size and has the room; a closed directory's enumeration is refused; the
-// input position is not an error to ask for. The terminal is not observed here,
+// Observations of the declarations recent rounds added, in the terms a caller
+// relies on: a context started with a least stack size is told at least that
+// size and has the room; a closed directory's enumeration is refused; and
+// (0.17) the system is named, this program names itself with the moment it
+// started, and a rename that does not replace refuses a name that is taken. The terminal is not observed here,
 // because a test run has none; the implementations observe it on a terminal
 // they make.
+#include <openkal/env.h>
 #include <openkal/fs.h>
+#include <openkal/process.h>
 #include <openkal/stream.h>
 #include <openkal/task.h>
 #include <openkal/version.h>
@@ -37,7 +40,7 @@ void room(void* p) {
 }
 
 int main() {
-    check(KAL_VERSION_MINOR >= 16u || KAL_VERSION_MAJOR > 0u, "the declarations are openkal 0.16 or later");
+    check(KAL_VERSION_MINOR >= 17u || KAL_VERSION_MAJOR > 0u, "the declarations are openkal 0.17 or later");
     check(kal_version() >= KAL_VERSION, "the implementation is at least as new as the declarations");
 
     probe q{0, 0};
@@ -58,6 +61,30 @@ int main() {
                   "an enumeration of a closed directory is refused");
         }
         kal_fs_remove(root, "okt.d", 5);
+    }
+
+    {
+        char system[32];
+        const kal_intptr n = kal_env_system(system, sizeof system);
+        check(n > 0, "the system this program runs upon is named");
+    }
+    {
+        kal_process me{};
+        kal_program_info info{};
+        info.self_size = sizeof info;
+        check(kal_process_self(&me) == kal_ok && kal_process_info(me, KAL_PINFO_ALL, &info) == kal_ok
+                  && info.id != 0 && info.started_ns != 0 && info.ended == 0,
+              "this program names itself, with the moment it started");
+        if (me.h) kal_process_close(me);
+    }
+    if (root.h && (kal_fs_props(root) & KAL_FS_PROP_RENAME_NO_REPLACE) != 0) {
+        kal_file f{};
+        if (kal_fs_open(root, "okt.a", 5, KAL_OPEN_WRITE | KAL_OPEN_CREATE | KAL_OPEN_TRUNCATE, &f) == kal_ok) kal_fs_close_file(f);
+        if (kal_fs_open(root, "okt.b", 5, KAL_OPEN_WRITE | KAL_OPEN_CREATE | KAL_OPEN_TRUNCATE, &f) == kal_ok) kal_fs_close_file(f);
+        check(kal_fs_rename_flags(root, "okt.a", 5, root, "okt.b", 5, KAL_RENAME_NO_REPLACE) == kal_err_exists,
+              "a rename that does not replace refuses a name that is taken");
+        kal_fs_remove(root, "okt.a", 5);
+        kal_fs_remove(root, "okt.b", 5);
     }
 
     if (failures == 0) kal_stream_write(kal_stdout(), "openkal: held\n", 14);
