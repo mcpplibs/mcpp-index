@@ -23,7 +23,11 @@ package = {
         language     = "c++23",
         import_std   = false,
         c_standard   = "c11",
-        cflags       = {"-D_GNU_SOURCE", "-D_DEFAULT_SOURCE", "-DHAVE_ARC4RANDOM_BUF=1"},
+        -- Key.c emulates arc4random_buf with getentropy (glibc 2.25+) when the
+        -- libc has no arc4random_buf of its own. Declaring HAVE_ARC4RANDOM_BUF
+        -- instead assumed glibc 2.36+, which an older sysroot (aarch64) lacks:
+        -- an implicit declaration, an error under C11.
+        cflags       = {"-D_GNU_SOURCE", "-D_DEFAULT_SOURCE", "-DHAVE_GETENTROPY=1", "-DHAVE_SYS_RANDOM_H=1"},
         include_dirs = {"*/include", "*"},
         sources = {
             "*/Array.c",

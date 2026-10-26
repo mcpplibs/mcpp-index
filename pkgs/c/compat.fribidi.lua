@@ -46,8 +46,29 @@ package = {
     repo        = "https://github.com/fribidi/fribidi",
     type        = "package",
 
+    -- One source tarball for every platform: fribidi is portable C99 with no
+    -- platform probes left (the two config headers below are written out),
+    -- so macOS and Windows build the same files Linux does.
     xpm = {
         linux = {
+            ["1.0.16"] = {
+                url = {
+                    GLOBAL = "https://github.com/fribidi/fribidi/releases/download/v1.0.16/fribidi-1.0.16.tar.xz",
+                    CN     = "https://gitcode.com/mcpp-res/fribidi/releases/download/1.0.16/fribidi-1.0.16.tar.xz",
+                },
+                sha256 = "1b1cde5b235d40479e91be2f0e88a309e3214c8ab470ec8a2744d82a5a9ea05c",
+            },
+        },
+        macosx = {
+            ["1.0.16"] = {
+                url = {
+                    GLOBAL = "https://github.com/fribidi/fribidi/releases/download/v1.0.16/fribidi-1.0.16.tar.xz",
+                    CN     = "https://gitcode.com/mcpp-res/fribidi/releases/download/1.0.16/fribidi-1.0.16.tar.xz",
+                },
+                sha256 = "1b1cde5b235d40479e91be2f0e88a309e3214c8ab470ec8a2744d82a5a9ea05c",
+            },
+        },
+        windows = {
             ["1.0.16"] = {
                 url = {
                     GLOBAL = "https://github.com/fribidi/fribidi/releases/download/v1.0.16/fribidi-1.0.16.tar.xz",
@@ -120,9 +141,11 @@ package = {
 
 #define HAVE_STDLIB_H 1
 #define HAVE_STRING_H 1
-#define HAVE_STRINGS_H 1
-#define HAVE_MEMORY_H 1
 #define SIZEOF_INT 4
+
+/* HAVE_STRINGS_H and HAVE_MEMORY_H are left out: lib/common.h would include
+   <strings.h> (which MSVC's headers do not have) and <memory.h>, and nothing
+   in lib/ uses a function from either; <string.h> covers memcpy and friends. */
 
 /* HAVE_FRIBIDI_CUSTOM_H and HAVE_FRIBIDI_UNICODE_VERSION_H are
    DELIBERATELY ABSENT rather than 0.
