@@ -53,7 +53,7 @@ package = {
                 },
                 sha256 = "8517f65938a4faae9ccf8ebb36631a38c1cadfb5efa85d9a72e15b9e97d25155",
                 -- 1: Form B -> Form A (install() writes mcpp.toml + the module unit).
-                -- 2: the module unit builds toml++ without its SSE2 path (TOML_ENABLE_SIMD 0).
+                -- 2: under the MSVC ABI the module unit builds toml++ without its SSE2 path.
                 revision = 2,
             },
         },
@@ -65,7 +65,7 @@ package = {
                 },
                 sha256 = "8517f65938a4faae9ccf8ebb36631a38c1cadfb5efa85d9a72e15b9e97d25155",
                 -- 1: Form B -> Form A (install() writes mcpp.toml + the module unit).
-                -- 2: the module unit builds toml++ without its SSE2 path (TOML_ENABLE_SIMD 0).
+                -- 2: under the MSVC ABI the module unit builds toml++ without its SSE2 path.
                 revision = 2,
             },
         },
@@ -77,7 +77,7 @@ package = {
                 },
                 sha256 = "8517f65938a4faae9ccf8ebb36631a38c1cadfb5efa85d9a72e15b9e97d25155",
                 -- 1: Form B -> Form A (install() writes mcpp.toml + the module unit).
-                -- 2: the module unit builds toml++ without its SSE2 path (TOML_ENABLE_SIMD 0).
+                -- 2: under the MSVC ABI the module unit builds toml++ without its SSE2 path.
                 revision = 2,
             },
         },
@@ -125,13 +125,16 @@ local MODULE_UNIT = [==[
 module;
 
 #define TOML_UNDEF_MACROS 0
-// No SSE2 path: <emmintrin.h> defines its intrinsics `static inline`, and
-// under the MSVC ABI clang gives such a function the same mangled name in
-// every module whose global module fragment includes it — a unit importing
-// both `std` (MSVC's library includes the intrinsics) and `tomlplusplus`
-// then fails with "definition with same mangled name". toml++ used SSE2
-// only to skip ASCII faster; the scalar path parses the same documents.
+// Under the MSVC ABI (cl, or clang in MSVC mode: both define _MSC_VER),
+// no SSE2 path: <emmintrin.h> defines its intrinsics `static inline`, and
+// clang gives such a function the same mangled name in every module whose
+// global module fragment includes it — a unit importing both `std` (MSVC's
+// library includes the intrinsics) and `tomlplusplus` then fails with
+// "definition with same mangled name". Elsewhere SSE2 stays on. toml++ uses
+// it only to skip ASCII faster; the scalar path parses the same documents.
+#if defined(_MSC_VER)
 #define TOML_ENABLE_SIMD 0
+#endif
 // mcpp#797: a host-module compile is not given this package's include_dirs,
 // so reach the header relative to this file (src/modules/ -> include/).
 // Same file either way; restore `<toml++/toml.hpp>` once mcpp#797 is settled.
