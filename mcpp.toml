@@ -91,6 +91,7 @@ members = [
     "tests/examples/imgui-module",
     "tests/examples/imgui-window",
     "tests/examples/jwt-cpp",
+    "tests/examples/libstdcxx-llvm",
     "tests/examples/marzer.tomlplusplus",
     "tests/examples/marzer.tomlplusplus-build-mcpp",
     "tests/examples/mcpp-plugins",

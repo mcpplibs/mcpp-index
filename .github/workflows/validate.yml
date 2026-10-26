@@ -431,7 +431,11 @@ env:
   # one module map of what it reaches; every unit of an ELF target is compiled
   # position-independent; `mcpp pack` states its build; `[build] jobs` bounds
   # `test` and `pack` (#751, #753).
-  MCPP_VERSION: "2026.10.24.1"
+  #
+  # 2026.10.26.1 (mcpp-community/mcpp#841): a graph-supplied libstdc++ under
+  # clang (gcc.libstdcxx, the libstdcxx-llvm member), `requires` as a table,
+  # and one C++ runtime per process -- compat.sycl-runtime's requirement.
+  MCPP_VERSION: "2026.10.26.1"
 
 jobs:
   lint:
@@ -1476,15 +1480,15 @@ jobs:
           fi
 
           # `mp-units-module`: the reverse case. `mpusz.mp-units` requires
-          # libc++ on linux because GCC 16.1 cannot import its modules
-          # (`recursive lazy load`, mpusz/mp-units#717), so the gcc leg would
-          # only reach that refusal. Lift once xim ships a GCC that works.
+          # the llvm compiler on linux because GCC 16.1 cannot import its
+          # modules (`recursive lazy load`, mpusz/mp-units#717), so the gcc leg
+          # would only reach that refusal. Lift once xim ships a GCC that works.
           if [ "${{ matrix.platform }}" = "linux" ] && [ "${{ matrix.toolchain }}" = "default" ]; then
             kept=""
             for m in $mine; do
               case "$m" in
                 mp-units-module)
-                  echo "skipping '$m' on the gcc leg: the package requires libc++" ;;
+                  echo "skipping '$m' on the gcc leg: the package requires the llvm compiler" ;;
                 *) kept="$kept $m" ;;
               esac
             done

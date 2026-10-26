@@ -101,10 +101,15 @@ package = {
             ["compat.opengl"] = "2026.05.31",
         },
         linux = {
+            -- The C library this package's X11 and GLX code is written for,
+            -- as a requirement on the target side (mcpp SPEC-002 §2.2). It
+            -- was the capability `abi:glibc`, which mcpp 2026.10.26.1 reads
+            -- as this same requirement and reports as a compatibility reading.
+            requires = { "mcpp:c-abi=glibc" },
             cflags = { "-D_DEFAULT_SOURCE", "-D_GLFW_X11" },
             runtime = {
                 dlopen_libs = { "libGLX.so.0", "libGL.so.1", "libGL.so" },
-                capabilities = { "x11.display", "opengl.glx.driver", "abi:glibc" },
+                capabilities = { "x11.display", "opengl.glx.driver" },
             },
             sources = {
                 "src/x11_init.c",

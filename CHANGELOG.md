@@ -9,6 +9,21 @@
 
 ### Added
 
+- **`gcc.libstdcxx` 16.1.0.1。** 向 llvm 构建提供 `mcpp:c++-abi=libstdc++`:安装时链接
+  `xim:gcc` 16.1.0 载荷的头文件与运行库目录并写出自身清单(`std-module` 为 `bits/std.cc`),
+  clang 据此以 libstdc++ 编译、`import std` 与链接(需要 mcpp 2026.10.26.1,SPEC-002 §7)。
+  新增测试成员 `tests/examples/libstdcxx-llvm`。
+
+### Changed
+
+- **`compat.sycl-runtime` 在 Linux 上要求 `mcpp:c++-abi=libstdc++`。** `libsycl.so` 在 libstdc++
+  上抛出 `sycl::exception`,而一个进程中的两套 C++ 运行时之间带类型的 `catch` 不会匹配
+  (mcpp-community/mcpp#838)。gcc 工具链,或 llvm 加 `gcc.libstdcxx`,满足该要求;其他构建
+  在编译前被拒绝。测试成员 `sycl-runtime` 在 Linux 上陈述 gcc。
+- **`mpusz.mp-units` 要求 `mcpp:compiler=llvm`**(原为 `mcpp:c++-abi=libc++`):约束来自 GCC 16.1
+  的模块缺陷,是编译器而不是 C++ 库。**`compat.glfw`** 以 `requires = { "mcpp:c-abi=glibc" }`
+  取代能力 `abi:glibc`。
+
 - **`openkal-macos` 0.14.1、`openkal-musl` 0.21.1、`openkal-llvm-runtime` 0.15.6。** macOS 上
   经 `fork` 复制的程序此前不能启动线程(`pthread_create` 返回 `EAGAIN`,
   mcpplibs/openkal-musl#55):`kal_space_start` 只调用复制原语,而该系统的 `fork` 在原语前后

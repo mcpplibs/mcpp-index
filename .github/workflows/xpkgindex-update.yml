@@ -25,7 +25,7 @@ concurrency:
 
 env:
   PYTHONUTF8: '1'
-  MCPP_VERSION: '2026.10.24.1'
+  MCPP_VERSION: '2026.10.26.1'
   MCPP_INDEX_MIRROR: GLOBAL
 
 jobs:
