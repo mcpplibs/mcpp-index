@@ -16,6 +16,13 @@
 
 ### Changed
 
+- **CI 按包身份选择受影响的成员。** `validate.yml` 的 select 曾在成员清单中查找描述符短名的
+  子串:`pkgs/o/os.lua` 选中 205 个成员中的 113 个(`boost-*`、`macos`、`cfg(os = ...)`、
+  注释里的 `exists`),而经 asio、curl 依赖 `compat.openssl` 的成员一个也未选中。
+  `tests/select_members.py` 以 mcpp 的规则读取成员声明的 `(namespace, name)`,沿描述符的
+  `deps` 与包归档内清单(按 tag 读 raw.githubusercontent.com;release 资产则读归档本身,
+  并经 `path` 依赖到达同一归档的其他清单)陈述的依赖求传递闭包,选出依赖图含被修改身份的成员。
+  归档以 sha256 固定,已读结果由 `actions/cache` 保存。读不到的清单记为警告,由每周全量运行覆盖。
 - **`compat.sycl-runtime` 在 Linux 上要求 `mcpp:c++-abi=libstdc++`。** `libsycl.so` 在 libstdc++
   上抛出 `sycl::exception`,而一个进程中的两套 C++ 运行时之间带类型的 `catch` 不会匹配
   (mcpp-community/mcpp#838)。gcc 工具链,或 llvm 加 `gcc.libstdcxx`,满足该要求;其他构建

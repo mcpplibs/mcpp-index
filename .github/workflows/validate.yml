@@ -704,6 +704,16 @@ jobs:
           fetch-depth: 0
       - name: Install lua
         run: sudo apt-get install -y --no-install-recommends lua5.4
+      # The dependencies stated by the manifests inside packages' archives,
+      # read by tests/select_members.py. An archive is pinned by its sha256,
+      # so an entry never goes stale; a new key per descriptor set keeps the
+      # entries of the previous one and adds the archives it adds.
+      - name: Restore the archive manifests read before
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/select-manifests.json
+          key: select-manifests-${{ hashFiles('pkgs/**/*.lua') }}
+          restore-keys: select-manifests-
       # ── Selective member testing ──────────────────────────────────────
       # `mcpp test --workspace` builds every member (opencv, ffmpeg, …) and
       # dominates CI wall-clock, while a PR almost always touches one
@@ -830,7 +840,7 @@ jobs:
             changed=""
           fi
           printf 'changed files vs %s:\n%s\n' "${base:-<none>}" "$changed"
-          sel=""; pkgsel=""
+          sel=""; pkgsel=""; descriptors=""
           add() { case " $sel " in *" $1 "*) ;; *) sel="$sel $1" ;; esac; }
           while IFS= read -r f; do
             [ -n "$f" ] || continue
@@ -856,15 +866,11 @@ jobs:
                 if [ -d "tests/examples/$m" ] || [ -d "tests/mwrap/$m" ]; then add "$m"; fi ;;
               pkgs/*.lua|pkgs/*/*.lua)
                 # A DELETED descriptor is in the diff but not on disk, and its
-                # CN urls are gone with it — nothing left to reach.
+                # CN urls are gone with it — nothing left to reach. The members
+                # it reaches are selected after the loop, all descriptors at
+                # once (tests/select_members.py).
                 if [ -f "$f" ]; then pkgsel="$pkgsel $f"; fi
-                lib=$(basename "$f" .lua); lib=${lib##*.}
-                hit=0
-                for mt in tests/examples/*/mcpp.toml tests/mwrap/*/mcpp.toml; do
-                  [ -f "$mt" ] || continue
-                  if grep -Fq "$lib" "$mt"; then add "$(basename "$(dirname "$mt")")"; hit=1; fi
-                done
-                [ "$hit" = 1 ] || echo "note: no workspace member exercises $f" ;;
+                descriptors="$descriptors $f" ;;
               # tools/ holds OFFLINE descriptor-generation and publishing
               # helpers (tools/compat-*/, tools/gtc/, publish_mcpp_index.sh).
               # Nothing under it is consumed by a package build: when one of
@@ -890,6 +896,18 @@ jobs:
           done <<EOF
           $changed
           EOF
+          # The members a changed descriptor reaches: those whose declared
+          # dependency graph holds its identity, directly or through other
+          # packages of this index (tests/select_members.py says how the
+          # graph is read). It replaced a substring search for the short name,
+          # under which pkgs/o/os.lua selected 113 members and two consumed it.
+          if [ -n "$descriptors" ]; then
+            python3 tests/test_select_members.py
+            for m in $(python3 tests/select_members.py ${base:+--base "$base"} \
+                         --cache "$RUNNER_TEMP/select-manifests.json" $descriptors); do
+              add "$m"
+            done
+          fi
           sel=${sel# }
           echo "MEMBERS=$sel" >> "$GITHUB_ENV"
           echo "selected members: ${sel:-<none>}"
