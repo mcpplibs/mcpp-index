@@ -1,0 +1,15 @@
+# openkal-tools test project: okrun and okld, built for this machine as a
+# project that makes ok images declares them, on every runner. The build of
+# the tools is the observation (openkal-tools over openkal-run over openkal-ld
+# and this system's openkal implementation, from one archive); the program
+# names where mcpp put them. Images themselves are built and run by
+# mcpplibs/openkal-image's own CI and by mcpp's (e2e 942).
+[package]
+name    = "openkal-tools-tests"
+version = "0.1.0"
+
+[build-dependencies.mcpplibs]
+openkal-tools = { version = "0.1.0", tools = ["okld", "okrun"] }
+
+[indices]
+mcpplibs = { path = "../../.." }
