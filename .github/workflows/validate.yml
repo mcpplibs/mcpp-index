@@ -431,7 +431,11 @@ env:
   # one module map of what it reaches; every unit of an ELF target is compiled
   # position-independent; `mcpp pack` states its build; `[build] jobs` bounds
   # `test` and `pack` (#751, #753).
-  MCPP_VERSION: "2026.10.24.1"
+  #
+  # 2026.10.26.1 (mcpp-community/mcpp#841): a graph-supplied libstdc++ under
+  # clang (gcc.libstdcxx, the libstdcxx-llvm member), `requires` as a table,
+  # and one C++ runtime per process -- compat.sycl-runtime's requirement.
+  MCPP_VERSION: "2026.10.26.1"
 
 jobs:
   lint:
