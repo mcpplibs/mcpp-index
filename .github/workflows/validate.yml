@@ -1421,11 +1421,27 @@ jobs:
       - name: Install host ffmpeg dev headers (llvm leg only)
         if: matrix.platform == 'linux' && matrix.toolchain == 'llvm'
         shell: bash
+        # Only Ubuntu's own archive is refreshed: a bare `apt-get update` also
+        # walks every third-party source the runner image carries (PPAs,
+        # vendor repos), and one slow mirror among them held this step for
+        # minutes. Bounded timeouts and retries, and no recommended packages.
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq \
-            libavutil-dev libavcodec-dev libavformat-dev \
-            libavfilter-dev libavdevice-dev libswscale-dev libswresample-dev
+          apt_opts=(-o Acquire::Retries=3 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20)
+          if [[ -f /etc/apt/sources.list.d/ubuntu.sources ]]; then
+            mkdir -p "$RUNNER_TEMP/apt-ubuntu"
+            cp /etc/apt/sources.list.d/ubuntu.sources "$RUNNER_TEMP/apt-ubuntu/"
+            apt_opts+=(-o Dir::Etc::SourceList=/dev/null -o "Dir::Etc::SourceParts=$RUNNER_TEMP/apt-ubuntu")
+          fi
+          time sudo timeout 180 apt-get update -qq "${apt_opts[@]}"
+          for attempt in 1 2; do
+            if time sudo timeout 300 apt-get install -y -qq --no-install-recommends "${apt_opts[@]}" \
+                 libavutil-dev libavcodec-dev libavformat-dev \
+                 libavfilter-dev libavdevice-dev libswscale-dev libswresample-dev; then
+              break
+            fi
+            [[ $attempt == 2 ]] && { echo "::error::the ffmpeg dev headers did not install"; exit 1; }
+            echo "::warning::apt-get install failed (attempt $attempt); retrying"
+          done
           dpkg -l | grep -E 'libav(util|codec)-dev|libswscale-dev'
 
       # ── Select the toolchain for this leg ─────────────────────────────
