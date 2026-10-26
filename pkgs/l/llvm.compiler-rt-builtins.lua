@@ -49,6 +49,13 @@ package = {
 
     xpm = {
         linux = {
+            ["22.1.8.6"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/compiler-rt-builtins/archive/refs/tags/22.1.8.6.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/compiler-rt-builtins/releases/download/22.1.8.6/compiler-rt-builtins-22.1.8.6.tar.gz",
+                },
+                sha256 = "14f246381c8667f978fc841ce89f91ee9c49823b90a7ff5cc6613b02c341a97b",
+            },
             ["22.1.8.5"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/compiler-rt-builtins/archive/refs/tags/22.1.8.5.tar.gz",
@@ -79,6 +86,13 @@ package = {
             },
         },
         macosx = {
+            ["22.1.8.6"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/compiler-rt-builtins/archive/refs/tags/22.1.8.6.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/compiler-rt-builtins/releases/download/22.1.8.6/compiler-rt-builtins-22.1.8.6.tar.gz",
+                },
+                sha256 = "14f246381c8667f978fc841ce89f91ee9c49823b90a7ff5cc6613b02c341a97b",
+            },
             ["22.1.8.5"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/compiler-rt-builtins/archive/refs/tags/22.1.8.5.tar.gz",
@@ -109,6 +123,13 @@ package = {
             },
         },
         windows = {
+            ["22.1.8.6"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/compiler-rt-builtins/archive/refs/tags/22.1.8.6.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/compiler-rt-builtins/releases/download/22.1.8.6/compiler-rt-builtins-22.1.8.6.tar.gz",
+                },
+                sha256 = "14f246381c8667f978fc841ce89f91ee9c49823b90a7ff5cc6613b02c341a97b",
+            },
             ["22.1.8.5"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/compiler-rt-builtins/archive/refs/tags/22.1.8.5.tar.gz",
