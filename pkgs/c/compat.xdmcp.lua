@@ -23,12 +23,36 @@ package = {
         language     = "c++23",
         import_std   = false,
         c_standard   = "c11",
-        -- Key.c emulates arc4random_buf with getentropy (glibc 2.25+) when the
-        -- libc has no arc4random_buf of its own. Declaring HAVE_ARC4RANDOM_BUF
-        -- instead assumed glibc 2.36+, which an older sysroot (aarch64) lacks:
-        -- an implicit declaration, an error under C11.
-        cflags       = {"-D_GNU_SOURCE", "-D_DEFAULT_SOURCE", "-DHAVE_GETENTROPY=1", "-DHAVE_SYS_RANDOM_H=1"},
-        include_dirs = {"*/include", "*"},
+        -- Whether the libc has arc4random_buf is a property of the sysroot,
+        -- not of the platform: glibc declares it from 2.36 (the x86_64
+        -- sysroot), an older glibc or musl does not (the aarch64 sysroot).
+        -- Key.c either calls the libc's or defines its own over getentropy,
+        -- so the choice is made where it can be seen — in config.h below,
+        -- from the libc's own version macros. A fixed -DHAVE_ARC4RANDOM_BUF
+        -- breaks the older sysroot (an implicit declaration); leaving it out
+        -- breaks the newer one (Key.c's static definition conflicts).
+        cflags       = {"-D_GNU_SOURCE", "-D_DEFAULT_SOURCE", "-DHAVE_CONFIG_H"},
+        generated_files = {
+            ["mcpp_generated/config.h"] = [[
+/* compat.xdmcp: the one configure answer the sources depend on. */
+#ifndef MCPP_XDMCP_CONFIG_H
+#define MCPP_XDMCP_CONFIG_H
+#if defined(__has_include)
+#  if __has_include(<features.h>)
+#    include <features.h>
+#  endif
+#endif
+#if defined(__GLIBC__) && (__GLIBC__ > 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 36))
+#  define HAVE_ARC4RANDOM_BUF 1
+#else
+/* getentropy: glibc 2.25+, musl 1.1.20+. */
+#  define HAVE_GETENTROPY 1
+#  define HAVE_SYS_RANDOM_H 1
+#endif
+#endif
+]],
+        },
+        include_dirs = {"mcpp_generated", "*/include", "*"},
         sources = {
             "*/Array.c",
             "*/Fill.c",
