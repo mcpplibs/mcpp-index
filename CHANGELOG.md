@@ -13,6 +13,13 @@
   `xim:gcc` 16.1.0 载荷的头文件与运行库目录并写出自身清单(`std-module` 为 `bits/std.cc`),
   clang 据此以 libstdc++ 编译、`import std` 与链接(需要 mcpp 2026.10.26.1,SPEC-002 §7)。
   新增测试成员 `tests/examples/libstdcxx-llvm`。
+- **openkal 0.17.1 及其实现 openkal-linux 0.18.1、openkal-macos 0.15.1、openkal-windows 0.13.1。**
+  openkal 增加 `KAL_SPAWN_ONE_STRING` / `KAL_PROCESS_PROP_ONE_STRING`:接收单个字符串的系统(Windows)上,
+  程序名之后的参数按原样连接,供以自身语法读取命令的命令解释器使用;接收参数向量的系统拒绝该标志。
+  openkal-windows 实现它;openkal-linux 与 openkal-macos 把 SIGHUP 纳入结束请求;openkal-linux 以绝对名
+  启动需要解释器的程序(`#!` 脚本的 `$0` 不再是 `/dev/fd/<n>`);openkal-macos 把 EBADARCH 与
+  EBADMACHO 译为 `kal_err_not_program`。测试成员 `openkal` 移到这些版本,并观察单字符串标志在
+  接收向量的系统上被拒绝。GLOBAL 为 GitHub 标签归档,CN 为 GitCode `mcpp-res` 镜像,sha256 两处一致。
 
 ### Changed
 

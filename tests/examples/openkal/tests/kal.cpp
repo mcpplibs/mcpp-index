@@ -4,7 +4,9 @@
 // relies on: a context started with a least stack size is told at least that
 // size and has the room; a closed directory's enumeration is refused; and
 // (0.17) the system is named, this program names itself with the moment it
-// started, and a rename that does not replace refuses a name that is taken. The terminal is not observed here,
+// started, and a rename that does not replace refuses a name that is taken;
+// (0.17.1) a joined command line is refused where programs receive vectors.
+// The terminal is not observed here,
 // because a test run has none; the implementations observe it on a terminal
 // they make.
 #include <openkal/env.h>
@@ -41,6 +43,7 @@ void room(void* p) {
 
 int main() {
     check(KAL_VERSION_MINOR >= 17u || KAL_VERSION_MAJOR > 0u, "the declarations are openkal 0.17 or later");
+    check(KAL_VERSION_MINOR > 17u || KAL_VERSION_PATCH >= 1u || KAL_VERSION_MAJOR > 0u, "and 0.17.1 or later");
     check(kal_version() >= KAL_VERSION, "the implementation is at least as new as the declarations");
 
     probe q{0, 0};
@@ -85,6 +88,18 @@ int main() {
               "a rename that does not replace refuses a name that is taken");
         kal_fs_remove(root, "okt.a", 5);
         kal_fs_remove(root, "okt.b", 5);
+    }
+
+    if ((kal_process_props() & KAL_PROCESS_PROP_ONE_STRING) == 0 && root.h) {
+        // Where a program receives a vector, a joined command line has no
+        // meaning and the start is refused before anything runs.
+        const char* argv[] = { "x" };
+        const kal_uintptr lens[] = { 1 };
+        const kal_spawn how{ root, root, nullptr, nullptr, 0, KAL_SPAWN_ONE_STRING };
+        kal_process p{};
+        check(kal_process_spawn(&how, "x", 1, argv, lens, 1, nullptr, nullptr, 0, nullptr, &p)
+                  == kal_err_not_supported,
+              "a joined command line is refused where programs receive vectors");
     }
 
     if (failures == 0) kal_stream_write(kal_stdout(), "openkal: held\n", 14);
