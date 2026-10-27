@@ -75,6 +75,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.16.2"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.16.2.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-llvm-runtime/releases/download/0.16.2/openkal-llvm-runtime-0.16.2.tar.gz",
+                },
+                sha256 = "8f23fbc19625a9a36caa04e39a62e916219ec0f6e21b02f659ad49c97202d7ed",
+            },
             ["0.16.1"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.16.1.tar.gz",
@@ -315,6 +322,13 @@ package = {
             },
         },
         macosx = {
+            ["0.16.2"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.16.2.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-llvm-runtime/releases/download/0.16.2/openkal-llvm-runtime-0.16.2.tar.gz",
+                },
+                sha256 = "8f23fbc19625a9a36caa04e39a62e916219ec0f6e21b02f659ad49c97202d7ed",
+            },
             ["0.16.1"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.16.1.tar.gz",
@@ -555,6 +569,13 @@ package = {
             },
         },
         windows = {
+            ["0.16.2"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.16.2.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-llvm-runtime/releases/download/0.16.2/openkal-llvm-runtime-0.16.2.tar.gz",
+                },
+                sha256 = "8f23fbc19625a9a36caa04e39a62e916219ec0f6e21b02f659ad49c97202d7ed",
+            },
             ["0.16.1"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.16.1.tar.gz",

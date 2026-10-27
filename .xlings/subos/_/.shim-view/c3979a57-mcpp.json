@@ -1,0 +1,1193 @@
+{
+  "fingerprint": {
+    "/home/speak/.xlings/.xlings.json": "4002723:-4644643759772368002",
+    "/home/speak/.xlings/data/versions.json": "3845404:-4644643759705365210",
+    "/home/speak/.xlings/subos/speak-agent-private/.xlings.json": "271702:-4644643759342350085",
+    "/home/speak/workspace/mcpplibs/mcpp-index/.xlings.json": "52:-4644586560366138024",
+    "/home/speak/workspace/mcpplibs/mcpp-index/.xlings/.xlings.json": "absent"
+  },
+  "format": 1,
+  "program": "mcpp",
+  "vinfo": {
+    "mcpp": {
+      "filename": "mcpp",
+      "type": "program",
+      "versions": {
+        "0.0.109": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "0.0.109",
+            "version": "0.0.109"
+          },
+          "bindingMembers": {
+            "mcpp": "0.0.109"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/0.0.109/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.10.1.1": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.10.1.1",
+            "version": "2026.10.1.1"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.10.1.1"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.10.1.1/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.10.1.2": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.10.1.2",
+            "version": "2026.10.1.2"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.10.1.2"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.10.1.2/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.10.1.3": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.10.1.3",
+            "version": "2026.10.1.3"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.10.1.3"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.10.1.3/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.10.10.2": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.10.10.2",
+            "version": "2026.10.10.2"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.10.10.2"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.10.10.2/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.10.11.1": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.10.11.1",
+            "version": "2026.10.11.1"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.10.11.1"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.10.11.1/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.10.16.3": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.10.16.3",
+            "version": "2026.10.16.3"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.10.16.3"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.10.16.3/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.10.19.1": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.10.19.1",
+            "version": "2026.10.19.1"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.10.19.1"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.10.19.1/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.10.21.1": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.10.21.1",
+            "version": "2026.10.21.1"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.10.21.1"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.10.21.1/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.10.24.1": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.10.24.1",
+            "version": "2026.10.24.1"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.10.24.1"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.10.24.1/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.10.26.1": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.10.26.1",
+            "version": "2026.10.26.1"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.10.26.1"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.10.26.1/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.10.3.1": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.10.3.1",
+            "version": "2026.10.3.1"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.10.3.1"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.10.3.1/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.10.5.1": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.10.5.1",
+            "version": "2026.10.5.1"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.10.5.1"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.10.5.1/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.10.5.2": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.10.5.2",
+            "version": "2026.10.5.2"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.10.5.2"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.10.5.2/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.10.5.3": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.10.5.3",
+            "version": "2026.10.5.3"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.10.5.3"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.10.5.3/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.10.8.1": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.10.8.1",
+            "version": "2026.10.8.1"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.10.8.1"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.10.8.1/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.7.27.1": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.7.27.1",
+            "version": "2026.7.27.1"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.7.27.1"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.7.27.1/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.8.8.4": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.8.8.4",
+            "version": "2026.8.8.4"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.8.8.4"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.8.8.4/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.9.10.1": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.9.10.1",
+            "version": "2026.9.10.1"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.9.10.1"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.9.10.1/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.9.10.2": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.9.10.2",
+            "version": "2026.9.10.2"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.9.10.2"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.9.10.2/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.9.11.2": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.9.11.2",
+            "version": "2026.9.11.2"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.9.11.2"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.9.11.2/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.9.11.4": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.9.11.4",
+            "version": "2026.9.11.4"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.9.11.4"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.9.11.4/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.9.12.2": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.9.12.2",
+            "version": "2026.9.12.2"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.9.12.2"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.9.12.2/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.9.12.4": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.9.12.4",
+            "version": "2026.9.12.4"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.9.12.4"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.9.12.4/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.9.13.1": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.9.13.1",
+            "version": "2026.9.13.1"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.9.13.1"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.9.13.1/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.9.13.2": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.9.13.2",
+            "version": "2026.9.13.2"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.9.13.2"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.9.13.2/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.9.14.1": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.9.14.1",
+            "version": "2026.9.14.1"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.9.14.1"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.9.14.1/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.9.14.2": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.9.14.2",
+            "version": "2026.9.14.2"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.9.14.2"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.9.14.2/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.9.14.3": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.9.14.3",
+            "version": "2026.9.14.3"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.9.14.3"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.9.14.3/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.9.15.1": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.9.15.1",
+            "version": "2026.9.15.1"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.9.15.1"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.9.15.1/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.9.16.1": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.9.16.1",
+            "version": "2026.9.16.1"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.9.16.1"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.9.16.1/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.9.16.2": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.9.16.2",
+            "version": "2026.9.16.2"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.9.16.2"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.9.16.2/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.9.17.1": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.9.17.1",
+            "version": "2026.9.17.1"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.9.17.1"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.9.17.1/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.9.17.2": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.9.17.2",
+            "version": "2026.9.17.2"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.9.17.2"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.9.17.2/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.9.17.3": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.9.17.3",
+            "version": "2026.9.17.3"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.9.17.3"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.9.17.3/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.9.18.1": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.9.18.1",
+            "version": "2026.9.18.1"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.9.18.1"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.9.18.1/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.9.18.3": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.9.18.3",
+            "version": "2026.9.18.3"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.9.18.3"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.9.18.3/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.9.2.1": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.9.2.1",
+            "version": "2026.9.2.1"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.9.2.1"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.9.2.1/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.9.20.1": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.9.20.1",
+            "version": "2026.9.20.1"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.9.20.1"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.9.20.1/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.9.21.1": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.9.21.1",
+            "version": "2026.9.21.1"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.9.21.1"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.9.21.1/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.9.21.2": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.9.21.2",
+            "version": "2026.9.21.2"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.9.21.2"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.9.21.2/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.9.21.3": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.9.21.3",
+            "version": "2026.9.21.3"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.9.21.3"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.9.21.3/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.9.24.1": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.9.24.1",
+            "version": "2026.9.24.1"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.9.24.1"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.9.24.1/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.9.25.1": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.9.25.1",
+            "version": "2026.9.25.1"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.9.25.1"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.9.25.1/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.9.26.1": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.9.26.1",
+            "version": "2026.9.26.1"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.9.26.1"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.9.26.1/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.9.26.2": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.9.26.2",
+            "version": "2026.9.26.2"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.9.26.2"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.9.26.2/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.9.27.1": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.9.27.1",
+            "version": "2026.9.27.1"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.9.27.1"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.9.27.1/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.9.28.1": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.9.28.1",
+            "version": "2026.9.28.1"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.9.28.1"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.9.28.1/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.9.28.2": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.9.28.2",
+            "version": "2026.9.28.2"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.9.28.2"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.9.28.2/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.9.28.3": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.9.28.3",
+            "version": "2026.9.28.3"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.9.28.3"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.9.28.3/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.9.29.1": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.9.29.1",
+            "version": "2026.9.29.1"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.9.29.1"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.9.29.1/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.9.29.2": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.9.29.2",
+            "version": "2026.9.29.2"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.9.29.2"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.9.29.2/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.9.29.3": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.9.29.3",
+            "version": "2026.9.29.3"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.9.29.3"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.9.29.3/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.9.29.4": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.9.29.4",
+            "version": "2026.9.29.4"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.9.29.4"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.9.29.4/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.9.29.5": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.9.29.5",
+            "version": "2026.9.29.5"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.9.29.5"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.9.29.5/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.9.3.1": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.9.3.1",
+            "version": "2026.9.3.1"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.9.3.1"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.9.3.1/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.9.3.2": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.9.3.2",
+            "version": "2026.9.3.2"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.9.3.2"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.9.3.2/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.9.30.1": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.9.30.1",
+            "version": "2026.9.30.1"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.9.30.1"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.9.30.1/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.9.30.2": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.9.30.2",
+            "version": "2026.9.30.2"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.9.30.2"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.9.30.2/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.9.4.1": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.9.4.1",
+            "version": "2026.9.4.1"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.9.4.1"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.9.4.1/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.9.4.2": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.9.4.2",
+            "version": "2026.9.4.2"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.9.4.2"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.9.4.2/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.9.4.3": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.9.4.3",
+            "version": "2026.9.4.3"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.9.4.3"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.9.4.3/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.9.5.1": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.9.5.1",
+            "version": "2026.9.5.1"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.9.5.1"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.9.5.1/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.9.5.2": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.9.5.2",
+            "version": "2026.9.5.2"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.9.5.2"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.9.5.2/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.9.5.4": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.9.5.4",
+            "version": "2026.9.5.4"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.9.5.4"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.9.5.4/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.9.6.6": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.9.6.6",
+            "version": "2026.9.6.6"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.9.6.6"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.9.6.6/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.9.7.1": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.9.7.1",
+            "version": "2026.9.7.1"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.9.7.1"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.9.7.1/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.9.8.1": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.9.8.1",
+            "version": "2026.9.8.1"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.9.8.1"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.9.8.1/bin",
+          "sourceName": "mcpp"
+        },
+        "2026.9.9.1": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "2026.9.9.1",
+            "version": "2026.9.9.1"
+          },
+          "bindingMembers": {
+            "mcpp": "2026.9.9.1"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.9.9.1/bin",
+          "sourceName": "mcpp"
+        },
+        "local:0.0.30": {
+          "path": "/home/speak/.xlings/data/xpkgs/local-x-mcpp/0.0.30/bin"
+        },
+        "local:0.0.33": {
+          "path": "/home/speak/.xlings/data/xpkgs/local-x-mcpp/0.0.33/bin"
+        },
+        "local:0.0.34": {
+          "path": "/home/speak/.xlings/data/xpkgs/local-x-mcpp/0.0.34/bin"
+        },
+        "local:0.0.35": {
+          "path": "/home/speak/.xlings/data/xpkgs/local-x-mcpp/0.0.35/bin"
+        },
+        "local:0.0.36": {
+          "path": "/home/speak/.xlings/data/xpkgs/local-x-mcpp/0.0.36/bin"
+        },
+        "local:0.0.38": {
+          "path": "/home/speak/.xlings/data/xpkgs/local-x-mcpp/0.0.38/bin"
+        },
+        "local:0.0.41": {
+          "path": "/home/speak/.xlings/data/xpkgs/local-x-mcpp/0.0.41/bin"
+        },
+        "local:0.0.43": {
+          "path": "/home/speak/.xlings/data/xpkgs/local-x-mcpp/0.0.43/bin"
+        },
+        "local:0.0.44": {
+          "path": "/home/speak/.xlings/data/xpkgs/local-x-mcpp/0.0.44/bin"
+        },
+        "local:0.0.45": {
+          "path": "/home/speak/.xlings/data/xpkgs/local-x-mcpp/0.0.45/bin"
+        },
+        "local:0.0.56": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "local:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "local:0.0.56",
+            "version": "0.0.56"
+          },
+          "bindingMembers": {
+            "mcpp": "local:0.0.56"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/local-x-mcpp/0.0.56/bin",
+          "sourceName": "mcpp"
+        },
+        "xim:2026.9.1.1": {
+          "bindingGroup": {
+            "group": "mcpp",
+            "provider": "xim:mcpp",
+            "rootTarget": "mcpp",
+            "rootVersion": "xim:2026.9.1.1",
+            "version": "2026.9.1.1"
+          },
+          "bindingMembers": {
+            "mcpp": "xim:2026.9.1.1"
+          },
+          "destinationName": "mcpp",
+          "kind": "program",
+          "path": "/home/speak/.xlings/data/xpkgs/xim-x-mcpp/2026.9.1.1/bin",
+          "sourceName": "mcpp"
+        }
+      }
+    }
+  },
+  "workspace": {
+    "mcpp": {
+      "active": "2026.10.26.1",
+      "installed": [
+        "2026.10.26.1"
+      ]
+    }
+  }
+}
