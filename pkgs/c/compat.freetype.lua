@@ -79,9 +79,33 @@ package = {
             -- against this freetype failed to LINK with two undefined
             -- references — measured while adding freedesktop.cairo.
             "*/src/base/ftsynth.c",
+            -- The rest of upstream's base extensions (modules.cfg BASE_EXTENSIONS,
+            -- CMakeLists.txt BASE_SRCS): the public API of ftstroke.h,
+            -- ftgasp.h, ftbdf.h, ftcid.h, ftpfr.h, ftwinfnt.h, t1tables.h
+            -- (FT_Get_PS_Font_Info …), FT_Get_FSType_Flags,
+            -- FT_Face_CheckTrueTypePatents and the validation entry points
+            -- (which report FT_Err_Unimplemented_Feature without the gxvalid /
+            -- otvalid modules, as upstream's default build does). Every
+            -- distribution builds them; without them those declarations link
+            -- to nothing. Measured while wrapping the whole API as modules
+            -- (mcpplibs.mwrap.freetype).
+            "*/src/base/ftbdf.c",
+            "*/src/base/ftcid.c",
+            "*/src/base/ftfstype.c",
+            "*/src/base/ftgasp.c",
+            "*/src/base/ftgxval.c",
+            "*/src/base/ftotval.c",
+            "*/src/base/ftpatent.c",
+            "*/src/base/ftpfr.c",
+            "*/src/base/ftstroke.c",
+            "*/src/base/fttype1.c",
+            "*/src/base/ftwinfnt.c",
             -- Modules (aggregates)
             "*/src/autofit/autofit.c",
             "*/src/bdf/bdf.c",
+            -- FT_Stream_OpenBzip2: FT_Err_Unimplemented_Feature without libbz2
+            -- (FT_CONFIG_OPTION_USE_BZIP2 stays off), as upstream builds it.
+            "*/src/bzip2/ftbzip2.c",
             "*/src/cff/cff.c",
             "*/src/cid/type1cid.c",
             "*/src/cache/ftcache.c",
