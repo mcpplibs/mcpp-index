@@ -10,6 +10,11 @@ int main(int argc, char** argv) {
         (void)os::stdio::write_output("echoed");
         return 0;
     }
+    if (argc > 1 && std::string_view(argv[1]) == "--both") {
+        (void)os::stdio::write_output("out ");
+        (void)os::stdio::write_error("err");
+        return 0;
+    }
     int failures = 0;
     auto check = [&](bool ok, std::string_view what) { if (!ok) { ++failures; std::println(std::cerr, "FAIL: {}", what); } };
 
@@ -39,6 +44,20 @@ int main(int argc, char** argv) {
         o.args.push_back("--echo");
         auto r = os::process::run(o);
         check(r && r->status.success() && r->out == "echoed", "a started program's output is read");
+
+        // 0.2.0: one pipe carries the output and the error output in the order written.
+        o.args.back() = "--both";
+        o.out = os::process::stdio::pipe;
+        o.err = os::process::stdio::output;
+        std::string merged;
+        auto p = os::process::process::spawn(o);
+        if (p) {
+            for (;;) { auto c = p->read_output(); if (!c || c->empty()) break; merged += *c; }
+            auto st = p->wait();
+            check(st && st->success() && merged == "out err", "both outputs arrive on one pipe in order");
+        } else {
+            check(false, "a program with both outputs on one pipe starts");
+        }
     }
     // 0.1.2: a symbol of the program resolves as the loader resolves it.
     if (os::library::supported())

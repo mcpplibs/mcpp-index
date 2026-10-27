@@ -1,12 +1,13 @@
 # mcpplibs.os test project: the library over this system's openkal
 # implementation, on every runner --- a program started and read, a file
-# published, a list of directories split, and the platform the build is for.
+# published, a list of directories split, the platform the build is for, and a
+# program's two outputs on one pipe.
 [package]
 name    = "os-tests"
 version = "0.1.0"
 
 [dependencies.mcpplibs]
-os = "0.1.2"
+os = "0.2.0"
 
 [indices]
 mcpplibs = { path = "../../.." }
