@@ -5,5 +5,5 @@
 name = "quickjs-ng-tests"
 version = "0.1.0"
 
-[dependencies]
-compat.quickjs-ng = "0.17.0"
+[dependencies.compat]
+quickjs-ng = "0.17.0"
