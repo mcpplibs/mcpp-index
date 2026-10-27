@@ -1623,6 +1623,11 @@ jobs:
         shell: bash
         run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.libpng@1.6.43
 
+      - name: Installed concurrentqueue wrapper archive and actual default pipeline template
+        if: contains(format(' {0} ', env.MEMBERS), ' concurrentqueue-mpmc ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.concurrentqueue@1.0.5
+
       - name: Installed FriBidi wrapper archive, actual default bidi template and its relocated LGPL notices
         if: contains(format(' {0} ', env.MEMBERS), ' fribidi-bidi ') && matrix.toolchain == 'default'
         shell: bash

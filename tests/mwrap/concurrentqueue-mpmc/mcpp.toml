@@ -1,0 +1,11 @@
+[package]
+name = "concurrentqueue-mpmc"
+version = "1.0.5"
+description = "Consume the immutable concurrentqueue wrapper: multi-producer multi-consumer traffic with tokens and bulk operations, the blocking queue's timed waits, the semaphore, the mapped macros"
+
+[indices]
+# Use the complete candidate built-in index prepared by tests/run_members.sh.
+# An explicit empty table overrides the legacy workspace redirect.
+
+[dependencies]
+"mcpplibs.mwrap.concurrentqueue" = "1.0.5"
