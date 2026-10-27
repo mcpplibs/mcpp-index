@@ -1,0 +1,65 @@
+// The image this member binds is built here, from image/twice.c, as a library
+// published as an image is built anywhere: clang for <arch>-unknown-none-elf,
+// the notes `okld note-source' lays down, ld.lld, `okld note'. Then
+// openkal-bind reads include/twice.h and generates the binding.
+#include <cstdio>
+#include <cstdlib>
+import std;
+import mcpp;
+import mcpp.mcpplibs.openkal_bind;
+
+namespace fs = std::filesystem;
+
+namespace {
+bool windows() { return std::string_view(mcpp::host()).find("windows") != std::string_view::npos; }
+std::string q(const fs::path& p) { return "\"" + p.generic_string() + "\""; }
+int run(std::string cmd) {
+    if (windows()) cmd = "\"" + cmd + "\"";
+    std::fflush(stdout);
+    return std::system(cmd.c_str());
+}
+}
+
+int main() {
+    const fs::path root = mcpp::manifest_dir();
+    const fs::path llvm = mcpp::xpkg_dir("xim", "llvm");
+    const fs::path okld = mcpp::dep_bin("openkal-tools", "okld");
+    const std::string arch = mcpp::target_arch();
+    const std::string exe = windows() ? ".exe" : "";
+    if (llvm.empty() || okld.empty()) {
+        std::fprintf(stderr, "error: openkal-bind-tests needs xim:llvm and openkal-tools' okld\n");
+        return 1;
+    }
+    const fs::path out = fs::path(mcpp::out_dir()) / "lib" / arch;
+    fs::create_directories(out);
+    const fs::path clang = llvm / "bin" / ("clang" + exe);
+    // The ELF linker: `ld.lld', or, where the payload ships another name of
+    // the same driver (the Windows archive has `lld-link.exe' alone), that
+    // driver told which flavour to be.
+    std::string lld;
+    for (const char* name : { "ld.lld", "lld", "lld-link" })
+        if (const fs::path p = llvm / "bin" / (std::string(name) + exe); lld.empty() && fs::exists(p))
+            lld = q(p) + (std::string_view(name) == "ld.lld" ? "" : " -flavor gnu");
+    if (lld.empty()) {
+        std::fprintf(stderr, "error: openkal-bind-tests: no lld in %s\n", (llvm / "bin").generic_string().c_str());
+        return 1;
+    }
+    const fs::path note = out / "note.S", image = out / "libtwice.okso";
+    std::string flags = std::format("--no-default-config --target={}-unknown-none-elf -ffreestanding -nostdlibinc -fPIC "
+                                    "-fvisibility=hidden -femulated-tls -fasynchronous-unwind-tables -O2", arch);
+    if (arch == "aarch64") flags += " -ffixed-x18 -mno-outline-atomics";
+    mcpp::rerun_if_changed((root / "image" / "twice.c").generic_string().c_str());
+    if (run(std::format("{} note-source > {}", q(okld), q(note))) != 0
+        || run(std::format("{} {} -c {} -o {}", q(clang), flags, q(root / "image" / "twice.c"), q(out / "twice.o"))) != 0
+        || run(std::format("{} {} -c {} -o {}", q(clang), flags, q(note), q(out / "note.o"))) != 0
+        || run(std::format("{} -shared -z max-page-size=65536 -z now -z noexecstack --hash-style=both -soname libtwice.okso -o {} {} {}",
+                           lld, q(image), q(out / "twice.o"), q(out / "note.o"))) != 0
+        || run(std::format("{} note {}", q(okld), q(image))) != 0) {
+        std::fprintf(stderr, "error: openkal-bind-tests: the image was not built\n");
+        return 1;
+    }
+    return mcpp::mcpplibs::openkal_bind::bind({
+        .header = "include/twice.h",
+        .image  = image.generic_string(),
+    });
+}

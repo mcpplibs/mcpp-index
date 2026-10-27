@@ -1,0 +1,57 @@
+-- openkal-bind --- the build plugin `mcpp.mcpplibs.openkal_bind' (openkal-image
+-- docs/bind.md).
+--
+-- A member of mcpplibs/openkal-image from 0.1.2 (one tag, one archive). A
+-- library published as an ok image (`lib<name>.okso') and a C header calls it
+-- from its build.mcpp:
+--
+--     [build-dependencies]
+--     openkal-bind = "0.1.2"
+--
+-- On an openkal target the image is linked as it is; on Linux, macOS and
+-- Windows the plugin reads the header with clang, checks the boundary, and
+-- generates a binding that calls the image through libokrun (openkal-run).
+--
+-- No `deps'. The plugin names no package; the library that uses it names
+-- openkal-run, and the plugin's own `xim:llvm' payload is declared on request.
+package = {
+    spec        = "1",
+    namespace   = "mcpplibs",
+    name        = "openkal-bind",
+    description = "A build plugin: a library published as an ok image (.okso) and a C header is called from a program of Linux, macOS or Windows, through a binding generated from the header and libokrun",
+    licenses    = {"Apache-2.0"},
+    repo        = "https://github.com/mcpplibs/openkal-image",
+    type        = "package",
+
+    xpm = {
+        linux = {
+            ["0.1.2"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-image/archive/refs/tags/0.1.2.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-image/releases/download/0.1.2/openkal-image-0.1.2.tar.gz",
+                },
+                sha256 = "63768571a800f3acdad420e18c14ee1bc5142f77ef29dcf01841f40d8f1f9a25",
+            },
+        },
+        macosx = {
+            ["0.1.2"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-image/archive/refs/tags/0.1.2.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-image/releases/download/0.1.2/openkal-image-0.1.2.tar.gz",
+                },
+                sha256 = "63768571a800f3acdad420e18c14ee1bc5142f77ef29dcf01841f40d8f1f9a25",
+            },
+        },
+        windows = {
+            ["0.1.2"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-image/archive/refs/tags/0.1.2.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-image/releases/download/0.1.2/openkal-image-0.1.2.tar.gz",
+                },
+                sha256 = "63768571a800f3acdad420e18c14ee1bc5142f77ef29dcf01841f40d8f1f9a25",
+            },
+        },
+    },
+
+    mcpp = "*/bind/mcpp.toml",
+}

@@ -53,6 +53,11 @@
 -- (An earlier revision of this comment said 0.15.0 was pending and unlisted.
 -- It had been released and registered; a note claiming a published version
 -- does not exist reads as missing data rather than as a stale sentence.)
+--
+-- 0.22.4 reads the flags word of `renameat2': RENAME_NOREPLACE is
+-- `kal_fs_rename_flags(KAL_RENAME_NO_REPLACE)' and every other flag is EINVAL.
+-- Before it the word was not read, and a RENAME_EXCHANGE lost the second
+-- file. The image form pins openkal-ld 0.1.2.
 package = {
     spec        = "1",
     namespace   = "mcpplibs",
@@ -64,6 +69,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.22.4"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-musl/archive/refs/tags/0.22.4.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-musl/releases/download/0.22.4/openkal-musl-0.22.4.tar.gz",
+                },
+                sha256 = "ee796a13882d4e4a1fb7829d72898eb865147e6d2b3b7c1a09c7f325b226cf68",
+            },
             ["0.22.3"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-musl/archive/refs/tags/0.22.3.tar.gz",
@@ -332,6 +344,13 @@ package = {
             },
         },
         macosx = {
+            ["0.22.4"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-musl/archive/refs/tags/0.22.4.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-musl/releases/download/0.22.4/openkal-musl-0.22.4.tar.gz",
+                },
+                sha256 = "ee796a13882d4e4a1fb7829d72898eb865147e6d2b3b7c1a09c7f325b226cf68",
+            },
             ["0.22.3"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-musl/archive/refs/tags/0.22.3.tar.gz",
@@ -600,6 +619,13 @@ package = {
             },
         },
         windows = {
+            ["0.22.4"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-musl/archive/refs/tags/0.22.4.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-musl/releases/download/0.22.4/openkal-musl-0.22.4.tar.gz",
+                },
+                sha256 = "ee796a13882d4e4a1fb7829d72898eb865147e6d2b3b7c1a09c7f325b226cf68",
+            },
             ["0.22.3"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-musl/archive/refs/tags/0.22.3.tar.gz",

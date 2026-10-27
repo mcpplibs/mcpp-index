@@ -234,6 +234,7 @@ members = [
     "tests/examples/openkal-musl",
     "tests/examples/compiler-rt-builtins",
     "tests/examples/openkal-tools",
+    "tests/examples/openkal-bind",
     "tests/examples/os",
 ]
 
