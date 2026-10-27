@@ -29,6 +29,10 @@
   按进程字的种类取得句柄:以有界生命期启动的程序由其记录命名,此前对它的每次有界等待都失败,
   调用方的时限(mcpp 的 `[hooks] timeout_seconds`)在 Windows 上不起作用。openkal-musl 与
   openkal-llvm-runtime 随之移动;测试成员 `openkal`、`openkal-musl` 随之移动。
+- **openkal-windows 0.13.3。** 环境表在首次查询时于一把锁下填写一次,两个执行上下文同时首次查询时
+  都读到已填写的表;此前其中一个可能读到空表,把已设置的变量(`PATH`)报为不存在。管道的有界读以
+  性能计数器计量时限,此前把每次 1 ms 的睡眠计为 1 ms,而默认计时器下一次睡眠持续约 15.6 ms,
+  100 ms 的时限约等待 1.5 s。测试成员 `openkal` 随之移动。
 
 ### Changed
 

@@ -27,7 +27,7 @@ openkal-linux = "0.18.2"
 openkal-macos = "0.15.1"
 
 [target.'cfg(windows)'.dependencies.mcpplibs]
-openkal-windows = "0.13.2"
+openkal-windows = "0.13.3"
 
 [target.'cfg(all(os = "linux", env = "musl"))'.dependencies.mcpplibs]
 openkal-llvm-runtime = "0.16.2"
