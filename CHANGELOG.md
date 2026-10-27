@@ -25,6 +25,10 @@
   此前共享唤醒到达不了私有等待,以等待结束请求结束的程序在请求后仍不结束。openkal-musl 与
   openkal-llvm-runtime 移到 openkal 0.17.1 这一轮:openkal 系列按精确版本固定,一个同时含 mcpplibs.os 0.2.0
   与 openkal-musl 0.22.0 的 ok image 图会出现两个 openkal。测试成员 `openkal`、`openkal-musl` 随之移动。
+- **openkal-windows 0.13.2、openkal-musl 0.22.2、openkal-llvm-runtime 0.16.2。** openkal-windows 的有界等待
+  按进程字的种类取得句柄:以有界生命期启动的程序由其记录命名,此前对它的每次有界等待都失败,
+  调用方的时限(mcpp 的 `[hooks] timeout_seconds`)在 Windows 上不起作用。openkal-musl 与
+  openkal-llvm-runtime 随之移动;测试成员 `openkal`、`openkal-musl` 随之移动。
 
 ### Changed
 
