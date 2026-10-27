@@ -8,7 +8,7 @@ name    = "openkal-musl-tests"
 version = "0.1.0"
 
 [target.'cfg(os = "linux")'.dependencies.mcpplibs]
-openkal-musl = "0.22.4"
+openkal-musl = "0.22.5"
 
 [target.'cfg(os = "linux")'.build]
 cxxflags = ["-DHAVE_OPENKAL_MUSL=1"]
