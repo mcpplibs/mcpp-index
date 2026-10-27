@@ -26,6 +26,10 @@ package = {
 
     xpm = {
         linux = {
+            ["0.1.2"] = {
+                url    = "https://github.com/mcpplibs/os/archive/refs/tags/0.1.2.tar.gz",
+                sha256 = "bf6f5cfb1518b045b693e246ee39306746074586434419d4052e648be111ea34",
+            },
             ["0.1.1"] = {
                 url    = "https://github.com/mcpplibs/os/archive/refs/tags/0.1.1.tar.gz",
                 sha256 = "c5abfb625ded0d5d837b799722c836c302460251d47081fef7a57a2a12e6b2b9",
@@ -39,6 +43,10 @@ package = {
             },
         },
         macosx = {
+            ["0.1.2"] = {
+                url    = "https://github.com/mcpplibs/os/archive/refs/tags/0.1.2.tar.gz",
+                sha256 = "bf6f5cfb1518b045b693e246ee39306746074586434419d4052e648be111ea34",
+            },
             ["0.1.1"] = {
                 url    = "https://github.com/mcpplibs/os/archive/refs/tags/0.1.1.tar.gz",
                 sha256 = "c5abfb625ded0d5d837b799722c836c302460251d47081fef7a57a2a12e6b2b9",
@@ -52,6 +60,10 @@ package = {
             },
         },
         windows = {
+            ["0.1.2"] = {
+                url    = "https://github.com/mcpplibs/os/archive/refs/tags/0.1.2.tar.gz",
+                sha256 = "bf6f5cfb1518b045b693e246ee39306746074586434419d4052e648be111ea34",
+            },
             ["0.1.1"] = {
                 url    = "https://github.com/mcpplibs/os/archive/refs/tags/0.1.1.tar.gz",
                 sha256 = "c5abfb625ded0d5d837b799722c836c302460251d47081fef7a57a2a12e6b2b9",
