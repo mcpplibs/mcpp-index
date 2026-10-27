@@ -221,13 +221,24 @@ def matrix(plan: Path, output: Path, base: str):
             build_plan["packages"] = [r for r in build_plan["packages"] if r["id"] != info["id"]]
             build_plan["packages"].append({"id": info["id"], "path": info["path"],
                                            "candidate": candidate, "status": "existing-candidate", "assets": assets})
+    # Packages released as one archive (one tag, several manifests reaching
+    # each other by path) are built together: a member of one builds the
+    # others from the same bytes, so the job of a sibling that has a member
+    # proves a package that none names directly.
+    def archive_of(record):
+        return frozenset(r["url"] for asset in record.get("assets", []) for r in asset["resources"].values())
+    candidates = [r for r in build_plan["packages"] if r["status"] in ("update-ready", "existing-candidate")]
     jobs = []
-    for record in build_plan["packages"]:
-        if record["status"] not in ("update-ready", "existing-candidate"):
-            continue
+    for record in candidates:
         member = direct_member(record["id"])
         if member is None and record["id"] not in ("compat:hiredis", "compat:libuv"):
-            raise RuntimeError(f"no candidate consumer: {record['id']}")
+            sibling = next((r["id"] for r in candidates
+                            if r is not record and archive_of(r) and archive_of(r) == archive_of(record)
+                            and direct_member(r["id"])), None)
+            if sibling is None:
+                raise RuntimeError(f"no candidate consumer: {record['id']}")
+            print(f"{record['id']}: built from the same archive by the job of {sibling}")
+            continue
         applicable = member_platforms(member, record["id"]) if member else None
         if applicable is not None and not applicable:
             print(f"{record['id']}: {member} names it only for a target no runner builds; "

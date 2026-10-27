@@ -33,9 +33,19 @@
   都读到已填写的表;此前其中一个可能读到空表,把已设置的变量(`PATH`)报为不存在。管道的有界读以
   性能计数器计量时限,此前把每次 1 ms 的睡眠计为 1 ms,而默认计时器下一次睡眠持续约 15.6 ms,
   100 ms 的时限约等待 1.5 s。测试成员 `openkal` 随之移动。
+- **openkal-run、openkal-tools、openkal-ld 0.1.1,openkal-musl 0.22.3,openkal-llvm-runtime 0.16.3。**
+  openkal-image 的三个包移到 openkal 0.17.1 这一轮:okrun 把 ok image 导入的名字绑定到 openkal-linux 0.18.2、
+  openkal-macos 0.15.1 与 openkal-windows 0.13.3,以 `KAL_SPAWN_ONE_STRING` 启动命令解释器的 image 在 okrun
+  下得到该标志的语义;三个包仍为同一版本、同一归档。openkal-musl 随 openkal-windows 0.13.3 与 openkal-ld 0.1.1
+  移动,openkal-llvm-runtime 随 openkal-musl 移动。测试成员 `openkal`、`openkal-musl`、`openkal-tools` 随之移动。
 
 ### Changed
 
+- **同一归档的包由点名其中一个的成员一并构建。** 候选矩阵要求每个新增版本有直接点名它的测试成员;
+  openkal-image 的 openkal-ld、openkal-run 与 openkal-tools 同一标签、同一归档,彼此以 `path` 依赖到达,
+  成员 `openkal-tools` 构建 openkal-tools 时即从同一字节构建另两个。`tests/autoupdate/ci.py` 的 matrix
+  对没有直接成员的包,查找本次计划中归档 URL 完全相同且有直接成员的同胞包,由该同胞的任务覆盖;
+  不同归档的包仍报 `no candidate consumer`。
 - **CI 按包身份选择受影响的成员。** `validate.yml` 的 select 曾在成员清单中查找描述符短名的
   子串:`pkgs/o/os.lua` 选中 205 个成员中的 113 个(`boost-*`、`macos`、`cfg(os = ...)`、
   注释里的 `exists`),而经 asio、curl 依赖 `compat.openssl` 的成员一个也未选中。
