@@ -1633,6 +1633,11 @@ jobs:
         shell: bash
         run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.freetype@2.13.3 --deploy
 
+      - name: Installed HarfBuzz wrapper archive, actual default shape template and its relocated notices
+        if: contains(format(' {0} ', env.MEMBERS), ' harfbuzz-shape ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.harfbuzz@14.3.0 --deploy
+
       - name: Installed Godot wrapper archive and actual standalone math template
         if: contains(format(' {0} ', env.MEMBERS), ' godot-math ') && matrix.toolchain == 'default'
         shell: bash

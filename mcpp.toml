@@ -22,6 +22,7 @@ members = [
     "tests/mwrap/libpng-image",
     "tests/mwrap/fribidi-bidi",
     "tests/mwrap/freetype-render",
+    "tests/mwrap/harfbuzz-shape",
     "tests/mwrap/grpc-cpu",
     "tests/mwrap/grpc-tools",
     "tests/mwrap/godot-math",
