@@ -38,6 +38,11 @@
   openkal-macos 0.15.1 与 openkal-windows 0.13.3,以 `KAL_SPAWN_ONE_STRING` 启动命令解释器的 image 在 okrun
   下得到该标志的语义;三个包仍为同一版本、同一归档。openkal-musl 随 openkal-windows 0.13.3 与 openkal-ld 0.1.1
   移动,openkal-llvm-runtime 随 openkal-musl 移动。测试成员 `openkal`、`openkal-musl`、`openkal-tools` 随之移动。
+- **openkal-platform 0.17.1(新包)。** ok 映像目标 `x86_64-openkal`、`aarch64-openkal` 的平台包(mcpp SPEC-013):
+  工具链 llvm@23.1.3,C 库 openkal-musl 0.22.3,C++ 与编译器运行时 openkal-llvm-runtime 0.16.3,工具 okld、okrun
+  (openkal-tools 0.1.1),编译与链接约定、封装、命名、运行器、载体,宿主组合与 openkal 0.17.1 的版本组。
+  mcpp 2026.10.27.1 的目标表为这两个目标选用它,工程不再声明运行时与工具。GLOBAL 为 GitHub 标签归档,
+  CN 为 GitCode `mcpp-res` 镜像,sha256 两处一致。
 - **openkal 0.17.2 这一轮:openkal-ld、openkal-run、openkal-tools 0.1.2,新包 openkal-bind 0.1.2,
   openkal-musl 0.22.4,openkal-llvm-runtime 0.16.4。** openkal-image 0.1.2 定义 okb v1(`docs/okb.md`):
   一个 ZIP 归档,映像以 stored 存放、数据起点按 64 KiB 对齐,`okb.json` 给出各架构的目录、入口与每个成员的
