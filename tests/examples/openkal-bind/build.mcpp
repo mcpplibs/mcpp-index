@@ -32,7 +32,12 @@ int main() {
     }
     const fs::path out = fs::path(mcpp::out_dir()) / "lib" / arch;
     fs::create_directories(out);
-    const fs::path clang = llvm / "bin" / ("clang" + exe), lld = llvm / "bin" / ("ld.lld" + exe);
+    const fs::path clang = llvm / "bin" / ("clang" + exe);
+    // The ELF linker: `ld.lld', or, where the payload ships the one driver
+    // alone (LLVM's Windows archive has `lld.exe' and no `ld.lld.exe'), that
+    // driver told which flavour to be.
+    std::string lld = q(llvm / "bin" / ("ld.lld" + exe));
+    if (!fs::exists(llvm / "bin" / ("ld.lld" + exe))) lld = q(llvm / "bin" / ("lld" + exe)) + " -flavor gnu";
     const fs::path note = out / "note.S", image = out / "libtwice.okso";
     std::string flags = std::format("--no-default-config --target={}-unknown-none-elf -ffreestanding -nostdlibinc -fPIC "
                                     "-fvisibility=hidden -femulated-tls -fasynchronous-unwind-tables -O2", arch);
@@ -42,7 +47,7 @@ int main() {
         || run(std::format("{} {} -c {} -o {}", q(clang), flags, q(root / "image" / "twice.c"), q(out / "twice.o"))) != 0
         || run(std::format("{} {} -c {} -o {}", q(clang), flags, q(note), q(out / "note.o"))) != 0
         || run(std::format("{} -shared -z max-page-size=65536 -z now -z noexecstack --hash-style=both -soname libtwice.okso -o {} {} {}",
-                           q(lld), q(image), q(out / "twice.o"), q(out / "note.o"))) != 0
+                           lld, q(image), q(out / "twice.o"), q(out / "note.o"))) != 0
         || run(std::format("{} note {}", q(okld), q(image))) != 0) {
         std::fprintf(stderr, "error: openkal-bind-tests: the image was not built\n");
         return 1;
