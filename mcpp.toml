@@ -19,6 +19,7 @@ members = [
     "tests/mwrap/md4c-render",
     "tests/mwrap/lua-embed",
     "tests/mwrap/quickjs-embed",
+    "tests/mwrap/libpng-image",
     "tests/mwrap/grpc-cpu",
     "tests/mwrap/grpc-tools",
     "tests/mwrap/godot-math",
