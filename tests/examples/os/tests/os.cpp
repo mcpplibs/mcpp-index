@@ -40,6 +40,9 @@ int main(int argc, char** argv) {
         auto r = os::process::run(o);
         check(r && r->status.success() && r->out == "echoed", "a started program's output is read");
     }
+    // 0.1.2: a symbol of the program resolves as the loader resolves it.
+    if (os::library::supported())
+        check(os::library::process_symbol(os::is_windows ? "GetCurrentProcessId" : "getpid") != nullptr, "a program symbol resolves");
     std::error_code ec;
     std::filesystem::remove_all(dir, ec);
     if (failures == 0) std::println("os-tests: held");
