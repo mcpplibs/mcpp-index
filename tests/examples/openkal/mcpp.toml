@@ -30,7 +30,7 @@ openkal-macos = "0.15.1"
 openkal-windows = "0.13.3"
 
 [target.'cfg(all(os = "linux", env = "musl"))'.dependencies.mcpplibs]
-openkal-llvm-runtime = "0.16.3"
+openkal-llvm-runtime = "0.16.4"
 
 [target.'cfg(arch = "wasm32")'.dependencies.mcpplibs]
 openkal-emscripten = "0.5.0"

@@ -38,6 +38,18 @@
   openkal-macos 0.15.1 与 openkal-windows 0.13.3,以 `KAL_SPAWN_ONE_STRING` 启动命令解释器的 image 在 okrun
   下得到该标志的语义;三个包仍为同一版本、同一归档。openkal-musl 随 openkal-windows 0.13.3 与 openkal-ld 0.1.1
   移动,openkal-llvm-runtime 随 openkal-musl 移动。测试成员 `openkal`、`openkal-musl`、`openkal-tools` 随之移动。
+- **openkal 0.17.2 这一轮:openkal-ld、openkal-run、openkal-tools 0.1.2,新包 openkal-bind 0.1.2,
+  openkal-musl 0.22.4,openkal-llvm-runtime 0.16.4。** openkal-image 0.1.2 定义 okb v1(`docs/okb.md`):
+  一个 ZIP 归档,映像以 stored 存放、数据起点按 64 KiB 对齐,`okb.json` 给出各架构的目录、入口与每个成员的
+  sha256,`okb.sig` 对清单签名;`okld bundle` / `okld bundle check` 写出并校验它,okrun 运行它;libokrun
+  增加 `okrun_run_okb_bytes`、`okrun_run_images`(从内存运行,不写盘)与 `okrun_open_library` /
+  `okrun_symbol` / `okrun_close`。openkal-bind 是构建插件(模块 `mcpp.mcpplibs.openkal_bind`,
+  `docs/bind.md`):以 `.okso` 加 C 头文件发布的库,在 Linux、macOS、Windows 上经它生成的绑定调用,
+  边界(`long`、`wchar_t`、变参、无原型的回调、未导出的函数)在构建时拒绝。四个包同一标签、同一归档。
+  openkal-musl 0.22.4 的 `renameat2` 按标志的含义执行或拒绝(`RENAME_NOREPLACE` 为
+  `kal_fs_rename_flags`,`RENAME_EXCHANGE` 与其余标志为 `EINVAL`);此前不读标志,交换会丢失第二个文件。
+  openkal-llvm-runtime 随 openkal-musl 移动。新增测试成员 `openkal-bind`(在构建程序中构建一个映像并经
+  插件绑定,测试经绑定调用映像、映像回调测试程序);`openkal`、`openkal-musl`、`openkal-tools` 随之移动。
 - **mcpplibs.os 0.2.0。** mcpp 的操作系统层所承载的内容进入 os:`exec`(本进程成为另一个程序)、
   一个管道按写入顺序承载输出与错误输出、追加写与持久化、卷的容量、`place` 与 `exchange`、属主、
   处理器数与可用内存、有界读取输入、发往错误流的输出、保留中断的原始模式,以及 Windows 的事实。
