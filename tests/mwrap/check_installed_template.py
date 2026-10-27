@@ -162,6 +162,30 @@ def main():
                 assert b"Apache License" in (roots[0] / "LICENSE").read_bytes()
                 assert b"mcpp-community" in (roots[0] / "NOTICE").read_bytes()
                 print(f"Verified {len(declared)} byte-identical wrapper/FriBidi license files", flush=True)
+            elif identity == "mcpplibs.mwrap.freetype":
+                # FreeType is linked statically under the FreeType License (FTL),
+                # whose credit the documentation carries: the license selector, the
+                # FTL and the notices of the BDF and PCF drivers travel with the
+                # program, at distinct paths, beside the wrapper's.
+                sources = [path for store in (home / "xpkgs", home / "registry/data/xpkgs")
+                           for path in store.glob(f"mcpplibs.mwrap-x-freetype/{version}/*/src/freetype.cppm")]
+                assert len(sources) == 1, sources
+                source = sources[0].parent.parent
+                declared = tomllib.loads((source / "mcpp.toml").read_text(encoding="utf-8"))["runtime"]["deploy"]
+                roots = list(relocated.rglob("licenses/freetype"))
+                assert len(roots) == 1, f"Missing FreeType runtime license tree: {roots}"
+                for entry in declared:
+                    notice = source / entry["from"]
+                    copied = roots[0].parent.parent / entry["to"] / notice.name
+                    assert copied.is_file() and copied.read_bytes() == notice.read_bytes(), copied
+                upstream = roots[0] / "upstream/freetype"
+                assert b"The FreeType Project LICENSE" in (upstream / "docs/FTL.TXT").read_bytes()
+                assert b"Francesco Zappa Nardelli" in (upstream / "src/bdf/README").read_bytes()
+                assert (upstream / "src/pcf/README").read_bytes() != (upstream / "src/bdf/README").read_bytes()
+                assert b"Apache License" in (roots[0] / "LICENSE").read_bytes()
+                notice = (roots[0] / "NOTICE").read_bytes()
+                assert b"mcpp-community" in notice and b"The FreeType Project" in notice
+                print(f"Verified {len(declared)} byte-identical wrapper/FreeType license files", flush=True)
             else:
                 raise ValueError(f"No deployment acceptance contract for {identity}")
             runtime_env = {key: value for key, value in os.environ.items()
