@@ -26,6 +26,11 @@ concurrency:
 env:
   PYTHONUTF8: '1'
   MCPP_VERSION: '2026.10.26.1'
+  # CROSS-VALIDATION BEFORE A RELEASE: a candidate that needs an mcpp newer
+  # than the pin (its package states the floor) is built with mcpp built from
+  # this branch of mcpp-community/mcpp, as openkal-compat.yml measures with it.
+  # Empty in an ordinary run.
+  MCPP_SOURCE_REF: ${{ vars.MCPP_SOURCE_REF || '' }}
   MCPP_INDEX_MIRROR: GLOBAL
 
 jobs:
@@ -204,6 +209,19 @@ jobs:
           else
             echo "MCPP=$root/bin/mcpp" >> "$GITHUB_ENV"
           fi
+      - name: The mcpp under review, built from MCPP_SOURCE_REF when it is set
+        if: env.MCPP_SOURCE_REF != ''
+        shell: bash
+        run: |
+          src="$RUNNER_TEMP/mcpp-src"
+          git clone --quiet --depth 1 --branch "$MCPP_SOURCE_REF" https://github.com/mcpp-community/mcpp.git "$src"
+          rm -f "$src/.xlings.json"
+          ( cd "$src" && "$MCPP" build --release )
+          built=$(find "$src/target" -type f \( -name mcpp -o -name mcpp.exe \) -path '*/bin/*' | head -1)
+          [ -n "$built" ] || { echo "::error::mcpp did not build from $MCPP_SOURCE_REF"; exit 1; }
+          if [[ "$RUNNER_OS" == Windows ]]; then built=$(cygpath -m "$built"); fi
+          echo "MCPP=$built" >> "$GITHUB_ENV"
+          echo "under review: $("$built" --version)  (from $MCPP_SOURCE_REF)"
       - name: Install macOS ODBC development headers
         if: runner.os == 'macOS' && matrix.id == 'compat:nanodbc'
         run: brew install libiodbc
