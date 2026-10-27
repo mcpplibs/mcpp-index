@@ -38,6 +38,11 @@
   openkal-macos 0.15.1 与 openkal-windows 0.13.3,以 `KAL_SPAWN_ONE_STRING` 启动命令解释器的 image 在 okrun
   下得到该标志的语义;三个包仍为同一版本、同一归档。openkal-musl 随 openkal-windows 0.13.3 与 openkal-ld 0.1.1
   移动,openkal-llvm-runtime 随 openkal-musl 移动。测试成员 `openkal`、`openkal-musl`、`openkal-tools` 随之移动。
+- **mcpp.plugins 0.20.0。** 新特性 `plugins-platform`(模块 `mcpp.plugins.platform`):平台插件与包格式提供者的
+  `provide_format`(声明格式,并在请求该格式的一遍中由暂存包的 `mcpp-package.json` 生成 artifact action),以及平台的
+  链接、产物命名、封装与运行主机的带检查的写法(mcpp SPEC-013 协议 17);`mcpp::plugins::package` 读取暂存包的
+  `mcpp-package.json`(SPEC-014 §4.5)。SYCL 构建只有一个 C++ 运行时(libstdc++)。需要 mcpp 2026.10.27.1;
+  `latest` 仍指向 0.19.1,随 mcpp 2026.10.27.1 发布移动。
 - **openkal-platform 0.17.1(新包)。** ok 映像目标 `x86_64-openkal`、`aarch64-openkal` 的平台包(mcpp SPEC-013):
   工具链 llvm@23.1.3,C 库 openkal-musl 0.22.3,C++ 与编译器运行时 openkal-llvm-runtime 0.16.3,工具 okld、okrun
   (openkal-tools 0.1.1),编译与链接约定、封装、命名、运行器、载体,宿主组合与 openkal 0.17.1 的版本组。
