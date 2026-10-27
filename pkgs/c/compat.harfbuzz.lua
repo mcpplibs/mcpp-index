@@ -41,6 +41,9 @@ package = {
                     CN     = "https://gitcode.com/mcpp-res/harfbuzz/releases/download/14.3.0/harfbuzz-14.3.0.tar.gz",
                 },
                 sha256 = "566e996a1b40486954fb7110ffe6eb88a0f7958bb466cdb023b0302618acea4a",
+                -- 1: hb-ft with FreeType's variation and transform entry points
+                -- (the HAVE_FT_* cxxflags below): installed copies take them.
+                revision = 1,
             },
         },
         macosx = {
@@ -50,6 +53,9 @@ package = {
                     CN     = "https://gitcode.com/mcpp-res/harfbuzz/releases/download/14.3.0/harfbuzz-14.3.0.tar.gz",
                 },
                 sha256 = "566e996a1b40486954fb7110ffe6eb88a0f7958bb466cdb023b0302618acea4a",
+                -- 1: hb-ft with FreeType's variation and transform entry points
+                -- (the HAVE_FT_* cxxflags below): installed copies take them.
+                revision = 1,
             },
         },
         windows = {
@@ -59,6 +65,9 @@ package = {
                     CN     = "https://gitcode.com/mcpp-res/harfbuzz/releases/download/14.3.0/harfbuzz-14.3.0.tar.gz",
                 },
                 sha256 = "566e996a1b40486954fb7110ffe6eb88a0f7958bb466cdb023b0302618acea4a",
+                -- 1: hb-ft with FreeType's variation and transform entry points
+                -- (the HAVE_FT_* cxxflags below): installed copies take them.
+                revision = 1,
             },
         },
     },
