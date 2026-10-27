@@ -1,0 +1,13 @@
+[package]
+name = "harfbuzz-shape"
+version = "14.3.0"
+description = "Consume the immutable HarfBuzz wrapper: shaping with a ligature and a kern pair, glyph names, an outline through draw functions, the FreeType integration over the FreeType wrapper's FT_Face, the macro mappings"
+
+[indices]
+# Use the complete candidate built-in index prepared by tests/run_members.sh.
+# An explicit empty table overrides the legacy workspace redirect.
+
+[dependencies]
+"mcpplibs.mwrap.harfbuzz" = "14.3.0"
+# FT_Face for hb_ft_*: the FreeType wrapper's, the very type HarfBuzz's FreeType integration takes.
+"mcpplibs.mwrap.freetype" = "2.13.3"
