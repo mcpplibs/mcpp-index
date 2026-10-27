@@ -58,7 +58,9 @@ Here, with the CI-pinned mcpp 2026.10.26.1 and `MCPP_INDEX_MIRROR=GLOBAL`:
 
 - `bash tests/run_members.sh harfbuzz-shape`: the real release archive through the candidate index; a ligature
   and kern pairs of a font embedded in the test, the same with `-liga,-kern`, an outline through draw functions,
-  the FreeType font functions and face loader, the macros and `hb::unique_ptr`: `test result ok`.
+  the FreeType font functions and face loader, an `FT_Face` of `mcpplibs.mwrap.freetype` (#594) shaped through
+  `hb_ft_font_create_referenced` (one type whichever module names it), the macros and `hb::unique_ptr`:
+  `test result ok`.
 - `python3 tests/mwrap/check_installed_template.py --package mcpplibs.mwrap.harfbuzz@14.3.0 --deploy`: the
   unmodified template from the real archive, then a relocated self-contained bundle whose `licenses/harfbuzz/`
   holds the wrapper's LICENSE/NOTICE and HarfBuzz's COPYING, AUTHORS and README byte for byte.

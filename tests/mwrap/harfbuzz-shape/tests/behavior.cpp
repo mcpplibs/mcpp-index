@@ -1,7 +1,10 @@
 // A font drawn for harfbuzz-m's default template (letters A V f i l t and the
-// space, the ligatures f_i and f_l, the kern pairs AV and VA, glyph names):
-// Copyright 2026 mcpp-community contributors, Apache-2.0.
+// space, the ligatures f_i and f_l, the kern pairs AV and VA, glyph names;
+// Copyright 2026 mcpp-community contributors, Apache-2.0), shaped through
+// HarfBuzz and, as an FT_Face of the FreeType wrapper, through HarfBuzz's
+// FreeType integration: one FT_Face whichever module names it.
 import std;
+import mcpplibs.mwrap.freetype;
 import mcpplibs.mwrap.harfbuzz;
 
 using namespace mcpplibs::mwrap::harfbuzz::macros;
@@ -170,6 +173,20 @@ int main() {
     if (!hb_font_set_funcs_using(font, "ft") || hb_font_get_glyph_h_advance(font, l) != 300) return 6;
     hb_face_t* ft_face = hb_ft_face_create_from_blob_or_fail(blob, 0);
     if (!ft_face || hb_face_get_upem(ft_face) != 1000) return 7;
+    // One FT_Face: FreeType's own through mcpplibs.mwrap.freetype, taken by
+    // HarfBuzz's FreeType integration through mcpplibs.mwrap.harfbuzz.
+    static_assert(std::is_same_v<decltype(hb_ft_font_get_ft_face(nullptr)), FT_Face>);
+    FT_Library library = nullptr;
+    FT_Face ft = nullptr;
+    if (FT_Init_FreeType(&library) || FT_New_Memory_Face(library, font_data, sizeof font_data, 0, &ft)) return 9;
+    if (FT_Set_Char_Size(ft, 1000 * 64, 1000 * 64, 72, 72)) return 10;
+    hb_font_t* over_ft = hb_ft_font_create_referenced(ft);
+    if (hb_ft_font_get_ft_face(over_ft) != ft) return 11;
+    // 26.6 advances at 1000 ppem: 64 times the font units, the same glyphs.
+    if (shaped(over_ft, "AV fi", "") != "[A=0+30720|V=1+38400|space=2+16000|f_i=3+38400]") return 12;
+    hb_font_destroy(over_ft);
+    FT_Done_Face(ft);
+    FT_Done_FreeType(library);
     // Macro mappings and the C++ helpers.
     static_assert(HB_TAG('l', 'i', 'g', 'a') == 0x6C696761u && HB_VERSION_ATLEAST(14, 0, 0));
     hb::unique_ptr<hb_set_t> set{hb_set_create()};
