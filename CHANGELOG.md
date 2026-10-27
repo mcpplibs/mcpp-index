@@ -50,6 +50,11 @@
   `kal_fs_rename_flags`,`RENAME_EXCHANGE` 与其余标志为 `EINVAL`);此前不读标志,交换会丢失第二个文件。
   openkal-llvm-runtime 随 openkal-musl 移动。新增测试成员 `openkal-bind`(在构建程序中构建一个映像并经
   插件绑定,测试经绑定调用映像、映像回调测试程序);`openkal`、`openkal-musl`、`openkal-tools` 随之移动。
+- **openkal-ld、openkal-run、openkal-tools、openkal-bind 0.1.3,openkal-musl 0.22.5,openkal-llvm-runtime 0.16.5。**
+  `okld bundle <out.okb> --package <树>` 由 mcpp 暂存的通用包写出 okb:读取 `mcpp-package.json`(mcpp SPEC-014 §4.5),
+  角色为 `image` 的文件按 `lib/<arch>/` 成为成员,各自的架构与 sha256 被核对,入口取 `launch.entry`;这是
+  openkal-platform 的 `okb` 包格式的动作。openkal-musl 随 openkal-ld 0.1.3 移动,openkal-llvm-runtime 随
+  openkal-musl 移动。测试成员 `openkal`、`openkal-bind`、`openkal-musl`、`openkal-tools` 随之移动。
 - **mcpplibs.os 0.2.0。** mcpp 的操作系统层所承载的内容进入 os:`exec`(本进程成为另一个程序)、
   一个管道按写入顺序承载输出与错误输出、追加写与持久化、卷的容量、`place` 与 `exchange`、属主、
   处理器数与可用内存、有界读取输入、发往错误流的输出、保留中断的原始模式,以及 Windows 的事实。

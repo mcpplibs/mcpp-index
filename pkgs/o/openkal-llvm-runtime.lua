@@ -75,6 +75,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.16.5"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.16.5.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-llvm-runtime/releases/download/0.16.5/openkal-llvm-runtime-0.16.5.tar.gz",
+                },
+                sha256 = "0dfd1ac49dae3aea41650b31b6c6c7f17d6bd767fcca0a171aed52f4cc02c4f6",
+            },
             ["0.16.4"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.16.4.tar.gz",
@@ -336,6 +343,13 @@ package = {
             },
         },
         macosx = {
+            ["0.16.5"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.16.5.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-llvm-runtime/releases/download/0.16.5/openkal-llvm-runtime-0.16.5.tar.gz",
+                },
+                sha256 = "0dfd1ac49dae3aea41650b31b6c6c7f17d6bd767fcca0a171aed52f4cc02c4f6",
+            },
             ["0.16.4"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.16.4.tar.gz",
@@ -597,6 +611,13 @@ package = {
             },
         },
         windows = {
+            ["0.16.5"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.16.5.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-llvm-runtime/releases/download/0.16.5/openkal-llvm-runtime-0.16.5.tar.gz",
+                },
+                sha256 = "0dfd1ac49dae3aea41650b31b6c6c7f17d6bd767fcca0a171aed52f4cc02c4f6",
+            },
             ["0.16.4"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.16.4.tar.gz",
