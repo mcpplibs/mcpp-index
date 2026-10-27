@@ -2,6 +2,8 @@ local versions = {
     ["2.15.0"] = {
         url = "https://github.com/freetype/freetype/archive/refs/tags/VER-2-15-0.tar.gz",
         sha256 = "87c7f1f8699b91e89f773f7dcfa505b044e1dae67f62a55d4e29c3afdcac4fb8",
+        -- 1: the rest of upstream's base extensions and ftbzip2 (#589).
+        revision = 1,
     },
 }
 
@@ -35,6 +37,8 @@ package = {
             ["2.13.3"] = {
                 url    = "https://github.com/freetype/freetype/archive/refs/tags/VER-2-13-3.tar.gz",
                 sha256 = "bc5c898e4756d373e0d991bab053036c5eb2aa7c0d5c67e8662ddc6da40c4103",
+                -- 1: the rest of upstream's base extensions and ftbzip2 (#589).
+                revision = 1,
             },
             ["2.15.0"] = versions["2.15.0"],
         },
@@ -42,6 +46,8 @@ package = {
             ["2.13.3"] = {
                 url    = "https://github.com/freetype/freetype/archive/refs/tags/VER-2-13-3.tar.gz",
                 sha256 = "bc5c898e4756d373e0d991bab053036c5eb2aa7c0d5c67e8662ddc6da40c4103",
+                -- 1: the rest of upstream's base extensions and ftbzip2 (#589).
+                revision = 1,
             },
             ["2.15.0"] = versions["2.15.0"],
         },
@@ -49,6 +55,8 @@ package = {
             ["2.13.3"] = {
                 url    = "https://github.com/freetype/freetype/archive/refs/tags/VER-2-13-3.tar.gz",
                 sha256 = "bc5c898e4756d373e0d991bab053036c5eb2aa7c0d5c67e8662ddc6da40c4103",
+                -- 1: the rest of upstream's base extensions and ftbzip2 (#589).
+                revision = 1,
             },
             ["2.15.0"] = versions["2.15.0"],
         },
