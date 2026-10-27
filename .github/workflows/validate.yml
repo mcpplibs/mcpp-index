@@ -1608,6 +1608,16 @@ jobs:
         shell: bash
         run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.md4c@0.5.3
 
+      - name: Installed Lua wrapper archive and actual default script template
+        if: contains(format(' {0} ', env.MEMBERS), ' lua-embed ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.lua@5.4.7
+
+      - name: Installed QuickJS-ng wrapper archive and actual default script template
+        if: contains(format(' {0} ', env.MEMBERS), ' quickjs-embed ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.quickjs_ng@0.17.0
+
       - name: Installed Godot wrapper archive and actual standalone math template
         if: contains(format(' {0} ', env.MEMBERS), ' godot-math ') && matrix.toolchain == 'default'
         shell: bash

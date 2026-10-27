@@ -17,6 +17,8 @@ members = [
     "tests/mwrap/ffmpeg-cpu",
     "tests/mwrap/imgui-headless",
     "tests/mwrap/md4c-render",
+    "tests/mwrap/lua-embed",
+    "tests/mwrap/quickjs-embed",
     "tests/mwrap/grpc-cpu",
     "tests/mwrap/grpc-tools",
     "tests/mwrap/godot-math",
