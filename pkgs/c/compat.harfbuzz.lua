@@ -72,7 +72,20 @@ package = {
         -- what makes <hb-ft.h> more than a set of declarations. The public
         -- header is installed either way, so without this the consumer gets a
         -- link error rather than a compile error -- worth pinning down here.
-        cxxflags     = { "-DHAVE_FREETYPE=1" },
+        --
+        -- The four HAVE_FT_* are what upstream's meson.build sets for every
+        -- FreeType that has these entry points (check_freetype_funcs; all of
+        -- them since FreeType 2.11, so compat.freetype 2.13.3 too). Without
+        -- them hb-ft.cc compiles out its variation and transform support: the
+        -- FreeType font functions ignore hb_font_set_variations() and the
+        -- face's FT_Set_Transform, and upstream's shaping suites fail with
+        -- --font-funcs=ft on every variable font (TestGVAR*, TestHVAR*,
+        -- TestCVARGVAR*, HBTest-VF …).
+        cxxflags     = { "-DHAVE_FREETYPE=1",
+                         "-DHAVE_FT_GET_VAR_BLEND_COORDINATES=1",
+                         "-DHAVE_FT_SET_VAR_BLEND_COORDINATES=1",
+                         "-DHAVE_FT_DONE_MM_VAR=1",
+                         "-DHAVE_FT_GET_TRANSFORM=1" },
         targets      = { ["harfbuzz"] = { kind = "lib" } },
         deps         = { ["compat.freetype"] = "2.13.3" },
         linux = {
