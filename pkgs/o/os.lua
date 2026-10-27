@@ -17,6 +17,13 @@ package = {
     repo        = "https://github.com/mcpplibs/os",
     type        = "package",
 
+    extensions = {
+        autoupdate = {
+            tag = "${version}",
+            url = "https://github.com/mcpplibs/os/archive/refs/tags/${tag}.tar.gz",
+        },
+    },
+
     xpm = {
         linux = {
             ["0.1.1"] = {
