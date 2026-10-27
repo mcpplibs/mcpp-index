@@ -20,6 +20,11 @@
   启动需要解释器的程序(`#!` 脚本的 `$0` 不再是 `/dev/fd/<n>`);openkal-macos 把 EBADARCH 与
   EBADMACHO 译为 `kal_err_not_program`。测试成员 `openkal` 移到这些版本,并观察单字符串标志在
   接收向量的系统上被拒绝。GLOBAL 为 GitHub 标签归档,CN 为 GitCode `mcpp-res` 镜像,sha256 两处一致。
+- **openkal-linux 0.18.2、openkal-musl 0.22.1、openkal-llvm-runtime 0.16.1。** openkal-linux 的结束请求
+  处理器以私有 futex 唤醒结束字(与 `kal_task_wait` 的等待一致),等待结束字的执行上下文由此被请求唤醒;
+  此前共享唤醒到达不了私有等待,以等待结束请求结束的程序在请求后仍不结束。openkal-musl 与
+  openkal-llvm-runtime 移到 openkal 0.17.1 这一轮:openkal 系列按精确版本固定,一个同时含 mcpplibs.os 0.2.0
+  与 openkal-musl 0.22.0 的 ok image 图会出现两个 openkal。测试成员 `openkal`、`openkal-musl` 随之移动。
 
 ### Changed
 
