@@ -1623,6 +1623,11 @@ jobs:
         shell: bash
         run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.libpng@1.6.43
 
+      - name: Installed FriBidi wrapper archive, actual default bidi template and its relocated LGPL notices
+        if: contains(format(' {0} ', env.MEMBERS), ' fribidi-bidi ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.fribidi@1.0.16 --deploy
+
       - name: Installed Godot wrapper archive and actual standalone math template
         if: contains(format(' {0} ', env.MEMBERS), ' godot-math ') && matrix.toolchain == 'default'
         shell: bash
