@@ -651,6 +651,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.20.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.20.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.20.0/mcpp-plugins-0.20.0.tar.gz",
+                },
+                sha256 = "d216989adedc2df616e693a2ac908d5d37e4cbac9ad008bdcd5af685eedd34ac",
+            },
             ["0.19.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.19.1.tar.gz",
@@ -927,6 +934,13 @@ package = {
             ["latest"] = { ref = "0.19.1" },
         },
         macosx = {
+            ["0.20.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.20.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.20.0/mcpp-plugins-0.20.0.tar.gz",
+                },
+                sha256 = "d216989adedc2df616e693a2ac908d5d37e4cbac9ad008bdcd5af685eedd34ac",
+            },
             ["0.19.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.19.1.tar.gz",
@@ -1203,6 +1217,13 @@ package = {
             ["latest"] = { ref = "0.19.1" },
         },
         windows = {
+            ["0.20.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.20.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.20.0/mcpp-plugins-0.20.0.tar.gz",
+                },
+                sha256 = "d216989adedc2df616e693a2ac908d5d37e4cbac9ad008bdcd5af685eedd34ac",
+            },
             ["0.19.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.19.1.tar.gz",
