@@ -21,6 +21,12 @@ int main(int argc, char** argv) {
     check(!os::fs::publish(file, "second").has_value(), "a published name is not replaced");
     check(os::fs::read(file).value_or("") == "first", "and keeps what was published first");
 
+    // 0.1.1: a name the Windows code page cannot spell, both ways (UTF-8 throughout).
+    const std::string name = "\xE4\xB8\xAD\xE6\x96\x87 \xD0\xBA\xD0\xB8\xD1\x80.txt";
+    const auto wide = dir / os::fs::from_utf8(name);
+    check(os::fs::write(wide, "ok").has_value() && os::fs::read(wide).value_or("") == "ok", "a file whose name is not ASCII");
+    check(os::fs::utf8(wide.filename()) == name, "and its name reads back as UTF-8");
+
     const char sep = os::conventions().path_list_separator;
     const auto parts = os::env::split_list(std::string("a") + sep + sep + "b");
     check(parts.size() == 2, "a list of directories splits at the host's separator");
