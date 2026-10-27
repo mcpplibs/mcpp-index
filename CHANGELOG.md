@@ -38,6 +38,12 @@
   openkal-macos 0.15.1 与 openkal-windows 0.13.3,以 `KAL_SPAWN_ONE_STRING` 启动命令解释器的 image 在 okrun
   下得到该标志的语义;三个包仍为同一版本、同一归档。openkal-musl 随 openkal-windows 0.13.3 与 openkal-ld 0.1.1
   移动,openkal-llvm-runtime 随 openkal-musl 移动。测试成员 `openkal`、`openkal-musl`、`openkal-tools` 随之移动。
+- **mcpplibs.os 0.2.0。** mcpp 的操作系统层所承载的内容进入 os:`exec`(本进程成为另一个程序)、
+  一个管道按写入顺序承载输出与错误输出、追加写与持久化、卷的容量、`place` 与 `exchange`、属主、
+  处理器数与可用内存、有界读取输入、发往错误流的输出、保留中断的原始模式,以及 Windows 的事实。
+  基于 openkal 0.17.1(openkal-linux 0.18.2、openkal-macos 0.15.1、openkal-windows 0.13.3);ok image
+  形态基于 openkal-llvm-runtime 0.16.3 与 openkal-tools 0.1.1。测试成员 `os` 移到 0.2.0,并观察两个输出
+  经一个管道按序到达。
 
 ### Changed
 
