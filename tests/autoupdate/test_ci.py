@@ -253,6 +253,32 @@ class MemberPlatformTests(unittest.TestCase):
                     self.assertEqual(sorted(job["platform"] for job in jobs if job["id"] == identity),
                                      ["linux", "linux", "macosx", "windows"])
 
+    def test_one_archive_is_built_by_the_job_of_the_package_a_member_names(self):
+        archive = "https://github.com/acme/image/archive/refs/tags/0.1.1.tar.gz"
+        other = "https://github.com/acme/other/archive/refs/tags/1.0.0.tar.gz"
+        def record(identity, url):
+            return {"id": identity, "candidate": "0.1.1", "status": "existing-candidate",
+                    "assets": [{"platform": "macosx", "resources": {"GLOBAL": {"url": url, "sha256": "a" * 64}}}]}
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            member = root / "tests/examples/image-tools"
+            member.mkdir(parents=True)
+            (member / "mcpp.toml").write_text(
+                '[package]\nname="image-tools"\nversion="0.1.0"\n'
+                '[build-dependencies.acme]\ntools={version="0.1.1",tools=["okld"]}\n')
+            plan = root / "plan.json"
+            plan.write_text(json.dumps({"packages": [
+                record("acme:ld", archive), record("acme:run", archive), record("acme:tools", archive)]}))
+            output = root / "matrix.json"
+            with patch.object(ci, "ROOT", root):
+                ci.matrix(plan, output, None)
+                jobs = json.loads(output.read_text())["include"]
+                self.assertEqual([(job["id"], job["member"]) for job in jobs], [("acme:tools", "image-tools")])
+                # A package of another archive that no member names has no job to share.
+                plan.write_text(json.dumps({"packages": [record("acme:ld", other), record("acme:tools", archive)]}))
+                with self.assertRaisesRegex(RuntimeError, "no candidate consumer: acme:ld"):
+                    ci.matrix(plan, output, None)
+
     def test_conditions_select_runners(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

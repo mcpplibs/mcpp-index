@@ -41,6 +41,11 @@
 
 ### Changed
 
+- **同一归档的包由点名其中一个的成员一并构建。** 候选矩阵要求每个新增版本有直接点名它的测试成员;
+  openkal-image 的 openkal-ld、openkal-run 与 openkal-tools 同一标签、同一归档,彼此以 `path` 依赖到达,
+  成员 `openkal-tools` 构建 openkal-tools 时即从同一字节构建另两个。`tests/autoupdate/ci.py` 的 matrix
+  对没有直接成员的包,查找本次计划中归档 URL 完全相同且有直接成员的同胞包,由该同胞的任务覆盖;
+  不同归档的包仍报 `no candidate consumer`。
 - **CI 按包身份选择受影响的成员。** `validate.yml` 的 select 曾在成员清单中查找描述符短名的
   子串:`pkgs/o/os.lua` 选中 205 个成员中的 113 个(`boost-*`、`macos`、`cfg(os = ...)`、
   注释里的 `exists`),而经 asio、curl 依赖 `compat.openssl` 的成员一个也未选中。
