@@ -20,6 +20,7 @@ members = [
     "tests/mwrap/lua-embed",
     "tests/mwrap/quickjs-embed",
     "tests/mwrap/libpng-image",
+    "tests/mwrap/concurrentqueue-mpmc",
     "tests/mwrap/fribidi-bidi",
     "tests/mwrap/freetype-render",
     "tests/mwrap/harfbuzz-shape",
