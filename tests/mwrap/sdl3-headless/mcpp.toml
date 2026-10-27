@@ -1,0 +1,11 @@
+[package]
+name = "sdl3-headless"
+version = "3.4.18"
+description = "Consume the immutable SDL3 wrapper headless: events, properties, a surface, the software renderer on the dummy driver, an audio stream, the mapped macros"
+
+[indices]
+# Use the complete candidate built-in index prepared by tests/run_members.sh.
+# An explicit empty table overrides the legacy workspace redirect.
+
+[dependencies]
+"mcpplibs.mwrap.sdl3" = "3.4.18"

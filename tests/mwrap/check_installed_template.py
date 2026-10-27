@@ -204,6 +204,24 @@ def main():
                 assert b"Apache License" in (roots[0] / "LICENSE").read_bytes()
                 assert b"mcpp-community" in (roots[0] / "NOTICE").read_bytes()
                 print(f"Verified {len(declared)} byte-identical wrapper/HarfBuzz license files", flush=True)
+            elif identity == "mcpplibs.mwrap.sdl3":
+                # SDL is zlib-licensed and linked statically: its license and
+                # README travel with the program, beside the wrapper's.
+                sources = [path for store in (home / "xpkgs", home / "registry/data/xpkgs")
+                           for path in store.glob(f"mcpplibs.mwrap-x-sdl3/{version}/*/src/sdl3.cppm")]
+                assert len(sources) == 1, sources
+                source = sources[0].parent.parent
+                declared = tomllib.loads((source / "mcpp.toml").read_text(encoding="utf-8"))["runtime"]["deploy"]
+                roots = list(relocated.rglob("licenses/sdl3"))
+                assert len(roots) == 1, f"Missing SDL runtime license tree: {roots}"
+                for entry in declared:
+                    notice = source / entry["from"]
+                    copied = roots[0].parent.parent / entry["to"] / notice.name
+                    assert copied.is_file() and copied.read_bytes() == notice.read_bytes(), copied
+                assert b"Sam Lantinga" in (roots[0] / "upstream/sdl3/LICENSE.txt").read_bytes()
+                assert b"Apache License" in (roots[0] / "LICENSE").read_bytes()
+                assert b"mcpp-community" in (roots[0] / "NOTICE").read_bytes()
+                print(f"Verified {len(declared)} byte-identical wrapper/SDL license files", flush=True)
             else:
                 raise ValueError(f"No deployment acceptance contract for {identity}")
             runtime_env = {key: value for key, value in os.environ.items()
