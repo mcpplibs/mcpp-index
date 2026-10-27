@@ -16,8 +16,6 @@
 // JS_FreeRuntime asserts that no object is still alive (quickjs.c:2699) and an
 // object this test forgot to free aborts it.
 
-#ifdef __linux__
-
 #include <quickjs.h>
 
 #include <cstdio>
@@ -131,9 +129,3 @@ int main() {
     }
     return 0;
 }
-
-#else
-
-int main() { return 0; }   // compat.quickjs-ng declares linux only; nothing to assert here.
-
-#endif
