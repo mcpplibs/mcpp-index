@@ -73,6 +73,7 @@ members = [
     "tests/examples/cuda-driver",
     "tests/examples/curl",
     "tests/examples/doctest",
+    "tests/examples/dr_libs",
     "tests/examples/eigen",
     "tests/examples/eui-neo",
     "tests/examples/eui-neo-app-main",

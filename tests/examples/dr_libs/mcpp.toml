@@ -1,0 +1,11 @@
+# compat.dr_libs — dr_wav, dr_flac and dr_mp3 from one generated implementation
+# TU: a WAV round trip, a FLAC stream decoded sample-exact against its own MD5,
+# an MP3 decoded to its LAME-tagged length, on every platform the descriptor
+# declares.
+[package]
+name     = "dr_libs-tests"
+version  = "0.1.0"
+standard = "c++23"
+
+[dependencies]
+compat.dr_libs = "2026.03.03"
