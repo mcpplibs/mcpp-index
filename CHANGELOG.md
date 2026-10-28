@@ -9,6 +9,15 @@
 
 ### Added
 
+- **mcpplibs.openkal-emscripten 0.6.0。** 按 openkal 0.17.1 实现其提供的十二个接口,使依赖 openkal 0.17 的
+  mcpplibs.os 能在 `wasm32-emscripten` 上解析与链接。`kal_env_image` 为 node 所给的脚本(页面中为 `kal_err_not_found`),
+  `kal_env_loader` 为 `kal_err_not_found`,`kal_env_system` 为 `emscripten`;`kal_fs_rename_flags` 中
+  `KAL_RENAME_NO_REPLACE` 为 `kal_err_not_supported`(C 库没有不替换的原子改名),声明 `KAL_FS_PROP_REMOVE_OPEN`
+  (在 MEMFS 上测得);`kal_net_listen_at`/`kal_net_connect_at` 为 `kal_err_not_supported`。修正:C 库对其自身终端设备
+  即使在管道下也回答 `isatty` 为 1,现在由宿主(node 的 `tty.isatty`)判断标准流是否为终端,终端设置
+  `KAL_TERM_SEQUENCES`。一致性(emsdk 6.0.9、node 26.7.0):终端下 109 成立、0 不成立、14 未观察;管道下 97、0、15。
+  GLOBAL 为 GitHub 标签归档,CN 为 GitCode `mcpp-res/openkal-emscripten` 镜像,sha256 一致。测试成员 `openkal` 的
+  wasm32 依赖移到 0.6.0。
 - **mcpplibs.os 0.2.1。** 在程序自己的 C 库的两种安排下构建并通过测试:系统自己的 C 库,以及位于系统自身三元组上的
   openkal-musl 与 openkal-llvm-runtime(mcpp docs/24)。机器、内存、卷的种类与两项交换在 Linux 与 macOS 上经内核调用
   得到,Windows 上以 32 位 DWORD 与 UTF-16 WCHAR 声明 kernel32 的名字,均不经 C 库;标准输出的转向与 SIGPIPE 在进程
