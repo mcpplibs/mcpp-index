@@ -11,7 +11,9 @@
 
 - **compat.pocketpy 2.2.0(新包)。** PocketPy 2:用 C11 写的小型可嵌入 Python 3.x 解释器(MIT,无依赖)。从标签归档
   构建 `src/**/*.c`(即上游 CMake 的 POCKETPY_SRC;`_generated.c` 已随源码提供,无需 prebuild.py)为静态库,
-  逐个源文件编译(同上游 build.sh / run_tests.sh),`-std=gnu11`。配置取 `pocketpy/config.h` 给未定义任何宏的使用者
+  按上游 CMake 的默认做法作为一个 unity 翻译单元编译(生成的 `pocketpy_unity.c` 按 CMake 的 GLOB_RECURSE 顺序包含 84 个
+  源文件;源码依赖于此:NDEBUG 下 `PK_INLINE` 把头文件声明、其他文件调用的函数标为 `inline`,clang 在 MSVC ABI 下不输出
+  其定义,逐个编译会在 Windows 上留下未定义符号),`-std=gnu11`。配置取 `pocketpy/config.h` 给未定义任何宏的使用者
   的取值(即使用者的 `<pocketpy.h>` 所见):`PK_ENABLE_OS=1`、`PK_ENABLE_THREADS=0`(CMake 打开它只在其 unity 构建下
   能编译:`time.c` 未包含声明 `c11_thrd__yield` 的头文件)、`PK_ENABLE_DLL=0`;另打开两项上游选项:
   `PK_ENABLE_DETERMINISM=1` 与 `-ffp-contract=off`(同 CMake,浮点结果跨平台一致)、`PK_ENABLE_WATCHDOG=1`

@@ -2,9 +2,8 @@
 -- C11 (MIT).
 --
 -- Shape A (C-source compat): upstream's library target, built from the tag
--- archive with each source compiled on its own, as upstream's build.sh and
--- run_tests.sh build it. A consumer writes `#include <pocketpy.h>` and links
--- the lib.
+-- archive as upstream's CMake builds it by default. A consumer writes
+-- `#include <pocketpy.h>` and links the lib.
 --
 -- WHAT IS COMPILED. Every src/**/*.c, which is exactly CMake's POCKETPY_SRC
 -- (`file(GLOB_RECURSE … src/*.c)`): the compiler, the VM, the public C API
@@ -15,6 +14,18 @@
 -- `main` REPL program and its tests), 3rd/ (the optional lz4, cute_png,
 -- msgpack and periphery modules, each OFF in CMakeOptions.txt), and the
 -- pybind11-style C++ layer under include/pybind11 (header-only, not built).
+--
+-- ONE TRANSLATION UNIT, as upstream builds it: CMake's default is a unity
+-- build of the whole of POCKETPY_SRC in one group (PK_BUILD_WITH_UNITY,
+-- UNITY_BUILD_MODE GROUP), and the release's pocketpy.c is the same sources
+-- amalgamated. The generated pocketpy_unity.c below includes the 84 files in
+-- CMake's order (GLOB_RECURSE sorts them). The sources rely on it: with
+-- NDEBUG, PK_INLINE marks functions the headers declare and other files call
+-- (py_retval, py_peek, PyObject__userdata …) `inline`, whose definitions
+-- clang does not emit for the MSVC ABI, so compiled one by one they leave
+-- undefined symbols on Windows; and calls across files inline as upstream's
+-- build inlines them. The file list is 2.2.0's: a new version's must be
+-- checked against its src/.
 --
 -- INCLUDE PATH. `*/include`, upstream's INTERFACE include directory
 -- (`target_include_directories(pocketpy INTERFACE include)`): a consumer
@@ -31,13 +42,11 @@
 -- that are on here:
 --   PK_ENABLE_OS=1          the os module, file import, the debugger
 --                           (config.h's default; CMake's too).
---   PK_ENABLE_THREADS=0     config.h's default. CMake turns it on, but only
---                           its unity build compiles that way: src/modules/
---                           time.c calls c11_thrd__yield without including
---                           the header that declares it, which a separate
---                           compilation (GCC 14+) rejects. Off, pkpy has no
---                           ComputeThread and names are interned without a
---                           lock; the same on every platform, the Web included.
+--   PK_ENABLE_THREADS=0     config.h's default (CMake's is on). Off, pkpy has
+--                           no ComputeThread and names are interned without a
+--                           lock: the same on every platform, the Web
+--                           included, where a program has no threads unless
+--                           built for shared memory (-pthread).
 --   PK_ENABLE_DLL=0         config.h's default: no import of native modules
 --                           from shared libraries (dlopen / LoadLibrary).
 --   PK_ENABLE_DETERMINISM=1 and -ffp-contract=off, as CMake builds it: float
@@ -56,7 +65,7 @@
 -- py_callcfunc as a function without NDEBUG and as a macro with it.
 --
 -- PLATFORMS. Linux (GCC, LLVM), macOS, Windows (clang targeting the MSVC ABI)
--- and wasm32-emscripten, the same sources and flags. Linux links libm for a
+-- and wasm32-emscripten, the same translation unit and flags. Linux links libm for a
 -- consumer linked by the C driver. Windows links ws2_32 (CMake, for the
 -- debugger's socket) and defines _CRT_SECURE_NO_WARNINGS as CMake does.
 --
@@ -117,7 +126,98 @@ package = {
         import_std   = false,
         c_standard   = "gnu11",
         include_dirs = { "*/include" },
-        sources      = { "*/src/**/*.c" },
+        sources      = { "*/mcpp/pocketpy_unity.c" },
+        generated_files = {
+            ["pocketpy-2.2.0/mcpp/pocketpy_unity.c"] = [==[
+/* compat.pocketpy: upstream's unity build (CMakeLists.txt, PK_BUILD_WITH_UNITY,
+   one UNITY_GROUP): every C source under src of 2.2.0, in the order of
+   CMake's GLOB_RECURSE. */
+#include "../src/bindings/py_array.c"
+#include "../src/bindings/py_mappingproxy.c"
+#include "../src/bindings/py_method.c"
+#include "../src/bindings/py_number.c"
+#include "../src/bindings/py_object.c"
+#include "../src/bindings/py_property.c"
+#include "../src/bindings/py_range.c"
+#include "../src/bindings/py_str.c"
+#include "../src/common/_generated.c"
+#include "../src/common/algorithm.c"
+#include "../src/common/chunkedvector.c"
+#include "../src/common/dmath.c"
+#include "../src/common/memorypool.c"
+#include "../src/common/name.c"
+#include "../src/common/serialize.c"
+#include "../src/common/smallmap.c"
+#include "../src/common/socket.c"
+#include "../src/common/sourcedata.c"
+#include "../src/common/sstream.c"
+#include "../src/common/str.c"
+#include "../src/common/threads.c"
+#include "../src/common/vector.c"
+#include "../src/compiler/compiler.c"
+#include "../src/compiler/lexer.c"
+#include "../src/debugger/core.c"
+#include "../src/debugger/dap.c"
+#include "../src/interpreter/ceval.c"
+#include "../src/interpreter/dll.c"
+#include "../src/interpreter/frame.c"
+#include "../src/interpreter/generator.c"
+#include "../src/interpreter/heap.c"
+#include "../src/interpreter/line_profiler.c"
+#include "../src/interpreter/objectpool.c"
+#include "../src/interpreter/py_compile.c"
+#include "../src/interpreter/typeinfo.c"
+#include "../src/interpreter/vm.c"
+#include "../src/interpreter/vmx.c"
+#include "../src/modules/array2d.c"
+#include "../src/modules/base64.c"
+#include "../src/modules/builtins.c"
+#include "../src/modules/colorcvt.c"
+#include "../src/modules/conio.c"
+#include "../src/modules/dis.c"
+#include "../src/modules/easing.c"
+#include "../src/modules/enum.c"
+#include "../src/modules/gc.c"
+#include "../src/modules/importlib.c"
+#include "../src/modules/inspect.c"
+#include "../src/modules/json.c"
+#include "../src/modules/lz4.c"
+#include "../src/modules/math.c"
+#include "../src/modules/os.c"
+#include "../src/modules/pickle.c"
+#include "../src/modules/picoterm.c"
+#include "../src/modules/pkpy.c"
+#include "../src/modules/random.c"
+#include "../src/modules/stdc.c"
+#include "../src/modules/time.c"
+#include "../src/modules/traceback.c"
+#include "../src/modules/unicodedata.c"
+#include "../src/modules/vmath.c"
+#include "../src/objects/bintree.c"
+#include "../src/objects/codeobject.c"
+#include "../src/objects/codeobject_ser.c"
+#include "../src/objects/container.c"
+#include "../src/objects/namedict.c"
+#include "../src/objects/object.c"
+#include "../src/public/Bindings.c"
+#include "../src/public/CodeExecution.c"
+#include "../src/public/DictSlots.c"
+#include "../src/public/FrameOps.c"
+#include "../src/public/GlobalSetup.c"
+#include "../src/public/Inspection.c"
+#include "../src/public/ModuleSystem.c"
+#include "../src/public/PyDict.c"
+#include "../src/public/PyException.c"
+#include "../src/public/PyList.c"
+#include "../src/public/PySlice.c"
+#include "../src/public/PyTuple.c"
+#include "../src/public/PythonOps.c"
+#include "../src/public/StackOps.c"
+#include "../src/public/TypeSystem.c"
+#include "../src/public/ValueCast.c"
+#include "../src/public/ValueCreation.c"
+]==],
+        },
         cflags       = {
             "-ffp-contract=off",
             "-DPK_ENABLE_OS=1",
