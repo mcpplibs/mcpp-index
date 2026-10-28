@@ -139,6 +139,7 @@ members = [
     "tests/examples/sdl2",
     "tests/examples/sdl3",
     "tests/examples/box2d",
+    "tests/examples/pocketpy",
     "tests/examples/sheenbidi",
     "tests/examples/spdlog",
     "tests/examples/fontconfig",

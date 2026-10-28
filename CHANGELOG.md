@@ -9,6 +9,19 @@
 
 ### Added
 
+- **compat.pocketpy 2.2.0(新包)。** PocketPy 2:用 C11 写的小型可嵌入 Python 3.x 解释器(MIT,无依赖)。从标签归档
+  构建 `src/**/*.c`(即上游 CMake 的 POCKETPY_SRC;`_generated.c` 已随源码提供,无需 prebuild.py)为静态库,
+  逐个源文件编译(同上游 build.sh / run_tests.sh),`-std=gnu11`。配置取 `pocketpy/config.h` 给未定义任何宏的使用者
+  的取值(即使用者的 `<pocketpy.h>` 所见):`PK_ENABLE_OS=1`、`PK_ENABLE_THREADS=0`(CMake 打开它只在其 unity 构建下
+  能编译:`time.c` 未包含声明 `c11_thrd__yield` 的头文件)、`PK_ENABLE_DLL=0`;另打开两项上游选项:
+  `PK_ENABLE_DETERMINISM=1` 与 `-ffp-contract=off`(同 CMake,浮点结果跨平台一致)、`PK_ENABLE_WATCHDOG=1`
+  (`py_watchdog_begin`/`py_watchdog_end` 在头文件中总是声明,只在打开时才有定义)。NDEBUG 随构建配置(release
+  定义),库与使用者一致。Linux 链接 `-lm`,Windows 链接 `ws2_32` 并定义 `_CRT_SECURE_NO_WARNINGS`。Linux、macOS、
+  Windows 与 `wasm32-emscripten` 使用同一组源文件与参数。使用者 `#include <pocketpy.h>`。url 为上游标签归档(暂无
+  CN 镜像);声明 `extensions.autoupdate`(`v${version}` 标签)。新增测试成员 `tests/examples/pocketpy`:版本与配置、
+  exec/eval 与 int/float/str/bool 读回、dict 与 list 的遍历、绑定的 C 函数及其参数检查、语法错误/运行时错误/
+  抛出/无限递归均返回 false 并带消息且 VM 可继续、watchdog 结束死循环、json/math/collections、确定性浮点值、
+  同一 VM 中重复执行、第二个 VM 与 `py_resetvm`。
 - **mcpplibs.os 0.2.2。** 新增 `wasm32-emscripten` 目标:基于 Emscripten 的 C 库与 openkal-emscripten 0.6.0 的 wasm
   模块,在 node 或页面中运行;新增 `platform::emscripten`、`architecture::wasm32` 与 `is_emscripten`,不定义平台模块。
   openkal-emscripten 没有 `openkal.process`,启动程序的调用在链接时失败并给出 openkal 符号名;`interrupt` 报告不会收到
