@@ -9,6 +9,10 @@
 
 ### Added
 
+- **openlifa.openas 0.2.0。** OpenLifa 标准 openas 的规范与声明它的 C++ 模块(`openas`、
+  `openas.conformance`):actor 及其委托链的文本形式、动词的效果等级、系统上限之下的授权与单个请求的决定、
+  运行信封的记录种类、退出码与错误码,以及动词描述、actor 与授权的一致性检查。只依赖标准库;代码 Apache-2.0,
+  规范文本 CC BY-SA 4.0。GLOBAL 为 GitHub 标签归档。新增测试成员 `tests/examples/openlifa.openas`。
 - **`gcc.libstdcxx` 16.1.0.1。** 向 llvm 构建提供 `mcpp:c++-abi=libstdc++`:安装时链接
   `xim:gcc` 16.1.0 载荷的头文件与运行库目录并写出自身清单(`std-module` 为 `bits/std.cc`),
   clang 据此以 libstdc++ 编译、`import std` 与链接(需要 mcpp 2026.10.26.1,SPEC-002 §7)。
