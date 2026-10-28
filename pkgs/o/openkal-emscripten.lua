@@ -32,8 +32,9 @@
 -- 2026.9.12.2); a consumer that activates the feature without it is refused
 -- before anything compiles.
 --
--- Conformance, measured with emsdk 6.0.9 under node: 86 held, 0 did not hold,
--- 13 not observed.
+-- Conformance of 0.6.0 (openkal 0.17.1), measured with emsdk 6.0.9 under node
+-- 26.7.0: 109 held, 0 did not hold, 14 not observed under a terminal; 97 held,
+-- 0 did not hold, 15 not observed under a pipe.
 package = {
     spec        = "1",
     namespace   = "mcpplibs",
@@ -45,6 +46,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.6.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-emscripten/archive/refs/tags/0.6.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-emscripten/releases/download/0.6.0/openkal-emscripten-0.6.0.tar.gz",
+                },
+                sha256 = "607b404954d4940414ec80226d53e4aa94f1d19100947dc2b900c44f4b2a229f",
+            },
             ["0.5.0"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-emscripten/archive/refs/tags/0.5.0.tar.gz",
@@ -96,6 +104,13 @@ package = {
             },
         },
         macosx = {
+            ["0.6.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-emscripten/archive/refs/tags/0.6.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-emscripten/releases/download/0.6.0/openkal-emscripten-0.6.0.tar.gz",
+                },
+                sha256 = "607b404954d4940414ec80226d53e4aa94f1d19100947dc2b900c44f4b2a229f",
+            },
             ["0.5.0"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-emscripten/archive/refs/tags/0.5.0.tar.gz",
@@ -147,6 +162,13 @@ package = {
             },
         },
         windows = {
+            ["0.6.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-emscripten/archive/refs/tags/0.6.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-emscripten/releases/download/0.6.0/openkal-emscripten-0.6.0.tar.gz",
+                },
+                sha256 = "607b404954d4940414ec80226d53e4aa94f1d19100947dc2b900c44f4b2a229f",
+            },
             ["0.5.0"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-emscripten/archive/refs/tags/0.5.0.tar.gz",
