@@ -9,6 +9,12 @@
 
 ### Added
 
+- **mcpplibs.os 0.2.1。** 在程序自己的 C 库的两种安排下构建并通过测试:系统自己的 C 库,以及位于系统自身三元组上的
+  openkal-musl 与 openkal-llvm-runtime(mcpp docs/24)。机器、内存、卷的种类与两项交换在 Linux 与 macOS 上经内核调用
+  得到,Windows 上以 32 位 DWORD 与 UTF-16 WCHAR 声明 kernel32 的名字,均不经 C 库;标准输出的转向与 SIGPIPE 在进程
+  保存它们的地方修改。mcpp-language-server 的操作系统层进入 os(有界运行、线程、环境赋值、有界读取、规范名)。
+  ok image 的 C 库、C++ 运行时与加载器取自其平台(openkal-platform,mcpp 2026.10.27.1 为 `<arch>-openkal` 选择),
+  包不再声明它们。GLOBAL 为 GitHub 标签归档,CN 为 GitCode `mcpp-res/os` 镜像,sha256 一致。测试成员 `os` 移到 0.2.1。
 - **mcpplibs.mwrap.dr_libs 2026.03.03(新包)。** dr_libs-m:以 C++23 模块(`import mcpplibs.mwrap.dr_libs;`)使用
   compat.dr_libs 2026.03.03(dr_wav 0.14.5、dr_flac 0.13.3、dr_mp3 0.7.3)。每个头文件各一个模块且可单独导入:
   `mcpplibs.mwrap.dr_libs.wav`(42 个类型、48 个枚举值、94 个函数)、`.flac`(32、6、31)、`.mp3`(28、8、29),全部以
