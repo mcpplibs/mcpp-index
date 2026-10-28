@@ -92,6 +92,37 @@ def declared(table: dict, namespace: str | None = None):
             yield from declared(value, selector)
 
 
+def platform_refs(manifest: dict):
+    """(selector, spec) for the package references mcpp SPEC-013 states outside
+    the dependency tables: `platform` under [target.<selector>],
+    [workspace.target.<selector>] and [host], and a platform package's own
+    [platform.layers], [platform.hosted.layers] and [platform.tools]. A
+    reference is `"<name>@<version>"`, a table naming a source, or `"none"` /
+    `false` (no package)."""
+    def ref(value):
+        if isinstance(value, str) and value != "none" and not value.startswith("path:"):
+            return value, value
+        if isinstance(value, dict) and is_spec(value) and isinstance(value.get("name"), str):
+            return value["name"], value
+        return None
+    def platform_of(table):
+        if isinstance(table, dict) and (r := ref(table.get("platform"))):
+            yield r
+    for scope in (manifest, manifest.get("workspace", {})):
+        if not isinstance(scope, dict):
+            continue
+        for selector_table in (scope.get("target") or {}).values():
+            yield from platform_of(selector_table)
+    yield from platform_of(manifest.get("host"))
+    platform = manifest.get("platform")
+    if isinstance(platform, dict):
+        for table in (platform.get("layers"), (platform.get("hosted") or {}).get("layers"),
+                      platform.get("tools")):
+            for value in (table or {}).values():
+                if (r := ref(value)):
+                    yield r
+
+
 def resolve(spelling: str, identities: set[Identity]) -> set[Identity]:
     """A spelling of a dependency (`os`, `compat.openssl`, `compat:openssl@3`,
     `mcpplibs.mwrap.ffmpeg`), as the identities of this index it can name."""
@@ -234,6 +265,7 @@ def selectors_of(start: str, read) -> set[str]:
     while todo:
         inside = todo.pop()
         manifest = loads(read(inside))
+        selectors.update(selector for selector, _ in platform_refs(manifest))
         for table in dependency_tables(manifest):
             for selector, spec in declared(table):
                 selectors.add(selector)
@@ -284,7 +316,8 @@ def members() -> list[Path]:
 
 def member_selectors(member: Path) -> set[str]:
     manifest = tomllib.loads((member / "mcpp.toml").read_text())
-    return {selector for table in dependency_tables(manifest) for selector, _ in declared(table)}
+    return ({selector for table in dependency_tables(manifest) for selector, _ in declared(table)}
+            | {selector for selector, _ in platform_refs(manifest)})
 
 
 class Graph:

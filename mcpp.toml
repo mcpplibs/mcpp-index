@@ -232,6 +232,7 @@ members = [
     "tests/examples/mcr",
     "tests/examples/openkal",
     "tests/examples/openkal-musl",
+    "tests/examples/openkal-platform",
     "tests/examples/compiler-rt-builtins",
     "tests/examples/openkal-tools",
     "tests/examples/openkal-bind",

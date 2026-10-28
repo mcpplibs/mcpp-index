@@ -52,6 +52,38 @@ openkal-tools = { version = "0.1.0", tools = ["okld"] }
             "cmdline", "mcpplibs.mwrap.ffmpeg", "openkal", "compat.fmt", "compat.zlib",
             "mcpplibs.mwrap.imgui", "freedesktop.wayland", "openkal-tools"})
 
+    def test_a_platform_reference_is_an_edge(self):
+        # mcpp SPEC-013: the platform a target or the host graph selects, and
+        # a platform package's layers and tools, are packages of the graph.
+        member = tomllib.loads('''
+[target.'cfg(any(linux, macos))']
+platform = "openkal-platform@0.17.3"
+[target.x86_64-openkal]
+platform = "none"
+[host]
+platform = { name = "openkal-platform", version = "0.17.3" }
+[workspace.target.'cfg(windows)']
+platform = "path:../plat"
+''')
+        self.assertEqual({sel for sel, _ in s.platform_refs(member)},
+                         {"openkal-platform@0.17.3", "openkal-platform"})
+        platform = tomllib.loads('''
+[platform]
+targets = ["x86_64-openkal"]
+[platform.layers]
+c-abi = { name = "openkal-musl", version = "0.22.6", default-features = false }
+"c++-abi" = "openkal-llvm-runtime@0.16.6"
+kernel-abi = false
+[platform.hosted.layers]
+c-abi = { name = "openkal-musl", version = "0.22.6" }
+[platform.tools]
+okld = { name = "openkal-tools", version = "0.1.3" }
+''')
+        self.assertEqual({sel for sel, _ in s.platform_refs(platform)},
+                         {"openkal-musl", "openkal-llvm-runtime@0.16.6", "openkal-tools"})
+        ids = {("mcpplibs", "openkal-platform")}
+        self.assertEqual(s.resolve("openkal-platform@0.17.3", ids), ids)
+
     def test_a_spelling_names_identities_of_this_index_only(self):
         ids = {("mcpplibs", "os"), ("compat", "openssl"), ("mcpplibs.mwrap", "ffmpeg"), ("compat", "os")}
         self.assertEqual(s.resolve("os", ids), {("mcpplibs", "os")})
