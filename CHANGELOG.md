@@ -9,6 +9,16 @@
 
 ### Added
 
+- **compat.dr_libs 2026.03.03(新包)。** dr_libs:单文件的 WAV/AIFF、FLAC 与 MP3 解码器(以及 WAV 编码器),C 实现,
+  无依赖,许可为 MIT-0 或 Unlicense 二选一。上游按头文件分别打标签(`wav-*`、`flac-*`、`mp3-*`),没有同时覆盖三者的标签;
+  本包固定 `wav-0.14.5` 的提交 `fa931f3`(2026-03-03)的归档,其中 `dr_flac.h`、`dr_mp3.h` 与 `flac-0.13.3`、`mp3-0.7.3`
+  标签逐字节相同,即 dr_wav 0.14.5、dr_flac 0.13.3、dr_mp3 0.7.3 三者均为已发布版本的最新提交;版本号取提交日期(同
+  compat.nanosvg)。一个生成的实现编译单元同时定义 `DR_WAV_IMPLEMENTATION`、`DR_FLAC_IMPLEMENTATION`、
+  `DR_MP3_IMPLEMENTATION`,构建为一个静态库;使用者 `#include <dr_wav.h>`(`<dr_flac.h>`、`<dr_mp3.h>`)并链接,不要再定义
+  这些宏。上游默认配置(stdio 与转换接口保留,SIMD 由编译器预定义宏决定)。miniaudio 内嵌的是改名的副本(`ma_dr_*`),
+  两者可在同一程序中共存。GLOBAL 为 GitHub 提交归档,CN 为 GitCode `mcpp-res/dr_libs` 镜像,sha256 一致。新增测试成员
+  `tests/examples/dr_libs`(三平台):WAV(RIFF、Wave64、IEEE float、mu-law)往返、FLAC 按 STREAMINFO 的 MD5 逐样本无损解码与
+  定位、MP3 按 LAME 标签的无缝长度解码。
 - **mcpplibs.mwrap.opus 1.6.1(新包)。** opus-m:以 C++23 模块(`import mcpplibs.mwrap.opus;`)使用 compat.opus 1.6.1、
   compat.opusfile 0.12 与 compat.ogg 1.3.6。`mcpplibs.mwrap.opus` 导出 libopus 的 13 个类型与 87 个函数,并重新导出
   `.file`(opusfile:10 个类型、54 个函数;不导出未构建的 libopusurl 的 9 个声明)、`.ogg`(libogg:12 个类型、71 个函数)
