@@ -23,6 +23,7 @@ members = [
     "tests/mwrap/concurrentqueue-mpmc",
     "tests/mwrap/fribidi-bidi",
     "tests/mwrap/sheenbidi-bidi",
+    "tests/mwrap/box2d-physics",
     "tests/mwrap/miniaudio-engine",
     "tests/mwrap/freetype-render",
     "tests/mwrap/harfbuzz-shape",

@@ -183,6 +183,26 @@ def main():
                 notice = (roots[0] / "NOTICE").read_bytes()
                 assert b"mcpp-community" in notice and b"Muhammad Tayyab Akram" in notice
                 print(f"Verified {len(declared)} byte-identical wrapper/SheenBidi license files", flush=True)
+            elif identity == "mcpplibs.mwrap.box2d":
+                # Box2D is MIT and linked statically: its LICENSE and README
+                # travel with the program beside the wrapper's LICENSE/NOTICE.
+                sources = [path for store in (home / "xpkgs", home / "registry/data/xpkgs")
+                           for path in store.glob(f"mcpplibs.mwrap-x-box2d/{version}/*/src/box2d.cppm")]
+                assert len(sources) == 1, sources
+                source = sources[0].parent.parent
+                declared = tomllib.loads((source / "mcpp.toml").read_text(encoding="utf-8"))["runtime"]["deploy"]
+                roots = list(relocated.rglob("licenses/box2d"))
+                assert len(roots) == 1, f"Missing Box2D runtime license tree: {roots}"
+                for entry in declared:
+                    notice = source / entry["from"]
+                    copied = roots[0].parent.parent / entry["to"] / notice.name
+                    assert copied.is_file() and copied.read_bytes() == notice.read_bytes(), copied
+                assert b"MIT License" in (roots[0] / "upstream/box2d/LICENSE").read_bytes()
+                assert b"Erin Catto" in (roots[0] / "upstream/box2d/LICENSE").read_bytes()
+                assert b"Apache License" in (roots[0] / "LICENSE").read_bytes()
+                notice = (roots[0] / "NOTICE").read_bytes()
+                assert b"mcpp-community" in notice and b"Erin Catto" in notice
+                print(f"Verified {len(declared)} byte-identical wrapper/Box2D license files", flush=True)
             elif identity == "mcpplibs.mwrap.miniaudio":
                 # miniaudio (MIT No Attribution or the Unlicense) is linked
                 # statically: its LICENSE and README travel with the program
