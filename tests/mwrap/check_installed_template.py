@@ -183,6 +183,30 @@ def main():
                 notice = (roots[0] / "NOTICE").read_bytes()
                 assert b"mcpp-community" in notice and b"Muhammad Tayyab Akram" in notice
                 print(f"Verified {len(declared)} byte-identical wrapper/SheenBidi license files", flush=True)
+            elif identity == "mcpplibs.mwrap.opus":
+                # libopus, opusfile and libogg are BSD-3-Clause and linked
+                # statically: each one's README and COPYING (libopus's with its
+                # patent license references) travel with the program beside the
+                # wrapper's LICENSE and NOTICE.
+                sources = [path for store in (home / "xpkgs", home / "registry/data/xpkgs")
+                           for path in store.glob(f"mcpplibs.mwrap-x-opus/{version}/*/src/opus.cppm")]
+                assert len(sources) == 1, sources
+                source = sources[0].parent.parent
+                declared = tomllib.loads((source / "mcpp.toml").read_text(encoding="utf-8"))["runtime"]["deploy"]
+                roots = list(relocated.rglob("licenses/opus"))
+                assert len(roots) == 1, f"Missing Opus runtime license tree: {roots}"
+                for entry in declared:
+                    notice = source / entry["from"]
+                    copied = roots[0].parent.parent / entry["to"] / notice.name
+                    assert copied.is_file() and copied.read_bytes() == notice.read_bytes(), copied
+                for library in ("opus", "opusfile", "ogg"):
+                    assert b"Redistribution and use in source and binary forms" in (
+                        roots[0] / "upstream" / library / "COPYING").read_bytes(), library
+                assert b"royalty-free patent licenses" in (roots[0] / "upstream/opus/COPYING").read_bytes()
+                assert b"Apache License" in (roots[0] / "LICENSE").read_bytes()
+                notice = (roots[0] / "NOTICE").read_bytes()
+                assert b"mcpp-community" in notice and b"Xiph.Org" in notice
+                print(f"Verified {len(declared)} byte-identical wrapper/libopus/opusfile/libogg license files", flush=True)
             elif identity == "mcpplibs.mwrap.box2d":
                 # Box2D is MIT and linked statically: its LICENSE and README
                 # travel with the program beside the wrapper's LICENSE/NOTICE.
