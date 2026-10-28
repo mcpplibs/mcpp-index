@@ -308,3 +308,24 @@ on-musl = "1.0.0"
                 self.assertEqual(ci.member_platforms("probe", "acme:on-windows"), {"windows"})
                 self.assertEqual(ci.member_platforms("probe", "acme:on-musl"), set())
                 self.assertEqual(ci.member_platforms("probe", "other:spec"), set())
+
+    def test_a_selected_platform_is_a_consumer(self):
+        # mcpp SPEC-013: a member that selects a platform builds it on the
+        # systems its condition names; `[host]` selects it everywhere.
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.member(root, """[package]
+name = "probe"
+version = "0.1.0"
+
+[target.'cfg(any(linux, macos))']
+platform = "plat@1.0.0"
+
+[host]
+platform = { name = "acme.hostplat", version = "1.0.0" }
+""")
+            with patch.object(ci, "ROOT", root):
+                self.assertEqual(ci.direct_member("acme:plat"), "probe")
+                self.assertEqual(ci.member_platforms("probe", "acme:plat"), {"linux", "macosx"})
+                self.assertEqual(ci.member_platforms("probe", "acme:hostplat"), {"linux", "macosx", "windows"})
+                self.assertIsNone(ci.direct_member("acme:other"))

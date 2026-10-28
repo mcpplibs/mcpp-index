@@ -1,0 +1,16 @@
+# openkal-platform test project: this system's own triple takes the platform's
+# hosted arrangement (mcpp SPEC-013 §5.4) -- the platform's toolchain, C library
+# (openkal-musl) and C++ run-time (openkal-llvm-runtime) over the system's
+# openkal implementation -- and the test runs with its arguments, an exception
+# and the standard library. Windows' default row is the MSVC one, which the
+# arrangement does not serve (its GNU row is measured by the platform's own CI),
+# so the member names Linux and macOS.
+[package]
+name    = "openkal-platform-tests"
+version = "0.1.0"
+
+[target.'cfg(any(linux, macos))']
+platform = "openkal-platform@0.17.3"
+
+[indices]
+mcpplibs = { path = "../../.." }

@@ -42,7 +42,8 @@ design.md §7, §12 decision 5) -- and is not computed here.
 
 `select` reads changed file paths and prints the members to measure: every
 listed member when the graph or the harness changed (an openkal family
-descriptor, pins.toml, compat.py), otherwise only the members the change names
+descriptor whose change is more than added versions, pins.toml, compat.py),
+otherwise only the members the change names
 -- an entry added or changed in members.toml (compared with `--base`), a
 member's own test project, or a descriptor a member's test project depends on.
 See `select_members`.
@@ -428,14 +429,59 @@ def members_changed(now: dict, base: dict) -> set[str]:
     return changed
 
 
+def version_blocks(text: str) -> list[tuple[str, int, int]]:
+    """Each `["<key>"] = { ... },` of a descriptor: its key and the span of the
+    whole entry, through the end of its line. Braces inside strings
+    (`${version}` in a URL) do not count."""
+    out = []
+    for m in re.finditer(r'\["([^"]+)"\]\s*=\s*\{', text):
+        i, depth = m.end(), 1
+        while i < len(text) and depth:
+            c = text[i]
+            if c == '"':
+                i = text.find('"', i + 1)
+                if i < 0:
+                    return out
+            elif c == "{":
+                depth += 1
+            elif c == "}":
+                depth -= 1
+            i += 1
+        end = text.find("\n", i)
+        out.append((m.group(1), text.rfind("\n", 0, m.start()) + 1, len(text) if end < 0 else end + 1))
+    return out
+
+
+def adds_versions_only(base: str, head: str) -> bool:
+    """Whether a descriptor's change only adds versions (and comments): with
+    the blocks of the versions the base does not state taken out, the head is
+    the base, comment lines aside. Every version the measured graph resolves
+    is pinned exactly (pins.toml: the runtime pins openkal-musl, which pins the
+    implementations), so such a change reaches no member."""
+    known = {key for key, _, _ in version_blocks(base)}
+    kept, at = [], 0
+    for key, start, end in version_blocks(head):
+        if key in known:
+            continue
+        kept.append(head[at:start])
+        at = end
+    kept.append(head[at:])
+    def plain(text: str) -> list[str]:
+        return [line.rstrip() for line in text.splitlines()
+                if line.strip() and not line.strip().startswith("--")]
+    return plain("".join(kept)) == plain(base)
+
+
 def select_members(changed: list[str], listed: list[str], packages: dict,
-                   members_now: dict, members_base: dict | None) -> list[str]:
+                   members_now: dict, members_base: dict | None,
+                   reaches=lambda path: True) -> list[str]:
     """What a change can affect, in listed order.
 
     Every listed member, when the change reaches all of them: an openkal
-    family descriptor (the graph), `pins.toml` (the graph's versions),
-    `compat.py` or anything else under tests/openkal/ (the harness), or
-    members.toml with no base to compare it against.
+    family descriptor whose change `reaches` the measured graph (one that only
+    adds versions does not: see `adds_versions_only`), `pins.toml` (the
+    graph's versions), `compat.py` or anything else under tests/openkal/ (the
+    harness), or members.toml with no base to compare it against.
 
     Otherwise only the members the change names: a member whose members.toml
     entry changed (`members_changed`), a member whose own test project under
@@ -446,7 +492,9 @@ def select_members(changed: list[str], listed: list[str], packages: dict,
     ids = set()
     for p in changed:
         if p.startswith(FAMILY_PREFIXES):
-            return list(listed)
+            if reaches(p):
+                return list(listed)
+            continue
         if p == MEMBERS_FILE:
             if members_base is None:
                 return list(listed)
@@ -490,7 +538,21 @@ def cmd_select(args: argparse.Namespace) -> int:
             members_base = tomllib.loads(proc.stdout)
     packages = {m: packages_of(load_toml(os.path.join(EXAMPLES, m, "mcpp.toml")))
                 for m in listed}
-    print(" ".join(select_members(changed, listed, packages, members_now, members_base)))
+
+    # A family descriptor reaches the measured graph unless its change only
+    # adds versions; without a base, or for a file new or deleted, it does.
+    def reaches(path: str) -> bool:
+        if not args.base:
+            return True
+        proc = subprocess.run(["git", "show", f"{args.base}:{path}"],
+                              cwd=ROOT, capture_output=True, text=True)
+        head = os.path.join(ROOT, path)
+        if proc.returncode != 0 or not os.path.isfile(head):
+            return True
+        with open(head, encoding="utf-8") as f:
+            return not adds_versions_only(proc.stdout, f.read())
+
+    print(" ".join(select_members(changed, listed, packages, members_now, members_base, reaches)))
     return 0
 
 
@@ -586,6 +648,30 @@ def cmd_selftest(_args: argparse.Namespace) -> int:
          sel(["tests/openkal/"]), listed),
         ("an openkal family descriptor measures every member",
          sel(["pkgs/o/openkal-musl.lua"]), listed),
+        ("unless its change only adds versions, which the pinned graph does not resolve",
+         select_members(["pkgs/o/openkal-musl.lua"], listed, packages, now, base,
+                        lambda path: False), []),
+    ]
+    # What `adds_versions_only` reads as an addition, and what it does not.
+    base_text = ('package = {\n    xpm = {\n        linux = {\n'
+                 '            ["0.1.0"] = {\n                url = "https://x/v${version}.tar.gz",\n'
+                 '                sha256 = "aa",\n            },\n        },\n    },\n}\n')
+    added = base_text.replace('        linux = {\n',
+                              '        linux = {\n            ["0.2.0"] = {\n'
+                              '                url = "https://x/v${version}.tar.gz",\n'
+                              '                sha256 = "bb",\n            },\n')
+    cases += [
+        ("a new version is an addition",
+         adds_versions_only(base_text, added), True),
+        ("and a comment with it",
+         adds_versions_only(base_text, "-- 0.2.0 fixes things\n" + added), True),
+        ("a changed version is not",
+         adds_versions_only(base_text, added.replace('"aa"', '"cc"')), False),
+        ("nor a field added to a version the base states",
+         adds_versions_only(base_text, base_text.replace('sha256 = "aa",',
+                                                         'sha256 = "aa",\n                deps = { "y" },')), False),
+        ("nor a removed version",
+         adds_versions_only(added, base_text), False),
         ("a descriptor measures the members that depend on it",
          sel(["pkgs/c/compat.y.lua"]), ["b"]),
         ("a member's test project measures that member",

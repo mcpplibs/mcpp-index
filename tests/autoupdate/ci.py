@@ -115,6 +115,24 @@ def selection(base: str, output: Path):
     output.write_text(selected[0] if len(selected) == 1 else "")
 
 
+def names_platform(value, namespace: str, name: str) -> bool:
+    """Whether a mcpp SPEC-013 platform reference (`"<name>@<version>"` or a
+    table naming `name`) names the package."""
+    spelled = value.split("@", 1)[0] if isinstance(value, str) else (
+        value.get("name") if isinstance(value, dict) else None)
+    return isinstance(spelled, str) and spelled in (name, f"{namespace}.{name}")
+
+
+def platform_conditions(manifest: dict, namespace: str, name: str):
+    """The `[target.<condition>]` tables (and `[host]`, condition None) whose
+    `platform` names the package."""
+    for condition, table in manifest.get("target", {}).items():
+        if isinstance(table, dict) and names_platform(table.get("platform"), namespace, name):
+            yield condition
+    if names_platform(manifest.get("host", {}).get("platform"), namespace, name):
+        yield None
+
+
 def direct_member(identity: str) -> str | None:
     namespace, name = identity.split(":", 1)
     candidates = []
@@ -129,6 +147,9 @@ def direct_member(identity: str) -> str | None:
     for category in ("examples", "mwrap"):
         for path in (ROOT / "tests" / category).glob("*/mcpp.toml"):
             manifest = tomllib.loads(path.read_text(encoding="utf-8"))
+            if any(True for _ in platform_conditions(manifest, namespace, name)):
+                candidates.append((category, path.parent.name))
+                continue
             for deps in dependency_tables(manifest):
                 nested = deps
                 for part in namespace.split("."):
@@ -186,11 +207,29 @@ def member_platforms(member: str, identity: str) -> set[str]:
         if not any(names_dependency(table.get(key, {}), namespace, name)
                    for key in ("dependencies", "build-dependencies")):
             continue
-        spelled = re.fullmatch(r'cfg\(\s*(?:os\s*=\s*"(\w+)"|(windows))\s*\)', condition.strip())
-        if spelled:
-            platforms.add(_CFG_PLATFORMS.get(spelled.group(1) or spelled.group(2), ""))
+        platforms |= condition_platforms(condition)
+    # A platform the member selects (mcpp SPEC-013): under `[host]` on every
+    # runner, under `[target.<condition>]` where the condition names a system.
+    for condition in platform_conditions(manifest, namespace, name):
+        platforms |= set(_CFG_PLATFORMS.values()) if condition is None else condition_platforms(condition)
     platforms.discard("")
     return platforms
+
+
+def condition_platforms(condition: str) -> set[str]:
+    """The runner platforms a `cfg(...)` naming operating systems selects:
+    `os = "linux"`, `windows`, or `any(...)` of those; any other condition
+    selects none."""
+    text = condition.strip()
+    inner = re.fullmatch(r'cfg\(\s*any\(\s*(.*?)\s*\)\s*\)', text)
+    parts = [p.strip() for p in inner.group(1).split(",")] if inner else [text[4:-1].strip()] if text.startswith("cfg(") and text.endswith(")") else []
+    out: set[str] = set()
+    for part in parts:
+        spelled = re.fullmatch(r'(?:os\s*=\s*"(\w+)"|(windows|linux|macos))', part)
+        if not spelled:
+            return set()
+        out.add(_CFG_PLATFORMS.get(spelled.group(1) or spelled.group(2), ""))
+    return out
 
 
 def matrix(plan: Path, output: Path, base: str):
@@ -275,6 +314,11 @@ def prepare(plan: Path, identity: str, output: Path, home: Path | None = None):
         text, replacements = re.subn(
             rf'(?m)^(\s*(?:{re.escape(name)}|"{re.escape(namespace)}\.{re.escape(name)}")\s*=\s*(?:\{{\s*version\s*=\s*)?")[^"]+(".*)$',
             lambda m: m[1] + version + m[2], text)
+        if not replacements:
+            # A platform the member selects (mcpp SPEC-013): `platform = "<name>@<version>"`.
+            text, replacements = re.subn(
+                rf'(?m)^(\s*platform\s*=\s*"(?:{re.escape(namespace)}\.)?{re.escape(name)}@)[^"]+(".*)$',
+                lambda m: m[1] + version + m[2], text)
         if not replacements:
             raise RuntimeError("candidate dependency was not replaced")
         # Standalone consumer: no inherited workspace or stale relative index redirects.
