@@ -236,6 +236,7 @@ members = [
     "tests/examples/openkal-tools",
     "tests/examples/openkal-bind",
     "tests/examples/openlifa.openas",
+    "tests/examples/openlifa.openmui",
     "tests/examples/os",
 ]
 

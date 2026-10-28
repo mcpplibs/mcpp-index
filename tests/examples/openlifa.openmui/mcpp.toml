@@ -1,0 +1,12 @@
+# openlifa.openmui test project: the specification's value types — an actor
+# in openas's text form, a node and its conformance, a Core contract, an
+# envelope.
+[package]
+name    = "openlifa-openmui-tests"
+version = "0.1.0"
+
+[dependencies]
+openlifa.openmui = "0.3.0"
+
+[indices]
+openlifa = { path = "../../.." }

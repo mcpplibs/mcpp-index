@@ -9,6 +9,10 @@
 
 ### Added
 
+- **openlifa.openmui 0.3.0。** OpenLifa 标准 openmui 的规范:registry、C ABI(`include/openmui.h`,
+  在使用者的包含路径上)和声明其值类型的 C++ 模块 `openmui.spec`(语义树节点及其一致性检查、actor、
+  信封、Core 组件契约)。actor、效果、授权与信封采用 openas 0.2。只依赖标准库(头文件为 C99);代码
+  Apache-2.0,规范文本 CC BY-SA 4.0。GLOBAL 为 GitHub 标签归档。新增测试成员 `tests/examples/openlifa.openmui`。
 - **openlifa.openas 0.2.0。** OpenLifa 标准 openas 的规范与声明它的 C++ 模块(`openas`、
   `openas.conformance`):actor 及其委托链的文本形式、动词的效果等级、系统上限之下的授权与单个请求的决定、
   运行信封的记录种类、退出码与错误码,以及动词描述、actor 与授权的一致性检查。只依赖标准库;代码 Apache-2.0,
