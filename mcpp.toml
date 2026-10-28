@@ -19,6 +19,7 @@ members = [
     "tests/mwrap/md4c-render",
     "tests/mwrap/lua-embed",
     "tests/mwrap/quickjs-embed",
+    "tests/mwrap/pocketpy-embed",
     "tests/mwrap/libpng-image",
     "tests/mwrap/concurrentqueue-mpmc",
     "tests/mwrap/fribidi-bidi",

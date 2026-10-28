@@ -1658,6 +1658,11 @@ jobs:
         shell: bash
         run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.box2d@3.2.0 --deploy
 
+      - name: Installed PocketPy wrapper archive, actual default script template and its relocated notices
+        if: contains(format(' {0} ', env.MEMBERS), ' pocketpy-embed ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.pocketpy@2.2.0 --deploy
+
       - name: Installed miniaudio wrapper archive, actual default tone template and its relocated notices
         if: contains(format(' {0} ', env.MEMBERS), ' miniaudio-engine ') && matrix.toolchain == 'default'
         shell: bash
