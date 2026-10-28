@@ -38,6 +38,10 @@
   openkal-macos 0.15.1 与 openkal-windows 0.13.3,以 `KAL_SPAWN_ONE_STRING` 启动命令解释器的 image 在 okrun
   下得到该标志的语义;三个包仍为同一版本、同一归档。openkal-musl 随 openkal-windows 0.13.3 与 openkal-ld 0.1.1
   移动,openkal-llvm-runtime 随 openkal-musl 移动。测试成员 `openkal`、`openkal-musl`、`openkal-tools` 随之移动。
+- **openkal-platform 0.17.2。** 通用包(`universal = true`:一个包含两个架构的映像、启动器,自包含时按系统带上运行器);
+  `okb` 包格式(平台插件经 mcpp.plugins.platform 0.20.0 运行 `okld bundle --package`);载体作为包的运行器、
+  并能从内存运行一个映像 zip(单文件);`-ffunction-sections -fdata-sections` 与 `--icf=safe`;版本组移到
+  openkal-image 0.1.3、openkal-musl 0.22.5、openkal-llvm-runtime 0.16.5。GLOBAL 与 CN 的 sha256 一致。
 - **mcpp.plugins 0.20.0。** 新特性 `plugins-platform`(模块 `mcpp.plugins.platform`):平台插件与包格式提供者的
   `provide_format`(声明格式,并在请求该格式的一遍中由暂存包的 `mcpp-package.json` 生成 artifact action),以及平台的
   链接、产物命名、封装与运行主机的带检查的写法(mcpp SPEC-013 协议 17);`mcpp::plugins::package` 读取暂存包的
