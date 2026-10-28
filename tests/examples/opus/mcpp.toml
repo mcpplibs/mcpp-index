@@ -1,0 +1,11 @@
+# compat.ogg, compat.opus and compat.opusfile — Opus audio from samples to an
+# Ogg Opus stream and back, on every platform the descriptors declare.
+[package]
+name     = "opus-tests"
+version  = "0.1.0"
+standard = "c++23"
+
+[dependencies]
+compat.ogg      = "1.3.6"
+compat.opus     = "1.6.1"
+compat.opusfile = "0.12"

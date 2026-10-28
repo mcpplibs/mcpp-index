@@ -115,6 +115,7 @@ members = [
     "tests/examples/openblas",
     "tests/examples/openmp",
     "tests/examples/openssl",
+    "tests/examples/opus",
     "tests/examples/recastnavigation",
     "tests/examples/recastnavigation-features",
     "tests/examples/richdem",
