@@ -1,0 +1,9 @@
+# PocketPy test project: Python source run by the interpreter and its results
+# read back through the C API, on Linux, macOS and Windows.
+[package]
+name     = "pocketpy-tests"
+version  = "0.1.0"
+standard = "c++23"
+
+[dependencies]
+compat.pocketpy = "2.2.0"
