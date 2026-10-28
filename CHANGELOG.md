@@ -9,6 +9,12 @@
 
 ### Added
 
+- **mcpplibs.os 0.2.2。** 新增 `wasm32-emscripten` 目标:基于 Emscripten 的 C 库与 openkal-emscripten 0.6.0 的 wasm
+  模块,在 node 或页面中运行;新增 `platform::emscripten`、`architecture::wasm32` 与 `is_emscripten`,不定义平台模块。
+  openkal-emscripten 没有 `openkal.process`,启动程序的调用在链接时失败并给出 openkal 符号名;`interrupt` 报告不会收到
+  结束请求。修正(所有目标):`fs::read` 不再经栈上 64 KiB 数组读取(它占满了 wasm 模块的默认栈);`stamp_of` 与
+  `identity_of` 同时请求节点种类,不再把已有文件报告为不存在。GLOBAL 为 GitHub 标签归档,CN 为 GitCode `mcpp-res/os`
+  镜像,sha256 一致。测试成员 `os` 移到 0.2.2。
 - **mcpplibs.openkal-emscripten 0.6.0。** 按 openkal 0.17.1 实现其提供的十二个接口,使依赖 openkal 0.17 的
   mcpplibs.os 能在 `wasm32-emscripten` 上解析与链接。`kal_env_image` 为 node 所给的脚本(页面中为 `kal_err_not_found`),
   `kal_env_loader` 为 `kal_err_not_found`,`kal_env_system` 为 `emscripten`;`kal_fs_rename_flags` 中

@@ -10,6 +10,9 @@
 -- C library, C++ run-time and loader are its platform's (openkal-platform,
 -- which mcpp 2026.10.27.1 selects for `<arch>-openkal'), and the package
 -- declares none of them.
+-- From 0.2.2 it builds for `wasm32-emscripten' over Emscripten's C library and
+-- openkal-emscripten 0.6.0, which its manifest names for that target; starting
+-- a program there fails at link, naming the openkal symbol.
 package = {
     spec        = "1",
     namespace   = "mcpplibs",
@@ -28,6 +31,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.2.2"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/os/archive/refs/tags/0.2.2.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/os/releases/download/0.2.2/os-0.2.2.tar.gz",
+                },
+                sha256 = "33c5d946c29de1ba7bacabe40fe6ee2f60bea0b25e62c0359f8c570b0f654e3e",
+            },
             ["0.2.1"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/os/archive/refs/tags/0.2.1.tar.gz",
@@ -56,6 +66,13 @@ package = {
             },
         },
         macosx = {
+            ["0.2.2"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/os/archive/refs/tags/0.2.2.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/os/releases/download/0.2.2/os-0.2.2.tar.gz",
+                },
+                sha256 = "33c5d946c29de1ba7bacabe40fe6ee2f60bea0b25e62c0359f8c570b0f654e3e",
+            },
             ["0.2.1"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/os/archive/refs/tags/0.2.1.tar.gz",
@@ -84,6 +101,13 @@ package = {
             },
         },
         windows = {
+            ["0.2.2"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/os/archive/refs/tags/0.2.2.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/os/releases/download/0.2.2/os-0.2.2.tar.gz",
+                },
+                sha256 = "33c5d946c29de1ba7bacabe40fe6ee2f60bea0b25e62c0359f8c570b0f654e3e",
+            },
             ["0.2.1"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/os/archive/refs/tags/0.2.1.tar.gz",
