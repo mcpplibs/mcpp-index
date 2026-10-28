@@ -247,6 +247,31 @@ def main():
                 notice = (roots[0] / "NOTICE").read_bytes()
                 assert b"mcpp-community" in notice and b"Erin Catto" in notice
                 print(f"Verified {len(declared)} byte-identical wrapper/Box2D license files", flush=True)
+            elif identity == "mcpplibs.mwrap.libwebp":
+                # libwebp (BSD-3-Clause with Google's patent grant) is linked
+                # statically: the wrapper's LICENSE/NOTICE and libwebp's README,
+                # COPYING, PATENTS and AUTHORS travel with the program, beside
+                # the COPYING/PATENTS/AUTHORS compat.libwebp deploys itself.
+                sources = [path for store in (home / "xpkgs", home / "registry/data/xpkgs")
+                           for path in store.glob(f"mcpplibs.mwrap-x-libwebp/{version}/*/src/libwebp.cppm")]
+                assert len(sources) == 1, sources
+                source = sources[0].parent.parent
+                declared = tomllib.loads((source / "mcpp.toml").read_text(encoding="utf-8"))["runtime"]["deploy"]
+                roots = list(relocated.rglob("licenses/libwebp"))
+                assert len(roots) == 1, f"Missing libwebp runtime license tree: {roots}"
+                for entry in declared:
+                    notice = source / entry["from"]
+                    copied = roots[0].parent.parent / entry["to"] / notice.name
+                    assert copied.is_file() and copied.read_bytes() == notice.read_bytes(), copied
+                upstream = roots[0] / "upstream/libwebp"
+                assert b"Google Inc." in (upstream / "COPYING").read_bytes()
+                assert b"patent" in (upstream / "PATENTS").read_bytes()
+                for name in ("COPYING", "PATENTS", "AUTHORS"):  # compat.libwebp's own deployment
+                    assert (roots[0] / name).read_bytes() == (upstream / name).read_bytes(), name
+                assert b"Apache License" in (roots[0] / "LICENSE").read_bytes()
+                notice = (roots[0] / "NOTICE").read_bytes()
+                assert b"mcpp-community" in notice and b"Google" in notice
+                print(f"Verified {len(declared)} byte-identical wrapper/libwebp license files", flush=True)
             elif identity == "mcpplibs.mwrap.pocketpy":
                 # PocketPy is MIT and linked statically: its LICENSE and README
                 # travel with the program beside the wrapper's LICENSE/NOTICE.

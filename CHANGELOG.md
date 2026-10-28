@@ -9,6 +9,19 @@
 
 ### Added
 
+- **mcpplibs.mwrap.libwebp 1.5.0(新包)。** libwebp-m:以 C++23 模块(`import mcpplibs.mwrap.libwebp;`)使用
+  compat.libwebp 1.5.0(BSD-3-Clause 与 Google 专利授权)。从固定版本的公开头文件生成,以 `export using` 导出:根模块
+  `webp/types.h`、`decode.h`、`encode.h`、`mux_types.h` 的 23 个类型、59 个枚举值与 72 个函数,`mcpplibs.mwrap.libwebp.sharpyuv`
+  (根模块重新导出),以及 `demux`/`mux` 特性下的 `mcpplibs.mwrap.libwebp.demux`(`WebPDemux*`、`WebPAnimDecoder*`)与
+  `mcpplibs.mwrap.libwebp.mux`(`WebPMux*`、`WebPAnimEncoder*`),特性转发到 compat.libwebp 的同名特性。22 个
+  `static inline` 函数(`WebPConfigInit`、`WebPPictureInit`、`WebPGetFeatures`、`WebPAnimEncoderNew`…)在
+  `mcpplibs::mwrap::libwebp` 中以同名同签名适配;`mcpplibs.mwrap.libwebp.macros` 映射 ABI 版本、`WEBP_MAX_DIMENSION`、
+  sharpyuv 版本与 `WEBP_ABI_IS_INCOMPATIBLE`/`SHARPYUV_MAKE_VERSION`。包装仓库 CI(Linux x86_64 GCC/LLVM、Linux arm64 GCC、
+  macOS、Windows、wasm32-emscripten,dev 与 release)固定编码字节与解码像素的哈希,在所有目标上一致;一致性检查确认
+  `examples/webpcodec` 的编码与解码结果与上游 makefile.unix 构建的 `cwebp`/`dwebp` 逐字节相同(76 项)。描述文件
+  `pkgs/mwrap/libwebp.lua` 指向不可变的 `mwrap-1.5.0` 发布归档(暂无 CN 镜像)。新增测试成员 `tests/mwrap/libwebp-image`
+  (开启 demux 与 mux:有损与无损 RGBA 往返含 alpha、高级 API 及固定哈希、动画逐帧编码与回放、错误路径),validate.yml 中
+  验证已安装归档的默认 `image` 模板及其迁移后的许可文件。
 - **mcpplibs.mwrap.pocketpy 2.2.0(新包)。** pocketpy-m:以 C++23 模块(`import mcpplibs.mwrap.pocketpy;`)使用
   compat.pocketpy 2.2.0(MIT)。从固定版本的 `<pocketpy.h>` 生成,以 `export using` 导出全部 29 个类型、91 个枚举值与
   246 个函数(上游全局名不变);`mcpplibs.mwrap.pocketpy.macros` 把 82 个宏中的 65 个映射为常量与函数(`PK_VERSION`、
