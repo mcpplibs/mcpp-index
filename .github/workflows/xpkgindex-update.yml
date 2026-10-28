@@ -25,7 +25,7 @@ concurrency:
 
 env:
   PYTHONUTF8: '1'
-  MCPP_VERSION: '2026.10.26.1'
+  MCPP_VERSION: '2026.10.27.1'
   # CROSS-VALIDATION BEFORE A RELEASE: a candidate that needs an mcpp newer
   # than the pin (its package states the floor) is built with mcpp built from
   # this branch of mcpp-community/mcpp, as openkal-compat.yml measures with it.

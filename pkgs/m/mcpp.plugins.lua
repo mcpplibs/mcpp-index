@@ -2,11 +2,18 @@
 -- each member selected by a feature.
 --
 --   [dependencies.mcpp]
---   plugins = { version = "0.19.1", features = ["rules-spirv"], host-module = true }
+--   plugins = { version = "0.20.0", features = ["rules-spirv"], host-module = true }
 --
 --   // build.mcpp
 --   import mcpp;
 --   import mcpp.rules.spirv;
+--
+-- 0.20.0 (package floor mcpp 2026.10.27.1): `mcpp.plugins.platform` -- a
+-- platform's plugin provides a package format over the staged package
+-- (`provide_format`, reading its mcpp-package.json) -- and
+-- `mcpp::plugins::package::read`; openkal-platform's okb is its first user
+-- (mcpp SPEC-013, SPEC-014). Moving `latest` breaks no published consumer:
+-- each pins an exact version.
 --
 -- 0.19.1 (same package floor): `mcpp::plugins::json::value` holds its object
 -- members as a plain struct instead of `std::pair<std::string, value>`, which
@@ -931,7 +938,7 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.19.1" },
+            ["latest"] = { ref = "0.20.0" },
         },
         macosx = {
             ["0.20.0"] = {
@@ -1214,7 +1221,7 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.19.1" },
+            ["latest"] = { ref = "0.20.0" },
         },
         windows = {
             ["0.20.0"] = {
@@ -1497,7 +1504,7 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.19.1" },
+            ["latest"] = { ref = "0.20.0" },
         },
     },
 
