@@ -16,11 +16,13 @@
   能编译:`time.c` 未包含声明 `c11_thrd__yield` 的头文件)、`PK_ENABLE_DLL=0`;另打开两项上游选项:
   `PK_ENABLE_DETERMINISM=1` 与 `-ffp-contract=off`(同 CMake,浮点结果跨平台一致)、`PK_ENABLE_WATCHDOG=1`
   (`py_watchdog_begin`/`py_watchdog_end` 在头文件中总是声明,只在打开时才有定义)。NDEBUG 随构建配置(release
-  定义),库与使用者一致。Linux 链接 `-lm`,Windows 链接 `ws2_32` 并定义 `_CRT_SECURE_NO_WARNINGS`。Linux、macOS、
+  定义),库与使用者一致。`install()` 带匹配计数地应用上游 2.2.0 之后的修复 de8351ed:异常对象记录的回溯帧中只有
+  调试器才填写的 `locals`/`globals` 未初始化,而垃圾回收无条件标记它们,异常对象存活时回收会读到未初始化内存并可能崩溃
+  (上游自己的 `tests/901_array2d_extra1.py` 按 build.sh 构建即崩溃);修复将二者置为 nil。Linux 链接 `-lm`,Windows 链接 `ws2_32` 并定义 `_CRT_SECURE_NO_WARNINGS`。Linux、macOS、
   Windows 与 `wasm32-emscripten` 使用同一组源文件与参数。使用者 `#include <pocketpy.h>`。url 为上游标签归档(暂无
   CN 镜像);声明 `extensions.autoupdate`(`v${version}` 标签)。新增测试成员 `tests/examples/pocketpy`:版本与配置、
   exec/eval 与 int/float/str/bool 读回、dict 与 list 的遍历、绑定的 C 函数及其参数检查、语法错误/运行时错误/
-  抛出/无限递归均返回 false 并带消息且 VM 可继续、watchdog 结束死循环、json/math/collections、确定性浮点值、
+  抛出/无限递归均返回 false 并带消息且 VM 可继续、异常对象跨多次垃圾回收存活、watchdog 结束死循环、json/math/collections、确定性浮点值、
   同一 VM 中重复执行、第二个 VM 与 `py_resetvm`。
 - **mcpplibs.os 0.2.2。** 新增 `wasm32-emscripten` 目标:基于 Emscripten 的 C 库与 openkal-emscripten 0.6.0 的 wasm
   模块,在 node 或页面中运行;新增 `platform::emscripten`、`architecture::wasm32` 与 `is_emscripten`,不定义平台模块。

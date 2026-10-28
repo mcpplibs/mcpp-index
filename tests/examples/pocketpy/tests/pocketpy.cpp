@@ -15,6 +15,10 @@
 //   the watchdog       PK_ENABLE_WATCHDOG=1: py_watchdog_begin ends an endless
 //                      loop with a TimeoutError
 //   the configuration  pkpy.configmacros: the PK_ENABLE_* the package sets
+//   upstream's fix     exceptions kept alive across garbage collections
+//                      (de8351ed, applied by install()): without it the
+//                      collector reads their unset traceback values and
+//                      crashes
 //   the library        json and math (dmath), modules compiled in C, and the
 //                      pure-Python ones from _generated.c (collections)
 //   determinism        upstream's deterministic float test values, bit for bit
@@ -136,6 +140,26 @@ int main() {
           "the watchdog ends a runaway loop");
     py_watchdog_end();
     check(eval_repr("x + 1") == "43", "the VM goes on after errors");
+
+    // Exceptions alive across collections, after garbage has dirtied the heap.
+    check(py_exec("import gc\n"
+                  "def deep(n):\n"
+                  "    if n == 0: raise ValueError('deep')\n"
+                  "    return deep(n - 1)\n"
+                  "kept = []\n"
+                  "for r in range(20):\n"
+                  "    junk = [str(i) * 50 for i in range(2000)]\n"
+                  "    junk = None\n"
+                  "    gc.collect()\n"
+                  "    for i in range(20):\n"
+                  "        try:\n"
+                  "            deep(10)\n"
+                  "        except ValueError as e:\n"
+                  "            kept.append(e)\n"
+                  "    gc.collect()\n",
+                  "<gc>", EXEC_MODE, nullptr) &&
+              eval_repr("len(kept)") == "400",
+          "exceptions survive garbage collections");
 
     // The library: C modules and pure-Python ones.
     check(eval_repr("__import__('json').dumps({'k': [1, 2.5, None, True]})") == "'{\"k\": [1, 2.5, null, true]}'",

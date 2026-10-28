@@ -60,6 +60,16 @@
 -- consumer linked by the C driver. Windows links ws2_32 (CMake, for the
 -- debugger's socket) and defines _CRT_SECURE_NO_WARNINGS as CMake does.
 --
+-- ONE UPSTREAM FIX, applied in install() with a checked match count:
+-- pocketpy commit de8351ed (2026-09-06, after the 2.2.0 tag, on main since).
+-- An exception keeps up to seven traceback frames, each with a `locals` and a
+-- `globals` value that only the debugger fills in; the garbage collector
+-- marks both unconditionally, so a collection while an exception object is
+-- alive reads uninitialised memory as values, and crashes when it looks like
+-- a pointer. Upstream's own tests/901_array2d_extra1.py crashes so, built as
+-- build.sh builds it (GCC 16, -O2). The fix sets both to nil when a frame is
+-- recorded, as upstream's main does. Nothing else is changed.
+--
 -- NO CN MIRROR. The url is upstream's tag archive as a plain string, the
 -- fallback docs/cn-mirror.md describes for a contributor without mcpp-res
 -- write access; a maintainer can add the CN entry later, the sha256 stays.
@@ -129,3 +139,38 @@ package = {
         deps    = { },
     },
 }
+
+import("xim.libxpkg.pkginfo")
+import("xim.libxpkg.log")
+
+-- See the header note: upstream's fix for the uninitialised traceback-frame
+-- values (de8351ed), then the unpacked tree moved into the install dir as its
+-- single wrap level, so the `*/` globs keep matching (compat.libserial does
+-- the same).
+function install()
+    local wrap = "pocketpy-" .. pkginfo.version()
+    local source = path.join(wrap, "src/public/PyException.c")
+    local content = io.readfile(source)
+    if not content then
+        log.error("compat.pocketpy: cannot read %s", source)
+        return false
+    end
+    local before = "    BaseExceptionFrame* frame_dump = c11_vector__emplace(&ud->stacktrace);\n"
+    local after = before
+        .. "    // `locals` and `globals` are only filled in when the debugger is attached, but the GC\n"
+        .. "    // walks them unconditionally; nil them out before anything below can allocate\n"
+        .. "    py_newnil(&frame_dump->locals);\n"
+        .. "    py_newnil(&frame_dump->globals);\n"
+    local patched, count = content:gsub(before:gsub("(%W)", "%%%1"), function() return after end)
+    if count ~= 1 then
+        log.error("compat.pocketpy: expected 1 match in %s, found %d", source, count)
+        return false
+    end
+    io.writefile(source, patched)
+
+    local prefix = pkginfo.install_dir()
+    os.tryrm(prefix)
+    os.mkdir(prefix)
+    os.mv(wrap, path.join(prefix, wrap))
+    return true
+end
