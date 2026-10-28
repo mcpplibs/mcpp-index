@@ -22,6 +22,7 @@ members = [
     "tests/mwrap/libpng-image",
     "tests/mwrap/concurrentqueue-mpmc",
     "tests/mwrap/fribidi-bidi",
+    "tests/mwrap/sheenbidi-bidi",
     "tests/mwrap/freetype-render",
     "tests/mwrap/harfbuzz-shape",
     "tests/mwrap/sdl3-headless",

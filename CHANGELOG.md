@@ -9,6 +9,13 @@
 
 ### Added
 
+- **mcpplibs.mwrap.sheenbidi 3.0.0(新包)。** sheenbidi-m:以 C++23 模块(`import mcpplibs.mwrap.sheenbidi;`)
+  使用 compat.sheenbidi 3.0.0。导出已安装头文件的全部类型、结构体标签与 51 个 `SB_PUBLIC` 函数(上游全局名不变);
+  `mcpplibs.mwrap.sheenbidi.macros` 把宏映射为常量与 constexpr 函数,并把无名枚举的 236 个枚举值映射为其 typedef
+  类型的常量;`SB_PUBLIC`、`SB_DEPRECATED` 与 `extern "C"` 括号留在 `<mwrap/sheenbidi/macros.hpp>`。包装仓库的 CI
+  (Linux x86_64 GCC/LLVM、Linux arm64、macOS、Windows)运行 Unicode 17.0.0 的 BidiTest.txt(770,241 例)与
+  BidiCharacterTest.txt(91,707 例),0 错误。GLOBAL 为 `mwrap-3.0.0` 发布资产,CN 为 GitCode `mcpp-res/mwrap-sheenbidi`
+  镜像,sha256 一致。新增测试成员 `tests/mwrap/sheenbidi-bidi` 与已安装模板及其许可文件的部署检查。
 - **compat.sheenbidi 3.0.0(新包)。** SheenBidi:Unicode 双向算法(UAX #9)的 C 实现,Apache-2.0,无依赖;
   3.0.0 实现 Unicode 17.0.0,通过该版本的 BidiTest.txt 与 BidiCharacterTest.txt 全部用例。以上游的单一编译单元
   `Source/SheenBidi.c`(`SB_CONFIG_UNITY`)从源码构建为静态库,只导出公共头文件的 51 个 `SB*` 入口;使用者的包含路径

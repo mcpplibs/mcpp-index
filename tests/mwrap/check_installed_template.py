@@ -162,6 +162,27 @@ def main():
                 assert b"Apache License" in (roots[0] / "LICENSE").read_bytes()
                 assert b"mcpp-community" in (roots[0] / "NOTICE").read_bytes()
                 print(f"Verified {len(declared)} byte-identical wrapper/FriBidi license files", flush=True)
+            elif identity == "mcpplibs.mwrap.sheenbidi":
+                # SheenBidi is Apache-2.0 and linked statically: its LICENSE and
+                # README, and the Unicode License v3 of the data its tables are
+                # generated from, travel with the program beside the wrapper's.
+                sources = [path for store in (home / "xpkgs", home / "registry/data/xpkgs")
+                           for path in store.glob(f"mcpplibs.mwrap-x-sheenbidi/{version}/*/src/sheenbidi.cppm")]
+                assert len(sources) == 1, sources
+                source = sources[0].parent.parent
+                declared = tomllib.loads((source / "mcpp.toml").read_text(encoding="utf-8"))["runtime"]["deploy"]
+                roots = list(relocated.rglob("licenses/sheenbidi"))
+                assert len(roots) == 1, f"Missing SheenBidi runtime license tree: {roots}"
+                for entry in declared:
+                    notice = source / entry["from"]
+                    copied = roots[0].parent.parent / entry["to"] / notice.name
+                    assert copied.is_file() and copied.read_bytes() == notice.read_bytes(), copied
+                assert b"Apache License" in (roots[0] / "upstream/sheenbidi/LICENSE").read_bytes()
+                assert b"UNICODE LICENSE V3" in (roots[0] / "upstream/unicode/license.txt").read_bytes()
+                assert b"Apache License" in (roots[0] / "LICENSE").read_bytes()
+                notice = (roots[0] / "NOTICE").read_bytes()
+                assert b"mcpp-community" in notice and b"Muhammad Tayyab Akram" in notice
+                print(f"Verified {len(declared)} byte-identical wrapper/SheenBidi license files", flush=True)
             elif identity == "mcpplibs.mwrap.freetype":
                 # FreeType is linked statically under the FreeType License (FTL),
                 # whose credit the documentation carries: the license selector, the
