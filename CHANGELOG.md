@@ -9,6 +9,15 @@
 
 ### Added
 
+- **mcpplibs.mwrap.dr_libs 2026.03.03(新包)。** dr_libs-m:以 C++23 模块(`import mcpplibs.mwrap.dr_libs;`)使用
+  compat.dr_libs 2026.03.03(dr_wav 0.14.5、dr_flac 0.13.3、dr_mp3 0.7.3)。每个头文件各一个模块且可单独导入:
+  `mcpplibs.mwrap.dr_libs.wav`(42 个类型、48 个枚举值、94 个函数)、`.flac`(32、6、31)、`.mp3`(28、8、29),全部以
+  `export using` 导出上游全局名;每个枚举都由 typedef 命名,枚举值按原样导出。`mcpplibs.mwrap.dr_libs.macros` 把 171 个
+  对象式宏映射为其自身类型的常量;`*_API` 等属性、字符串化宏与 dr_flac 的平台检测宏共 28 个留在
+  `<mwrap/dr_libs/macros.hpp>`。包装仓库的 CI(Linux x86_64 GCC/LLVM、Linux arm64、macOS、Windows)逐样本核对 FLAC
+  解码、按 LAME 标签的无缝长度解码 MP3、在各容器中往返 WAV,并与 compat.miniaudio 链接在同一程序中解码出相同样本。
+  GLOBAL 为 `mwrap-2026.03.03` 发布资产,CN 为 GitCode `mcpp-res/mwrap-dr_libs` 镜像,sha256 一致。新增测试成员
+  `tests/mwrap/dr_libs-audio` 与已安装模板及其许可文件的部署检查。
 - **compat.dr_libs 2026.03.03(新包)。** dr_libs:单文件的 WAV/AIFF、FLAC 与 MP3 解码器(以及 WAV 编码器),C 实现,
   无依赖,许可为 MIT-0 或 Unlicense 二选一。上游按头文件分别打标签(`wav-*`、`flac-*`、`mp3-*`),没有同时覆盖三者的标签;
   本包固定 `wav-0.14.5` 的提交 `fa931f3`(2026-03-03)的归档,其中 `dr_flac.h`、`dr_mp3.h` 与 `flac-0.13.3`、`mp3-0.7.3`
