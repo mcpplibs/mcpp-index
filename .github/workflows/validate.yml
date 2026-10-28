@@ -1638,6 +1638,11 @@ jobs:
         shell: bash
         run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.sheenbidi@3.0.0 --deploy
 
+      - name: Installed miniaudio wrapper archive, actual default tone template and its relocated notices
+        if: contains(format(' {0} ', env.MEMBERS), ' miniaudio-engine ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.miniaudio@0.11.25 --deploy
+
       - name: Installed FreeType wrapper archive, actual default banner template and its relocated FTL notices
         if: contains(format(' {0} ', env.MEMBERS), ' freetype-render ') && matrix.toolchain == 'default'
         shell: bash

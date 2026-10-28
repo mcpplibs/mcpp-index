@@ -1,0 +1,11 @@
+[package]
+name = "miniaudio-engine"
+version = "0.11.25"
+description = "Consume the immutable miniaudio wrapper: the engine without a device mixing a sound through a group, a tone encoded as WAV in memory and decoded back, the Null backend's device, the mapped macros, the side header beside the import"
+
+[indices]
+# Use the complete candidate built-in index prepared by tests/run_members.sh.
+# An explicit empty table overrides the legacy workspace redirect.
+
+[dependencies]
+"mcpplibs.mwrap.miniaudio" = "0.11.25"
