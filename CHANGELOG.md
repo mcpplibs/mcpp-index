@@ -9,6 +9,13 @@
 
 ### Added
 
+- **compat.sheenbidi 3.0.0(新包)。** SheenBidi:Unicode 双向算法(UAX #9)的 C 实现,Apache-2.0,无依赖;
+  3.0.0 实现 Unicode 17.0.0,通过该版本的 BidiTest.txt 与 BidiCharacterTest.txt 全部用例。以上游的单一编译单元
+  `Source/SheenBidi.c`(`SB_CONFIG_UNITY`)从源码构建为静态库,只导出公共头文件的 51 个 `SB*` 入口;使用者的包含路径
+  只有 `Headers`(`#include <SheenBidi/SheenBidi.h>`),内部头文件所在的 `Source` 是私有包含目录。未定义
+  `SB_CONFIG_EXPERIMENTAL_TEXT_API`(上游默认,实验性的 SBText 接口不编译)。是 compat.fribidi(LGPL-2.1-or-later)
+  的宽松许可替代,可静态链接。GLOBAL 为 GitHub 标签归档,CN 为 GitCode `mcpp-res` 镜像,sha256 两处一致;
+  声明 `extensions.autoupdate`(`v${version}` 标签)。新增测试成员 `tests/examples/sheenbidi`(三平台)。
 - **openlifa.openmui 0.3.0。** OpenLifa 标准 openmui 的规范:registry、C ABI(`include/openmui.h`,
   在使用者的包含路径上)和声明其值类型的 C++ 模块 `openmui.spec`(语义树节点及其一致性检查、actor、
   信封、Core 组件契约)。actor、效果、授权与信封采用 openas 0.2。只依赖标准库(头文件为 C99);代码

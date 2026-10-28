@@ -1,0 +1,9 @@
+# compat.sheenbidi — the Unicode bidirectional algorithm (Apache-2.0), on text
+# that needs it, on every platform the descriptor declares.
+[package]
+name     = "sheenbidi-tests"
+version  = "0.1.0"
+standard = "c++23"
+
+[dependencies]
+compat.sheenbidi = "3.0.0"
