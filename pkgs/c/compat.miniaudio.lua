@@ -21,6 +21,10 @@
 -- a LINK error, not a compile error, so it surfaces late. Just
 -- `#include <miniaudio.h>` and link.
 --
+-- THE WEB: on wasm32-emscripten miniaudio enables its Web Audio backend (and
+-- the custom one; the null backend needs threads and is not built there). It
+-- needs no flag of its own beyond the GNU C dialect below (`c_standard`).
+--
 -- SYSTEM LIBRARIES: miniaudio dlopen()s its backends rather than linking them,
 -- which is why the Linux link line is `-ldl -lpthread -lm` and NOT -lasound /
 -- -lpulse -- ALSA and PulseAudio are resolved at runtime if present, so the
@@ -68,7 +72,14 @@ package = {
     mcpp = {
         language     = "c++23",
         import_std   = false,
-        c_standard   = "c11",
+        -- gnu11, not c11: on wasm32-emscripten the Web Audio backend is
+        -- JavaScript emitted through EM_ASM, which Emscripten refuses under a
+        -- strict -std=c* mode ("EM_ASM does not work in -std=c* modes, use
+        -- -std=gnu* modes instead"; miniaudio.h §2.6: "You cannot use -std=c*
+        -- compiler flags"). The GNU dialect changes nothing miniaudio relies on
+        -- elsewhere: upstream's CMake build sets no standard, so GCC and Clang
+        -- compile it at their gnu17 default on every platform.
+        c_standard   = "gnu11",
         -- Tarball root: `#include <miniaudio.h>`.
         include_dirs = { "*" },
         sources      = { "*/miniaudio.c" },
