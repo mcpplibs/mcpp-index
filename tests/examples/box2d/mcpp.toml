@@ -1,0 +1,16 @@
+# compat.box2d — the 2D physics engine (MIT), on every platform the descriptor
+# declares: a world that steps, collides, casts and sleeps, and upstream's
+# cross-platform determinism scene with the hash upstream pins.
+[package]
+name     = "box2d-tests"
+version  = "0.1.0"
+standard = "c++23"
+
+# The test's own scene setup (positions such as h + 2*h*i) is floating point
+# too: compiled as upstream compiles its tests, without contraction into FMA,
+# or the arm64 rows would start from different bits.
+[build]
+cxxflags = ["-ffp-contract=off"]
+
+[dependencies]
+compat.box2d = "3.2.0"

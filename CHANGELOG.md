@@ -9,6 +9,14 @@
 
 ### Added
 
+- **compat.box2d 3.2.0(新包)。** Box2D v3:游戏用 2D 刚体物理引擎(C17,MIT,无依赖)。按上游 CMake 的做法从标签归档
+  构建 `src/*.c` 为静态库:`-std=gnu17`、`-ffp-contract=off`(上游为跨平台确定性对每个 GCC/Clang 设置,禁止乘加收缩为
+  FMA)、上游默认的 SIMD 选择(x86_64 为 SSE2,并在运行时按 cpuid 分派 AVX2 求解器;arm64 为 Neon)、unix 上
+  `-fPIC -fvisibility=hidden`,Linux 链接 `-lm -lpthread`;Emscripten 目标加上游同样的 `-msimd128 -msse2`(`target_cfg`)。
+  不定义 BOX2D_VALIDATE / BOX2D_DOUBLE_PRECISION / BOX2D_PROFILE(与上游作为依赖使用时相同)。使用者 `#include <box2d/box2d.h>`。
+  GLOBAL 为 GitHub 标签归档,CN 为 GitCode `mcpp-res` 镜像,sha256 两处一致;声明 `extensions.autoupdate`(`v${version}` 标签)。
+  新增测试成员 `tests/examples/box2d`(三平台):版本、下落与休眠、接触与移动事件、射线与凸包,以及上游的确定性场景
+  falling hinges(第 299 步全部休眠、变换哈希 0x465F3DF4,1 个与 4 个 worker、SSE2 回退路径)。
 - **mcpplibs.mwrap.miniaudio 0.11.25(新包)。** miniaudio-m:以 C++23 模块(`import mcpplibs.mwrap.miniaudio;`)使用
   compat.miniaudio 0.11.25(MIT-0 或 Unlicense)。导出 `miniaudio.h` API 部分的全部 266 个类型与结构体标签、368 个枚举值与
   931 个 `MA_API` 函数(上游全局名不变),每个声明位于头文件声明它的同一预处理条件下;三个 `static MA_INLINE` 辅助函数在
