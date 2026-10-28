@@ -9,6 +9,14 @@
 
 ### Added
 
+- **mcpplibs.mwrap.miniaudio 0.11.25(新包)。** miniaudio-m:以 C++23 模块(`import mcpplibs.mwrap.miniaudio;`)使用
+  compat.miniaudio 0.11.25(MIT-0 或 Unlicense)。导出 `miniaudio.h` API 部分的全部 266 个类型与结构体标签、368 个枚举值与
+  931 个 `MA_API` 函数(上游全局名不变),每个声明位于头文件声明它的同一预处理条件下;三个 `static MA_INLINE` 辅助函数在
+  `mcpplibs::mwrap::miniaudio` 中适配;`mcpplibs.mwrap.miniaudio.macros` 把 27 个数值宏映射为常量,并把兼容名字
+  (`ma_resource_manager_job*`)映射为类型别名与函数引用;属性、字符串化与平台/后端测试宏留在 `<mwrap/miniaudio/macros.hpp>`。
+  包装仓库的 CI(Linux x86_64 GCC/LLVM、Linux arm64、macOS、Windows,以及 Web:wasm32-emscripten,node 下运行测试)
+  在每个目标上依编译器自身的预处理审计导出。GLOBAL 为 `mwrap-0.11.25` 发布资产,CN 为 GitCode `mcpp-res/mwrap-miniaudio`
+  镜像,sha256 一致。新增测试成员 `tests/mwrap/miniaudio-engine` 与已安装模板及其许可文件的部署检查。
 - **mcpplibs.mwrap.sheenbidi 3.0.0(新包)。** sheenbidi-m:以 C++23 模块(`import mcpplibs.mwrap.sheenbidi;`)
   使用 compat.sheenbidi 3.0.0。导出已安装头文件的全部类型、结构体标签与 51 个 `SB_PUBLIC` 函数(上游全局名不变);
   `mcpplibs.mwrap.sheenbidi.macros` 把宏映射为常量与 constexpr 函数,并把无名枚举的 236 个枚举值映射为其 typedef
