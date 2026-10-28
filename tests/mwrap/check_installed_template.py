@@ -183,6 +183,26 @@ def main():
                 notice = (roots[0] / "NOTICE").read_bytes()
                 assert b"mcpp-community" in notice and b"Muhammad Tayyab Akram" in notice
                 print(f"Verified {len(declared)} byte-identical wrapper/SheenBidi license files", flush=True)
+            elif identity == "mcpplibs.mwrap.dr_libs":
+                # dr_libs (Unlicense OR MIT-0) is linked statically: its README
+                # and LICENSE travel with the program beside the wrapper's.
+                sources = [path for store in (home / "xpkgs", home / "registry/data/xpkgs")
+                           for path in store.glob(f"mcpplibs.mwrap-x-dr_libs/{version}/*/src/dr_libs.cppm")]
+                assert len(sources) == 1, sources
+                source = sources[0].parent.parent
+                declared = tomllib.loads((source / "mcpp.toml").read_text(encoding="utf-8"))["runtime"]["deploy"]
+                roots = list(relocated.rglob("licenses/dr_libs"))
+                assert len(roots) == 1, f"Missing dr_libs runtime license tree: {roots}"
+                for entry in declared:
+                    notice = source / entry["from"]
+                    copied = roots[0].parent.parent / entry["to"] / notice.name
+                    assert copied.is_file() and copied.read_bytes() == notice.read_bytes(), copied
+                upstream = (roots[0] / "upstream/dr_libs/LICENSE").read_bytes()
+                assert b"unlicense.org" in upstream and b"MIT No Attribution" in upstream
+                assert b"Apache License" in (roots[0] / "LICENSE").read_bytes()
+                notice = (roots[0] / "NOTICE").read_bytes()
+                assert b"mcpp-community" in notice and b"David Reid" in notice
+                print(f"Verified {len(declared)} byte-identical wrapper/dr_libs license files", flush=True)
             elif identity == "mcpplibs.mwrap.opus":
                 # libopus, opusfile and libogg are BSD-3-Clause and linked
                 # statically: each one's README and COPYING (libopus's with its
