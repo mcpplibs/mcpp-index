@@ -315,6 +315,11 @@ def prepare(plan: Path, identity: str, output: Path, home: Path | None = None):
             rf'(?m)^(\s*(?:{re.escape(name)}|"{re.escape(namespace)}\.{re.escape(name)}")\s*=\s*(?:\{{\s*version\s*=\s*)?")[^"]+(".*)$',
             lambda m: m[1] + version + m[2], text)
         if not replacements:
+            # A platform the member selects (mcpp SPEC-013): `platform = "<name>@<version>"`.
+            text, replacements = re.subn(
+                rf'(?m)^(\s*platform\s*=\s*"(?:{re.escape(namespace)}\.)?{re.escape(name)}@)[^"]+(".*)$',
+                lambda m: m[1] + version + m[2], text)
+        if not replacements:
             raise RuntimeError("candidate dependency was not replaced")
         # Standalone consumer: no inherited workspace or stale relative index redirects.
         text = re.sub(r'(?ms)^\[indices(?:\.[^\]]+)?\]\s*\n.*?(?=^\[|\Z)', '', text)
