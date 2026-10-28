@@ -21,6 +21,7 @@ members = [
     "tests/mwrap/quickjs-embed",
     "tests/mwrap/pocketpy-embed",
     "tests/mwrap/libpng-image",
+    "tests/mwrap/libwebp-image",
     "tests/mwrap/concurrentqueue-mpmc",
     "tests/mwrap/fribidi-bidi",
     "tests/mwrap/sheenbidi-bidi",

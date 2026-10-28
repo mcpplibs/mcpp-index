@@ -1,0 +1,11 @@
+[package]
+name = "libwebp-image"
+version = "1.5.0"
+description = "Consume the immutable libwebp wrapper with the demux and mux features: lossy and lossless RGBA round trips with alpha, the advanced API, an animation encoded and decoded frame by frame, the error paths, pinned bytes"
+
+[indices]
+# Use the complete candidate built-in index prepared by tests/run_members.sh.
+# An explicit empty table overrides the legacy workspace redirect.
+
+[dependencies]
+"mcpplibs.mwrap.libwebp" = { version = "1.5.0", features = ["demux", "mux"] }
