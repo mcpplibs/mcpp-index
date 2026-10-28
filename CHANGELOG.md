@@ -9,6 +9,20 @@
 
 ### Added
 
+- **compat.ogg 1.3.6、compat.opus 1.6.1、compat.opusfile 0.12(新包)。** Opus 音频的三个 Xiph.Org 库,均为
+  BSD-3-Clause,均以上游发布 tarball 从源码构建为静态库。compat.ogg:Ogg 容器的分页与位打包(`src/framing.c`、
+  `src/bitwise.c`),`<ogg/config_types.h>` 按上游 CMake 的结果由 `generated_files` 生成(int16_t…uint64_t)。
+  compat.opus:Opus 编解码器(RFC 6716)的编码器与解码器、multistream、ambisonics projection 与 repacketizer;
+  上游默认的浮点构建(源文件取自 `celt_sources.mk` / `silk_sources.mk` / `opus_sources.mk`),deep PLC、DRED、
+  OSCE 与 QEXT 关闭(上游默认),纯 C、不启用 SIMD 内建函数与运行时 CPU 检测(x86 内建函数需要逐文件 `-m` 标志);
+  生成的 `config.h`(`OPUS_BUILD`、`PACKAGE_VERSION "1.6.1"`、`VAR_ARRAYS`、`ENABLE_HARDENING`)与内部头文件目录
+  是私有包含目录,使用者只看到 `include/`(`#include <opus.h>`);Linux/macOS 以 `-fvisibility=hidden` 编译,
+  与上游 configure 一致。compat.opusfile:Ogg Opus 文件(RFC 7845)的解码与精确定位,依赖 compat.ogg 与
+  compat.opus;只构建 libopusfile(不含需要 OpenSSL 的 libopusurl / HTTP)。GLOBAL 为上游发布资产
+  (opus 为 downloads.xiph.org,GitHub 无 1.6.1 发布;ogg 与 opusfile 为 GitHub 发布资产),CN 为 GitCode
+  `mcpp-res/opus`、`mcpp-res/ogg`、`mcpp-res/opusfile` 镜像,sha256 一致;声明 `extensions.autoupdate`(`v${version}`
+  标签)。新增测试成员 `tests/examples/opus`(三平台):CELT 与 SILK 往返(信噪比)、包解析、5.1 multistream、
+  ambisonics、repacketizer,以 libogg 生成的 Ogg Opus 流经 opusfile 读取(OpusHead、OpusTags、精确长度、定位)。
 - **mcpplibs.mwrap.box2d 3.2.0(新包)。** box2d-m:以 C++23 模块(`import mcpplibs.mwrap.box2d;`)使用
   compat.box2d 3.2.0。按上游全局名导出已安装头文件的 110 个类型、3 个不透明结构体、176 个枚举值、506 个 `B2_API` 函数、
   91 个内联函数、8 个 C++ 向量运算符与 `b2_lengthUnitsPerMeter`;头文件的 13 个 `static const` 对象(内部链接)以同类型、
