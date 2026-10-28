@@ -6,8 +6,10 @@
 -- one built as an ok image (`<arch>-openkal').
 --
 -- No `deps'. The package names openkal and, for the system it is built for,
--- that system's implementation in its own manifest; a program that builds ok
--- images names the C library and the C++ run-time inside them itself.
+-- that system's implementation in its own manifest. From 0.2.1 an ok image's
+-- C library, C++ run-time and loader are its platform's (openkal-platform,
+-- which mcpp 2026.10.27.1 selects for `<arch>-openkal'), and the package
+-- declares none of them.
 package = {
     spec        = "1",
     namespace   = "mcpplibs",
@@ -26,6 +28,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.2.1"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/os/archive/refs/tags/0.2.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/os/releases/download/0.2.1/os-0.2.1.tar.gz",
+                },
+                sha256 = "264a3b80ef40fcb760b7c63565e01597549fdd8e5aa0672389b5d9384661218f",
+            },
             ["0.2.0"] = {
                 url    = "https://github.com/mcpplibs/os/archive/refs/tags/0.2.0.tar.gz",
                 sha256 = "9dc147ad8dca0216549c40dc4dfabaed7394cdf7a7f253c58613ccc226abd04e",
@@ -47,6 +56,13 @@ package = {
             },
         },
         macosx = {
+            ["0.2.1"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/os/archive/refs/tags/0.2.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/os/releases/download/0.2.1/os-0.2.1.tar.gz",
+                },
+                sha256 = "264a3b80ef40fcb760b7c63565e01597549fdd8e5aa0672389b5d9384661218f",
+            },
             ["0.2.0"] = {
                 url    = "https://github.com/mcpplibs/os/archive/refs/tags/0.2.0.tar.gz",
                 sha256 = "9dc147ad8dca0216549c40dc4dfabaed7394cdf7a7f253c58613ccc226abd04e",
@@ -68,6 +84,13 @@ package = {
             },
         },
         windows = {
+            ["0.2.1"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/os/archive/refs/tags/0.2.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/os/releases/download/0.2.1/os-0.2.1.tar.gz",
+                },
+                sha256 = "264a3b80ef40fcb760b7c63565e01597549fdd8e5aa0672389b5d9384661218f",
+            },
             ["0.2.0"] = {
                 url    = "https://github.com/mcpplibs/os/archive/refs/tags/0.2.0.tar.gz",
                 sha256 = "9dc147ad8dca0216549c40dc4dfabaed7394cdf7a7f253c58613ccc226abd04e",

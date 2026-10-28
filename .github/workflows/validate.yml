@@ -435,7 +435,12 @@ env:
   # 2026.10.26.1 (mcpp-community/mcpp#841): a graph-supplied libstdc++ under
   # clang (gcc.libstdcxx, the libstdcxx-llvm member), `requires` as a table,
   # and one C++ runtime per process -- compat.sycl-runtime's requirement.
-  MCPP_VERSION: "2026.10.26.1"
+  #
+  # 2026.10.27.1 (mcpp-community/mcpp#847): platforms (SPEC-013) -- the
+  # ok-image rows take openkal-platform with no declaration, the
+  # tests/examples/openkal-platform member's hosted arrangement -- and
+  # packaging along three axes (SPEC-014); mcpp.plugins 0.20.0's floor.
+  MCPP_VERSION: "2026.10.27.1"
 
 jobs:
   lint:
