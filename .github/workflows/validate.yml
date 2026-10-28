@@ -1638,6 +1638,11 @@ jobs:
         shell: bash
         run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.sheenbidi@3.0.0 --deploy
 
+      - name: Installed Opus wrapper archive, actual default tone template and its relocated BSD notices
+        if: contains(format(' {0} ', env.MEMBERS), ' opus-ogg ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.opus@1.6.1 --deploy
+
       - name: Installed Box2D wrapper archive, actual default physics template and its relocated notices
         if: contains(format(' {0} ', env.MEMBERS), ' box2d-physics ') && matrix.toolchain == 'default'
         shell: bash

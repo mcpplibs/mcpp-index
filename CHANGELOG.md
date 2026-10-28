@@ -9,6 +9,15 @@
 
 ### Added
 
+- **mcpplibs.mwrap.opus 1.6.1(新包)。** opus-m:以 C++23 模块(`import mcpplibs.mwrap.opus;`)使用 compat.opus 1.6.1、
+  compat.opusfile 0.12 与 compat.ogg 1.3.6。`mcpplibs.mwrap.opus` 导出 libopus 的 13 个类型与 87 个函数,并重新导出
+  `.file`(opusfile:10 个类型、54 个函数;不导出未构建的 libopusurl 的 9 个声明)、`.ogg`(libogg:12 个类型、71 个函数)
+  与 `.macros`(115 个整数常量、6 个类型别名、54 个 CTL 宏映射为返回带类型 `ctl_request` 的 constexpr 函数,7 个 `*_ctl`
+  函数各有接受它的重载,`opus_encoder_ctl(enc, OPUS_SET_BITRATE(64000))` 写法不变);属性、版本测试与 CTL 参数检查等
+  22 个宏留在 `<mwrap/opus/macros.hpp>`。包装仓库的 CI(Linux x86_64 GCC/LLVM、Linux arm64、macOS、Windows)经由模块
+  解码 RFC 8251 的 12 个测试向量(5 种采样率、单声道与立体声,共 120 次,逐包核对区间解码器最终状态,并以 libopus 的
+  `opus_compare` 对照参考输出),0 失败;212 个导出函数全部可链接。GLOBAL 为 `mwrap-1.6.1` 发布资产,CN 为 GitCode
+  `mcpp-res/mwrap-opus` 镜像,sha256 一致。新增测试成员 `tests/mwrap/opus-ogg` 与已安装模板及其许可文件的部署检查。
 - **compat.ogg 1.3.6、compat.opus 1.6.1、compat.opusfile 0.12(新包)。** Opus 音频的三个 Xiph.Org 库,均为
   BSD-3-Clause,均以上游发布 tarball 从源码构建为静态库。compat.ogg:Ogg 容器的分页与位打包(`src/framing.c`、
   `src/bitwise.c`),`<ogg/config_types.h>` 按上游 CMake 的结果由 `generated_files` 生成(int16_t…uint64_t)。
