@@ -100,6 +100,11 @@
 
 ### Changed
 
+- **compat.miniaudio 0.11.25 以 `gnu11` 编译(可构建到 wasm32-emscripten)。** Emscripten 上 miniaudio 的 Web Audio
+  后端经 `EM_ASM` 内联 JavaScript,Emscripten 在严格的 `-std=c*` 模式下拒绝 `EM_ASM`(上游 miniaudio.h §2.6:
+  不能使用 `-std=c*`),原来的 `c_standard = "c11"` 使 `mcpp build --target wasm32-emscripten` 编译失败;改为
+  `gnu11` 后构建并在 node 下运行,启用的后端为 Web Audio 与 Custom(上游在 Emscripten 上不构建需要后台线程的 Null 后端)。
+  其他平台不受影响(上游 CMake 不设标准,GCC/Clang 默认即 GNU 方言);归档与 sha256 不变,仍为同一版本。
 - **同一归档的包由点名其中一个的成员一并构建。** 候选矩阵要求每个新增版本有直接点名它的测试成员;
   openkal-image 的 openkal-ld、openkal-run 与 openkal-tools 同一标签、同一归档,彼此以 `path` 依赖到达,
   成员 `openkal-tools` 构建 openkal-tools 时即从同一字节构建另两个。`tests/autoupdate/ci.py` 的 matrix
