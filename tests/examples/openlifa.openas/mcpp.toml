@@ -1,0 +1,11 @@
+# openlifa.openas test project: an actor delegated and read back, a grant
+# parsed, and a request decided by it; the conformance check of a verb list.
+[package]
+name    = "openlifa-openas-tests"
+version = "0.1.0"
+
+[dependencies]
+openlifa.openas = "0.2.0"
+
+[indices]
+openlifa = { path = "../../.." }
