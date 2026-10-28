@@ -9,6 +9,16 @@
 
 ### Added
 
+- **mcpplibs.mwrap.pocketpy 2.2.0(新包)。** pocketpy-m:以 C++23 模块(`import mcpplibs.mwrap.pocketpy;`)使用
+  compat.pocketpy 2.2.0(MIT)。从固定版本的 `<pocketpy.h>` 生成,以 `export using` 导出全部 29 个类型、91 个枚举值与
+  246 个函数(上游全局名不变);`mcpplibs.mwrap.pocketpy.macros` 把 82 个宏中的 65 个映射为常量与函数(`PK_VERSION`、
+  `PK_ENABLE_*`、`py_isint`…、`py_r0`…、`TypeError` 等为传给 `py_exception` 的可变参数模板,`py_callcfunc` 两种 NDEBUG
+  状态各自正确),`PY_CHECK_ARGC`、`PY_CHECK_ARG_TYPE`、`py_arg` 留在 `<mwrap/pocketpy/macros.hpp>`。包装仓库 CI
+  (Linux x86_64 GCC/LLVM、Linux arm64 GCC、macOS、Windows、wasm32-emscripten,dev 与 release)运行嵌入 API 测试,并在
+  只用本模块写成的宿主上运行上游全部 92 个 `tests/*.py`(源码与编译成 `.pyc` 各一遍)。描述文件
+  `pkgs/mwrap/pocketpy.lua` 指向不可变的 `mwrap-2.2.0` 发布归档(暂无 CN 镜像)。新增测试成员 `tests/mwrap/pocketpy-embed`
+  (exec/eval 读回、遍历 dict、Python 调用 C 函数、错误消息与 VM 继续、同一 VM 中重复执行、watchdog,以及侧头文件与
+  导入并用),validate.yml 中验证已安装归档的默认 `script` 模板及其迁移后的许可文件。
 - **compat.pocketpy 2.2.0(新包)。** PocketPy 2:用 C11 写的小型可嵌入 Python 3.x 解释器(MIT,无依赖)。从标签归档
   构建 `src/**/*.c`(即上游 CMake 的 POCKETPY_SRC;`_generated.c` 已随源码提供,无需 prebuild.py)为静态库,
   按上游 CMake 的默认做法作为一个 unity 翻译单元编译(生成的 `pocketpy_unity.c` 按 CMake 的 GLOB_RECURSE 顺序包含 84 个
