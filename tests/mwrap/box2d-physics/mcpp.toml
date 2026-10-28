@@ -1,0 +1,11 @@
+[package]
+name = "box2d-physics"
+version = "3.2.0"
+description = "Consume the immutable Box2D wrapper: a world that steps, collides and sleeps, a ray cast, the mapped constants and id macros, the struck-pyramid determinism hash every platform computes, the side header beside the import"
+
+[indices]
+# Use the complete candidate built-in index prepared by tests/run_members.sh.
+# An explicit empty table overrides the legacy workspace redirect.
+
+[dependencies]
+"mcpplibs.mwrap.box2d" = "3.2.0"

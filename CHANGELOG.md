@@ -9,6 +9,16 @@
 
 ### Added
 
+- **mcpplibs.mwrap.box2d 3.2.0(新包)。** box2d-m:以 C++23 模块(`import mcpplibs.mwrap.box2d;`)使用
+  compat.box2d 3.2.0。按上游全局名导出已安装头文件的 110 个类型、3 个不透明结构体、176 个枚举值、506 个 `B2_API` 函数、
+  91 个内联函数、8 个 C++ 向量运算符与 `b2_lengthUnitsPerMeter`;头文件的 13 个 `static const` 对象(内部链接)以同类型、
+  同初值的常量置于 `mcpplibs::mwrap::box2d`。`mcpplibs.mwrap.box2d.macros` 把 20 个宏映射为常量、5 个读取长度单位的宏
+  映射为函数(`B2_LINEAR_SLOP()`)、3 个 id 宏映射为 constexpr 函数;声明说明符、初始化器语法与断言留在
+  `<mwrap/box2d/macros.hpp>`。包装仓库的 CI(Linux x86_64 GCC/LLVM、Linux arm64 GCC/LLVM、macOS、Windows、
+  wasm32-emscripten)在 dev 与 release 下运行确定性场景:上游的 falling hinges(第 299 步、哈希 0x465F3DF4)与
+  被撞倒的 20 层金字塔(600 步,哈希 0x790D7C28),1–8 个 worker、用户任务系统、SSE2 回退,各行逐位一致。
+  GLOBAL 为 `mwrap-3.2.0` 发布资产,CN 为 GitCode `mcpp-res/mwrap-box2d` 镜像,sha256 一致。新增测试成员
+  `tests/mwrap/box2d-physics` 与已安装模板及其许可文件的部署检查。
 - **compat.box2d 3.2.0(新包)。** Box2D v3:游戏用 2D 刚体物理引擎(C17,MIT,无依赖)。按上游 CMake 的做法从标签归档
   构建 `src/*.c` 为静态库:`-std=gnu17`、`-ffp-contract=off`(上游为跨平台确定性对每个 GCC/Clang 设置,禁止乘加收缩为
   FMA)、上游默认的 SIMD 选择(x86_64 为 SSE2,并在运行时按 cpuid 分派 AVX2 求解器;arm64 为 Neon)、unix 上

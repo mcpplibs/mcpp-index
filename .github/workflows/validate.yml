@@ -1638,6 +1638,11 @@ jobs:
         shell: bash
         run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.sheenbidi@3.0.0 --deploy
 
+      - name: Installed Box2D wrapper archive, actual default physics template and its relocated notices
+        if: contains(format(' {0} ', env.MEMBERS), ' box2d-physics ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.box2d@3.2.0 --deploy
+
       - name: Installed miniaudio wrapper archive, actual default tone template and its relocated notices
         if: contains(format(' {0} ', env.MEMBERS), ' miniaudio-engine ') && matrix.toolchain == 'default'
         shell: bash
