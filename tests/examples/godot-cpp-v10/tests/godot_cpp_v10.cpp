@@ -1,9 +1,10 @@
-// Behavioral test for compat.godot-cpp 10.0.0-rc1 -- godot-cpp's own 10.x
-// version line, whose bindings target Godot 4.6.
+// Behavioral test for compat.godot-cpp 10.0.0 -- godot-cpp's own 10.x
+// version line, whose bindings target Godot 4.7 (the api_version default
+// cmake resolves when GODOTCPP_API_VERSION is unset; see the descriptor).
 //
 // The point of a second member is that it can tell the two versions apart, so
 // the first thing asserted is WHICH bindings arrived: the generated version
-// header and a class that exists in 4.6 and not in 4.5. The rest mirrors the
+// header and a class that exists in 4.7 and not in 4.5. The rest mirrors the
 // 4.5 member so a behavioural difference between the two would show up as a
 // diff between two otherwise identical tests.
 //
@@ -11,7 +12,7 @@
 // through the gdextension_interface_* pointers needs a Godot process that has
 // loaded the extension.
 
-#include <godot_cpp/classes/editor_dock.hpp>  // new in Godot 4.6
+#include <godot_cpp/classes/area_light3d.hpp>  // new in Godot 4.7
 #include <godot_cpp/classes/global_constants.hpp>
 #include <godot_cpp/classes/node.hpp>
 #include <godot_cpp/core/version.hpp>
@@ -60,10 +61,10 @@ private:
 };
 
 int main() {
-    // these bindings are Godot 4.6, not the 4.5 the sibling member pins
+    // these bindings are Godot 4.7, not the 4.5 the sibling member pins
     const bool version_ok = GODOT_VERSION_MAJOR == 4 &&
-                            GODOT_VERSION_MINOR == 6 &&
-                            sizeof(EditorDock) > 0;
+                            GODOT_VERSION_MINOR == 7 &&
+                            sizeof(AreaLight3D) > 0;
 
     // out-of-line variant math: proves the library linked
     const bool vec2_ok = close(Vector2(3, 4).length(), 5.0) &&

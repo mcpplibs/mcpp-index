@@ -12,4 +12,4 @@ name    = "godot-cpp-v10-tests"
 version = "0.1.0"
 
 [dependencies.compat]
-godot-cpp = "10.0.0-rc1"
+godot-cpp = "10.0.0"

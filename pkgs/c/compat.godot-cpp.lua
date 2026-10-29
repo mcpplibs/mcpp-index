@@ -26,6 +26,20 @@
 --   gen/ tree, so it cannot be a feature over this archive; it would be a
 --   second version/package.
 --
+-- 10.0.0 (was 10.0.0-rc1): the API JSON that feeds the generator became
+-- per-version -- gdextension/ ships extension_api-4-3.json through
+-- extension_api-4-7.json and the api_version build option selects one
+-- (cmake: GODOTCPP_API_VERSION, defaulting to GODOTCPP_DEFAULT_API_VERSION
+-- "4.7" per CMakeLists.txt; scons has no default and wants api_version
+-- passed). repack.sh therefore takes the newest shipped json, so this
+-- archive's gen/ tree is the Godot 4.7 bindings -- the same answer cmake's
+-- default gives. 10.0.0 also adds src/templates/hashfuncs.cpp; the existing
+-- `*/src/*/*.cpp` glob already covers it (verified in the extracted
+-- archive). Everything else about the descriptor carries over: the
+-- hand-written layout, the `-include cstdlib` quirk (src/godot.cpp still
+-- calls realloc()/free() without including <cstdlib> in 10.0.0), and the
+-- three include roots.
+--
 -- Defines
 --   GDEXTENSION is upstream's PUBLIC compile definition (cmake sets it on the
 --   godot-cpp target's INTERFACE), so it rides on a default feature: the lib
@@ -72,6 +86,13 @@ package = {
     -- gdextension_interface.h ABI).
     xpm = {
         linux = {
+            ["10.0.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/xlings-res/godot-cpp/releases/download/10.0.0/godot-cpp-10.0.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/godot-cpp/releases/download/10.0.0/godot-cpp-10.0.0.tar.gz",
+                },
+                sha256 = "85983e0bf4667080c056d2250bf7c1c90f36f7eaa6e5f939d8ab356ebdbd7325",
+            },
             ["10.0.0-rc1"] = {
                 url = {
                     GLOBAL = "https://github.com/xlings-res/godot-cpp/releases/download/10.0.0-rc1/godot-cpp-10.0.0-rc1.tar.gz",
@@ -88,6 +109,13 @@ package = {
             },
         },
         macosx = {
+            ["10.0.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/xlings-res/godot-cpp/releases/download/10.0.0/godot-cpp-10.0.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/godot-cpp/releases/download/10.0.0/godot-cpp-10.0.0.tar.gz",
+                },
+                sha256 = "85983e0bf4667080c056d2250bf7c1c90f36f7eaa6e5f939d8ab356ebdbd7325",
+            },
             ["10.0.0-rc1"] = {
                 url = {
                     GLOBAL = "https://github.com/xlings-res/godot-cpp/releases/download/10.0.0-rc1/godot-cpp-10.0.0-rc1.tar.gz",
@@ -104,6 +132,13 @@ package = {
             },
         },
         windows = {
+            ["10.0.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/xlings-res/godot-cpp/releases/download/10.0.0/godot-cpp-10.0.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/godot-cpp/releases/download/10.0.0/godot-cpp-10.0.0.tar.gz",
+                },
+                sha256 = "85983e0bf4667080c056d2250bf7c1c90f36f7eaa6e5f939d8ab356ebdbd7325",
+            },
             ["10.0.0-rc1"] = {
                 url = {
                     GLOBAL = "https://github.com/xlings-res/godot-cpp/releases/download/10.0.0-rc1/godot-cpp-10.0.0-rc1.tar.gz",
