@@ -9,6 +9,12 @@
 
 ### Added
 
+- **openkal-musl 0.22.7、openkal-llvm-runtime 0.16.7、openkal-ld / openkal-run / openkal-tools / openkal-bind 0.1.4。**
+  openkal-musl 钉 openkal-linux 0.18.3,并只在内部 overlay 在命令行上时为 C++ 定义 `restrict`:musl 的公开头写
+  `__restrict`,而为每个 C++ 消费者定义的宏占用了程序自己的名字(clang 的 `TokenKinds.def` 把 `restrict` 作为宏
+  实参传入)。openkal-llvm-runtime 随之移动;openkal-image 的四个成员钉 openkal-linux 0.18.3,okrun 与载体能在
+  可搜索不可读的目录中启动程序。测试成员 `openkal`、`openkal-musl`、`openkal-tools`、`openkal-bind` 随之移动。
+  GLOBAL 为 GitHub 标签归档,CN 为 GitCode `mcpp-res` 镜像,sha256 两处一致。
 - **openkal-linux 0.18.3。** 每个 `kal_dir`(含两个预开放目录)以 `O_PATH` 打开:在其下解析名字、在其中启动程序、
   描述它都不需要读权限,列举时另开可读的描述符。Android 应用沙箱(`run-as`,SELinux `runas_app`)中根目录的预开放以
   EACCES 失败,以绝对名启动的每个程序报告为找不到(mcpp-community/mcpp#857)。测试成员 `openkal` 移到 0.18.3。
