@@ -1,0 +1,9 @@
+# compat.libwebm — a WebM file written with mkvmuxer and read back with
+# mkvparser, on every platform the descriptor declares.
+[package]
+name     = "libwebm-tests"
+version  = "0.1.0"
+standard = "c++23"
+
+[dependencies]
+compat.libwebm = "1.0.0.32"

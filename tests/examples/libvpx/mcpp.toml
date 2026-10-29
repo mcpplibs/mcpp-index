@@ -1,0 +1,9 @@
+# compat.libvpx — VP9 frames encoded and decoded back, on every platform the
+# descriptor declares.
+[package]
+name     = "libvpx-tests"
+version  = "0.1.0"
+standard = "c++23"
+
+[dependencies]
+compat.libvpx = "1.17.0"
