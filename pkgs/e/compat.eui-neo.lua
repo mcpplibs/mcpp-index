@@ -17,7 +17,30 @@
 -- them as `"3rd/stb_image.h"` — except miniaudio, which audio.cpp includes
 -- BARE; see the 0.6.0 note below.
 --
--- The build recipe below tracks upstream `CMakeLists.txt` (v0.6.1): CORE_SOURCES
+-- 0.6.2: CORE_SOURCES and VULKAN_SOURCES are byte-identical to 0.6.1, so the
+-- lib's source list, deps, features and flags carry over unchanged. The
+-- release is touch input for the SDL2 backend (single-finger pointer events,
+-- pixel-granular ScrollEvent::pixelX/pixelY), Markdown viewport-only builds,
+-- glyph-advance caching and on-demand glyph-atlas allocation, plus upstream
+-- regression probes. It also UN-DOES the one descriptor-relevant break of
+-- 0.6.1: upstream hoisted the SDL2 branch's sendX11MoveResizeForWindow
+-- definition OUT of the `#if … && defined(SDL_VIDEO_DRIVER_X11)` guard (the
+-- `#endif` moved from below the definition to above it — compare
+-- core/window/window_backend.cpp across the two tags), giving the non-linux
+-- platforms a real definition with the `#else return false` body upstream's
+-- GLFW branch always had. That collides with the 0.6.1 package-private stub
+-- in mcpp_eui_backends.h (redefinition, measured on a 0.6.2 compile), so the
+-- stub became a FUNCTION TEMPLATE: on 0.6.1 non-linux it is still the only
+-- candidate and satisfies the unguarded uses; on 0.6.2 non-linux the real
+-- non-template definition is preferred by overload resolution (exact-match
+-- tie → non-template wins) and the template goes unused; a template and a
+-- non-template with the same name coexist, so there is no redefinition on
+-- either tag. Versions cannot gate descriptor content (the xpkg parser
+-- accepts only literal strings in generated_files — a concatenated value
+-- fails with "malformed mcpp segment", measured), so one header must serve
+-- every published version, and the template is what makes that possible.
+--
+-- The build recipe below tracks upstream `CMakeLists.txt` (v0.6.2): CORE_SOURCES
 -- plus the OpenGL backend and, for the glfw window backend, `ime_bridge.c`.
 -- 0.5.5 grew a Shadertoy subsystem: render_backend.h and include/eui/types.h now
 -- include core/render/shadertoy.h unconditionally, and opengl_backend.cpp calls
@@ -250,6 +273,14 @@ package = {
                 url    = "https://github.com/sudoevolve/EUI-NEO/archive/refs/tags/v0.6.1.tar.gz",
                 sha256 = "cd0bd6bd437177db097da146fc20f4b8b01c70d0db561a6f8e26baa26dbbbf5f",
             },
+            -- 0.6.2: CORE_SOURCES/VULKAN_SOURCES byte-identical to 0.6.1; the
+            -- mcpp_eui_backends.h stub is now a template so the header serves
+            -- both tags (see the file-top note). No CN mirror yet — plain-
+            -- string GLOBAL url, same as 0.6.1.
+            ["0.6.2"] = {
+                url    = "https://github.com/sudoevolve/EUI-NEO/archive/refs/tags/v0.6.2.tar.gz",
+                sha256 = "189d97aadb044de653237e12ac97d6fa92f1a65952854e3db6211d360f4d4124",
+            },
         },
         macosx = {
             ["0.5.3"] = {
@@ -302,6 +333,11 @@ package = {
                 url    = "https://github.com/sudoevolve/EUI-NEO/archive/refs/tags/v0.6.1.tar.gz",
                 sha256 = "cd0bd6bd437177db097da146fc20f4b8b01c70d0db561a6f8e26baa26dbbbf5f",
             },
+            -- 0.6.2: see the linux block — plain-string GLOBAL, no CN mirror.
+            ["0.6.2"] = {
+                url    = "https://github.com/sudoevolve/EUI-NEO/archive/refs/tags/v0.6.2.tar.gz",
+                sha256 = "189d97aadb044de653237e12ac97d6fa92f1a65952854e3db6211d360f4d4124",
+            },
         },
         windows = {
             ["0.5.3"] = {
@@ -353,6 +389,11 @@ package = {
             ["0.6.1"] = {
                 url    = "https://github.com/sudoevolve/EUI-NEO/archive/refs/tags/v0.6.1.tar.gz",
                 sha256 = "cd0bd6bd437177db097da146fc20f4b8b01c70d0db561a6f8e26baa26dbbbf5f",
+            },
+            -- 0.6.2: see the linux block — plain-string GLOBAL, no CN mirror.
+            ["0.6.2"] = {
+                url    = "https://github.com/sudoevolve/EUI-NEO/archive/refs/tags/v0.6.2.tar.gz",
+                sha256 = "189d97aadb044de653237e12ac97d6fa92f1a65952854e3db6211d360f4d4124",
             },
         },
     },
@@ -433,23 +474,27 @@ package = {
  *
  * Both halves must NOT become interface defines — consumers would inherit
  * the lie on every platform (on macOS, SDL_syswm.h would then demand X11
- * headers consumers do not have). */
+ * headers consumers do not have).
+ *
+ * 0.6.2 note: upstream hoisted the guarded definition OUT of the macro
+ * guard (window_backend.cpp), so on 0.6.2 this branch's stub must not be a
+ * plain function — it would redefine the now-unguarded upstream one. It is
+ * a FUNCTION TEMPLATE instead: on 0.6.1 (definition still guard-hidden) it
+ * is the only candidate and satisfies the unguarded uses at :567/:571; on
+ * 0.6.2 the real non-template definition exists before those uses and wins
+ * the exact-match tie (non-template preferred), leaving the template
+ * unused. A template and a non-template of the same name coexist, so one
+ * header serves both tags. Handle is void* in the SDL2 branch
+ * (window_types.h), so W deduces to void with an exact match.
+ * Guarded by __cplusplus because mcpp_eui_backends.h is force-included
+ * into the package's C TUs (tray_bridge.c, native_bridge.c) as well as
+ * its C++ ones. */
 #  if defined(__linux__) && !defined(__ANDROID__)
 #    define SDL_VIDEO_DRIVER_X11 1
 #  elif defined(__cplusplus)
-/* macOS / Windows: `__linux__` is false, so no macro can wake the guarded
- * declaration — upstream's own CI builds the SDL2 backend on Linux only and
- * never sees it (measured on both CI legs: use of undeclared identifier at
- * :567/:571). Supply the fallback upstream's GLFW branch and its release
- * notes both describe — "on non-X11 platforms the delegation returns false
- * and callers keep their programmatic fallback" — as a core::window stub.
- * Handle is void* in the SDL2 branch (window_types.h), so the signature
- * matches exactly, and the later real definition cannot exist on this branch
- * of the #if (it is linux-only), so there is no redefinition. Guarded by
- * __cplusplus because mcpp_eui_backends.h is force-included into the package's
- * C TUs (tray_bridge.c, native_bridge.c) as well as its C++ ones. */
 namespace core::window {
-inline bool sendX11MoveResizeForWindow(void* window, int direction) {
+template <typename W>
+inline bool sendX11MoveResizeForWindow(W* window, int direction) {
     (void)window;
     (void)direction;
     return false;
