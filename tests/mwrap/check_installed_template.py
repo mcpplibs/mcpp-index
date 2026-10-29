@@ -272,6 +272,30 @@ def main():
                 notice = (roots[0] / "NOTICE").read_bytes()
                 assert b"mcpp-community" in notice and b"Google" in notice
                 print(f"Verified {len(declared)} byte-identical wrapper/libwebp license files", flush=True)
+            elif identity == "mcpplibs.mwrap.libvpx":
+                # libvpx and libwebm (BSD-3-Clause with the WebM project's
+                # patent grant) are linked statically: the wrapper's
+                # LICENSE/NOTICE and each library's README, LICENSE, PATENTS
+                # and AUTHORS travel with the program.
+                sources = [path for store in (home / "xpkgs", home / "registry/data/xpkgs")
+                           for path in store.glob(f"mcpplibs.mwrap-x-libvpx/{version}/*/src/libvpx.cppm")]
+                assert len(sources) == 1, sources
+                source = sources[0].parent.parent
+                declared = tomllib.loads((source / "mcpp.toml").read_text(encoding="utf-8"))["runtime"]["deploy"]
+                roots = list(relocated.rglob("licenses/libvpx"))
+                assert len(roots) == 1, f"Missing libvpx runtime license tree: {roots}"
+                for entry in declared:
+                    notice = source / entry["from"]
+                    copied = roots[0].parent.parent / entry["to"] / notice.name
+                    assert copied.is_file() and copied.read_bytes() == notice.read_bytes(), copied
+                assert b"The WebM Project authors" in (roots[0] / "upstream/libvpx/LICENSE").read_bytes()
+                assert b"Google Inc." in (roots[0] / "upstream/libwebm/LICENSE.TXT").read_bytes()
+                for patents in ("upstream/libvpx/PATENTS", "upstream/libwebm/PATENTS.TXT"):
+                    assert b"patent" in (roots[0] / patents).read_bytes(), patents
+                assert b"Apache License" in (roots[0] / "LICENSE").read_bytes()
+                notice = (roots[0] / "NOTICE").read_bytes()
+                assert b"mcpp-community" in notice and b"WebM Project" in notice
+                print(f"Verified {len(declared)} byte-identical wrapper/libvpx/libwebm license files", flush=True)
             elif identity == "mcpplibs.mwrap.pocketpy":
                 # PocketPy is MIT and linked statically: its LICENSE and README
                 # travel with the program beside the wrapper's LICENSE/NOTICE.

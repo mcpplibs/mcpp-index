@@ -27,6 +27,7 @@ members = [
     "tests/mwrap/sheenbidi-bidi",
     "tests/mwrap/dr_libs-audio",
     "tests/mwrap/opus-ogg",
+    "tests/mwrap/libvpx-webm",
     "tests/mwrap/box2d-physics",
     "tests/mwrap/miniaudio-engine",
     "tests/mwrap/freetype-render",
