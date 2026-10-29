@@ -9,6 +9,9 @@
 
 ### Added
 
+- **mcpplibs.os 0.2.3。** 钉 openkal-linux 0.18.3:目录句柄以 `O_PATH` 打开,进程可搜索而不可读的目录中按绝对名
+  启动的程序能被找到(Android 应用沙箱,mcpp-community/mcpp#857)。GLOBAL 为 GitHub 标签归档,CN 为 GitCode
+  `mcpp-res` 镜像,sha256 两处一致。
 - **openkal-platform 0.18.0。** 运行器声明 `hosts`(okrun 构建的系统与架构,即需要它的包能运行的地方);删除
   `universal`(打包只含命令命名的腿);版本组为 openkal-linux 0.18.3、openkal-musl 0.22.9、openkal-llvm-runtime
   0.16.9、openkal-ld/run/tools 0.1.4。需要 mcpp 2026.10.30.1;测试成员 `openkal-platform` 在本仓库 CI 的 mcpp 移到 2026.10.30.1 时随之移动。GLOBAL 为 GitHub
