@@ -9,6 +9,9 @@
 
 ### Added
 
+- **openkal-musl 0.22.8、openkal-llvm-runtime 0.16.8。** openkal-musl 钉 openkal-ld 0.1.4(本轮 openkal-image 归档);
+  0.22.7 仍钉 0.1.3,与本轮平台的版本组不一致。openkal-llvm-runtime 随之移动。测试成员 `openkal`、`openkal-musl`
+  随之移动。GLOBAL 为 GitHub 标签归档,CN 为 GitCode `mcpp-res` 镜像,sha256 两处一致。
 - **openkal-musl 0.22.7、openkal-llvm-runtime 0.16.7、openkal-ld / openkal-run / openkal-tools / openkal-bind 0.1.4。**
   openkal-musl 钉 openkal-linux 0.18.3,并只在内部 overlay 在命令行上时为 C++ 定义 `restrict`:musl 的公开头写
   `__restrict`,而为每个 C++ 消费者定义的宏占用了程序自己的名字(clang 的 `TokenKinds.def` 把 `restrict` 作为宏
