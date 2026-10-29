@@ -9,6 +9,10 @@
 
 ### Added
 
+- **openkal-linux 0.18.3。** 每个 `kal_dir`(含两个预开放目录)以 `O_PATH` 打开:在其下解析名字、在其中启动程序、
+  描述它都不需要读权限,列举时另开可读的描述符。Android 应用沙箱(`run-as`,SELinux `runas_app`)中根目录的预开放以
+  EACCES 失败,以绝对名启动的每个程序报告为找不到(mcpp-community/mcpp#857)。测试成员 `openkal` 移到 0.18.3。
+  GLOBAL 为 GitHub 标签归档,CN 为 GitCode `mcpp-res` 镜像,sha256 两处一致。
 - **mcpplibs.mwrap.libvpx 1.17.0(新包)。** libvpx-m:以 C++23 模块(`import mcpplibs.mwrap.libvpx;`)使用 VP9 编解码库
   libvpx 1.17.0 与 WebM 容器库 libwebm 1.0.0.32(建立在 compat.libvpx 与 compat.libwebm 之上)。根模块导出 libvpx 头文件的
   133 个类型、192 个枚举值、上游导出的 35 个函数与两个 VP9 接口(VP8 未构建,其接口不导出),头文件中 86 个类型化控制函数
