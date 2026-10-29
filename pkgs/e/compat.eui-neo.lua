@@ -1,3 +1,10 @@
+local versions = {
+    ["0.6.2"] = {
+        url = "https://github.com/sudoevolve/EUI-NEO/archive/refs/tags/v0.6.2.tar.gz",
+        sha256 = "189d97aadb044de653237e12ac97d6fa92f1a65952854e3db6211d360f4d4124",
+    },
+}
+
 -- compat.eui-neo — EUI-NEO, a declarative retained-mode C++17 UI framework.
 --
 -- Header-compat shape (Form B, `import_std = false`): the ~20 core TUs are
@@ -250,6 +257,7 @@ package = {
                 url    = "https://github.com/sudoevolve/EUI-NEO/archive/refs/tags/v0.6.1.tar.gz",
                 sha256 = "cd0bd6bd437177db097da146fc20f4b8b01c70d0db561a6f8e26baa26dbbbf5f",
             },
+            ["0.6.2"] = versions["0.6.2"],
         },
         macosx = {
             ["0.5.3"] = {
@@ -302,6 +310,7 @@ package = {
                 url    = "https://github.com/sudoevolve/EUI-NEO/archive/refs/tags/v0.6.1.tar.gz",
                 sha256 = "cd0bd6bd437177db097da146fc20f4b8b01c70d0db561a6f8e26baa26dbbbf5f",
             },
+            ["0.6.2"] = versions["0.6.2"],
         },
         windows = {
             ["0.5.3"] = {
@@ -354,6 +363,7 @@ package = {
                 url    = "https://github.com/sudoevolve/EUI-NEO/archive/refs/tags/v0.6.1.tar.gz",
                 sha256 = "cd0bd6bd437177db097da146fc20f4b8b01c70d0db561a6f8e26baa26dbbbf5f",
             },
+            ["0.6.2"] = versions["0.6.2"],
         },
     },
 
