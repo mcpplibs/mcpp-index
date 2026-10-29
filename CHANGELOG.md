@@ -9,6 +9,25 @@
 
 ### Added
 
+- **compat.libvpx 1.17.0(新包)。** libvpx:WebM 项目的 VP9 视频编解码器(编码器与解码器;BSD-3-Clause,附 WebM 项目的
+  免版税专利授权 PATENTS)。从 `v1.17.0` 标签归档构建上游 `configure --target=generic-gnu --disable-vp8 --enable-vp9
+  --enable-multithread`(不含示例、工具、文档、单元测试、webm-io、libyuv)所编译的 101 个 C 源文件:通用 C 实现,无 SIMD、
+  无汇编、无运行时 CPU 检测,同一配置在 x86-64 与 aarch64、Linux、macOS、Windows 与 `wasm32-emscripten` 上不变地构建。
+  该配置生成的 `vpx_config.h`、`vpx_config.c`、`vpx_version.h` 与三个 RTCD 头(`vp9_rtcd.h`、`vpx_dsp_rtcd.h`、
+  `vpx_scale_rtcd.h`)作为 `generated_files` 原样提供(私有头目录),只有描述宿主操作系统的三行改由预处理器决定:
+  Windows 以外有 `pthread.h`、`unistd.h`(Windows 上 `vpx_util/vpx_pthread.h` 用 Win32 实现工作线程),glibc 与 Apple
+  上有 `pthread_setname_np`;不带 pthreads 的 Emscripten 上 `CONFIG_MULTITHREAD` 为 0(单线程工作器依次执行各块)。
+  `-ffp-contract=off`。使用者 `#include <vpx/vpx_encoder.h>`、`<vpx/vp8cx.h>` 等(上游安装布局)。url 为上游标签归档
+  (暂无 CN 镜像);声明 `extensions.autoupdate`。新增测试成员 `tests/examples/libvpx`:版本与构建配置字符串、
+  一遍编码(好质量、恒定质量)解码回来的 PSNR、实时速度 8、无损逐像素还原、单线程两次编码字节相同、四线程分块编码
+  两线程解码。
+- **compat.libwebm 1.0.0.32(新包)。** libwebm:WebM 项目的 WebM(Matroska)容器库,复用器 mkvmuxer 与解析器 mkvparser
+  (BSD-3-Clause)。从 `libwebm-1.0.0.32` 标签归档构建上游 CMakeLists.txt 的 `webm` 目标:`common/file_util.cc`、
+  `common/hdr_util.cc` 与 mkvmuxer、mkvparser 的源文件(不含默认关闭的新解析器 `webm_parser/`、MPEG-TS 工具、WebVTT
+  与示例程序);无配置头、无生成文件。使用者 `#include <mkvmuxer/mkvmuxer.h>`、`<mkvparser/mkvparser.h>` 等。新增测试
+  成员 `tests/examples/libwebm`:写一个 VP9 与 Opus 两条轨道的 WebM(BT.709 有限范围的色彩、OpusHead、编码延迟、
+  关键帧、cues、时长)到内存与磁盘(逐字节相同),用 mkvparser 从内存与 MkvReader 读回每一帧的字节与时间;给定轨道
+  UID 时两次复用字节相同(不给时 mkvmuxer 按当前时间随机生成)。
 - **mcpplibs.mwrap.libwebp 1.5.0(新包)。** libwebp-m:以 C++23 模块(`import mcpplibs.mwrap.libwebp;`)使用
   compat.libwebp 1.5.0(BSD-3-Clause 与 Google 专利授权)。从固定版本的公开头文件生成,以 `export using` 导出:根模块
   `webp/types.h`、`decode.h`、`encode.h`、`mux_types.h` 的 23 个类型、59 个枚举值与 72 个函数,`mcpplibs.mwrap.libwebp.sharpyuv`

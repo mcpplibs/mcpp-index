@@ -184,6 +184,8 @@ members = [
     "tests/examples/pangocairo",
     "tests/examples/libgbm",
     "tests/examples/libpng",
+    "tests/examples/libvpx",
+    "tests/examples/libwebm",
     "tests/examples/libwebp",
     "tests/examples/llamacpp",
     "tests/examples/llamacpp-metal",
