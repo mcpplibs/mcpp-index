@@ -10,7 +10,7 @@ name    = "openkal-platform-tests"
 version = "0.1.0"
 
 [target.'cfg(any(linux, macos))']
-platform = "openkal-platform@0.18.0"
+platform = "openkal-platform@0.17.3"
 
 [indices]
 mcpplibs = { path = "../../.." }
