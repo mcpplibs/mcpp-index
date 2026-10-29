@@ -9,6 +9,10 @@
 
 ### Added
 
+- **openkal-musl 0.22.9、openkal-llvm-runtime 0.16.9。** openkal-musl 的 `pread`、`pwrite`、`preadv`、`pwritev`
+  由定位、传输与恢复位置组成(此前返回 `ENOSYS`);openkal-llvm-runtime 在 ok 映像上导出 `__cxa_thread_atexit`,
+  带析构的 `thread_local` 的映像可以封装。测试成员 `openkal`、`openkal-musl` 随之移动。GLOBAL 为 GitHub 标签归档,
+  CN 为 GitCode `mcpp-res` 镜像,sha256 两处一致。
 - **openkal-musl 0.22.8、openkal-llvm-runtime 0.16.8。** openkal-musl 钉 openkal-ld 0.1.4(本轮 openkal-image 归档);
   0.22.7 仍钉 0.1.3,与本轮平台的版本组不一致。openkal-llvm-runtime 随之移动。测试成员 `openkal`、`openkal-musl`
   随之移动。GLOBAL 为 GitHub 标签归档,CN 为 GitCode `mcpp-res` 镜像,sha256 两处一致。
