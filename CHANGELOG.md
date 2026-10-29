@@ -9,6 +9,16 @@
 
 ### Added
 
+- **mcpplibs.mwrap.libvpx 1.17.0(新包)。** libvpx-m:以 C++23 模块(`import mcpplibs.mwrap.libvpx;`)使用 VP9 编解码库
+  libvpx 1.17.0 与 WebM 容器库 libwebm 1.0.0.32(建立在 compat.libvpx 与 compat.libwebm 之上)。根模块导出 libvpx 头文件的
+  133 个类型、192 个枚举值、上游导出的 35 个函数与两个 VP9 接口(VP8 未构建,其接口不导出),头文件中 86 个类型化控制函数
+  (`VPX_CTRL_USE_TYPE` 生成的 static 函数)在 `mcpplibs::mwrap::libvpx` 中同名适配;`mcpplibs.mwrap.libvpx.webm` 在各自
+  命名空间导出 libwebm 的 mkvmuxer、mkvparser 与 libwebm(命名空间作用域常量为内部链接,其值在
+  `mcpplibs::mwrap::libvpx::mkvmuxer` / `::mkvparser` 下同名提供);`mcpplibs.mwrap.libvpx.macros` 把 74 个宏映射为常量、
+  函数与 constexpr 函数,其余(`vpx_codec_control` 等)留在 `<mwrap/libvpx/macros.hpp>`。描述符为 libvpx-m 的不可变
+  `mwrap-1.17.0` 发布包(暂无 CN 镜像)。新增使用者 `tests/mwrap/libvpx-webm`:经类型化控制编码 VP9、mkvmuxer 封装、
+  mkvparser 解析并解码(PSNR 下限)、两次封装字节相同,以及侧边头文件与 import 同时使用;validate.yml 新增已安装模板检查
+  (wrapper 的 LICENSE/NOTICE 与两个库的 README、LICENSE、PATENTS、AUTHORS 在搬迁后的发布包中逐字节一致)。
 - **compat.libvpx 1.17.0(新包)。** libvpx:WebM 项目的 VP9 视频编解码器(编码器与解码器;BSD-3-Clause,附 WebM 项目的
   免版税专利授权 PATENTS)。从 `v1.17.0` 标签归档构建上游 `configure --target=generic-gnu --disable-vp8 --enable-vp9
   --enable-multithread`(不含示例、工具、文档、单元测试、webm-io、libyuv)所编译的 101 个 C 源文件:通用 C 实现,无 SIMD、

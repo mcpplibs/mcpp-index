@@ -1663,6 +1663,11 @@ jobs:
         shell: bash
         run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.libwebp@1.5.0 --deploy
 
+      - name: Installed libvpx wrapper archive, actual default webm template and its relocated notices
+        if: contains(format(' {0} ', env.MEMBERS), ' libvpx-webm ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.libvpx@1.17.0 --deploy
+
       - name: Installed PocketPy wrapper archive, actual default script template and its relocated notices
         if: contains(format(' {0} ', env.MEMBERS), ' pocketpy-embed ') && matrix.toolchain == 'default'
         shell: bash
