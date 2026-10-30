@@ -9,6 +9,10 @@
 
 ### Added
 
+- **mcpplibs.os 0.2.4。** 按 openkal 0.18 的实现：openkal 0.18.0、openkal-linux 0.19.0、openkal-macos 0.16.0、
+  openkal-windows 0.14.0、openkal-emscripten 0.7.0。其上的 ok 映像选择 openkal-platform 0.19.0（mcpp 2026.10.31.2 的
+  openkal 行钉 0.18.0，其版本组为 openkal 0.17.1）。测试成员 `os` 随之移动。GLOBAL 为 GitHub 标签归档，CN 为 GitCode
+  `mcpp-res` 镜像，sha256 两处一致。
 - **openkal-emscripten 0.7.0。** 按 openkal 0.18.0 编写，提供的十二个接口不变；`openkal.map` 不提供（Emscripten 的文件
   `mmap` 是复制，无法满足共享区域的语义），链接时缺席。mcpplibs.os 0.2.4 的 `wasm32-emscripten` 由此解析；测试成员
   `openkal` 的 wasm32 行随之移动。GLOBAL 为 GitHub 标签归档，CN 为 GitCode `mcpp-res` 镜像，sha256 两处一致。
