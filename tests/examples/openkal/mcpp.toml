@@ -18,16 +18,16 @@ name    = "openkal-tests"
 version = "0.1.0"
 
 [dependencies.mcpplibs]
-openkal = "0.17.1"
+openkal = "0.18.0"
 
 [target.'cfg(os = "linux")'.dependencies.mcpplibs]
-openkal-linux = "0.18.3"
+openkal-linux = "0.19.0"
 
 [target.'cfg(os = "macos")'.dependencies.mcpplibs]
-openkal-macos = "0.15.1"
+openkal-macos = "0.16.0"
 
 [target.'cfg(windows)'.dependencies.mcpplibs]
-openkal-windows = "0.13.3"
+openkal-windows = "0.14.0"
 
 [target.'cfg(all(os = "linux", env = "musl"))'.dependencies.mcpplibs]
 openkal-llvm-runtime = "0.16.9"

@@ -9,6 +9,12 @@
 
 ### Added
 
+- **openkal 0.18.0、openkal-linux 0.19.0、openkal-macos 0.16.0、openkal-windows 0.14.0。** 新的可选接口
+  `openkal.map`(`KAL_IFACE_MAP`):`kal_map_file` 把文件的一部分映射到地址空间(偏移为 `KAL_MAP_ALIGNMENT`,即
+  64 KiB 的倍数;读或写、私有或共享),`kal_map_sync` 使共享区域的写入对文件读取可见,`kal_map_release` 按地址与长度
+  释放。区域不越过文件末尾、不可执行;末页中文件末尾之后的字节读为零。三个实现分别以 mmap、mmap 与 section/view
+  实现。测试成员 `openkal` 随之移动,并观察 0.18 的映射。GLOBAL 为 GitHub 标签归档,CN 为 GitCode `mcpp-res` 镜像,
+  sha256 两处一致。
 - **mcpplibs.os 0.2.3。** 钉 openkal-linux 0.18.3:目录句柄以 `O_PATH` 打开,进程可搜索而不可读的目录中按绝对名
   启动的程序能被找到(Android 应用沙箱,mcpp-community/mcpp#857)。测试成员 `os` 随之移动。GLOBAL 为 GitHub 标签归档,CN 为 GitCode
   `mcpp-res` 镜像,sha256 两处一致。
