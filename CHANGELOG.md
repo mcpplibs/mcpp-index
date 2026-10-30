@@ -9,6 +9,10 @@
 
 ### Added
 
+- **openkal-musl 0.23.0、openkal-llvm-runtime 0.16.10。** openkal-musl 的文件 `mmap`、`munmap`、`msync` 经
+  `openkal.map`(偏移按 `KAL_MAP_ALIGNMENT` 向下对齐,区域止于文件末尾);openkal-llvm-runtime 随之移动。测试成员
+  `openkal-musl` 观察映射的文件,`openkal` 移到 0.16.10。GLOBAL 为 GitHub 标签归档,CN 为 GitCode `mcpp-res` 镜像,
+  sha256 两处一致。
 - **openkal-ld、openkal-run、openkal-tools、openkal-bind 0.1.5。** okrun 以 `openkal.map`(私有、可写)映射它运行的映像
   或 okb,而不是整体读入内存,映像结束时释放;映像绑定 `openkal.map` 的三个函数。四个成员钉 openkal 0.18.0、
   openkal-linux 0.19.0、openkal-macos 0.16.0、openkal-windows 0.14.0。测试成员 `openkal-tools`、`openkal-bind`

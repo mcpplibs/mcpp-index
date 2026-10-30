@@ -75,6 +75,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.16.10"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.16.10.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-llvm-runtime/releases/download/0.16.10/openkal-llvm-runtime-0.16.10.tar.gz",
+                },
+                sha256 = "6f23060d3956c19986ee18a72034017b3f918dbe8c5fe4011b8fad8a3a7b00ba",
+            },
             ["0.16.9"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.16.9.tar.gz",
@@ -371,6 +378,13 @@ package = {
             },
         },
         macosx = {
+            ["0.16.10"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.16.10.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-llvm-runtime/releases/download/0.16.10/openkal-llvm-runtime-0.16.10.tar.gz",
+                },
+                sha256 = "6f23060d3956c19986ee18a72034017b3f918dbe8c5fe4011b8fad8a3a7b00ba",
+            },
             ["0.16.9"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.16.9.tar.gz",
@@ -667,6 +681,13 @@ package = {
             },
         },
         windows = {
+            ["0.16.10"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.16.10.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-llvm-runtime/releases/download/0.16.10/openkal-llvm-runtime-0.16.10.tar.gz",
+                },
+                sha256 = "6f23060d3956c19986ee18a72034017b3f918dbe8c5fe4011b8fad8a3a7b00ba",
+            },
             ["0.16.9"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.16.9.tar.gz",
