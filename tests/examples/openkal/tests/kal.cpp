@@ -5,12 +5,14 @@
 // size and has the room; a closed directory's enumeration is refused; and
 // (0.17) the system is named, this program names itself with the moment it
 // started, and a rename that does not replace refuses a name that is taken;
-// (0.17.1) a joined command line is refused where programs receive vectors.
+// (0.17.1) a joined command line is refused where programs receive vectors;
+// (0.18) a file is mapped, the region holds its bytes and zero after its end.
 // The terminal is not observed here,
 // because a test run has none; the implementations observe it on a terminal
 // they make.
 #include <openkal/env.h>
 #include <openkal/fs.h>
+#include <openkal/map.h>
 #include <openkal/process.h>
 #include <openkal/stream.h>
 #include <openkal/task.h>
@@ -44,6 +46,7 @@ void room(void* p) {
 int main() {
     check(KAL_VERSION_MINOR >= 17u || KAL_VERSION_MAJOR > 0u, "the declarations are openkal 0.17 or later");
     check(KAL_VERSION_MINOR > 17u || KAL_VERSION_PATCH >= 1u || KAL_VERSION_MAJOR > 0u, "and 0.17.1 or later");
+    check(KAL_VERSION_MINOR >= 18u || KAL_VERSION_MAJOR > 0u, "and 0.18 or later");
     check(kal_version() >= KAL_VERSION, "the implementation is at least as new as the declarations");
 
     probe q{0, 0};
@@ -100,6 +103,22 @@ int main() {
         check(kal_process_spawn(&how, "x", 1, argv, lens, 1, nullptr, nullptr, 0, nullptr, &p)
                   == kal_err_not_supported,
               "a joined command line is refused where programs receive vectors");
+    }
+
+    if (root.h && (kal_interfaces() & KAL_IFACE_MAP) != 0) {
+        kal_file f{};
+        if (kal_fs_open(root, "okt.m", 5, KAL_OPEN_READ | KAL_OPEN_WRITE | KAL_OPEN_CREATE | KAL_OPEN_TRUNCATE, &f) == kal_ok) {
+            kal_stream_write(kal_fs_stream(f), "mapped", 6);
+            void* region = nullptr;
+            check(kal_map_file(f, 0, 6, 0, &region) == kal_ok, "a file is mapped");
+            if (region) {
+                const volatile char* b = static_cast<const char*>(region);
+                check(b[0] == 'm' && b[5] == 'd' && b[6] == 0, "the region holds the file's bytes and zero after its end");
+                kal_map_release(region, 6);
+            }
+            kal_fs_close_file(f);
+        }
+        kal_fs_remove(root, "okt.m", 5);
     }
 
     if (failures == 0) kal_stream_write(kal_stdout(), "openkal: held\n", 14);
