@@ -440,7 +440,10 @@ env:
   # ok-image rows take openkal-platform with no declaration, the
   # tests/examples/openkal-platform member's hosted arrangement -- and
   # packaging along three axes (SPEC-014); mcpp.plugins 0.20.0's floor.
-  MCPP_VERSION: "2026.10.27.1"
+  #
+  # 2026.10.31.1 (mcpp-community/mcpp#869): `features` in the machine output,
+  # and the floor openkal-platform states since 0.18.0 (2026.10.30.1).
+  MCPP_VERSION: "2026.10.31.1"
 
 jobs:
   lint:
