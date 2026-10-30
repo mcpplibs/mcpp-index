@@ -1,6 +1,6 @@
 /* The reporters' programs, above openkal-musl. Elsewhere this compiles to a
  * main() that reports nothing, because the member names the port for Linux
- * alone. */
+ * alone. And (0.23) a file mapped with mmap. */
 #ifndef HAVE_OPENKAL_MUSL
 int main(void) { return 0; }
 #else
@@ -10,6 +10,7 @@ int main(void) { return 0; }
 #include <fcntl.h>
 #include <pthread.h>
 #include <stdio.h>
+#include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -45,6 +46,18 @@ int main(void) {
     static char region[1 << 20];
     pthread_attr_setstack(&attr, region, sizeof region);
     check(pthread_create(&t, &attr, body, &depth) == EINVAL, "a stack the caller supplies is refused");
+    /* 0.23: mmap of a file is openkal.map's; the bytes after the end in the last page are zero. */
+    int fd = open("okm.map", O_RDWR | O_CREAT | O_TRUNC, 0644);
+    if (fd >= 0 && write(fd, "mapped", 6) == 6) {
+        const char* p = (const char*)mmap(NULL, 6, PROT_READ, MAP_PRIVATE, fd, 0);
+        check(p != MAP_FAILED, "a file is mapped");
+        if (p != MAP_FAILED) {
+            check(p[0] == 'm' && p[5] == 'd' && p[6] == 0, "the region holds the file's bytes and zero after its end");
+            check(munmap((void*)p, 6) == 0, "the region is released");
+        }
+    }
+    if (fd >= 0) close(fd);
+    unlink("okm.map");
     return failures != 0;
 }
 #endif
