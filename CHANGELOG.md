@@ -9,6 +9,10 @@
 
 ### Added
 
+- **openkal-ld、openkal-run、openkal-tools、openkal-bind 0.1.5。** okrun 以 `openkal.map`(私有、可写)映射它运行的映像
+  或 okb,而不是整体读入内存,映像结束时释放;映像绑定 `openkal.map` 的三个函数。四个成员钉 openkal 0.18.0、
+  openkal-linux 0.19.0、openkal-macos 0.16.0、openkal-windows 0.14.0。测试成员 `openkal-tools`、`openkal-bind`
+  随之移动。GLOBAL 为 GitHub 标签归档,CN 为 GitCode `mcpp-res` 镜像,sha256 两处一致。
 - **openkal 0.18.0、openkal-linux 0.19.0、openkal-macos 0.16.0、openkal-windows 0.14.0。** 新的可选接口
   `openkal.map`(`KAL_IFACE_MAP`):`kal_map_file` 把文件的一部分映射到地址空间(偏移为 `KAL_MAP_ALIGNMENT`,即
   64 KiB 的倍数;读或写、私有或共享),`kal_map_sync` 使共享区域的写入对文件读取可见,`kal_map_release` 按地址与长度
