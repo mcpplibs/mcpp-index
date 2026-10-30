@@ -33,7 +33,7 @@ openkal-windows = "0.14.0"
 openkal-llvm-runtime = "0.16.10"
 
 [target.'cfg(arch = "wasm32")'.dependencies.mcpplibs]
-openkal-emscripten = "0.6.0"
+openkal-emscripten = "0.7.0"
 
 [target.'cfg(arch = "riscv64")'.dependencies.mcpplibs]
 openkal-opensbi = "0.8.3"
