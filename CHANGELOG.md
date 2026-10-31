@@ -9,6 +9,9 @@
 
 ### Added
 
+- **openkal-platform 0.20.1。** openkal-macos 0.17.1、openkal-musl 0.24.1、openkal-llvm-runtime 0.16.14、
+  openkal-ld/run/tools 0.1.9：macOS 上上下文的标识不再每次进入内核。GLOBAL 为 GitHub 标签归档，CN 为 GitCode `mcpp-res`
+  镜像，sha256 两处一致。
 - **openkal-ld/run/tools/bind 0.1.9；openkal-musl 0.24.1；openkal-llvm-runtime 0.16.14。** openkal-macos 0.17.1 的一轮：
   macOS 上的 okrun 与 openkal-musl 建在它之上，上下文的标识不再每次进入内核；格式与加载器不变。测试成员 `openkal`、
   `openkal-musl`、`openkal-tools`、`openkal-bind` 随之移动。GLOBAL 为 GitHub 标签归档，CN 为 GitCode `mcpp-res` 镜像，
