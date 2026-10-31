@@ -6,7 +6,9 @@
 // (0.17) the system is named, this program names itself with the moment it
 // started, and a rename that does not replace refuses a name that is taken;
 // (0.17.1) a joined command line is refused where programs receive vectors;
-// (0.18) a file is mapped, the region holds its bytes and zero after its end.
+// (0.18) a file is mapped, the region holds its bytes and zero after its end;
+// (0.19) the cores are no more than the processors, and a started context
+// lowers its claim on the processors where the implementation claims it.
 // The terminal is not observed here,
 // because a test run has none; the implementations observe it on a terminal
 // they make.
@@ -34,6 +36,9 @@ long (*volatile g_recurse)(long) = recurse;
 long recurse(long n) { volatile char pad[1000]; pad[0] = static_cast<char>(n); return n ? g_recurse(n - 1) + pad[0] : 0; }
 
 struct probe { kal_uintptr told; volatile int done; };
+
+int g_claim = -1;
+void lowers(void*) { g_claim = kal_task_set_priority(KAL_TASK_PRIORITY_BACKGROUND); }
 void room(void* p) {
     auto* q = static_cast<probe*>(p);
     void* base = nullptr; kal_uintptr size = 0;
@@ -119,6 +124,18 @@ int main() {
             kal_fs_close_file(f);
         }
         kal_fs_remove(root, "okt.m", 5);
+    }
+
+    {
+        const kal_uintptr cores = kal_task_cores(), processors = kal_task_parallelism();
+        check(processors == 0 || cores <= processors, "the cores are no more than the processors");
+        kal_task t{};
+        if (kal_task_start(lowers, nullptr, &t) == kal_ok) {
+            kal_task_join(t);
+            const bool claims = (kal_task_props() & KAL_TASK_PROP_PRIORITY) != 0;
+            check(claims ? g_claim == kal_ok : g_claim == kal_err_not_supported,
+                  "a started context lowers its claim to background, or is told the implementation has none");
+        }
     }
 
     if (failures == 0) kal_stream_write(kal_stdout(), "openkal: held\n", 14);
