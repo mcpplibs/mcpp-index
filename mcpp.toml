@@ -17,6 +17,7 @@ members = [
     "tests/mwrap/ffmpeg-cpu",
     "tests/mwrap/imgui-headless",
     "tests/mwrap/md4c-render",
+    "tests/mwrap/accesskit-tree",
     "tests/mwrap/lua-embed",
     "tests/mwrap/quickjs-embed",
     "tests/mwrap/pocketpy-embed",

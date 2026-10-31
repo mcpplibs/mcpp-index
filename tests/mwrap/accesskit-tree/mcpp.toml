@@ -1,0 +1,11 @@
+[package]
+name = "accesskit-tree"
+version = "0.23.1"
+description = "Consume the immutable accesskit wrapper: build a tree update through the module and read it back"
+
+[indices]
+# Use the complete candidate built-in index prepared by tests/run_members.sh.
+# An explicit empty table overrides the legacy workspace redirect.
+
+[dependencies]
+"mcpplibs.mwrap.accesskit" = "0.23.1"
