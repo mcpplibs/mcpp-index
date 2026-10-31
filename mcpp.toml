@@ -41,6 +41,7 @@ members = [
     "tests/examples/abseil",
     "tests/examples/archive",
     "tests/examples/argparse",
+    "tests/examples/accesskit",
     "tests/examples/asio-module",
     "tests/examples/asio-ssl",
     "tests/examples/boost-asio",
