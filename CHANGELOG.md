@@ -9,6 +9,10 @@
 
 ### Added
 
+- **openkal-ld/run/tools/bind 0.1.9；openkal-musl 0.24.1；openkal-llvm-runtime 0.16.14。** openkal-macos 0.17.1 的一轮：
+  macOS 上的 okrun 与 openkal-musl 建在它之上，上下文的标识不再每次进入内核；格式与加载器不变。测试成员 `openkal`、
+  `openkal-musl`、`openkal-tools`、`openkal-bind` 随之移动。GLOBAL 为 GitHub 标签归档，CN 为 GitCode `mcpp-res` 镜像，
+  sha256 两处一致。
 - **openkal-macos 0.17.1。** `kal_task_current` 从系统库为每个线程保存的记录读取线程的内核标识（`pthread_threadid_np`），
   不再每次调用都进入内核；值不变。openkal-musl 经它取得 `errno`、线程指针与 ok 映像的每个（模拟的）线程局部变量，一次
   `clangd --check` 调用约 158 万次。GLOBAL 为 GitHub 标签归档，CN 为 GitCode `mcpp-res` 镜像，sha256 两处一致。
