@@ -9,6 +9,9 @@
 
 ### Added
 
+- **mcpplibs.os 0.2.5。** openkal 0.19 的实现（openkal-linux 0.20.0、openkal-macos 0.17.0、openkal-windows 0.15.0、
+  openkal-emscripten 0.8.0）；接口不变。其上的 ok 映像选 openkal-platform 0.20.0。测试成员 `os` 随之移动。GLOBAL 为
+  GitHub 标签归档，CN 为 GitCode `mcpp-res` 镜像，sha256 两处一致。
 - **openkal-platform 0.20.0。** openkal 0.19 的版本组：openkal 0.19.0、openkal-linux 0.20.0、openkal-macos 0.17.0、
   openkal-windows 0.15.0、openkal-musl 0.24.0、openkal-llvm-runtime 0.16.13、openkal-ld/run/tools 0.1.8。GLOBAL 为 GitHub
   标签归档，CN 为 GitCode `mcpp-res` 镜像，sha256 两处一致。

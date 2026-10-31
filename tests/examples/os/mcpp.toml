@@ -7,7 +7,7 @@ name    = "os-tests"
 version = "0.1.0"
 
 [dependencies.mcpplibs]
-os = "0.2.4"
+os = "0.2.5"
 
 [indices]
 mcpplibs = { path = "../../.." }
