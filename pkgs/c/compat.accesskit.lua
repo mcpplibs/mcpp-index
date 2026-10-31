@@ -27,6 +27,16 @@ package = {
     repo        = "https://github.com/AccessKit/accesskit-c",
     type        = "package",
 
+    -- A new release is found and fetched by the updater; the library paths
+    -- below name the archive's versioned wrap layer, so its candidate build
+    -- says when they need the new version too.
+    extensions = {
+        autoupdate = {
+            tag = "${version}",
+            url = "https://github.com/AccessKit/accesskit-c/releases/download/${tag}/accesskit-c-${version}.zip",
+        },
+    },
+
     xpm = {
         linux = {
             ["0.23.1"] = {
