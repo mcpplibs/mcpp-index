@@ -9,6 +9,9 @@
 
 ### Added
 
+- **openkal-platform 0.19.2。** openkal 0.18 的版本组，openkal-ld/run/tools 0.1.7、openkal-musl 0.23.2、
+  openkal-llvm-runtime 0.16.12：Linux aarch64 上 okrun 在处理器表明有 SHA-256 指令时以其接纳映像。openkal 0.18.0 与三个
+  实现不变。GLOBAL 为 GitHub 标签归档，CN 为 GitCode `mcpp-res` 镜像，sha256 两处一致。
 - **openkal-ld、openkal-run、openkal-tools、openkal-bind 0.1.7；openkal-musl 0.23.2；openkal-llvm-runtime 0.16.12。**
   Linux aarch64 上，加载器在处理器的 `ID_AA64ISAR0_EL1` 表明有 SHA-256 指令时以其求摘要（Linux 自 4.11 起模拟对标识
   寄存器的 `mrs`，先以 `uname` 读内核版本）；0.1.6 只在编译目标保证这些指令时使用（Apple arm64）。openkal-musl 钉
