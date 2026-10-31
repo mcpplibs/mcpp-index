@@ -9,6 +9,12 @@
 
 ### Added
 
+- **openkal-ld、openkal-run、openkal-tools、openkal-bind 0.1.6；openkal-musl 0.23.1；openkal-llvm-runtime 0.16.11。**
+  okrun 在映像装入后释放它运行的文件，并在加载器交回时释放每个被依赖映像的文件：映像只以其副本常驻，不再同时以文件常驻
+  （clangd.okb 约少 68 MiB）。加载器不保留指向所装入字节的指针（okld.h），以处理器的 SHA-256 指令求摘要（x86_64 的 SHA
+  扩展；`__ARM_FEATURE_SHA2` 下的 ARMv8 指令），每个段只写一次。openkal-musl 钉 openkal-ld 0.1.6，openkal-llvm-runtime
+  随之移动，二者源码不变。测试成员 `openkal`、`openkal-musl`、`openkal-tools`、`openkal-bind` 随之移动。GLOBAL 为
+  GitHub 标签归档，CN 为 GitCode `mcpp-res` 镜像，sha256 两处一致。
 - **mcpplibs.os 0.2.4。** 按 openkal 0.18 的实现：openkal 0.18.0、openkal-linux 0.19.0、openkal-macos 0.16.0、
   openkal-windows 0.14.0、openkal-emscripten 0.7.0。其上的 ok 映像选择 openkal-platform 0.19.0（mcpp 2026.10.31.2 的
   openkal 行钉 0.18.0，其版本组为 openkal 0.17.1）。测试成员 `os` 随之移动。GLOBAL 为 GitHub 标签归档，CN 为 GitCode
