@@ -9,6 +9,9 @@
 
 ### Added
 
+- **openkal-macos 0.17.1。** `kal_task_current` 从系统库为每个线程保存的记录读取线程的内核标识（`pthread_threadid_np`），
+  不再每次调用都进入内核；值不变。openkal-musl 经它取得 `errno`、线程指针与 ok 映像的每个（模拟的）线程局部变量，一次
+  `clangd --check` 调用约 158 万次。GLOBAL 为 GitHub 标签归档，CN 为 GitCode `mcpp-res` 镜像，sha256 两处一致。
 - **mcpplibs.os 0.2.5。** openkal 0.19 的实现（openkal-linux 0.20.0、openkal-macos 0.17.0、openkal-windows 0.15.0、
   openkal-emscripten 0.8.0）；接口不变。其上的 ok 映像选 openkal-platform 0.20.0。测试成员 `os` 随之移动。GLOBAL 为
   GitHub 标签归档，CN 为 GitCode `mcpp-res` 镜像，sha256 两处一致。
