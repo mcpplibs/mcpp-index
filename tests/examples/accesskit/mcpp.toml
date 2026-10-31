@@ -1,0 +1,9 @@
+# compat.accesskit test project: a tree built and handed to AccessKit, and on
+# Linux an AT-SPI adapter made and given the tree. `compat` redirect inherited
+# from the workspace root.
+[package]
+name = "accesskit-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+accesskit = "0.23.1"
