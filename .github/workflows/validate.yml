@@ -1616,6 +1616,11 @@ jobs:
         shell: bash
         run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.md4c@0.5.3
 
+      - name: Installed accesskit wrapper archive and actual default tree template
+        if: contains(format(' {0} ', env.MEMBERS), ' accesskit-tree ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.accesskit@0.23.1
+
       - name: Installed Lua wrapper archive and actual default script template
         if: contains(format(' {0} ', env.MEMBERS), ' lua-embed ') && matrix.toolchain == 'default'
         shell: bash
