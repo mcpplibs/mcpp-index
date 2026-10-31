@@ -9,6 +9,13 @@
 
 ### Added
 
+- **openkal 0.19.0；openkal-linux 0.20.0、openkal-macos 0.17.0、openkal-windows 0.15.0、openkal-emscripten 0.8.0。**
+  `openkal.task` 增加两项：`kal_task_cores`（程序可运行于其上的处理器的物理核数，0 为无法回答）与
+  `kal_task_set_priority`（调用者所在上下文对处理器的占用：DEFAULT、LOW、BACKGROUND，属性位 `KAL_TASK_PROP_PRIORITY`，
+  升回被拒绝为 `kal_err_permission`）；规范 §1.1 写明边界：下层的东西不向上穿透，实现之间只在规范留名的余地内不同，绕过
+  openkal 的使用者绑定它所绕到的东西。各实现：Linux 以 sysfs 拓扑与 SCHED_OTHER/BATCH/IDLE，macOS 以 `hw.physicalcpu`
+  与 QoS 类，Windows 以处理器核心关系与后台模式，Emscripten 两者都答"无法回答／不支持"。测试成员 `openkal` 随之移动，
+  并观察 0.19 的两项。GLOBAL 为 GitHub 标签归档，CN 为 GitCode `mcpp-res` 镜像，sha256 两处一致。
 - **openkal-platform 0.19.2。** openkal 0.18 的版本组，openkal-ld/run/tools 0.1.7、openkal-musl 0.23.2、
   openkal-llvm-runtime 0.16.12：Linux aarch64 上 okrun 在处理器表明有 SHA-256 指令时以其接纳映像。openkal 0.18.0 与三个
   实现不变。GLOBAL 为 GitHub 标签归档，CN 为 GitCode `mcpp-res` 镜像，sha256 两处一致。
