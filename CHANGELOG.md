@@ -9,6 +9,10 @@
 
 ### Added
 
+- **openkal-platform 0.19.1。** openkal 0.18 的版本组，openkal-ld/run/tools 0.1.6、openkal-musl 0.23.1、
+  openkal-llvm-runtime 0.16.11：okrun 在映像装入后释放它运行的文件，加载器以处理器的 SHA-256 指令求摘要、每个段只写
+  一次。openkal 0.18.0 与三个实现不变。其 CI 以 mcpp 2026.10.31.3 测量（集合的 Windows 启动器建在 mcpp 自身 openkal
+  行的平台上）。GLOBAL 为 GitHub 标签归档，CN 为 GitCode `mcpp-res` 镜像，sha256 两处一致。
 - **openkal-ld、openkal-run、openkal-tools、openkal-bind 0.1.6；openkal-musl 0.23.1；openkal-llvm-runtime 0.16.11。**
   okrun 在映像装入后释放它运行的文件，并在加载器交回时释放每个被依赖映像的文件：映像只以其副本常驻，不再同时以文件常驻
   （clangd.okb 约少 68 MiB）。加载器不保留指向所装入字节的指针（okld.h），以处理器的 SHA-256 指令求摘要（x86_64 的 SHA
