@@ -9,6 +9,9 @@
 
 ### Added
 
+- **openkal-platform 0.20.0。** openkal 0.19 的版本组：openkal 0.19.0、openkal-linux 0.20.0、openkal-macos 0.17.0、
+  openkal-windows 0.15.0、openkal-musl 0.24.0、openkal-llvm-runtime 0.16.13、openkal-ld/run/tools 0.1.8。GLOBAL 为 GitHub
+  标签归档，CN 为 GitCode `mcpp-res` 镜像，sha256 两处一致。
 - **openkal-ld/run/tools/bind 0.1.8；openkal-musl 0.24.0；openkal-llvm-runtime 0.16.13。** openkal 0.19 的一轮：
   okb 为每个映像成员记录 1 MiB 分块的 SHA-256（`files.<member>.chunks`），okrun 在多个上下文上同时校验各块，`okld bundle`
   写入、`okld bundle check` 两种摘要都校验；openkal-musl 的 `getpid` 为环境给出的标识，`kill(pid, 0)`、`getsid`、`getpgid`
