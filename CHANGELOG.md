@@ -9,6 +9,11 @@
 
 ### Added
 
+- **openkal-ld、openkal-run、openkal-tools、openkal-bind 0.1.7；openkal-musl 0.23.2；openkal-llvm-runtime 0.16.12。**
+  Linux aarch64 上，加载器在处理器的 `ID_AA64ISAR0_EL1` 表明有 SHA-256 指令时以其求摘要（Linux 自 4.11 起模拟对标识
+  寄存器的 `mrs`，先以 `uname` 读内核版本）；0.1.6 只在编译目标保证这些指令时使用（Apple arm64）。openkal-musl 钉
+  openkal-ld 0.1.7，openkal-llvm-runtime 随之移动，二者源码不变。测试成员 `openkal`、`openkal-musl`、`openkal-tools`、
+  `openkal-bind` 随之移动。GLOBAL 为 GitHub 标签归档，CN 为 GitCode `mcpp-res` 镜像，sha256 两处一致。
 - **openkal-platform 0.19.1。** openkal 0.18 的版本组，openkal-ld/run/tools 0.1.6、openkal-musl 0.23.1、
   openkal-llvm-runtime 0.16.11：okrun 在映像装入后释放它运行的文件，加载器以处理器的 SHA-256 指令求摘要、每个段只写
   一次。openkal 0.18.0 与三个实现不变。其 CI 以 mcpp 2026.10.31.3 测量（集合的 Windows 启动器建在 mcpp 自身 openkal

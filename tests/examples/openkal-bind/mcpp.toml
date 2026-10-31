@@ -17,11 +17,11 @@ sources      = []
 include_dirs = ["include"]
 
 [dependencies.mcpplibs]
-openkal-run = "0.1.6"
+openkal-run = "0.1.7"
 
 [build-dependencies.mcpplibs]
-openkal-bind  = "0.1.6"
-openkal-tools = { version = "0.1.6", tools = ["okld"] }
+openkal-bind  = "0.1.7"
+openkal-tools = { version = "0.1.7", tools = ["okld"] }
 
 [xlings.workspace]
 "xim:llvm" = "23.1.3"
