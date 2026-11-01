@@ -9,7 +9,7 @@ name    = "openkal-tools-tests"
 version = "0.1.0"
 
 [build-dependencies.mcpplibs]
-openkal-tools = { version = "0.1.9", tools = ["okld", "okrun"] }
+openkal-tools = { version = "0.2.0", tools = ["okld", "okrun"] }
 
 [indices]
 mcpplibs = { path = "../../.." }

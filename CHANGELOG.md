@@ -15,6 +15,10 @@
 
 ### Added
 
+- **openkal-ld/run/tools/bind 0.2.0。** openkal 0.20 的一轮：运行器提供加载器接口 `openkal.prof` 与 `openkal.debug`，
+  `okrun --prof=`（`OKRUN_PROF`）度量一个映像的调用、计数器与阶段，`okprof`（openkal-tools）记录、汇总与比较报告；
+  `kal_debug_symbolize` 由映像文件的符号表给出地址的名字；okb 的准入按用户记住，同一文件的后续启动不再重读整个 okb。测试成员
+  `openkal-tools`、`openkal-bind` 随之移动。GLOBAL 为 GitHub 标签归档，CN 为 GitCode `mcpp-res` 镜像，sha256 两处一致。
 - **openkal 0.20.0；openkal-linux 0.21.0、openkal-macos 0.18.0、openkal-windows 0.16.0、openkal-emscripten 0.9.0。** 按偏移的传输
   （`kal_fs_read_at`／`kal_fs_write_at`，不用也不改位置）；程序与单元的内存用量（`KAL_PINFO_MEMORY`、`kal_process_job_usage`）与
   单元的内存限额（`kal_process_job_limit`，HARD／SUPERVISED）；可选接口 `openkal.region`（保留、分段提交、归还与丢弃、整体释放）；
