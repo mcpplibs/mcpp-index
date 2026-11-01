@@ -9,6 +9,11 @@
 
 ### Added
 
+- **compat.mimalloc 3.6.1。** 与 3.4.5 并存；同一份源文件列表同时写出两个版本的目录布局（3.6.1 分为 `alloc/`、`arena/`、
+  `heap/`、`prim/`、`profile/`、`util/` 七个目录，新增 `profile/` 三个单元），列表中某版本没有的名字在该版本下不选中任何文件。
+  按 c11 编译时补上 `_DEFAULT_SOURCE`（上游以 gnu11 编译；3.6.1 的 `prim/prim.c` 在 `prim/unix/prim.c` 声明它之前已包含头文件）。
+  测试成员 `mimalloc` 随之移动。openkal-musl 0.26 将它嵌入为默认分配器。GLOBAL 为 GitHub 标签归档，CN 为 GitCode `mcpp-res`
+  镜像，sha256 两处一致。
 - **openkal-platform 0.20.2。** openkal-musl 0.25.0、openkal-llvm-runtime 0.16.15：线程一起分配，`memcmp` 与 `strlen` 按字或向量。
   GLOBAL 为 GitHub 标签归档，CN 为 GitCode `mcpp-res` 镜像，sha256 两处一致。
 - **openkal-musl 0.25.0；openkal-llvm-runtime 0.16.15。** 有第二个线程后，每个线程保留它释放的小尺寸类槽（≤ 2032 B），

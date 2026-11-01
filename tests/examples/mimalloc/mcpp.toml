@@ -4,11 +4,11 @@
 # Resolves compat.mimalloc from this repo's own index via the inherited
 # workspace-root `[indices]`. The dependency is spelled QUALIFIED for the same
 # reason every other member does it: the redirect is keyed by the REQUEST's
-# namespace, so a bare `mimalloc = "3.4.5"` would resolve from the published
+# namespace, so a bare `mimalloc = "3.6.1"` would resolve from the published
 # remote index and quietly stop testing this checkout.
 [package]
 name = "mimalloc-tests"
 version = "0.1.0"
 
 [dependencies.compat]
-mimalloc = "3.4.5"
+mimalloc = "3.6.1"
