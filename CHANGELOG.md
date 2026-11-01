@@ -9,6 +9,10 @@
 
 ### Added
 
+- **openkal-musl 0.25.0；openkal-llvm-runtime 0.16.15。** 有第二个线程后，每个线程保留它释放的小尺寸类槽（≤ 2032 B），
+  不经 mallocng 的锁取回：ok 映像中一次 malloc+free 在 1／2／4 线程下由 38.5／194／521 ns 降为 31／41／61 ns；`memcmp`
+  每次比较 8 字节，`strlen` 每次 16 字节（x86_64 上 SSE2，其余按字）。单线程程序的行为不变。测试成员 `openkal`、
+  `openkal-musl` 随之移动。GLOBAL 为 GitHub 标签归档，CN 为 GitCode `mcpp-res` 镜像，sha256 两处一致。
 - **mcpplibs.os 0.2.6。** openkal-macos 0.17.1；接口不变。其上的 ok 映像选 openkal-platform 0.20.1。测试成员 `os` 随之移动。
   GLOBAL 为 GitHub 标签归档，CN 为 GitCode `mcpp-res` 镜像，sha256 两处一致。
 - **openkal-platform 0.20.1。** openkal-macos 0.17.1、openkal-musl 0.24.1、openkal-llvm-runtime 0.16.14、

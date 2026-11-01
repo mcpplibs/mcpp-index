@@ -75,6 +75,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.16.15"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.16.15.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-llvm-runtime/releases/download/0.16.15/openkal-llvm-runtime-0.16.15.tar.gz",
+                },
+                sha256 = "4a076037ca048fcf006336a67e9f61b25743f024fb62c265a8c4ea5efa20f5aa",
+            },
             ["0.16.14"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.16.14.tar.gz",
@@ -406,6 +413,13 @@ package = {
             },
         },
         macosx = {
+            ["0.16.15"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.16.15.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-llvm-runtime/releases/download/0.16.15/openkal-llvm-runtime-0.16.15.tar.gz",
+                },
+                sha256 = "4a076037ca048fcf006336a67e9f61b25743f024fb62c265a8c4ea5efa20f5aa",
+            },
             ["0.16.14"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.16.14.tar.gz",
@@ -737,6 +751,13 @@ package = {
             },
         },
         windows = {
+            ["0.16.15"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.16.15.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-llvm-runtime/releases/download/0.16.15/openkal-llvm-runtime-0.16.15.tar.gz",
+                },
+                sha256 = "4a076037ca048fcf006336a67e9f61b25743f024fb62c265a8c4ea5efa20f5aa",
+            },
             ["0.16.14"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.16.14.tar.gz",
