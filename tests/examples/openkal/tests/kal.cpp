@@ -8,14 +8,20 @@
 // (0.17.1) a joined command line is refused where programs receive vectors;
 // (0.18) a file is mapped, the region holds its bytes and zero after its end;
 // (0.19) the cores are no more than the processors, and a started context
-// lowers its claim on the processors where the implementation claims it.
+// lowers its claim on the processors where the implementation claims it;
+// (0.20) a transfer at an offset neither uses nor moves the file's position,
+// this program is told the memory it occupies and its peak, and a region is
+// reserved, backed, written, its backing returned and backed again reading
+// zero, and released.
 // The terminal is not observed here,
 // because a test run has none; the implementations observe it on a terminal
 // they make.
 #include <openkal/env.h>
 #include <openkal/fs.h>
 #include <openkal/map.h>
+#include <openkal/memory.h>
 #include <openkal/process.h>
+#include <openkal/region.h>
 #include <openkal/stream.h>
 #include <openkal/task.h>
 #include <openkal/version.h>
@@ -135,6 +141,49 @@ int main() {
             const bool claims = (kal_task_props() & KAL_TASK_PROP_PRIORITY) != 0;
             check(claims ? g_claim == kal_ok : g_claim == kal_err_not_supported,
                   "a started context lowers its claim to background, or is told the implementation has none");
+        }
+    }
+
+    if (kal_fs_preopen_count() > 0 && kal_fs_preopen(0, &root, nullptr, 0, nullptr) == kal_ok) {
+        kal_file f{};
+        if (kal_fs_open(root, "okt.p", 5, KAL_OPEN_READ | KAL_OPEN_WRITE | KAL_OPEN_CREATE | KAL_OPEN_TRUNCATE, &f) == kal_ok) {
+            kal_stream_write(kal_fs_stream(f), "abcdef", 6);
+            check(kal_fs_write_at(f, "XY", 2, 1) == 2, "a write at an offset writes the whole buffer");
+            kal_u64 at = 0;
+            check(kal_fs_seek(f, 0, KAL_SEEK_CURRENT, &at) == kal_ok && at == 6,
+                  "and leaves the position where it was");
+            char b[8] = {};
+            check(kal_fs_read_at(f, b, 6, 0) == 6 && b[0] == 'a' && b[1] == 'X' && b[2] == 'Y' && b[5] == 'f',
+                  "a read at an offset reads what is there");
+            check(kal_fs_read_at(f, b, 6, 6) == 0, "a read at the end reads nothing");
+            kal_fs_close_file(f);
+        }
+        kal_fs_remove(root, "okt.p", 5);
+    }
+
+    {
+        kal_process me{};
+        if (kal_process_self(&me) == kal_ok) {
+            kal_program_info info{};
+            info.self_size = sizeof info;
+            if (kal_process_info(me, KAL_PINFO_MEMORY, &info) == kal_ok && (info.present & KAL_PINFO_MEMORY))
+                check(info.memory_bytes > 0 && info.memory_peak_bytes >= info.memory_bytes,
+                      "this program is told the memory it occupies, and a peak no smaller");
+            kal_process_close(me);
+        }
+    }
+
+    if (kal_interfaces() & KAL_IFACE_REGION) {
+        const kal_uintptr g = kal_memory_granularity();
+        auto* r = static_cast<unsigned char*>(kal_region_reserve(4 * g, g, 0));
+        check(r != nullptr, "a region is reserved");
+        if (r) {
+            check(kal_region_commit(r, g) == kal_ok, "a part of it is backed");
+            r[0] = 7; r[g - 1] = 9;
+            check(kal_region_decommit(r, g) == kal_ok && kal_region_commit(r, g) == kal_ok,
+                  "its backing is returned and it is backed again");
+            check(r[0] == 0 && r[g - 1] == 0, "and it reads as zero");
+            kal_region_release(r, 4 * g);
         }
     }
 
