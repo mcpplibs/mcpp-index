@@ -154,11 +154,22 @@ package = {
         targets = { ["mimalloc"] = { kind = "lib" } },
         deps    = {},
         linux = {
-            -- CMakeLists.txt:618-626 -- pthread for thread state, rt for
-            -- clock_gettime/shm, atomic for the 64-bit atomics on targets
-            -- where libatomic is not folded into libgcc.
-            ldflags = { "-lpthread", "-lrt", "-latomic" },
+            -- CMakeLists.txt (3.6.1: 886-898) -- pthread for thread state, rt
+            -- for clock_gettime/shm.
+            --
+            -- NOT `-latomic`, which upstream links only where it finds the
+            -- library ("detected automatically"): mimalloc's atomics are
+            -- lock-free on every architecture this index builds for, and a
+            -- toolchain without the archive (the LLVM one, above a C library
+            -- of the graph) failed the link on its name alone.
+            ldflags = { "-lpthread", "-lrt" },
         },
+        -- AN OK IMAGE (openkal SPEC 12) NAMES NOTHING AT ITS LINK. Its C library
+        -- supplies threads and clocks, and an image imports `kal_*` alone; an
+        -- ok target otherwise reads the `linux` block, whose `-lpthread` and
+        -- `-lrt` name archives an image's link does not have. The key is
+        -- written out: a block with no key is read as no block.
+        openkal = { ldflags = {} },
         macosx = {
             ldflags = { "-lpthread" },
         },

@@ -7,6 +7,12 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- **compat.mimalloc：ok 映像不再链接 `-lpthread`、`-lrt`，Linux 不再链接 `-latomic`。** ok 映像（`<arch>-openkal`）原先读 `linux`
+  块，链接时找不到这两个归档；新增 `openkal` 块，不列链接参数。`-latomic` 上游只在找到时才链接，mimalloc 的原子操作在本索引
+  构建的各架构上都是无锁的，LLVM 工具链在图中 C 库之上没有这个归档。
+
 ### Added
 
 - **compat.mimalloc 3.6.1。** 与 3.4.5 并存；同一份源文件列表同时写出两个版本的目录布局（3.6.1 分为 `alloc/`、`arena/`、
