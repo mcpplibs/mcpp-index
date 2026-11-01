@@ -13,8 +13,11 @@
 --   src/free.c            is #included BY alloc.c (`#include "free.c"`, alloc.c:22),
 --   src/alloc-override.c   likewise (alloc.c:21). Neither is a standalone TU.
 --
--- The list below is upstream's own `mi_sources` (CMakeLists.txt:75-93), which is
--- the only authoritative answer to "which files are TUs".
+-- The list below is upstream's own `mi_sources` (CMakeLists.txt:75-93 in 3.4.5,
+-- 107-135 in 3.6.1), which is the only authoritative answer to "which files are
+-- TUs". The two releases lay the same library out differently, and one list
+-- names both layouts: a name that is not in a release's tree selects nothing
+-- there.
 --
 -- `src/prim/prim.c` is a dispatcher: it #includes the platform implementation
 -- (prim/unix, prim/windows, prim/osx, …) for the host it is compiled on, so one
@@ -43,6 +46,13 @@ package = {
                 },
                 sha256 = "19a43af0645c57d348e729d5b31e23e912582911bb1047f795790834d3416221",
             },
+            ["3.6.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/microsoft/mimalloc/archive/refs/tags/v3.6.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mimalloc/releases/download/3.6.1/mimalloc-3.6.1.tar.gz",
+                },
+                sha256 = "2672e6a99d4579fb4bb32d9de0d63aa424ce600d31fbfaf06eb74d940d2e07a6",
+            },
         },
         macosx = {
             ["3.4.5"] = {
@@ -51,6 +61,13 @@ package = {
                     CN     = "https://gitcode.com/mcpp-res/mimalloc/releases/download/3.4.5/mimalloc-3.4.5.tar.gz",
                 },
                 sha256 = "19a43af0645c57d348e729d5b31e23e912582911bb1047f795790834d3416221",
+            },
+            ["3.6.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/microsoft/mimalloc/archive/refs/tags/v3.6.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mimalloc/releases/download/3.6.1/mimalloc-3.6.1.tar.gz",
+                },
+                sha256 = "2672e6a99d4579fb4bb32d9de0d63aa424ce600d31fbfaf06eb74d940d2e07a6",
             },
         },
         windows = {
@@ -61,6 +78,13 @@ package = {
                 },
                 sha256 = "19a43af0645c57d348e729d5b31e23e912582911bb1047f795790834d3416221",
             },
+            ["3.6.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/microsoft/mimalloc/archive/refs/tags/v3.6.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mimalloc/releases/download/3.6.1/mimalloc-3.6.1.tar.gz",
+                },
+                sha256 = "2672e6a99d4579fb4bb32d9de0d63aa424ce600d31fbfaf06eb74d940d2e07a6",
+            },
         },
     },
 
@@ -69,7 +93,14 @@ package = {
         import_std   = false,
         c_standard   = "c11",
         include_dirs = { "*/include" },
+        -- Upstream builds as gnu11; this recipe builds as c11, under which a C
+        -- library declares nothing beyond ISO C unless asked. 3.6.1's
+        -- `prim/prim.c' includes headers before `prim/unix/prim.c' states
+        -- `_DEFAULT_SOURCE' for itself, so `syscall' and `madvise' arrive
+        -- undeclared; stating it for every unit is what gnu11 did.
+        cflags = { "-D_DEFAULT_SOURCE" },
         sources = {
+            -- 3.4.5: one directory.
             "*/src/alloc.c",
             "*/src/alloc-aligned.c",
             "*/src/alloc-posix.c",
@@ -87,6 +118,37 @@ package = {
             "*/src/stats.c",
             "*/src/theap.c",
             "*/src/threadlocal.c",
+            -- 3.6.1: the same library in seven directories, and three units
+            -- the earlier layout did not have (profile/). `alloc/free.c' and
+            -- `alloc/alloc-override.c' are included by `alloc/alloc.c', as
+            -- `free.c' was by `alloc.c'.
+            "*/src/prim/os.c",
+            "*/src/prim/prim-tls.c",
+            "*/src/util/libc.c",
+            "*/src/util/options.c",
+            "*/src/util/random.c",
+            "*/src/util/stats.c",
+            "*/src/util/threadlocal.c",
+            "*/src/arena/arena.c",
+            "*/src/arena/arena-alloc.c",
+            "*/src/arena/arena-page.c",
+            "*/src/arena/bitmap.c",
+            "*/src/arena/bitmap-chunk.c",
+            "*/src/alloc/alloc.c",
+            "*/src/alloc/alloc-generic.c",
+            "*/src/alloc/alloc-aligned.c",
+            "*/src/alloc/alloc-posix.c",
+            "*/src/alloc/page.c",
+            "*/src/alloc/page-queue.c",
+            "*/src/heap/heap.c",
+            "*/src/heap/process.c",
+            "*/src/heap/page-map.c",
+            "*/src/heap/subproc.c",
+            "*/src/heap/theap.c",
+            "*/src/profile/sample-guarded.c",
+            "*/src/profile/sample-profile.c",
+            "*/src/profile/pprof.c",
+            -- Both.
             "*/src/prim/prim.c",
         },
         targets = { ["mimalloc"] = { kind = "lib" } },
