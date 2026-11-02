@@ -15,6 +15,8 @@
 
 ### Added
 
+- **openkal-musl 0.26.1。** 映像的加载器为 openkal-ld 0.3.1（openkal-platform 0.21.1 的版本组），其余不变。测试成员
+  `openkal-musl` 随之移动。
 - **openkal-ld/run/tools/bind 0.3.1。** 记住的 okb 准入不再读取成员：okrun 对此前在同一文件上比对过的成员只按形状准入
   （`okld_okb_admit_layout`：存储方式、在归档内、对齐），0.2.0 与 0.3.0 在这里计算归档声明的 CRC-32，每次启动遍历整个成员
   （clangd 的 71 MB 映像约 0.1 s 处理器时间）。测试成员 `openkal-tools`、`openkal-bind` 随之移动。GLOBAL 为 GitHub 标签归档，
