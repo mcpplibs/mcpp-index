@@ -1,3 +1,10 @@
+local versions = {
+    ["0.18.0"] = {
+        url = "https://github.com/quickjs-ng/quickjs/archive/refs/tags/v0.18.0.tar.gz",
+        sha256 = "28bcd89aa3683fd2a946537e5ce3f11cc46b5cbf3383c7561aaef3df5ff9f1dd",
+    },
+}
+
 -- compat.quickjs-ng — QuickJS-ng, a small embeddable JavaScript engine.
 --
 -- Shape A (C-source compat): upstream's library target and nothing else. A
@@ -81,18 +88,21 @@ package = {
                 url    = "https://github.com/quickjs-ng/quickjs/archive/refs/tags/v0.17.0.tar.gz",
                 sha256 = "559bc4c420475e55c7ab4510adbc562f55d7524d75e8e89d79ce4bb02f5687d9",
             },
+            ["0.18.0"] = versions["0.18.0"],
         },
         macosx = {
             ["0.17.0"] = {
                 url    = "https://github.com/quickjs-ng/quickjs/archive/refs/tags/v0.17.0.tar.gz",
                 sha256 = "559bc4c420475e55c7ab4510adbc562f55d7524d75e8e89d79ce4bb02f5687d9",
             },
+            ["0.18.0"] = versions["0.18.0"],
         },
         windows = {
             ["0.17.0"] = {
                 url    = "https://github.com/quickjs-ng/quickjs/archive/refs/tags/v0.17.0.tar.gz",
                 sha256 = "559bc4c420475e55c7ab4510adbc562f55d7524d75e8e89d79ce4bb02f5687d9",
             },
+            ["0.18.0"] = versions["0.18.0"],
         },
     },
 
