@@ -12,11 +12,13 @@
 // (0.20) a transfer at an offset neither uses nor moves the file's position,
 // this program is told the memory it occupies and its peak, and a region is
 // reserved, backed, written, its backing returned and backed again reading
-// zero, and released.
+// zero, and released; (0.21) where the implementation states it, part of an
+// executable region is a file's bytes, read from where the file holds them.
 // The terminal is not observed here,
 // because a test run has none; the implementations observe it on a terminal
 // they make.
 #include <openkal/env.h>
+#include <openkal/exec.h>
 #include <openkal/fs.h>
 #include <openkal/map.h>
 #include <openkal/memory.h>
@@ -185,6 +187,27 @@ int main() {
             check(r[0] == 0 && r[g - 1] == 0, "and it reads as zero");
             kal_region_release(r, 4 * g);
         }
+    }
+
+    if ((kal_interfaces() & KAL_IFACE_EXEC) && (kal_exec_props() & KAL_EXEC_PROP_FILE)
+        && kal_fs_preopen_count() > 0 && kal_fs_preopen(0, &root, nullptr, 0, nullptr) == kal_ok) {
+        const kal_uintptr a = 65536;
+        kal_file f{};
+        if (kal_fs_open(root, "okt.x", 5, KAL_OPEN_READ | KAL_OPEN_WRITE | KAL_OPEN_CREATE | KAL_OPEN_TRUNCATE, &f) == kal_ok) {
+            static unsigned char block[65536];
+            for (kal_uintptr i = 0; i < a; ++i) block[i] = static_cast<unsigned char>(i * 7 + 1);
+            kal_stream_write(kal_fs_stream(f), block, a);
+            auto* r = static_cast<unsigned char*>(kal_exec_alloc(a));
+            check(r != nullptr && kal_exec_map_part(r, 0, a, f, 0, 0) == kal_ok,
+                  "part of an executable region is made a file's bytes");
+            kal_fs_close_file(f);
+            if (r) {
+                check(r[0] == 1 && r[a - 1] == static_cast<unsigned char>((a - 1) * 7 + 1),
+                      "and holds them after the file's handle is closed");
+                kal_exec_free(r, a);
+            }
+        }
+        kal_fs_remove(root, "okt.x", 5);
     }
 
     if (failures == 0) kal_stream_write(kal_stdout(), "openkal: held\n", 14);
