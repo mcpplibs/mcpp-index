@@ -1666,6 +1666,11 @@ jobs:
         shell: bash
         run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.box2d@3.2.0 --deploy
 
+      - name: Installed mimalloc wrapper archive, actual default allocation template and its relocated notices
+        if: contains(format(' {0} ', env.MEMBERS), ' mimalloc-heap ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.mimalloc@3.6.1 --deploy
+
       - name: Installed libwebp wrapper archive, actual default image template and its relocated notices
         if: contains(format(' {0} ', env.MEMBERS), ' libwebp-image ') && matrix.toolchain == 'default'
         shell: bash
