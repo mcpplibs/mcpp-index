@@ -15,7 +15,9 @@
 // zero, and released; (0.21) where the implementation states it, part of an
 // executable region is a file's bytes, read from where the file holds them;
 // (0.22) the null device beside a stream at one position is refused, and is
-// refused as unsupported where the implementation does not state it.
+// refused as unsupported where the implementation does not state it; (0.23) a
+// region at an address, zero; a read-only attenuation; the machine's memory
+// and the resource preference.
 // The terminal is not observed here,
 // because a test run has none; the implementations observe it on a terminal
 // they make.
@@ -233,6 +235,46 @@ int main() {
             }
         }
         kal_fs_remove(root, "okt.x", 5);
+    }
+
+    // 0.23: a region at an address, and a region zero when returned; a
+    // directory attenuated read-only refuses a creation beneath it; the
+    // machine's memory and this program's resource preference are told.
+    if ((kal_interfaces() & KAL_IFACE_EXEC) && (kal_exec_props() & KAL_EXEC_PROP_PLACE)) {
+        const kal_uintptr a = 65536;
+        void* any = kal_exec_alloc(a);
+        if (any) {
+            kal_exec_free(any, a);
+            auto* r = static_cast<unsigned char*>(kal_exec_alloc_at(any, a));
+            check(r == any, "a region is reserved at the address asked for");
+            check(r && r[0] == 0 && r[a - 1] == 0, "and is zero");
+            if (r) {
+                check(kal_exec_alloc_at(r, a) == nullptr, "an address already held is refused");
+                kal_exec_free(r, a);
+            }
+        }
+    }
+    if (kal_fs_preopen_count() > 0 && kal_fs_preopen(0, &root, nullptr, 0, nullptr) == kal_ok
+        && (kal_fs_props(root) & KAL_FS_PROP_ATTENUATE)) {
+        kal_dir_rights rights{};
+        rights.self_size = sizeof rights;
+        rights.flags = KAL_DIR_READ_ONLY;
+        kal_dir ro{};
+        check(kal_fs_dir_attenuate(root, &rights, &ro) == kal_ok, "a directory is attenuated read-only");
+        kal_file f{};
+        check(kal_fs_open(ro, "okt.ro", 6, KAL_OPEN_WRITE | KAL_OPEN_CREATE, &f) != kal_ok,
+              "and a creation beneath it is refused");
+        kal_fs_remove(root, "okt.ro", 6);
+        kal_fs_close_dir(ro);
+    }
+    {
+        kal_memory_status m{};
+        m.self_size = sizeof m;
+        check(kal_memory_info(&m) != kal_ok || !(m.present & KAL_MSTATUS_TOTAL) || m.total_bytes > 0,
+              "the machine's memory is told where it is stated");
+        const int pref = kal_env_resources();
+        check(pref == KAL_RESOURCES_BALANCED || pref == KAL_RESOURCES_PERFORMANCE || pref == KAL_RESOURCES_ECONOMY,
+              "and the resource preference is one of three");
     }
 
     if (failures == 0) kal_stream_write(kal_stdout(), "openkal: held\n", 14);
