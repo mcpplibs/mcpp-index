@@ -15,6 +15,10 @@
 
 ### Added
 
+- **openkal-platform 0.21.0；openkal-emscripten 0.10.0。** openkal 0.21 的版本组：openkal 0.21.0 与三个实现、openkal-musl 0.26.0、
+  openkal-llvm-runtime 0.17.0、openkal-ld/run/tools 0.3.0；mcpp 2026.11.2.2 以它为内置的 `<arch>-openkal` 平台。openkal-emscripten
+  0.10.0 按 openkal 0.21 编写，0.21 的增补都在它不提供的接口上，其余不变。GLOBAL 为 GitHub 标签归档，CN 为 GitCode `mcpp-res` 镜像，
+  sha256 两处一致。
 - **openkal-musl 0.26.0、openkal-llvm-runtime 0.17.0。** openkal-musl 的分配器为嵌入的 mimalloc 3.6.1（`malloc-mimalloc`，默认；
   `malloc-mallocng` 保留 musl 自己的），匿名内存建在 `openkal.region` 上，定位读写不持锁，八个字符串函数按向量处理，普通互斥锁按
   glibc 的方式等待。openkal-llvm-runtime 建在其上（裸机选 mallocng），PE 与 Mach-O 上 `thread_local` 的析构读到自己的变量
