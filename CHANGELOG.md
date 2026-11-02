@@ -15,6 +15,8 @@
 
 ### Added
 
+- **mcpplibs.os 0.2.7。** openkal 0.21 的实现（openkal-linux 0.22.0、openkal-macos 0.19.0、openkal-windows 0.17.0、openkal-emscripten
+  0.10.0），接口不变；其上的 ok 映像选 openkal-platform 0.21.0。测试成员 `os` 随之移动。
 - **openkal-platform 0.21.0；openkal-emscripten 0.10.0。** openkal 0.21 的版本组：openkal 0.21.0 与三个实现、openkal-musl 0.26.0、
   openkal-llvm-runtime 0.17.0、openkal-ld/run/tools 0.3.0；mcpp 2026.11.2.2 以它为内置的 `<arch>-openkal` 平台。openkal-emscripten
   0.10.0 按 openkal 0.21 编写，0.21 的增补都在它不提供的接口上，其余不变。GLOBAL 为 GitHub 标签归档，CN 为 GitCode `mcpp-res` 镜像，
