@@ -15,6 +15,9 @@
 
 ### Added
 
+- **openkal-platform 0.21.1。** 版本组改为 openkal-image 0.3.1（记住的 okb 准入不再读取成员）、openkal-musl 0.26.1、
+  openkal-llvm-runtime 0.17.1，carrier 为 openkal-run 0.3.1；其余与 0.21.0 相同。GLOBAL 为 GitHub 标签归档，CN 为 GitCode
+  `mcpp-res` 镜像，sha256 两处一致。
 - **openkal-llvm-runtime 0.17.1。** 建在 openkal-musl 0.26.1 上（openkal-platform 0.21.1 的版本组）；L2 的系统一侧改由 Clang 编译，
   使比较的是运行时而不是编译器。测试成员 `openkal` 随之移动。
 - **openkal-musl 0.26.1。** 映像的加载器为 openkal-ld 0.3.1（openkal-platform 0.21.1 的版本组），其余不变。测试成员
