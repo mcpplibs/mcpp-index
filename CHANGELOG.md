@@ -15,6 +15,10 @@
 
 ### Added
 
+- **openkal-ld/run/tools/bind 0.3.0。** openkal 0.21 的一轮：okld 把不可写、文件与内存大小相同、与文件偏移模 64 KiB 同余且独占所在
+  粒度的段从映像文件映射（`okld_host::map`，即 `kal_exec_map_part`），其余段照旧复制；每个重定位须写入可写段，否则拒绝映像；
+  okrun 在程序运行期间保持映像文件打开。测试成员 `openkal-tools`、`openkal-bind` 随之移动。GLOBAL 为 GitHub 标签归档，CN 为
+  GitCode `mcpp-res` 镜像，sha256 两处一致。
 - **openkal 0.21.0；openkal-linux 0.22.0、openkal-macos 0.19.0、openkal-windows 0.17.0。** `openkal.exec` 的
   `kal_exec_map_part`：可执行区域的一部分由文件的字节构成（只读，或只读且可执行，属性 `KAL_EXEC_PROP_FILE`），加载器据此映射映像的
   指令与只读数据；结束的程序的处理器时间在句柄释放前可读。openkal-linux 以 `CLONE_VM | CLONE_VFORK` 启动程序、`kal_alloc` 按需
