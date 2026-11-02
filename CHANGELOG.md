@@ -15,6 +15,12 @@
 
 ### Added
 
+- **mcpplibs.mwrap.mimalloc 3.6.1（新包）。** mimalloc-m：以 C++23 模块（`import mcpplibs.mwrap.mimalloc;`）使用 compat.mimalloc
+  3.6.1。`<mimalloc.h>` 的函数、堆、arena、子进程、选项与 STL 分配器以上游的全局名导出；`.stats`、`.profile` 两个子模块对应
+  `<mimalloc-stats.h>`、`<mimalloc-profile.h>`；上游的 `static inline` 辅助函数以同名适配在 `mcpplibs::mwrap::mimalloc`；值宏在
+  `.macros` 中为常量，带类型参数的宏与 `mi_stats_t_decl` 留在 `<mwrap/mimalloc/macros.hpp>`。消费者测试
+  `tests/mwrap/mimalloc-heap` 与已安装模板检查（`allocate` 模板与重定位后的许可文件）。GLOBAL 为 GitHub 发布资产，CN 为
+  GitCode `mcpp-res/mwrap-mimalloc` 镜像，sha256 两处一致。
 - **openkal-ld/run/tools/bind 0.3.0。** openkal 0.21 的一轮：okld 把不可写、文件与内存大小相同、与文件偏移模 64 KiB 同余且独占所在
   粒度的段从映像文件映射（`okld_host::map`，即 `kal_exec_map_part`），其余段照旧复制；每个重定位须写入可写段，否则拒绝映像；
   okrun 在程序运行期间保持映像文件打开。测试成员 `openkal-tools`、`openkal-bind` 随之移动。GLOBAL 为 GitHub 标签归档，CN 为
