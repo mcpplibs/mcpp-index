@@ -443,7 +443,11 @@ env:
   #
   # 2026.10.31.1 (mcpp-community/mcpp#869): `features` in the machine output,
   # and the floor openkal-platform states since 0.18.0 (2026.10.30.1).
-  MCPP_VERSION: "2026.10.31.1"
+  #
+  # 2026.11.2.1 (mcpp-community/mcpp#882): a dependency's patches and a
+  # dependency embedded in its consumer -- the floor openkal-musl 0.26.0
+  # states, since it embeds compat.mimalloc.
+  MCPP_VERSION: "2026.11.2.1"
 
 jobs:
   lint:
