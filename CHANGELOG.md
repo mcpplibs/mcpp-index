@@ -15,6 +15,12 @@
 
 ### Added
 
+- **openkal-musl 0.26.0、openkal-llvm-runtime 0.17.0。** openkal-musl 的分配器为嵌入的 mimalloc 3.6.1（`malloc-mimalloc`，默认；
+  `malloc-mallocng` 保留 musl 自己的），匿名内存建在 `openkal.region` 上，定位读写不持锁，八个字符串函数按向量处理，普通互斥锁按
+  glibc 的方式等待。openkal-llvm-runtime 建在其上（裸机选 mallocng），PE 与 Mach-O 上 `thread_local` 的析构读到自己的变量
+  （emutls 在最后一轮才释放），并带 L2 的工作负载对比（`bench/`）。测试成员 `openkal-musl`、`openkal` 随之移动。CI 的 mcpp 移到
+  2026.11.2.1：openkal-musl 0.26.0 以 `embed` 嵌入 compat.mimalloc，并陈述 `mcpp >= 2026.11`。GLOBAL 为 GitHub 标签归档，CN 为
+  GitCode `mcpp-res` 镜像，sha256 两处一致。
 - **mcpplibs.mwrap.mimalloc 3.6.1（新包）。** mimalloc-m：以 C++23 模块（`import mcpplibs.mwrap.mimalloc;`）使用 compat.mimalloc
   3.6.1。`<mimalloc.h>` 的函数、堆、arena、子进程、选项与 STL 分配器以上游的全局名导出；`.stats`、`.profile` 两个子模块对应
   `<mimalloc-stats.h>`、`<mimalloc-profile.h>`；上游的 `static inline` 辅助函数以同名适配在 `mcpplibs::mwrap::mimalloc`；值宏在

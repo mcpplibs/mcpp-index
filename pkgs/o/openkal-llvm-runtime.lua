@@ -75,6 +75,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.17.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.17.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-llvm-runtime/releases/download/0.17.0/openkal-llvm-runtime-0.17.0.tar.gz",
+                },
+                sha256 = "75d9fb8039de796fe8c447e7ecd6d849a5a343690f10ac08b447e2777f6abc93",
+            },
             ["0.16.15"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.16.15.tar.gz",
@@ -413,6 +420,13 @@ package = {
             },
         },
         macosx = {
+            ["0.17.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.17.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-llvm-runtime/releases/download/0.17.0/openkal-llvm-runtime-0.17.0.tar.gz",
+                },
+                sha256 = "75d9fb8039de796fe8c447e7ecd6d849a5a343690f10ac08b447e2777f6abc93",
+            },
             ["0.16.15"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.16.15.tar.gz",
@@ -751,6 +765,13 @@ package = {
             },
         },
         windows = {
+            ["0.17.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.17.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-llvm-runtime/releases/download/0.17.0/openkal-llvm-runtime-0.17.0.tar.gz",
+                },
+                sha256 = "75d9fb8039de796fe8c447e7ecd6d849a5a343690f10ac08b447e2777f6abc93",
+            },
             ["0.16.15"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.16.15.tar.gz",
