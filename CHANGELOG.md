@@ -15,6 +15,9 @@
 
 ### Added
 
+- **openkal-ld/run/tools/bind 0.3.2。** 在 openkal 0.22 的实现上构建（openkal-linux 0.23.0、openkal-macos 0.20.0、openkal-windows
+  0.18.0）：映像启动程序时可以在位置上得到系统的空设备（`KAL_SPAWN_NULL_*`），自身无改动。测试成员 `openkal-tools`、
+  `openkal-bind` 随之移动。GLOBAL 为 GitHub 标签归档，CN 为 GitCode `mcpp-res` 镜像，sha256 两处一致。
 - **openkal 0.22.0；openkal-linux 0.23.0、openkal-macos 0.20.0、openkal-windows 0.18.0、openkal-emscripten 0.11.0。**
   `openkal.process` 的位置上的空设备：`KAL_SPAWN_NULL_IN`、`_OUT`、`_ERR` 使启动的程序在该位置读到输入结束、写入全部被接受并
   丢弃（属性 `KAL_PROCESS_PROP_NULL_STREAMS`）；Linux、macOS 在启动的程序一侧打开 `/dev/null`，Windows 为本次启动打开 `NUL`。
