@@ -15,6 +15,10 @@
 
 ### Added
 
+- **openkal-ld/run/tools/bind 0.3.1。** 记住的 okb 准入不再读取成员：okrun 对此前在同一文件上比对过的成员只按形状准入
+  （`okld_okb_admit_layout`：存储方式、在归档内、对齐），0.2.0 与 0.3.0 在这里计算归档声明的 CRC-32，每次启动遍历整个成员
+  （clangd 的 71 MB 映像约 0.1 s 处理器时间）。测试成员 `openkal-tools`、`openkal-bind` 随之移动。GLOBAL 为 GitHub 标签归档，
+  CN 为 GitCode `mcpp-res` 镜像，sha256 两处一致。
 - **mcpplibs.os 0.2.7。** openkal 0.21 的实现（openkal-linux 0.22.0、openkal-macos 0.19.0、openkal-windows 0.17.0、openkal-emscripten
   0.10.0），接口不变；其上的 ok 映像选 openkal-platform 0.21.0。测试成员 `os` 随之移动。
 - **openkal-platform 0.21.0；openkal-emscripten 0.10.0。** openkal 0.21 的版本组：openkal 0.21.0 与三个实现、openkal-musl 0.26.0、

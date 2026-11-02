@@ -18,6 +18,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.3.1"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-image/archive/refs/tags/0.3.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-image/releases/download/0.3.1/openkal-image-0.3.1.tar.gz",
+                },
+                sha256 = "c5a294d71b446254ac59f9fcaf30df0de01705cb6a30d619188263822fdbaae0",
+            },
             ["0.3.0"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-image/archive/refs/tags/0.3.0.tar.gz",
@@ -104,6 +111,13 @@ package = {
             },
         },
         macosx = {
+            ["0.3.1"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-image/archive/refs/tags/0.3.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-image/releases/download/0.3.1/openkal-image-0.3.1.tar.gz",
+                },
+                sha256 = "c5a294d71b446254ac59f9fcaf30df0de01705cb6a30d619188263822fdbaae0",
+            },
             ["0.3.0"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-image/archive/refs/tags/0.3.0.tar.gz",
@@ -190,6 +204,13 @@ package = {
             },
         },
         windows = {
+            ["0.3.1"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-image/archive/refs/tags/0.3.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-image/releases/download/0.3.1/openkal-image-0.3.1.tar.gz",
+                },
+                sha256 = "c5a294d71b446254ac59f9fcaf30df0de01705cb6a30d619188263822fdbaae0",
+            },
             ["0.3.0"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-image/archive/refs/tags/0.3.0.tar.gz",
