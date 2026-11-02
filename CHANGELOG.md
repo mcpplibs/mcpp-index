@@ -15,6 +15,8 @@
 
 ### Added
 
+- **openkal-llvm-runtime 0.17.1。** 建在 openkal-musl 0.26.1 上（openkal-platform 0.21.1 的版本组）；L2 的系统一侧改由 Clang 编译，
+  使比较的是运行时而不是编译器。测试成员 `openkal` 随之移动。
 - **openkal-musl 0.26.1。** 映像的加载器为 openkal-ld 0.3.1（openkal-platform 0.21.1 的版本组），其余不变。测试成员
   `openkal-musl` 随之移动。
 - **openkal-ld/run/tools/bind 0.3.1。** 记住的 okb 准入不再读取成员：okrun 对此前在同一文件上比对过的成员只按形状准入
