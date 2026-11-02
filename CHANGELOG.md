@@ -15,6 +15,10 @@
 
 ### Added
 
+- **openkal 0.21.0；openkal-linux 0.22.0、openkal-macos 0.19.0、openkal-windows 0.17.0。** `openkal.exec` 的
+  `kal_exec_map_part`：可执行区域的一部分由文件的字节构成（只读，或只读且可执行，属性 `KAL_EXEC_PROP_FILE`），加载器据此映射映像的
+  指令与只读数据；结束的程序的处理器时间在句柄释放前可读。openkal-linux 以 `CLONE_VM | CLONE_VFORK` 启动程序、`kal_alloc` 按需
+  切分；openkal-windows 不提供文件部分。测试成员 `openkal` 随之移动，并观察可执行区域的文件部分。
 - **openkal-ld/run/tools/bind 0.2.0。** openkal 0.20 的一轮：运行器提供加载器接口 `openkal.prof` 与 `openkal.debug`，
   `okrun --prof=`（`OKRUN_PROF`）度量一个映像的调用、计数器与阶段，`okprof`（openkal-tools）记录、汇总与比较报告；
   `kal_debug_symbolize` 由映像文件的符号表给出地址的名字；okb 的准入按用户记住，同一文件的后续启动不再重读整个 okb。测试成员
