@@ -13,7 +13,9 @@
 // this program is told the memory it occupies and its peak, and a region is
 // reserved, backed, written, its backing returned and backed again reading
 // zero, and released; (0.21) where the implementation states it, part of an
-// executable region is a file's bytes, read from where the file holds them.
+// executable region is a file's bytes, read from where the file holds them;
+// (0.22) the null device beside a stream at one position is refused, and is
+// refused as unsupported where the implementation does not state it.
 // The terminal is not observed here,
 // because a test run has none; the implementations observe it on a terminal
 // they make.
@@ -116,6 +118,29 @@ int main() {
         check(kal_process_spawn(&how, "x", 1, argv, lens, 1, nullptr, nullptr, 0, nullptr, &p)
                   == kal_err_not_supported,
               "a joined command line is refused where programs receive vectors");
+    }
+
+    if (root.h) {
+        const char* argv[] = { "x" };
+        const kal_uintptr lens[] = { 1 };
+        kal_process p{};
+        if ((kal_process_props() & KAL_PROCESS_PROP_NULL_STREAMS) == 0) {
+            const kal_spawn how{ root, root, nullptr, nullptr, 0, KAL_SPAWN_NULL_OUT };
+            check(kal_process_spawn(&how, "x", 1, argv, lens, 1, nullptr, nullptr, 0, nullptr, &p)
+                      == kal_err_not_supported,
+                  "the null device is refused where the implementation does not state it");
+        } else if (kal_process_props() & KAL_PROCESS_PROP_CHANNEL) {
+            kal_stream mine{}, theirs{};
+            if (kal_process_channel(&mine, &theirs) == kal_ok) {
+                const kal_spawn_streams placed{ kal_stream{0}, theirs, kal_stream{0} };
+                const kal_spawn how{ root, root, nullptr, nullptr, 0, KAL_SPAWN_NULL_OUT };
+                check(kal_process_spawn(&how, "x", 1, argv, lens, 1, nullptr, nullptr, 0, &placed, &p)
+                          == kal_err_invalid,
+                      "the null device beside a stream at one position is refused");
+                kal_process_channel_close(theirs);
+                kal_process_channel_close(mine);
+            }
+        }
     }
 
     if (root.h && (kal_interfaces() & KAL_IFACE_MAP) != 0) {

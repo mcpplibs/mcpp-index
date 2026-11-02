@@ -15,6 +15,11 @@
 
 ### Added
 
+- **openkal 0.22.0；openkal-linux 0.23.0、openkal-macos 0.20.0、openkal-windows 0.18.0、openkal-emscripten 0.11.0。**
+  `openkal.process` 的位置上的空设备：`KAL_SPAWN_NULL_IN`、`_OUT`、`_ERR` 使启动的程序在该位置读到输入结束、写入全部被接受并
+  丢弃（属性 `KAL_PROCESS_PROP_NULL_STREAMS`）；Linux、macOS 在启动的程序一侧打开 `/dev/null`，Windows 为本次启动打开 `NUL`。
+  openkal-emscripten 依 0.22 编写，无其他改动。测试成员 `openkal` 随之移动，并观察标志与流同处一个位置时被拒绝。GLOBAL 为
+  GitHub 标签归档，CN 为 GitCode `mcpp-res` 镜像，sha256 两处一致。
 - **openkal-platform 0.21.1。** 版本组改为 openkal-image 0.3.1（记住的 okb 准入不再读取成员）、openkal-musl 0.26.1、
   openkal-llvm-runtime 0.17.1，carrier 为 openkal-run 0.3.1；其余与 0.21.0 相同。GLOBAL 为 GitHub 标签归档，CN 为 GitCode
   `mcpp-res` 镜像，sha256 两处一致。
