@@ -15,6 +15,8 @@
 
 ### Added
 
+- **openkal-platform 0.23.1.** This release supersedes 0.23.0 and pins openkal-macos 0.21.3, openkal-musl 0.27.1, openkal-llvm-runtime 0.18.2 and openkal-image 0.4.2. It requires mcpp 2026.11.2.3. GLOBAL and CN archives have the same verified SHA256.
+
 - **openkal-llvm-runtime 0.18.2.** The runtime pins openkal-musl 0.27.1 over openkal-macos 0.21.3, so hosted macOS programs receive their granted directories. The openkal test member follows the release. GLOBAL and CN archives have the same verified SHA256.
 
 - **openkal-musl 0.27.1。** 在 openkal-macos 0.21.3 之上：macOS 上的 hosted 程序得到被授予的目录（本库的初始化函数先于实现的运行，
