@@ -15,6 +15,10 @@
 
 ### Added
 
+- **openkal-macos 0.21.1。** 睡眠不再占用处理器时间：内核读取 `ulock_wait` 所等待的字时不处理缺页，对尚未驻留的页返回
+  `EFAULT`；`kal_time_sleep` 等待的是一个从未写过的零字，每次等待立即失败，睡眠成了整段时长的自旋（在 arm64 与 x86_64 运行机上
+  睡 200 ms 耗费 127 至 200 ms 处理器时间）。等待现在在 `EFAULT` 时读取该字后重试，睡眠所用的字位于当前上下文的栈上。测试成员
+  `openkal` 随之移动。GLOBAL 为 GitHub 标签归档，CN 为 GitCode `mcpp-res` 镜像，sha256 两处一致。
 - **openkal-ld/run/tools/bind 0.4.0。** 在 openkal 0.23 的实现上构建（openkal-linux 0.24.0、openkal-macos 0.21.0、openkal-windows
   0.19.0）：映像在每次开机选定的基址上放置，数据作为预备副本保存在用户缓存中；触页记录（`okprof record --what touch`、
   `okld touch`）按程序的资源偏好预读；初始化代码的快照每次开机生成一次、之后的启动直接映射（`OKRUN_SNAPSHOT=0` 关闭）；启动的
