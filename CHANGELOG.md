@@ -15,6 +15,12 @@
 
 ### Added
 
+- **openkal-ld/run/tools/bind 0.4.0。** 在 openkal 0.23 的实现上构建（openkal-linux 0.24.0、openkal-macos 0.21.0、openkal-windows
+  0.19.0）：映像在每次开机选定的基址上放置，数据作为预备副本保存在用户缓存中；触页记录（`okprof record --what touch`、
+  `okld touch`）按程序的资源偏好预读；初始化代码的快照每次开机生成一次、之后的启动直接映射（`OKRUN_SNAPSHOT=0` 关闭）；启动的
+  花费随资源偏好（performance、balanced、economy）变化，`okrun cache` 列出并回收运行器的缓存；`okld bundle --compress` 写出压缩
+  的 okb（okb 2）；okprof 成为 openkal-tools 的第三个程序。测试成员 `openkal-tools`（构建 okprof）、`openkal-bind` 随之移动。
+  GLOBAL 为 GitHub 标签归档，CN 为 GitCode `mcpp-res` 镜像，sha256 两处一致。
 - **openkal 0.23.0；openkal-linux 0.24.0、openkal-macos 0.21.0、openkal-windows 0.19.0、openkal-emscripten 0.12.0。**
   映像在其基址上放置（`kal_exec_alloc_at`、placement note）；exec 区域返回时为零，可封存（`kal_exec_seal_part`）、预取、私有映射
   文件的部分（`KAL_EXEC_MAP_WRITE`）；按名字解析全部链接（`kal_fs_resolved_name`）与带属性的列举；目录授予的衰减（只读、不变、
