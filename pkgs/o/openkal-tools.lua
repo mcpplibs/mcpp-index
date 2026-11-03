@@ -1,4 +1,4 @@
--- openkal-tools --- okrun and okld (openkal SPEC clause 12).
+-- openkal-tools --- okrun, okld and okprof (openkal SPEC clause 12).
 --
 -- A member of mcpplibs/openkal-image (one tag, one archive). A project that
 -- builds ok images (`<arch>-openkal`) declares it for this machine:
@@ -13,13 +13,20 @@ package = {
     spec        = "1",
     namespace   = "mcpplibs",
     name        = "openkal-tools",
-    description = "okrun and okld: the runner of ok images, and the tool that writes an image's requirements note, checks the convention and signs it",
+    description = "okrun, okld and okprof: the runner of ok images; the tool that writes an image's notes (requirements, placement, touches), checks the convention, signs and bundles it; and the reader of the runner's reports",
     licenses    = {"Apache-2.0"},
     repo        = "https://github.com/mcpplibs/openkal-image",
     type        = "package",
 
     xpm = {
         linux = {
+            ["0.4.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-image/archive/refs/tags/0.4.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-image/releases/download/0.4.0/openkal-image-0.4.0.tar.gz",
+                },
+                sha256 = "2ffec55b912f22c3efefca4e9ad651ea0180c3d2495c8bc5413503b05524a92f",
+            },
             ["0.3.2"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-image/archive/refs/tags/0.3.2.tar.gz",
@@ -120,6 +127,13 @@ package = {
             },
         },
         macosx = {
+            ["0.4.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-image/archive/refs/tags/0.4.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-image/releases/download/0.4.0/openkal-image-0.4.0.tar.gz",
+                },
+                sha256 = "2ffec55b912f22c3efefca4e9ad651ea0180c3d2495c8bc5413503b05524a92f",
+            },
             ["0.3.2"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-image/archive/refs/tags/0.3.2.tar.gz",
@@ -220,6 +234,13 @@ package = {
             },
         },
         windows = {
+            ["0.4.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-image/archive/refs/tags/0.4.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-image/releases/download/0.4.0/openkal-image-0.4.0.tar.gz",
+                },
+                sha256 = "2ffec55b912f22c3efefca4e9ad651ea0180c3d2495c8bc5413503b05524a92f",
+            },
             ["0.3.2"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-image/archive/refs/tags/0.3.2.tar.gz",
