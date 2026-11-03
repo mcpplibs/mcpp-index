@@ -15,6 +15,9 @@
 
 ### Added
 
+- **openkal-llvm-runtime 0.18.1。** 有分支保护时 compiler-rt 的 outline atomics 也能汇编（openkal-platform 0.23.0 在 aarch64 上的
+  `-mbranch-protection=pac-ret+bti`）：libunwind 的同名 `assembly.h` 不再跟在 compiler-rt 的之后重定义 `GNU_PROPERTY`，目标文件带有
+  `aarch64 feature: BTI, PAC`。测试成员 `openkal` 随之移动。GLOBAL 为 GitHub 标签归档，CN 为 GitCode `mcpp-res` 镜像，sha256 两处一致。
 - **openkal-llvm-runtime 0.18.0。** 建在 openkal-musl 0.27.0 之上（openkal 0.23），即 openkal-platform 0.23.0 所指的 C 库；加固与帧指针
   随平台的编译选项。测试成员 `openkal` 随之移动。GLOBAL 为 GitHub 标签归档，CN 为 GitCode `mcpp-res` 镜像，sha256 两处一致。
 - **openkal-musl 0.27.0。** 面向 openkal 0.23（openkal-linux 0.24.0、openkal-macos 0.21.2、openkal-windows 0.19.0）与
