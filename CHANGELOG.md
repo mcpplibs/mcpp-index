@@ -15,6 +15,8 @@
 
 ### Added
 
+- **openkal-musl 0.27.3.** The Linux dependency selects openkal-linux 0.24.1 for correct read-only confinement, and the image dependency selects openkal-ld 0.4.3. The C library implementation is unchanged. The Linux test member follows the release. GLOBAL and CN archives have the same verified SHA256.
+
 - **openkal-ld, openkal-run, openkal-tools and openkal-bind 0.4.3.** The native Linux runner uses openkal-linux 0.24.1, which requires Landlock ABI 3 before claiming read-only confinement. Both image test members follow the release. All four packages share one source archive; GLOBAL and CN downloads have the same verified SHA256.
 
 - **openkal-linux 0.24.1.** Read-only confinement requires Landlock ABI 3, which can restrict file truncation; earlier ABIs refuse a confinement request. The ABI probe cache uses atomic accesses. The openkal test member follows the release. GLOBAL and CN archives have the same verified SHA256.
