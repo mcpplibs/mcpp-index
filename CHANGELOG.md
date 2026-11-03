@@ -15,6 +15,8 @@
 
 ### Added
 
+- **openkal-llvm-runtime 0.18.5.** Both allocator arrangements select openkal-musl 0.27.4, which propagates image loader 0.4.4. The C++ runtime implementation is unchanged. The openkal test member follows the release. GLOBAL and CN source archives have the same verified SHA256.
+
 - **openkal-musl 0.27.4.** The image dependency selects openkal-ld 0.4.4 for the partial mapping correction. The C library implementation and hosted kernel backend pins are unchanged. The Linux test member follows the release. GLOBAL and CN source archives have the same verified SHA256.
 
 - **openkal-ld, openkal-run, openkal-tools and openkal-bind 0.4.4.** A refused later mapping run is copied without overwriting earlier read-only views; copied instructions are published separately. The correction passed four-host execution and the original Windows clangd startup and semantic replays. GLOBAL and CN source archives have the same verified SHA256.
