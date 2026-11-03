@@ -15,6 +15,10 @@
 
 ### Added
 
+- **openkal-macos 0.21.3。** 在实现自己的初始化函数运行之前被提问时（链接在它之前的初始化函数，如 hosted 安排中 openkal-musl 的），
+  参数、环境与启动者授予的目录取自加载器的记录（`_NSGetArgc`、`_NSGetArgv`、`_NSGetEnviron`）；此前被授予目录的 hosted 程序读到
+  实现的默认目录（整个文件系统、可写）。测试成员 `openkal` 随之移动。GLOBAL 为 GitHub 标签归档，CN 为 GitCode `mcpp-res` 镜像，
+  sha256 两处一致。
 - **openkal-platform 0.23.0。** openkal 0.23 的版本组（openkal-linux 0.24.0、openkal-macos 0.21.2、openkal-windows 0.19.0、
   openkal-musl 0.27.0、openkal-llvm-runtime 0.18.1、openkal-image 0.4.1）：映像在其基址上封存，运行器把它移到每次开机的基址并可从
   初始化快照启动；每个单元以帧指针、全局栈保护、零初始化局部变量、libc++ 快速加固、CET（x86_64）或 pac-ret 与 BTI（aarch64）
