@@ -15,6 +15,11 @@
 
 ### Added
 
+- **openkal-platform 0.23.0。** openkal 0.23 的版本组（openkal-linux 0.24.0、openkal-macos 0.21.2、openkal-windows 0.19.0、
+  openkal-musl 0.27.0、openkal-llvm-runtime 0.18.1、openkal-image 0.4.1）：映像在其基址上封存，运行器把它移到每次开机的基址并可从
+  初始化快照启动；每个单元以帧指针、全局栈保护、零初始化局部变量、libc++ 快速加固、CET（x86_64）或 pac-ret 与 BTI（aarch64）
+  编译，映像以 build-id 命名；okprof 列入平台工具；打包声明 `gzip` 时 okb 的映像压缩存放。要求 mcpp 2026.11.2.3（std 模块以平台的
+  选项编译）。GLOBAL 为 GitHub 标签归档，CN 为 GitCode `mcpp-res` 镜像，sha256 两处一致。
 - **openkal-llvm-runtime 0.18.1。** 有分支保护时 compiler-rt 的 outline atomics 也能汇编（openkal-platform 0.23.0 在 aarch64 上的
   `-mbranch-protection=pac-ret+bti`）：libunwind 的同名 `assembly.h` 不再跟在 compiler-rt 的之后重定义 `GNU_PROPERTY`，目标文件带有
   `aarch64 feature: BTI, PAC`。测试成员 `openkal` 随之移动。GLOBAL 为 GitHub 标签归档，CN 为 GitCode `mcpp-res` 镜像，sha256 两处一致。
