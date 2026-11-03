@@ -499,6 +499,8 @@
 
 ### Changed
 
+- CI and compatibility measurements use mcpp 2026.11.3.1. The hosted platform member selects openkal-platform 0.23.3. The index client floor and compatibility runtime baseline are unchanged.
+
 - **compat.miniaudio 0.11.25 以 `gnu11` 编译(可构建到 wasm32-emscripten)。** Emscripten 上 miniaudio 的 Web Audio
   后端经 `EM_ASM` 内联 JavaScript,Emscripten 在严格的 `-std=c*` 模式下拒绝 `EM_ASM`(上游 miniaudio.h §2.6:
   不能使用 `-std=c*`),原来的 `c_standard = "c11"` 使 `mcpp build --target wasm32-emscripten` 编译失败;改为
