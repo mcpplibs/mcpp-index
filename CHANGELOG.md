@@ -15,6 +15,8 @@
 
 ### Added
 
+- **openkal-musl 0.27.4.** The image dependency selects openkal-ld 0.4.4 for the partial mapping correction. The C library implementation and hosted kernel backend pins are unchanged. The Linux test member follows the release. GLOBAL and CN source archives have the same verified SHA256.
+
 - **openkal-ld, openkal-run, openkal-tools and openkal-bind 0.4.4.** A refused later mapping run is copied without overwriting earlier read-only views; copied instructions are published separately. The correction passed four-host execution and the original Windows clangd startup and semantic replays. GLOBAL and CN source archives have the same verified SHA256.
 
 - **mcpplibs.os 0.2.9.** Linux selects openkal-linux 0.24.1 for corrected read-only confinement, and hosted/image qualification uses platform 0.23.3. The C++ API and implementation are unchanged. The os test member follows the release. GLOBAL and CN archives have the same verified SHA256.
