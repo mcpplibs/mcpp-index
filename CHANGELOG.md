@@ -15,6 +15,8 @@
 
 ### Added
 
+- **openkal-ld, openkal-run, openkal-tools and openkal-bind 0.4.3.** The native Linux runner uses openkal-linux 0.24.1, which requires Landlock ABI 3 before claiming read-only confinement. Both image test members follow the release. All four packages share one source archive; GLOBAL and CN downloads have the same verified SHA256.
+
 - **openkal-linux 0.24.1.** Read-only confinement requires Landlock ABI 3, which can restrict file truncation; earlier ABIs refuse a confinement request. The ABI probe cache uses atomic accesses. The openkal test member follows the release. GLOBAL and CN archives have the same verified SHA256.
 
 - **mcpplibs.os 0.2.8.** Process options expose granted directories and rights, confinement requests, resource preferences and the system null device. The corrected platform 0.23.2 group is verified on native, hosted and four image hosts. The os test member follows the release. GLOBAL and CN archives have the same verified SHA256.
