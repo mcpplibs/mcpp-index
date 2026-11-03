@@ -15,6 +15,9 @@
 
 ### Added
 
+- **openkal-macos 0.21.2。** 单调时钟的粒度取内核的计时单位（`mach_timebase_info`，向上取整：arm64 为 42 ns，x86_64 为 1 ns），
+  每次启动相同；此前以读数变化的差值测得，各次启动不同，openkal-image 的运行器在使用初始化快照前比较实现的事实，曾因此拒绝快照。
+  测试成员 `openkal` 随之移动。GLOBAL 为 GitHub 标签归档，CN 为 GitCode `mcpp-res` 镜像，sha256 两处一致。
 - **openkal-macos 0.21.1。** 睡眠不再占用处理器时间：内核读取 `ulock_wait` 所等待的字时不处理缺页，对尚未驻留的页返回
   `EFAULT`；`kal_time_sleep` 等待的是一个从未写过的零字，每次等待立即失败，睡眠成了整段时长的自旋（在 arm64 与 x86_64 运行机上
   睡 200 ms 耗费 127 至 200 ms 处理器时间）。等待现在在 `EFAULT` 时读取该字后重试，睡眠所用的字位于当前上下文的栈上。测试成员
