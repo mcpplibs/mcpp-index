@@ -15,6 +15,8 @@
 
 ### Added
 
+- **openkal-ld, openkal-run, openkal-tools and openkal-bind 0.4.4.** A refused later mapping run is copied without overwriting earlier read-only views; copied instructions are published separately. The correction passed four-host execution and the original Windows clangd startup and semantic replays. GLOBAL and CN source archives have the same verified SHA256.
+
 - **mcpplibs.os 0.2.9.** Linux selects openkal-linux 0.24.1 for corrected read-only confinement, and hosted/image qualification uses platform 0.23.3. The C++ API and implementation are unchanged. The os test member follows the release. GLOBAL and CN archives have the same verified SHA256.
 
 - **openkal-platform 0.23.3.** Both image and hosted arrangements select the corrected Linux confinement graph: Linux 0.24.1, musl 0.27.3, llvm-runtime 0.18.4 and image 0.4.3. It requires mcpp 2026.11.3.1. GLOBAL and CN archives have the same verified SHA256.
