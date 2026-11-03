@@ -75,6 +75,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.18.4"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.18.4.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-llvm-runtime/releases/download/0.18.4/openkal-llvm-runtime-0.18.4.tar.gz",
+                },
+                sha256 = "5e8d635199d6018142cd176d360f676e083780cabe71895eeb82ae226e2f134a",
+            },
             ["0.18.3"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.18.3.tar.gz",
@@ -455,6 +462,13 @@ package = {
             },
         },
         macosx = {
+            ["0.18.4"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.18.4.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-llvm-runtime/releases/download/0.18.4/openkal-llvm-runtime-0.18.4.tar.gz",
+                },
+                sha256 = "5e8d635199d6018142cd176d360f676e083780cabe71895eeb82ae226e2f134a",
+            },
             ["0.18.3"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.18.3.tar.gz",
@@ -835,6 +849,13 @@ package = {
             },
         },
         windows = {
+            ["0.18.4"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.18.4.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-llvm-runtime/releases/download/0.18.4/openkal-llvm-runtime-0.18.4.tar.gz",
+                },
+                sha256 = "5e8d635199d6018142cd176d360f676e083780cabe71895eeb82ae226e2f134a",
+            },
             ["0.18.3"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.18.3.tar.gz",
