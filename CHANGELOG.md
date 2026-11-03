@@ -15,6 +15,8 @@
 
 ### Added
 
+- **openkal-platform 0.23.2.** The corrected version group pins musl 0.27.2, llvm-runtime 0.18.3 and image tools 0.4.2; the published musl image edge now selects the same loader. It requires mcpp 2026.11.3.1. GLOBAL and CN archives have the same verified SHA256. The older published groups remain unchanged.
+
 - **openkal-llvm-runtime 0.18.3.** The runtime pins openkal-musl 0.27.2, whose image loader edge selects openkal-ld 0.4.2. The openkal test member follows the release. GLOBAL and CN archives have the same verified SHA256.
 
 - **openkal-musl 0.27.2.** The image dependency selects openkal-ld 0.4.2, matching the platform version group. The Linux test member follows the release. GLOBAL and CN archives have the same verified SHA256.
