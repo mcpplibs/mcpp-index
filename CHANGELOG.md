@@ -15,6 +15,8 @@
 
 ### Added
 
+- **openkal-platform 0.23.3.** Both image and hosted arrangements select the corrected Linux confinement graph: Linux 0.24.1, musl 0.27.3, llvm-runtime 0.18.4 and image 0.4.3. It requires mcpp 2026.11.3.1. GLOBAL and CN archives have the same verified SHA256.
+
 - **openkal-llvm-runtime 0.18.4.** Both allocator arrangements select openkal-musl 0.27.3, which propagates Linux 0.24.1 and image loader 0.4.3. The C++ runtime implementation is unchanged. The openkal test member follows the release for musl targets. GLOBAL and CN archives have the same verified SHA256.
 
 - **openkal-musl 0.27.3.** The Linux dependency selects openkal-linux 0.24.1 for correct read-only confinement, and the image dependency selects openkal-ld 0.4.3. The C library implementation is unchanged. The Linux test member follows the release. GLOBAL and CN archives have the same verified SHA256.
