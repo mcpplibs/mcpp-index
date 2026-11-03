@@ -15,6 +15,8 @@
 
 ### Added
 
+- **openkal-platform 0.23.4.** Both image and hosted arrangements select loader/tools 0.4.4, musl 0.27.4 and llvm-runtime 0.18.5. Kernel backend pins and compile/link conventions are unchanged. The hosted platform test member follows the release; mcpp remains 2026.11.3.1. GLOBAL and CN source archives have the same verified SHA256.
+
 - **openkal-llvm-runtime 0.18.5.** Both allocator arrangements select openkal-musl 0.27.4, which propagates image loader 0.4.4. The C++ runtime implementation is unchanged. The openkal test member follows the release. GLOBAL and CN source archives have the same verified SHA256.
 
 - **openkal-musl 0.27.4.** The image dependency selects openkal-ld 0.4.4 for the partial mapping correction. The C library implementation and hosted kernel backend pins are unchanged. The Linux test member follows the release. GLOBAL and CN source archives have the same verified SHA256.

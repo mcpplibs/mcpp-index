@@ -18,6 +18,8 @@ toolchain = "llvm@22.1.8"
 # index requires mcpp >= 2026.9.18.1 but this is mcpp 2026.9.17.3 [E0006]"
 # before a single line of the member's own source is read.
 #
+# 2026-11-03 loader follow-up: the hosted platform member selects 0.23.4.
+# The measurement engine and compatibility runtime/toolchain baseline are unchanged.
 # 2026-11-03: measurement engine 2026.11.3.1 matches all CI workflows; the
 # hosted platform member uses the corrected 0.23.3 group. The compatibility
 # runtime/toolchain baseline and index client floor remain unchanged.
