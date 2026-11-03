@@ -15,6 +15,9 @@
 
 ### Added
 
+- **openkal-ld/run/tools/bind 0.4.1。** 在 openkal-macos 0.21.2 上构建 macOS 的运行器：睡眠挂起当前上下文而不再自旋，单调时钟粒度
+  每次启动相同，初始化快照不再因测得的差异被拒绝。测试成员 `openkal-tools`、`openkal-bind` 随之移动。GLOBAL 为 GitHub 标签归档，
+  CN 为 GitCode `mcpp-res` 镜像，sha256 两处一致。
 - **openkal-macos 0.21.2。** 单调时钟的粒度取内核的计时单位（`mach_timebase_info`，向上取整：arm64 为 42 ns，x86_64 为 1 ns），
   每次启动相同；此前以读数变化的差值测得，各次启动不同，openkal-image 的运行器在使用初始化快照前比较实现的事实，曾因此拒绝快照。
   测试成员 `openkal` 随之移动。GLOBAL 为 GitHub 标签归档，CN 为 GitCode `mcpp-res` 镜像，sha256 两处一致。
