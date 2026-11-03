@@ -15,6 +15,9 @@
 
 ### Added
 
+- **openkal-musl 0.27.1。** 在 openkal-macos 0.21.3 之上：macOS 上的 hosted 程序得到被授予的目录（本库的初始化函数先于实现的运行，
+  实现改为从加载器的记录作答）。跨链接探针期望实现新导入的三个加载器名字；本库代码不变。测试成员 `openkal-musl` 随之移动。
+  GLOBAL 为 GitHub 标签归档，CN 为 GitCode `mcpp-res` 镜像，sha256 两处一致。
 - **openkal-ld/run/tools/bind 0.4.2。** 在 openkal-macos 0.21.3 上构建 macOS 的运行器。测试成员 `openkal-tools`、`openkal-bind`
   随之移动。GLOBAL 为 GitHub 标签归档，CN 为 GitCode `mcpp-res` 镜像，sha256 两处一致。
 - **openkal-macos 0.21.3。** 在实现自己的初始化函数运行之前被提问时（链接在它之前的初始化函数，如 hosted 安排中 openkal-musl 的），
