@@ -15,6 +15,12 @@
 
 ### Added
 
+- **openkal-musl 0.27.0。** 面向 openkal 0.23（openkal-linux 0.24.0、openkal-macos 0.21.2、openkal-windows 0.19.0）与
+  openkal-image 0.4.1：各系统上的 `/dev/null` 交给启动的程序为环境的空设备；`realpath` 由环境回答；映像的 `dlopen` 放在其基址；
+  初始化快照的两阶段（`__okrun_snapshot`、`__okrun_snapshot_start`）；`posix_spawn` 把程序持有的目录连同权限授予启动的程序；
+  `okm_preopen_attenuate`（`<okm_preopen.h>`）按程序自己的请求衰减持有的目录（含记录）；卷下的名字按环境的规则比较（盘符大小写、
+  两种分隔符）；mimalloc 的归还延迟随资源偏好。测试成员 `openkal-musl` 随之移动。GLOBAL 为 GitHub 标签归档，CN 为 GitCode
+  `mcpp-res` 镜像，sha256 两处一致。
 - **openkal-ld/run/tools/bind 0.4.1。** 在 openkal-macos 0.21.2 上构建 macOS 的运行器：睡眠挂起当前上下文而不再自旋，单调时钟粒度
   每次启动相同，初始化快照不再因测得的差异被拒绝。测试成员 `openkal-tools`、`openkal-bind` 随之移动。GLOBAL 为 GitHub 标签归档，
   CN 为 GitCode `mcpp-res` 镜像，sha256 两处一致。
