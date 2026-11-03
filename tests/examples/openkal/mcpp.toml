@@ -21,7 +21,7 @@ version = "0.1.0"
 openkal = "0.23.0"
 
 [target.'cfg(os = "linux")'.dependencies.mcpplibs]
-openkal-linux = "0.24.0"
+openkal-linux = "0.24.1"
 
 [target.'cfg(os = "macos")'.dependencies.mcpplibs]
 openkal-macos = "0.21.3"
