@@ -15,6 +15,8 @@
 
 ### Added
 
+- **openkal-llvm-runtime 0.18.2.** The runtime pins openkal-musl 0.27.1 over openkal-macos 0.21.3, so hosted macOS programs receive their granted directories. The openkal test member follows the release. GLOBAL and CN archives have the same verified SHA256.
+
 - **openkal-musl 0.27.1。** 在 openkal-macos 0.21.3 之上：macOS 上的 hosted 程序得到被授予的目录（本库的初始化函数先于实现的运行，
   实现改为从加载器的记录作答）。跨链接探针期望实现新导入的三个加载器名字；本库代码不变。测试成员 `openkal-musl` 随之移动。
   GLOBAL 为 GitHub 标签归档，CN 为 GitCode `mcpp-res` 镜像，sha256 两处一致。
