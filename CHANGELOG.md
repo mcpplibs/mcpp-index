@@ -15,6 +15,8 @@
 
 ### Added
 
+- **openkal-platform 0.23.5.** Image layers and the version group select musl 0.27.5 and LLVM runtime 0.18.6 for scoped routing scratch. The loader, tools, backends and hardening selections are retained. All four producer hosts passed; the hosted platform test member follows the release.
+
 - **openkal-llvm-runtime 0.18.6.** Both allocator arrangements select musl 0.27.5 for scoped routing scratch with image automatic zeroing retained. The C++ runtime implementation is unchanged. All ten producer checks passed; the openkal test member follows the release. GLOBAL and CN source archives have the same verified SHA256.
 
 - **openkal-musl 0.27.5.** Scope routing scratch to the syscalls that use it and avoid large temporary initialization on empty descriptor unlocks and ordinary null-name rejections, while retaining image automatic zeroing and existing refusal/ownership behavior. All ten producer checks passed, including the same regression image on four hosts. GLOBAL and CN source archives have the same verified SHA256; the direct C-library test member follows the release.
