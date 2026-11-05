@@ -15,6 +15,8 @@
 
 ### Added
 
+- **openkal-musl 0.27.7.** Select public Linux 0.24.2 and image loader 0.4.5 without changing the C library implementation or ABI. All ten producer jobs pass; matching source mirrors are verified and the direct consumer follows the release.
+
 - **openkal-image source family 0.4.5.** Loader, runner, tools and binding share the verified archive. The runner adopts Linux 0.24.2 unit-memory observation; okprof forwards complete environment values and child status. Both source consumers follow the release; hosted prebuilt tools and final engine qualification remain separate.
 
 - openkal-linux 0.24.2: avoid reading unrelated process RSS during unit memory observation; preserve refused-query fallback, group charges and supervision cadence.
