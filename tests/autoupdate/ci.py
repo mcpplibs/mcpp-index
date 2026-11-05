@@ -300,8 +300,24 @@ def matrix(plan: Path, output: Path, base: str):
     print(f"Candidate matrix: {len(jobs)} real build/run jobs.")
 
 
+def replace_candidate(text: str, identity: str, version: str) -> str:
+    namespace, name = identity.split(":", 1)
+    text, replacements = re.subn(
+        rf'(?m)^(\s*(?:{re.escape(name)}|"{re.escape(namespace)}\.{re.escape(name)}")\s*=\s*(?:\{{\s*version\s*=\s*)?")[^"]+(".*)$',
+        lambda m: m[1] + version + m[2], text)
+    if not replacements:
+        # A platform the member selects (mcpp SPEC-013).
+        text, replacements = re.subn(
+            rf'(?m)^(\s*platform\s*=\s*"(?:{re.escape(namespace)}\.)?{re.escape(name)}@)[^"]+(".*)$',
+            lambda m: m[1] + version + m[2], text)
+    if not replacements:
+        raise RuntimeError("candidate dependency was not replaced: " + identity)
+    return text
+
+
 def prepare(plan: Path, identity: str, output: Path, home: Path | None = None):
-    record = next(r for r in json.loads(plan.read_text(encoding="utf-8"))["packages"] if r["id"] == identity)
+    candidates = json.loads(plan.read_text(encoding="utf-8"))["packages"]
+    record = next(r for r in candidates if r["id"] == identity)
     namespace, name = identity.split(":", 1)
     version = record["candidate"]
     member = direct_member(identity)
@@ -311,16 +327,13 @@ def prepare(plan: Path, identity: str, output: Path, home: Path | None = None):
         shutil.copytree(source, output, dirs_exist_ok=True,
                         ignore=shutil.ignore_patterns("target", ".mcpp", "mcpp.lock"))
         text = (output / "mcpp.toml").read_text(encoding="utf-8")
-        text, replacements = re.subn(
-            rf'(?m)^(\s*(?:{re.escape(name)}|"{re.escape(namespace)}\.{re.escape(name)}")\s*=\s*(?:\{{\s*version\s*=\s*)?")[^"]+(".*)$',
-            lambda m: m[1] + version + m[2], text)
-        if not replacements:
-            # A platform the member selects (mcpp SPEC-013): `platform = "<name>@<version>"`.
-            text, replacements = re.subn(
-                rf'(?m)^(\s*platform\s*=\s*"(?:{re.escape(namespace)}\.)?{re.escape(name)}@)[^"]+(".*)$',
-                lambda m: m[1] + version + m[2], text)
-        if not replacements:
-            raise RuntimeError("candidate dependency was not replaced")
+        # One change plan may advance an ABI group together. Replacing only
+        # this row creates a mixture the resolver correctly rejects. Apply
+        # exactly the planned candidates mapped to this same real consumer;
+        # unplanned dependencies retain the fixture's constraints.
+        for candidate in candidates:
+            if direct_member(candidate["id"]) == member:
+                text = replace_candidate(text, candidate["id"], candidate["candidate"])
         # Standalone consumer: no inherited workspace or stale relative index redirects.
         text = re.sub(r'(?ms)^\[indices(?:\.[^\]]+)?\]\s*\n.*?(?=^\[|\Z)', '', text)
     else:

@@ -25,6 +25,43 @@ def descriptor(name):
 
 
 class BaselineTests(unittest.TestCase):
+    def test_one_consumer_uses_all_and_only_its_planned_candidates(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "tests/examples/kernel"
+            source.mkdir(parents=True)
+            (source / "mcpp.toml").write_text(
+                '[package]\nname="kernel"\nversion="0.1.0"\n'
+                '[dependencies.mcpplibs]\nabi="0.23.0"\n'
+                '[target.linux.dependencies.mcpplibs]\nbackend="0.24.2"\n'
+                '[build-dependencies.compat]\nhelper="1.0.0"\n')
+            other = root / "tests/examples/other"
+            other.mkdir()
+            (other / "mcpp.toml").write_text(
+                '[package]\nname="other"\nversion="0.1.0"\n'
+                '[dependencies.compat]\nunrelated="1.0.0"\n')
+            plan = root / "plan.json"
+            candidates = [{"id": "mcpplibs:abi", "candidate": "0.24.0"},
+                          {"id": "mcpplibs:backend", "candidate": "0.25.0"},
+                          {"id": "compat:unrelated", "candidate": "2.0.0"}]
+            with patch.object(ci, "ROOT", root):
+                for identity in ("mcpplibs:abi", "mcpplibs:backend"):
+                    plan.write_text(json.dumps({"packages": candidates}))
+                    dest = root / identity.split(":")[1]
+                    ci.prepare(plan, identity, dest)
+                    manifest = tomllib.loads((dest / "mcpp.toml").read_text())
+                    self.assertEqual(manifest["dependencies"]["mcpplibs"]["abi"], "0.24.0")
+                    self.assertEqual(manifest["target"]["linux"]["dependencies"]["mcpplibs"]["backend"], "0.25.0")
+                    self.assertEqual(manifest["build-dependencies"]["compat"]["helper"], "1.0.0")
+                    self.assertNotIn("unrelated", manifest.get("dependencies", {}).get("compat", {}))
+                # No implicit companion upgrade when it is absent from the plan.
+                plan.write_text(json.dumps({"packages": candidates[:1]}))
+                dest = root / "single"
+                ci.prepare(plan, "mcpplibs:abi", dest)
+                manifest = tomllib.loads((dest / "mcpp.toml").read_text())
+                self.assertEqual(manifest["dependencies"]["mcpplibs"]["abi"], "0.24.0")
+                self.assertEqual(manifest["target"]["linux"]["dependencies"]["mcpplibs"]["backend"], "0.24.2")
+
     def test_commit_snapshot_is_manual_but_historical_bytes_are_still_guarded(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

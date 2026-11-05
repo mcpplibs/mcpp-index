@@ -46,6 +46,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.13.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-emscripten/archive/refs/tags/0.13.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-emscripten/releases/download/0.13.0/openkal-emscripten-0.13.0.tar.gz",
+                },
+                sha256 = "0397a00f76612b4e1fd469ce7178fd0754b1988d80a71756730799a1c99d7adb",
+            },
             ["0.12.0"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-emscripten/archive/refs/tags/0.12.0.tar.gz",
@@ -146,6 +153,13 @@ package = {
             },
         },
         macosx = {
+            ["0.13.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-emscripten/archive/refs/tags/0.13.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-emscripten/releases/download/0.13.0/openkal-emscripten-0.13.0.tar.gz",
+                },
+                sha256 = "0397a00f76612b4e1fd469ce7178fd0754b1988d80a71756730799a1c99d7adb",
+            },
             ["0.12.0"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-emscripten/archive/refs/tags/0.12.0.tar.gz",
@@ -246,6 +260,13 @@ package = {
             },
         },
         windows = {
+            ["0.13.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-emscripten/archive/refs/tags/0.13.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-emscripten/releases/download/0.13.0/openkal-emscripten-0.13.0.tar.gz",
+                },
+                sha256 = "0397a00f76612b4e1fd469ce7178fd0754b1988d80a71756730799a1c99d7adb",
+            },
             ["0.12.0"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-emscripten/archive/refs/tags/0.12.0.tar.gz",
