@@ -1,7 +1,7 @@
 -- openkal-linux --- the reference implementation.
 --
--- No `deps`. The implementation uses the C library of the host, which mcpp
--- already supplies for a hosted target; nothing further is required.
+-- No descriptor-level `deps`: the source manifest names the openkal contract.
+-- The implementation issues kernel system calls without borrowing a C library.
 --
 -- The package is listed for every platform because a descriptor's platform
 -- table describes availability rather than applicability. A project selects
@@ -19,6 +19,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.24.2"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-linux/archive/refs/tags/0.24.2.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-linux/releases/download/0.24.2/openkal-linux-0.24.2.tar.gz",
+                },
+                sha256 = "bfe9f4fc34b9d2c4d321939bb00f4da7c8f444abb38bb12756da7b5d57717ee9",
+            },
             ["0.24.1"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-linux/archive/refs/tags/0.24.1.tar.gz",
@@ -231,6 +238,13 @@ package = {
             },
         },
         macosx = {
+            ["0.24.2"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-linux/archive/refs/tags/0.24.2.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-linux/releases/download/0.24.2/openkal-linux-0.24.2.tar.gz",
+                },
+                sha256 = "bfe9f4fc34b9d2c4d321939bb00f4da7c8f444abb38bb12756da7b5d57717ee9",
+            },
             ["0.24.1"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-linux/archive/refs/tags/0.24.1.tar.gz",
@@ -443,6 +457,13 @@ package = {
             },
         },
         windows = {
+            ["0.24.2"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-linux/archive/refs/tags/0.24.2.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-linux/releases/download/0.24.2/openkal-linux-0.24.2.tar.gz",
+                },
+                sha256 = "bfe9f4fc34b9d2c4d321939bb00f4da7c8f444abb38bb12756da7b5d57717ee9",
+            },
             ["0.24.1"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-linux/archive/refs/tags/0.24.1.tar.gz",

@@ -15,6 +15,8 @@
 
 ### Added
 
+- openkal-linux 0.24.2: avoid reading unrelated process RSS during unit memory observation; preserve refused-query fallback, group charges and supervision cadence.
+
 - **openkal-platform 0.23.7.** Image and hosted layers select musl 0.27.6 and LLVM runtime 0.18.7 consistently with the exact version group. The C library avoids redundant resolved-name property preflights; TLS, ThinLTO, loader, backend and hardening contracts remain intact. All four producer hosts passed; the hosted platform consumer follows the release. Final clangd cold CPU qualification remains separate.
 
 - **openkal-llvm-runtime 0.18.7.** Both allocator arrangements select musl 0.27.6; the C++ runtime implementation is unchanged. All ten producer checks passed, including native/cross-target behavior, four-host images and the unchanged L2 workload thresholds. GLOBAL and CN source archives are verified before registration; the conditional runtime test member follows the release.
