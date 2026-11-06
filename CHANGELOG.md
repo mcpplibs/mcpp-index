@@ -13,6 +13,11 @@
   块，链接时找不到这两个归档；新增 `openkal` 块，不列链接参数。`-latomic` 上游只在找到时才链接，mimalloc 的原子操作在本索引
   构建的各架构上都是无锁的，LLVM 工具链在图中 C 库之上没有这个归档。
 
+### Chore
+
+- **validate：llvm 腿安装宿主 ffmpeg 头文件时改走 IPv4、等待 dpkg 锁并重试三次。** 2026-11-06 起多个运行器上安装在超时内没有任何
+  输出，而索引更新只用数秒；安装现在输出进度，失败后重新更新索引再试。
+
 ### Added
 
 - **mcpplibs.mwrap.zlib 1.3.2、.zstd 1.5.7、.xz 5.8.3、.xxhash 0.8.3、.libarchive 3.8.7、.libc 17.0.0（新包）。** 六个 mwrap

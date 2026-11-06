@@ -1444,15 +1444,21 @@ jobs:
             cp /etc/apt/sources.list.d/ubuntu.sources "$RUNNER_TEMP/apt-ubuntu/"
             apt_opts+=(-o Dir::Etc::SourceList=/dev/null -o "Dir::Etc::SourceParts=$RUNNER_TEMP/apt-ubuntu")
           fi
+          # IPv4: on 2026-11-06 the install stalled without output for the
+          # whole timeout on several runners while the index update had taken
+          # seconds. The install now reports its progress, waits for a held
+          # dpkg lock rather than stalling on it, and is tried three times.
+          apt_opts+=(-o Acquire::ForceIPv4=true -o DPkg::Lock::Timeout=120)
           time sudo timeout 180 apt-get update -qq "${apt_opts[@]}"
-          for attempt in 1 2; do
-            if time sudo timeout 300 apt-get install -y -qq --no-install-recommends "${apt_opts[@]}" \
+          for attempt in 1 2 3; do
+            if time sudo timeout 240 apt-get install -y -q --no-install-recommends "${apt_opts[@]}" \
                  libavutil-dev libavcodec-dev libavformat-dev \
                  libavfilter-dev libavdevice-dev libswscale-dev libswresample-dev; then
               break
             fi
-            [[ $attempt == 2 ]] && { echo "::error::the ffmpeg dev headers did not install"; exit 1; }
+            [[ $attempt == 3 ]] && { echo "::error::the ffmpeg dev headers did not install"; exit 1; }
             echo "::warning::apt-get install failed (attempt $attempt); retrying"
+            sudo timeout 120 apt-get update -qq "${apt_opts[@]}" || true
           done
           dpkg -l | grep -E 'libav(util|codec)-dev|libswscale-dev'
 
