@@ -1,6 +1,6 @@
 -- openkal-ld --- libokld, the ok format's library (openkal SPEC clause 12).
 --
--- One of the three packages of mcpplibs/openkal-image, which share one tag
+-- One of the four packages of mcpplibs/openkal-image, which share one tag
 -- and one archive; each descriptor names its member's manifest. Freestanding:
 -- the definition of the format, a reader, a checker, a signer and a loader, for
 -- a loader (openkal-run), the tools (openkal-tools) and a C library that
@@ -18,6 +18,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.5.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-image/archive/refs/tags/0.5.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-image/releases/download/0.5.0/openkal-image-0.5.0.tar.gz",
+                },
+                sha256 = "6b3a906cd150751c639c858c9536d10b38b51d25b1067529c50e345996344b0f",
+            },
             ["0.4.5"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-image/archive/refs/tags/0.4.5.tar.gz",
@@ -160,6 +167,13 @@ package = {
             },
         },
         macosx = {
+            ["0.5.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-image/archive/refs/tags/0.5.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-image/releases/download/0.5.0/openkal-image-0.5.0.tar.gz",
+                },
+                sha256 = "6b3a906cd150751c639c858c9536d10b38b51d25b1067529c50e345996344b0f",
+            },
             ["0.4.5"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-image/archive/refs/tags/0.4.5.tar.gz",
@@ -302,6 +316,13 @@ package = {
             },
         },
         windows = {
+            ["0.5.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-image/archive/refs/tags/0.5.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-image/releases/download/0.5.0/openkal-image-0.5.0.tar.gz",
+                },
+                sha256 = "6b3a906cd150751c639c858c9536d10b38b51d25b1067529c50e345996344b0f",
+            },
             ["0.4.5"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-image/archive/refs/tags/0.4.5.tar.gz",

@@ -75,6 +75,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.19.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.19.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-llvm-runtime/releases/download/0.19.0/openkal-llvm-runtime-0.19.0.tar.gz",
+                },
+                sha256 = "ef459fb602148129d0354c71e0a657cae59588548e09839aa6ac0cad779d10fd",
+            },
             ["0.18.7"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.18.7.tar.gz",
@@ -483,6 +490,13 @@ package = {
             },
         },
         macosx = {
+            ["0.19.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.19.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-llvm-runtime/releases/download/0.19.0/openkal-llvm-runtime-0.19.0.tar.gz",
+                },
+                sha256 = "ef459fb602148129d0354c71e0a657cae59588548e09839aa6ac0cad779d10fd",
+            },
             ["0.18.7"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.18.7.tar.gz",
@@ -891,6 +905,13 @@ package = {
             },
         },
         windows = {
+            ["0.19.0"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.19.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openkal-llvm-runtime/releases/download/0.19.0/openkal-llvm-runtime-0.19.0.tar.gz",
+                },
+                sha256 = "ef459fb602148129d0354c71e0a657cae59588548e09839aa6ac0cad779d10fd",
+            },
             ["0.18.7"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.18.7.tar.gz",
