@@ -22,6 +22,14 @@
 
 ### Added
 
+- **The openkal 0.24.1 correction group, as one change.** openkal-platform 0.24.1, openkal-musl 0.28.1 (a directory's whole
+  name kept, openkal-musl#83), openkal-llvm-runtime 0.19.1 (a name beneath a Windows volume is absolute,
+  openkal-llvm-runtime#64) and the image family 0.5.1 (openkal-ld, -run, -tools, -bind: okrun over openkal-macos 0.22.1,
+  indexed by #720). The members name one another by compatible ranges and the platform's version group selects the
+  versions; this change was written by openkal-platform's `tools/family_release.py index`, which also verified each
+  tag's GitHub archive against its GitCode mirror. The openkal members move to the group (runtime 0.19.1, platform
+  0.24.1, musl 0.28.1, the 0.5.1 image family).
+
 - **mcpplibs.mwrap.zlib 1.3.2、.zstd 1.5.7、.xz 5.8.3、.xxhash 0.8.3、.libarchive 3.8.7、.libc 17.0.0（新包）。** 六个 mwrap
   包装把头文件收敛到各自的包中（mcpp 设计记录 2026-11-07 D10）。前五个以 C++23 模块使用同版本的 compat 实现：函数、类型、
   枚举值以上游的全局名导出，常量宏与类型宏在 `.macros` 中为同名常量与别名，带参数的宏在 `<mwrap/<lib>/macros.hpp>`；
