@@ -19,6 +19,11 @@
   `MAXPATHLEN` no longer refuse a well-formed start with `kal_err_invalid`. OpenKal is the compatible range `^0.24.0`.
   First member of the openkal 0.24.1 correction group (mcpp design record 2026-11-07 §4.2.3).
 
+- **The openkal test members consume the 0.24 group.** `openkal-tests` names openkal 0.24.0, Linux 0.25.0, macOS 0.22.1,
+  Windows 0.20.0, LLVM runtime 0.19.0 and Emscripten 0.13.0; the platform, musl, tools and binding members name
+  openkal-platform 0.24.0, openkal-musl 0.28.0 and the 0.5.0 image family. Under the 0.23 pins a 0.24 candidate could not
+  share a build with the member.
+
 - **openkal-musl 0.27.7.** Select public Linux 0.24.2 and image loader 0.4.5 without changing the C library implementation or ABI. All ten producer jobs pass; matching source mirrors are verified and the direct consumer follows the release.
 
 - **openkal-image source family 0.4.5.** Loader, runner, tools and binding share the verified archive. The runner adopts Linux 0.24.2 unit-memory observation; okprof forwards complete environment values and child status. Both source consumers follow the release; hosted prebuilt tools and final engine qualification remain separate.
