@@ -15,6 +15,15 @@
 
 ### Added
 
+- **mcpplibs.mwrap.zlib 1.3.2、.zstd 1.5.7、.xz 5.8.3、.xxhash 0.8.3、.libarchive 3.8.7、.libc 17.0.0（新包）。** 六个 mwrap
+  包装把头文件收敛到各自的包中（mcpp 设计记录 2026-11-07 D10）。前五个以 C++23 模块使用同版本的 compat 实现：函数、类型、
+  枚举值以上游的全局名导出，常量宏与类型宏在 `.macros` 中为同名常量与别名，带参数的宏在 `<mwrap/<lib>/macros.hpp>`；
+  导出清单由各仓库的 `tools/generate.py` 按 clang 读到的头文件生成并在 CI 中审计。`mcpplibs.mwrap.libc` 映射 ISO C17
+  附录 B 的对象宏（`stdout()`、`errno()`、`EOF`、`INT_MAX` 等），实现为目标的 C 库。消费者测试 `tests/mwrap/zlib-compress`、
+  `zstd-squeeze`、`xz-pack`、`xxhash-digest`、`libarchive-bundle`、`libc-stdio`，以及已安装模板与重定位许可检查（检查脚本以
+  `STATIC_NOTICES` 表统一六个包的约定）。GLOBAL 为 GitHub 发布资产，CN 为 GitCode `mcpp-res/mwrap-<lib>` 镜像，sha256
+  两处一致。`docs/mwrap.md` 补充 C 标准库这一实现来源。
+
 - **openkal-macos 0.22.1.** The confinement rules are sized to the grants of each start; sixteen grants named near
   `MAXPATHLEN` no longer refuse a well-formed start with `kal_err_invalid`. OpenKal is the compatible range `^0.24.0`.
   First member of the openkal 0.24.1 correction group (mcpp design record 2026-11-07 §4.2.3).

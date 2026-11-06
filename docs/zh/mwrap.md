@@ -20,6 +20,9 @@
 包和模块名不带 -m，不创建另一套普通 API namespace。已发布旧身份、版本和内容保持不可变，
 通过新 mwrap 身份迁移。简单实现优先依赖 compat.xxx；复杂库可以 vendor 到 upstream/。
 同一程序的同一实现只能有一个所有者，不能把 compat 与 vendored 实现重复链接。
+C 标准库是第三种实现来源：实现由目标的 C 库提供，由 mcpp 随目标选定（glibc、musl、Windows CRT、macOS libSystem、
+openkal-musl、mingw-w64）。`mcpplibs.mwrap.libc` 不链接任何实现；版本号表示所依据的标准（ISO/IEC 9899:2018 为 17.0.0），
+记录在 `[package.metadata.mwrap]` 的 `standard` 中。
 
 ## 仓库分层
 

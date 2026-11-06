@@ -1,0 +1,11 @@
+[package]
+name = "xz-pack"
+version = "5.8.3"
+description = "Consume the immutable liblzma wrapper: an .xz stream through the side header's LZMA_STREAM_INIT, a BCJ filter chain, the .lzma format, and the published CRC-64"
+
+[indices]
+# Use the complete candidate built-in index prepared by tests/run_members.sh.
+# An explicit empty table overrides the legacy workspace redirect.
+
+[dependencies]
+"mcpplibs.mwrap.xz" = "5.8.3"

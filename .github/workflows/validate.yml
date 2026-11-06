@@ -1675,6 +1675,36 @@ jobs:
         shell: bash
         run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.mimalloc@3.6.1 --deploy
 
+      - name: Installed zlib wrapper archive, actual default compression template and its relocated notices
+        if: contains(format(' {0} ', env.MEMBERS), ' zlib-compress ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.zlib@1.3.2 --deploy
+
+      - name: Installed zstd wrapper archive, actual default compression template and its relocated notices
+        if: contains(format(' {0} ', env.MEMBERS), ' zstd-squeeze ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.zstd@1.5.7 --deploy
+
+      - name: Installed xz wrapper archive, actual default compression template and its relocated notices
+        if: contains(format(' {0} ', env.MEMBERS), ' xz-pack ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.xz@5.8.3 --deploy
+
+      - name: Installed xxhash wrapper archive, actual default hashing template and its relocated notices
+        if: contains(format(' {0} ', env.MEMBERS), ' xxhash-digest ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.xxhash@0.8.3 --deploy
+
+      - name: Installed libarchive wrapper archive, actual default archive template and its relocated notices
+        if: contains(format(' {0} ', env.MEMBERS), ' libarchive-bundle ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.libarchive@3.8.7 --deploy
+
+      - name: Installed libc wrapper archive, actual default C stdio template and its relocated notices
+        if: contains(format(' {0} ', env.MEMBERS), ' libc-stdio ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.libc@17.0.0 --deploy
+
       - name: Installed libwebp wrapper archive, actual default image template and its relocated notices
         if: contains(format(' {0} ', env.MEMBERS), ' libwebp-image ') && matrix.toolchain == 'default'
         shell: bash

@@ -1,0 +1,11 @@
+[package]
+name = "zstd-squeeze"
+version = "1.5.7"
+description = "Consume the immutable Zstandard wrapper: a one-shot round trip with the frame's content size, a stream, a damaged checksum refused, and the side header's ZSTD_COMPRESSBOUND"
+
+[indices]
+# Use the complete candidate built-in index prepared by tests/run_members.sh.
+# An explicit empty table overrides the legacy workspace redirect.
+
+[dependencies]
+"mcpplibs.mwrap.zstd" = "1.5.7"
