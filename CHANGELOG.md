@@ -15,6 +15,10 @@
 
 ### Added
 
+- **openkal-macos 0.22.1.** The confinement rules are sized to the grants of each start; sixteen grants named near
+  `MAXPATHLEN` no longer refuse a well-formed start with `kal_err_invalid`. OpenKal is the compatible range `^0.24.0`.
+  First member of the openkal 0.24.1 correction group (mcpp design record 2026-11-07 §4.2.3).
+
 - **openkal-musl 0.27.7.** Select public Linux 0.24.2 and image loader 0.4.5 without changing the C library implementation or ABI. All ten producer jobs pass; matching source mirrors are verified and the direct consumer follows the release.
 
 - **openkal-image source family 0.4.5.** Loader, runner, tools and binding share the verified archive. The runner adopts Linux 0.24.2 unit-memory observation; okprof forwards complete environment values and child status. Both source consumers follow the release; hosted prebuilt tools and final engine qualification remain separate.
