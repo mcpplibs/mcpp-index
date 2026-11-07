@@ -1,0 +1,11 @@
+[package]
+name = "zlib-compress"
+version = "1.3.2"
+description = "Consume the immutable zlib wrapper: a one-call round trip, an inflate stream through the side header's inflateInit, a gzip file, and the published CRC-32"
+
+[indices]
+# Use the complete candidate built-in index prepared by tests/run_members.sh.
+# An explicit empty table overrides the legacy workspace redirect.
+
+[dependencies]
+"mcpplibs.mwrap.zlib" = "1.3.2"

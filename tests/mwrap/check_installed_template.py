@@ -12,6 +12,18 @@ import tempfile
 import tomllib
 
 
+# Identity: (root module source, retained upstream license under licenses/<name>,
+# a phrase of that license, a phrase of the wrapper's NOTICE naming the authors).
+STATIC_NOTICES = {
+    "mcpplibs.mwrap.zlib": ("zlib.cppm", "upstream/zlib/LICENSE", b"Jean-loup Gailly", b"Mark Adler"),
+    "mcpplibs.mwrap.zstd": ("zstd.cppm", "upstream/zstd/LICENSE", b"BSD License", b"Meta Platforms"),
+    "mcpplibs.mwrap.xz": ("xz.cppm", "upstream/xz/COPYING.0BSD", b"Permission to use, copy, modify", b"XZ Utils authors"),
+    "mcpplibs.mwrap.xxhash": ("xxhash.cppm", "upstream/xxhash/LICENSE", b"BSD 2-Clause", b"Yann Collet"),
+    "mcpplibs.mwrap.libarchive": ("libarchive.cppm", "upstream/libarchive/COPYING", b"Tim Kientzle", b"Tim Kientzle"),
+    "mcpplibs.mwrap.libc": ("libc.cppm", None, b"", b"ISO/IEC 9899:2018"),
+}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--mcpp", default="mcpp")
@@ -417,6 +429,28 @@ def main():
                 assert b"Apache License" in (roots[0] / "LICENSE").read_bytes()
                 assert b"mcpp-community" in (roots[0] / "NOTICE").read_bytes()
                 print(f"Verified {len(declared)} byte-identical wrapper/SDL license files", flush=True)
+            elif identity in STATIC_NOTICES:
+                # A statically linked library whose notices the package
+                # deploys beside the wrapper's (libc-m: the wrapper's only).
+                module, upstream, marker, author = STATIC_NOTICES[identity]
+                short = identity.rsplit(".", 1)[1]
+                sources = [path for store in (home / "xpkgs", home / "registry/data/xpkgs")
+                           for path in store.glob(f"mcpplibs.mwrap-x-{short}/{version}/*/src/{module}")]
+                assert len(sources) == 1, sources
+                source = sources[0].parent.parent
+                declared = tomllib.loads((source / "mcpp.toml").read_text(encoding="utf-8"))["runtime"]["deploy"]
+                roots = list(relocated.rglob(f"licenses/{short}"))
+                assert len(roots) == 1, f"Missing {short} runtime license tree: {roots}"
+                for entry in declared:
+                    notice = source / entry["from"]
+                    copied = roots[0].parent.parent / entry["to"] / notice.name
+                    assert copied.is_file() and copied.read_bytes() == notice.read_bytes(), copied
+                if upstream:
+                    assert marker in (roots[0] / upstream).read_bytes(), upstream
+                assert b"Apache License" in (roots[0] / "LICENSE").read_bytes()
+                notice = (roots[0] / "NOTICE").read_bytes()
+                assert b"mcpp-community" in notice and author in notice
+                print(f"Verified {len(declared)} byte-identical wrapper/{short} license files", flush=True)
             else:
                 raise ValueError(f"No deployment acceptance contract for {identity}")
             runtime_env = {key: value for key, value in os.environ.items()

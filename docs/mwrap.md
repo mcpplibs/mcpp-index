@@ -28,6 +28,11 @@ A wrapper should depend on it when its configuration and ABI are sufficient.
 Complex implementations may instead vendor pinned sources under `upstream/`.
 Each implementation has one owner in a program: do not link both a vendored copy
 and a compat copy of the same library.
+The C standard library is the third source: its implementation is the target's
+C library, which mcpp selects with the target (glibc, musl, the Windows CRT,
+macOS libSystem, openkal-musl, mingw-w64). `mcpplibs.mwrap.libc` links nothing;
+its version names the standard (17.0.0 for ISO/IEC 9899:2018), recorded with
+`standard` in `[package.metadata.mwrap]`.
 
 ## Repository layout
 

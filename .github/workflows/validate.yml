@@ -1421,40 +1421,60 @@ jobs:
       # A bare GitHub runner has no libav* under /usr/include, so a
       # descriptor that loses its vendored headers to the host's would still
       # be green here. That is precisely how compat.ffmpeg's -idirafter hole
-      # survived: nothing in CI had a system ffmpeg to lose to. Installing
-      # the dev headers is what turns this leg into a real test of include
-      # ORDER rather than of include EXISTENCE.
+      # survived: nothing in CI had a system ffmpeg to lose to. Headers of
+      # FFmpeg's own names under /usr/include are what turn this leg into a
+      # test of include ORDER rather than of include EXISTENCE.
+      #
+      # They are planted, not installed: each public header of the release
+      # compat.ffmpeg names, as a file that stops the compile, naming itself.
+      # A reach of the host's header is then an error at the line that made
+      # it, where an installed header of another FFmpeg compiled silently or
+      # failed somewhere else. And nothing is downloaded from Ubuntu's mirror,
+      # whose ffmpeg closure (~100 MiB at the 2026-11-06 rates) outlasted
+      # every timeout on ubuntu-26.04 runners.
       #
       # Deliberately only on the llvm leg. The default leg reaches its
       # compiler through --sysroot, so it is immune by construction and
-      # installing there would change an existing job's environment for no
+      # planting there would change an existing job's environment for no
       # coverage. Keeping the blast radius to the new leg means a red here
       # is always about the thing this leg was added to watch.
-      - name: Install host ffmpeg dev headers (llvm leg only)
+      - name: Plant host ffmpeg headers that stop the compile (llvm leg only)
         if: matrix.platform == 'linux' && matrix.toolchain == 'llvm'
         shell: bash
-        # Only Ubuntu's own archive is refreshed: a bare `apt-get update` also
-        # walks every third-party source the runner image carries (PPAs,
-        # vendor repos), and one slow mirror among them held this step for
-        # minutes. Bounded timeouts and retries, and no recommended packages.
         run: |
-          apt_opts=(-o Acquire::Retries=3 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20)
-          if [[ -f /etc/apt/sources.list.d/ubuntu.sources ]]; then
-            mkdir -p "$RUNNER_TEMP/apt-ubuntu"
-            cp /etc/apt/sources.list.d/ubuntu.sources "$RUNNER_TEMP/apt-ubuntu/"
-            apt_opts+=(-o Dir::Etc::SourceList=/dev/null -o "Dir::Etc::SourceParts=$RUNNER_TEMP/apt-ubuntu")
-          fi
-          time sudo timeout 180 apt-get update -qq "${apt_opts[@]}"
-          for attempt in 1 2; do
-            if time sudo timeout 300 apt-get install -y -qq --no-install-recommends "${apt_opts[@]}" \
-                 libavutil-dev libavcodec-dev libavformat-dev \
-                 libavfilter-dev libavdevice-dev libswscale-dev libswresample-dev; then
-              break
-            fi
-            [[ $attempt == 2 ]] && { echo "::error::the ffmpeg dev headers did not install"; exit 1; }
-            echo "::warning::apt-get install failed (attempt $attempt); retrying"
-          done
-          dpkg -l | grep -E 'libav(util|codec)-dev|libswscale-dev'
+          python3 - <<'PY'
+          import hashlib, io, re, subprocess, tarfile, urllib.request
+          from pathlib import Path
+          lua = Path("pkgs/c/compat.ffmpeg.lua").read_text()
+          entry = re.search(r'linux\s*=\s*\{\s*\["([^"]+)"\]\s*=\s*\{.*?GLOBAL\s*=\s*"([^"]+)".*?CN\s*=\s*"([^"]+)".*?sha256\s*=\s*"([0-9a-f]{64})"', lua, re.S)
+          version, urls, sha = entry.group(1), (entry.group(2), entry.group(3)), entry.group(4)
+          data = None
+          for url in urls:
+              try:
+                  data = urllib.request.urlopen(url, timeout=120).read()
+              except OSError as e:
+                  print(f"::warning::{url}: {e}")
+                  continue
+              if hashlib.sha256(data).hexdigest() == sha:
+                  break
+              data = None
+          if data is None:
+              raise SystemExit(f"::error::the FFmpeg {version} source matching the descriptor could not be read")
+          libs = ("libavutil", "libavcodec", "libavformat", "libavfilter", "libavdevice", "libswscale", "libswresample")
+          planted = 0
+          with tarfile.open(fileobj=io.BytesIO(data)) as tar:
+              for name in tar.getnames():
+                  parts = name.split("/")
+                  if len(parts) == 3 and parts[1] in libs and parts[2].endswith(".h"):
+                      target = Path("/usr/include") / parts[1] / parts[2]
+                      text = f'#error "host <{parts[1]}/{parts[2]}> reached: a vendored FFmpeg header was not found first"\n'
+                      subprocess.run(["sudo", "mkdir", "-p", str(target.parent)], check=True)
+                      subprocess.run(["sudo", "tee", str(target)], input=text.encode(), check=True, stdout=subprocess.DEVNULL)
+                      planted += 1
+          if planted < 100:
+              raise SystemExit(f"::error::only {planted} FFmpeg headers were planted")
+          print(f"planted {planted} FFmpeg {version} headers under /usr/include")
+          PY
 
       # ── Select the toolchain for this leg ─────────────────────────────
       # No version pin: `llvm` resolves to whatever the toolchain family's
@@ -1674,6 +1694,36 @@ jobs:
         if: contains(format(' {0} ', env.MEMBERS), ' mimalloc-heap ') && matrix.toolchain == 'default'
         shell: bash
         run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.mimalloc@3.6.1 --deploy
+
+      - name: Installed zlib wrapper archive, actual default compression template and its relocated notices
+        if: contains(format(' {0} ', env.MEMBERS), ' zlib-compress ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.zlib@1.3.2 --deploy
+
+      - name: Installed zstd wrapper archive, actual default compression template and its relocated notices
+        if: contains(format(' {0} ', env.MEMBERS), ' zstd-squeeze ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.zstd@1.5.7 --deploy
+
+      - name: Installed xz wrapper archive, actual default compression template and its relocated notices
+        if: contains(format(' {0} ', env.MEMBERS), ' xz-pack ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.xz@5.8.3 --deploy
+
+      - name: Installed xxhash wrapper archive, actual default hashing template and its relocated notices
+        if: contains(format(' {0} ', env.MEMBERS), ' xxhash-digest ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.xxhash@0.8.3 --deploy
+
+      - name: Installed libarchive wrapper archive, actual default archive template and its relocated notices
+        if: contains(format(' {0} ', env.MEMBERS), ' libarchive-bundle ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.libarchive@3.8.7 --deploy
+
+      - name: Installed libc wrapper archive, actual default C stdio template and its relocated notices
+        if: contains(format(' {0} ', env.MEMBERS), ' libc-stdio ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.libc@17.0.0 --deploy
 
       - name: Installed libwebp wrapper archive, actual default image template and its relocated notices
         if: contains(format(' {0} ', env.MEMBERS), ' libwebp-image ') && matrix.toolchain == 'default'

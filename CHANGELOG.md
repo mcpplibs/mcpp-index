@@ -13,7 +13,23 @@
   块，链接时找不到这两个归档；新增 `openkal` 块，不列链接参数。`-latomic` 上游只在找到时才链接，mimalloc 的原子操作在本索引
   构建的各架构上都是无锁的，LLVM 工具链在图中 C 库之上没有这个归档。
 
+### Chore
+
+- **validate：llvm 腿不再从 Ubuntu 镜像安装 ffmpeg 开发包，改为在 `/usr/include` 下放置 FFmpeg 公开头文件同名、内容为
+  `#error` 的文件。** 文件名取自 compat.ffmpeg 描述符所指发布（按描述符的 sha256 校验）。宿主头文件一旦被包含即在包含处报错，
+  比安装另一版本的头文件更直接地检验包含顺序；2026-11-06 起 ubuntu-26.04 运行器上 ffmpeg 依赖闭包（约 100 MiB）的下载在每个
+  超时内都完成不了。
+
 ### Added
+
+- **mcpplibs.mwrap.zlib 1.3.2、.zstd 1.5.7、.xz 5.8.3、.xxhash 0.8.3、.libarchive 3.8.7、.libc 17.0.0（新包）。** 六个 mwrap
+  包装把头文件收敛到各自的包中（mcpp 设计记录 2026-11-07 D10）。前五个以 C++23 模块使用同版本的 compat 实现：函数、类型、
+  枚举值以上游的全局名导出，常量宏与类型宏在 `.macros` 中为同名常量与别名，带参数的宏在 `<mwrap/<lib>/macros.hpp>`；
+  导出清单由各仓库的 `tools/generate.py` 按 clang 读到的头文件生成并在 CI 中审计。`mcpplibs.mwrap.libc` 映射 ISO C17
+  附录 B 的对象宏（`stdout()`、`errno()`、`EOF`、`INT_MAX` 等），实现为目标的 C 库。消费者测试 `tests/mwrap/zlib-compress`、
+  `zstd-squeeze`、`xz-pack`、`xxhash-digest`、`libarchive-bundle`、`libc-stdio`，以及已安装模板与重定位许可检查（检查脚本以
+  `STATIC_NOTICES` 表统一六个包的约定）。GLOBAL 为 GitHub 发布资产，CN 为 GitCode `mcpp-res/mwrap-<lib>` 镜像，sha256
+  两处一致。`docs/mwrap.md` 补充 C 标准库这一实现来源。
 
 - **openkal-macos 0.22.1.** The confinement rules are sized to the grants of each start; sixteen grants named near
   `MAXPATHLEN` no longer refuse a well-formed start with `kal_err_invalid`. OpenKal is the compatible range `^0.24.0`.
