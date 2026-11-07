@@ -22,6 +22,10 @@
 
 ### Added
 
+- **mcpplibs.os 0.4.0.** `is_openkal` names a build for the openkal target, as each `is_<platform>` names its own
+  (`is_image` remains as a deprecated alias); `can_run_on(p)` and `on<P>(f)` ask one platform question of a native
+  build and an image alike; the platform modules are defined in an image where it can answer them; the effective user
+  and the creation mask are the kernel's answers. The test member `os` consumes 0.4.0.
 - **mcpplibs.os 0.3.1.** A name in the long spelling (`\\?\C:\...`, `\\?\UNC\...`) is the name it spells: `locate` and
   every `os::fs` operation through it accept what `fs::extended` produces, which 0.3.0 refused with `errc::invalid`; the
   kernel layer is a compatible range. The test member `os` consumes 0.3.1 (it stayed on 0.2.9 when 0.3.0 was registered).
