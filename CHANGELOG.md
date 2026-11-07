@@ -22,6 +22,9 @@
 
 ### Added
 
+- **mcpplibs.os 0.3.1.** A name in the long spelling (`\\?\C:\...`, `\\?\UNC\...`) is the name it spells: `locate` and
+  every `os::fs` operation through it accept what `fs::extended` produces, which 0.3.0 refused with `errc::invalid`; the
+  kernel layer is a compatible range. The test member `os` consumes 0.3.1 (it stayed on 0.2.9 when 0.3.0 was registered).
 - **The openkal 0.24.2 patch group: a leaf and a platform patch, as one change.** openkal-llvm-runtime 0.19.2 keeps the
   volume of a name it rebuilds part by part (`lexically_normal`, `weakly_canonical`, `D:/a` / `/b`), which 0.19.1 lost
   on Windows (openkal-llvm-runtime#68), and openkal-platform 0.24.2 names it; no other member changes. The test members
