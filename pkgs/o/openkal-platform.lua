@@ -26,6 +26,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.24.4"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-platform/archive/refs/tags/0.24.4.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-platform/releases/download/0.24.4/openkal-platform-0.24.4.tar.gz",
+                },
+                sha256 = "966a703d97c7f9acdd6c954a02d8eed23bc0ddbf9c1272a65815a2df9075724e",
+            },
             ["0.24.3"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-platform/archive/refs/tags/0.24.3.tar.gz",
@@ -196,6 +203,13 @@ package = {
             },
         },
         macosx = {
+            ["0.24.4"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-platform/archive/refs/tags/0.24.4.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-platform/releases/download/0.24.4/openkal-platform-0.24.4.tar.gz",
+                },
+                sha256 = "966a703d97c7f9acdd6c954a02d8eed23bc0ddbf9c1272a65815a2df9075724e",
+            },
             ["0.24.3"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-platform/archive/refs/tags/0.24.3.tar.gz",
@@ -366,6 +380,13 @@ package = {
             },
         },
         windows = {
+            ["0.24.4"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-platform/archive/refs/tags/0.24.4.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-platform/releases/download/0.24.4/openkal-platform-0.24.4.tar.gz",
+                },
+                sha256 = "966a703d97c7f9acdd6c954a02d8eed23bc0ddbf9c1272a65815a2df9075724e",
+            },
             ["0.24.3"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-platform/archive/refs/tags/0.24.3.tar.gz",
