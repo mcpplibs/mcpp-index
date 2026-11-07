@@ -22,6 +22,11 @@
 
 ### Added
 
+- **The openkal 0.24.2 patch group: a leaf and a platform patch, as one change.** openkal-llvm-runtime 0.19.2 keeps the
+  volume of a name it rebuilds part by part (`lexically_normal`, `weakly_canonical`, `D:/a` / `/b`), which 0.19.1 lost
+  on Windows (openkal-llvm-runtime#68), and openkal-platform 0.24.2 names it; no other member changes. The test members
+  `openkal` and `openkal-platform` consume the 0.24.2 group. Written by `tools/family_release.py index` of
+  openkal-platform.
 - **The openkal 0.24.1 correction group, as one change.** openkal-platform 0.24.1, openkal-musl 0.28.1 (a directory's whole
   name kept, openkal-musl#83), openkal-llvm-runtime 0.19.1 (a name beneath a Windows volume is absolute,
   openkal-llvm-runtime#64) and the image family 0.5.1 (openkal-ld, -run, -tools, -bind: okrun over openkal-macos 0.22.1,
