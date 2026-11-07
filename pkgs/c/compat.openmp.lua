@@ -3,6 +3,10 @@ local versions = {
         url = "https://github.com/llvm/llvm-project/releases/download/llvmorg-23.1.4/llvm-project-23.1.4.src.tar.xz",
         sha256 = "819ecf7351f1a66f76b2d701d8942faaf5faeb324cb90c9d5b090de142434bb2",
     },
+    ["23.1.5"] = {
+        url = "https://github.com/llvm/llvm-project/releases/download/llvmorg-23.1.5/llvm-project-23.1.5.src.tar.xz",
+        sha256 = "fb50b1eac93ddeb3aa8dab4cfe324dff74f4a9c2bdee6160c9e36188f8d06a6e",
+    },
 }
 
 -- LLVM OpenMP runtime built from its pinned release sources.
@@ -32,6 +36,7 @@ package = {
                 sha256 = "922f1817a0df7b1489272d18134ee0087a8b068828f87ac63b9861b1a9965888",
             },
             ["23.1.4"] = versions["23.1.4"],
+            ["23.1.5"] = versions["23.1.5"],
         },
         macosx = {
             deps = { "xim:cmake@latest", "xim:python@3.13.12" },
@@ -40,6 +45,7 @@ package = {
                 sha256 = "922f1817a0df7b1489272d18134ee0087a8b068828f87ac63b9861b1a9965888",
             },
             ["23.1.4"] = versions["23.1.4"],
+            ["23.1.5"] = versions["23.1.5"],
         },
         windows = {
             deps = { "xim:cmake@latest", "xim:python@3.13.12" },
@@ -48,6 +54,7 @@ package = {
                 sha256 = "922f1817a0df7b1489272d18134ee0087a8b068828f87ac63b9861b1a9965888",
             },
             ["23.1.4"] = versions["23.1.4"],
+            ["23.1.5"] = versions["23.1.5"],
         },
     },
     mcpp = {
