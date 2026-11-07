@@ -447,7 +447,10 @@ env:
   # 2026.11.2.1 (mcpp-community/mcpp#882): a dependency's patches and a
   # dependency embedded in its consumer -- the floor openkal-musl 0.26.0
   # states, since it embeds compat.mimalloc.
-  MCPP_VERSION: "2026.11.7.1"
+  #
+  # 2026.11.7.2: the built-in platform as one release, and the floor
+  # mcpplibs.mtest 0.1.0 states.
+  MCPP_VERSION: "2026.11.7.2"
 
 jobs:
   lint:
