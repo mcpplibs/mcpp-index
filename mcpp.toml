@@ -228,6 +228,7 @@ members = [
     "tests/examples/yaml-cpp-v080",
     "tests/examples/yyjson",
     "tests/examples/zlib",
+    "tests/examples/zlib-ng",
     "tests/examples/magic_enum",
     "tests/examples/mimalloc",
     "tests/examples/harfbuzz",

@@ -1,0 +1,13 @@
+# compat.zlib-ng test project. It asserts that zlib-ng in its zlib-compatible
+# form reads what madler's zlib writes (a stream Python's zlib 1.3.1 produced,
+# as a native engine linked to its system's libz writes a shard), that its own
+# streams and gz files round-trip through the vectorised inflate on data long
+# enough to reach it, that the checksums give their published values, and that
+# the library and this consumer agree on the width of z_off_t.
+# `compat` redirect inherited from the workspace root.
+[package]
+name = "zlib-ng-tests"
+version = "0.1.0"
+
+[dependencies]
+compat.zlib-ng = "2.3.3"
