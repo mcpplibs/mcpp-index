@@ -24,7 +24,7 @@
 
 - **mcpp.plugins 0.21.0。** CMake 交叉构建在动作运行时使用引擎给出的编译器、标志、归档器与目标约定（链接可执行文件或共享库的
   交叉子项目需要 mcpp 2026.11.7.1）；加速器规则拥有各自的代码目标，SYCL 在一个请求中给出多个 NVIDIA 架构与 SPIR-V
-  （mcpp-plugins#887）；`plugins-progress` 写出动作的可选进度；各成员经 mcpplibs.os 0.4.0 访问系统，不包含头文件。包的下限为
+  （mcpp#887）；`plugins-progress` 写出动作的可选进度；各成员经 mcpplibs.os 0.4.0 访问系统，不包含头文件。包的下限为
   mcpp 2026.10.30.1；`latest` 指向 0.21.0。
 - **mtest 0.1.0.** `mcpplibs.mtest`, the C++ library of the mtest test system (cases, expectations, fixtures, bench,
   conformance and end-to-end helpers, no macro and no header, speaking the mtest test protocol); its GoogleTest

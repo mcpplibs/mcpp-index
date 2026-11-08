@@ -12,7 +12,7 @@
 -- engine's compiler, flags, archiver and target contract when the action
 -- runs (a cross subproject that links an executable or a shared library
 -- needs mcpp 2026.11.7.1); accelerator rules own their code targets (SYCL's
--- NVIDIA architectures and SPIR-V in one request, mcpp-plugins#887);
+-- NVIDIA architectures and SPIR-V in one request, mcpp#887);
 -- `plugins-progress` writes an action's optional progress; the members reach
 -- the system through mcpplibs.os 0.4.0 and include no header.
 --
