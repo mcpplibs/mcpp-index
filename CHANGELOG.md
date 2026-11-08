@@ -22,6 +22,9 @@
 
 ### Added
 
+- **mtest 0.2.0.** `mcpplibs.mtest`、`mcpplibs.mtest.gtest`、`mcpplibs.mtest.capi` 的 0.2.0（同一标签、同一归档）：
+  `mcpplibs.mtest.manifest` 从源文本读出测试文件声明的用例（静态用例清单）；引擎增加 `[discover.<name>]` 组、
+  用例属性、`--shard`、覆盖映射与 `list --static`。测试成员 `mtest`、`mtest-gtest`、`mtest-capi` 随之移到 0.2.0。
 - **mcpp.plugins 0.21.0。** CMake 交叉构建在动作运行时使用引擎给出的编译器、标志、归档器与目标约定（链接可执行文件或共享库的
   交叉子项目需要 mcpp 2026.11.7.1）；加速器规则拥有各自的代码目标，SYCL 在一个请求中给出多个 NVIDIA 架构与 SPIR-V
   （mcpp#887）；`plugins-progress` 写出动作的可选进度；各成员经 mcpplibs.os 0.4.0 访问系统，不包含头文件。包的下限为
