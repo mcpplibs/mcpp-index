@@ -113,6 +113,17 @@ sha256="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
                 self.assertEqual(result["dependencies"]["mcpplibs.mwrap.example"], "1.0.1")
                 self.assertEqual((dest / "tests/probe.cpp").read_text(), 'int main() { return 0; }\n')
 
+    def test_an_unquoted_identity_key_is_replaced(self):
+        # The key mcpp recommends (2026.11.8.1): the identity, dotted and unquoted, which TOML
+        # reads as nested tables.
+        text = '[dev-dependencies]\nmcpplibs.mtest.capi = "0.2.0"\nmcpplibs.mtest = "0.2.0"\n'
+        replaced = ci.replace_candidate(text, "mcpplibs.mtest:capi", "0.3.0")
+        self.assertIn('mcpplibs.mtest.capi = "0.3.0"', replaced)
+        self.assertIn('mcpplibs.mtest = "0.2.0"', replaced)
+        replaced = ci.replace_candidate(text, "mcpplibs:mtest", "0.3.0")
+        self.assertIn('mcpplibs.mtest = "0.3.0"', replaced)
+        self.assertIn('mcpplibs.mtest.capi = "0.2.0"', replaced)
+
     def test_candidate_discovers_target_and_build_dependencies(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

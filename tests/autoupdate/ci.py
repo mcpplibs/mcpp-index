@@ -301,9 +301,12 @@ def matrix(plan: Path, output: Path, base: str):
 
 
 def replace_candidate(text: str, identity: str, version: str) -> str:
+    # The key as a consumer writes it: the bare name under the namespace's
+    # table, or the identity key, quoted or not (`mcpplibs.mtest.capi = ...`,
+    # the form mcpp recommends since 2026.11.8.1).
     namespace, name = identity.split(":", 1)
     text, replacements = re.subn(
-        rf'(?m)^(\s*(?:{re.escape(name)}|"{re.escape(namespace)}\.{re.escape(name)}")\s*=\s*(?:\{{\s*version\s*=\s*)?")[^"]+(".*)$',
+        rf'(?m)^(\s*(?:{re.escape(name)}|"?{re.escape(namespace)}\.{re.escape(name)}"?)\s*=\s*(?:\{{\s*version\s*=\s*)?")[^"]+(".*)$',
         lambda m: m[1] + version + m[2], text)
     if not replacements:
         # A platform the member selects (mcpp SPEC-013).
