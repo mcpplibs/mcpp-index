@@ -241,6 +241,16 @@ def condition_platforms(condition: str) -> set[str]:
     return out
 
 
+def version_key(version: str) -> tuple:
+    """A dotted version's order: its numeric parts as numbers, any other part
+    after them as text (`0.10.0` after `0.9.0`)."""
+    return tuple((0, int(p), "") if p.isdigit() else (1, 0, p) for p in re.split(r"[.+-]", version))
+
+
+def newest(versions: set[str]) -> str:
+    return max(versions, key=version_key)
+
+
 def matrix(plan: Path, output: Path, base: str):
     build_plan = json.loads(plan.read_text(encoding="utf-8"))
     # A normal bump PR already contains its candidate, so discovery says up-to-date.
@@ -256,9 +266,10 @@ def matrix(plan: Path, output: Path, base: str):
             added = {v for plat, entries in new.items() for v in entries if v not in old.get(plat, {})}
             if not added:
                 continue
-            if len(added) != 1:
-                raise RuntimeError(f"expected one added candidate for {info['id']}: {added}")
-            candidate = added.pop()
+            # A change that adds several releases of one package (two releases cut
+            # while its pull request was open) is proven at the newest: the one
+            # consumers are moved to, and whose archive the older ones precede.
+            candidate = newest(added)
             assets = []
             for plat, platform in info["platforms"].items():
                 if candidate not in platform["entries"]:

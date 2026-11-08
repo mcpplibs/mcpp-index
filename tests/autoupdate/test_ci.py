@@ -25,6 +25,11 @@ def descriptor(name):
 
 
 class BaselineTests(unittest.TestCase):
+    def test_several_added_releases_are_proven_at_the_newest(self):
+        self.assertEqual(ci.newest({"0.2.0", "0.3.0"}), "0.3.0")
+        self.assertEqual(ci.newest({"0.9.0", "0.10.0"}), "0.10.0")
+        self.assertEqual(ci.newest({"2026.11.7.2", "2026.11.10.1"}), "2026.11.10.1")
+
     def test_one_consumer_uses_all_and_only_its_planned_candidates(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
