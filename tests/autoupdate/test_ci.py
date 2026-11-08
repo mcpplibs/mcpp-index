@@ -124,6 +124,13 @@ sha256="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
         self.assertIn('mcpplibs.mtest = "0.3.0"', replaced)
         self.assertIn('mcpplibs.mtest.capi = "0.2.0"', replaced)
 
+    def test_a_package_below_a_namespace_does_not_name_the_namespace_package(self):
+        # `mcpplibs.mtest.capi = ...` reads as the table mcpplibs.mtest = {capi = ...}, which names
+        # mcpplibs.mtest:capi and not mcpplibs:mtest.
+        deps = tomllib.loads('[dependencies]\nmcpplibs.mtest.capi = "0.2.0"\n')["dependencies"]
+        self.assertTrue(ci.names_dependency(deps, "mcpplibs.mtest", "capi"))
+        self.assertFalse(ci.names_dependency(deps, "mcpplibs", "mtest"))
+
     def test_candidate_discovers_target_and_build_dependencies(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

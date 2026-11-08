@@ -151,10 +151,7 @@ def direct_member(identity: str) -> str | None:
                 candidates.append((category, path.parent.name))
                 continue
             for deps in dependency_tables(manifest):
-                nested = deps
-                for part in namespace.split("."):
-                    nested = nested.get(part, {}) if isinstance(nested, dict) else {}
-                if (f"{namespace}.{name}" in deps or name in deps.get(namespace, {}) or name in nested):
+                if names_dependency(deps, namespace, name):
                     candidates.append((category, path.parent.name))
                     break
     if not candidates:
@@ -172,12 +169,24 @@ def member_manifest(member: str) -> Path:
     raise FileNotFoundError(f"consumer manifest not found: {member}")
 
 
+SPEC_KEYS = {"version", "path", "git", "branch", "tag", "rev", "features", "default-features",
+             "optional", "host-module", "tools", "artifacts", "visibility", "linkage", "embed"}
+
+
+def is_spec(value) -> bool:
+    """A dependency's specification, as opposed to the table of a namespace below it: a version
+    string, or a table of a specification's keys (`mcpplibs.mtest.capi = "0.2.0"` makes
+    `mcpplibs.mtest` the table `{capi = "0.2.0"}`, which names no dependency)."""
+    return isinstance(value, str) or (isinstance(value, dict) and bool(SPEC_KEYS & value.keys()))
+
+
 def names_dependency(deps: dict, namespace: str, name: str) -> bool:
     nested = deps
     for part in namespace.split("."):
         nested = nested.get(part, {}) if isinstance(nested, dict) else {}
-    return (f"{namespace}.{name}" in deps
-            or name in deps.get(namespace, {}) or name in nested)
+    return (is_spec(deps.get(f"{namespace}.{name}"))
+            or is_spec(deps.get(namespace, {}).get(name) if isinstance(deps.get(namespace), dict) else None)
+            or (isinstance(nested, dict) and is_spec(nested.get(name))))
 
 
 # The runner platforms, by the spelling a member's `cfg(os = ...)` uses.
