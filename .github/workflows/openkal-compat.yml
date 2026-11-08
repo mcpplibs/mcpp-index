@@ -108,7 +108,7 @@ jobs:
         shell: bash
         run: |
           archive="mcpp-${MCPP_VERSION}-linux-x86_64.tar.gz"
-          curl -L -fsS -o "$archive" \
+          curl -L -fsS --retry 5 --retry-all-errors --retry-delay 10 -o "$archive" \
             "https://github.com/mcpp-community/mcpp/releases/download/v${MCPP_VERSION}/${archive}"
           tar -xzf "$archive"
           root="$PWD/mcpp-${MCPP_VERSION}-linux-x86_64"

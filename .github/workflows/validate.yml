@@ -577,7 +577,7 @@ jobs:
       # needing a newer grammar cannot pass a lint pinned to an older mcpp.
       - name: Download pinned mcpp
         run: |
-          curl -L -fsS -o mcpp.tar.gz \
+          curl -L -fsS --retry 5 --retry-all-errors --retry-delay 10 -o mcpp.tar.gz \
             "https://github.com/mcpp-community/mcpp/releases/download/v${MCPP_VERSION}/mcpp-${MCPP_VERSION}-linux-x86_64.tar.gz"
           tar -xzf mcpp.tar.gz
           echo "MCPP=$PWD/mcpp-${MCPP_VERSION}-linux-x86_64/bin/mcpp" >> "$GITHUB_ENV"
@@ -1210,7 +1210,7 @@ jobs:
           MCPP_ARCHIVE: mcpp-${{ env.MCPP_VERSION }}-linux-x86_64.tar.gz
           MCPP_ROOT: mcpp-${{ env.MCPP_VERSION }}-linux-x86_64
         run: |
-          curl -L -fsS -o "$MCPP_ARCHIVE" \
+          curl -L -fsS --retry 5 --retry-all-errors --retry-delay 10 -o "$MCPP_ARCHIVE" \
             "https://github.com/mcpp-community/mcpp/releases/download/v${MCPP_VERSION}/${MCPP_ARCHIVE}"
           tar -xzf "$MCPP_ARCHIVE"
           root="$PWD/$MCPP_ROOT"
@@ -1257,7 +1257,7 @@ jobs:
         shell: bash
         run: |
           archive="mcpp-${MCPP_VERSION}-${{ matrix.suffix }}.tar.gz"
-          curl -L -fsS -o "$archive" "https://github.com/mcpp-community/mcpp/releases/download/v${MCPP_VERSION}/$archive"
+          curl -L -fsS --retry 5 --retry-all-errors --retry-delay 10 -o "$archive" "https://github.com/mcpp-community/mcpp/releases/download/v${MCPP_VERSION}/$archive"
           tar -xzf "$archive"
           echo "MCPP=$PWD/mcpp-${MCPP_VERSION}-${{ matrix.suffix }}/bin/mcpp" >> "$GITHUB_ENV"
       - name: Immutable archive, default scaffold, strict build and loopback RPC
@@ -1380,7 +1380,7 @@ jobs:
           MCPP_ARCHIVE: mcpp-${{ env.MCPP_VERSION }}-${{ matrix.suffix }}.${{ matrix.ext }}
           MCPP_ROOT: mcpp-${{ env.MCPP_VERSION }}-${{ matrix.suffix }}
         run: |
-          curl -L -fsS -o "$MCPP_ARCHIVE" \
+          curl -L -fsS --retry 5 --retry-all-errors --retry-delay 10 -o "$MCPP_ARCHIVE" \
             "https://github.com/mcpp-community/mcpp/releases/download/v${MCPP_VERSION}/${MCPP_ARCHIVE}"
           case "$MCPP_ARCHIVE" in
             *.zip) powershell -NoProfile -Command "Expand-Archive -Force -Path '${MCPP_ARCHIVE}' -DestinationPath '.'" ;;
