@@ -22,6 +22,10 @@
 
 ### Added
 
+- **mtest 0.4.0.** `mcpplibs.mtest`、`mcpplibs.mtest.gtest`、`mcpplibs.mtest.capi`、`mcpplibs.mtest.manifest` 的 0.4.0
+  （同一标签、同一归档）：用例在名字之后声明其度量的界限（`at_most`、`at_least`），库在用例结束时判定（P6.5），列举、
+  静态清单与各适配器携带同一界限；引擎增加 `analyze trend`，并以替换字符保存非 UTF-8 的输出。测试成员移到 0.4.0，
+  `mtest` 成员增加一个带界限的 `Bench`。
 - **mtest 0.3.0.** `mcpplibs.mtest`、`mcpplibs.mtest.gtest`、`mcpplibs.mtest.capi` 的 0.3.0 与新包
   `mcpplibs.mtest.manifest`（同一标签、同一归档）：一个对象即一个用例，类型即类别（`UTest`、`CTS`、`E2E`、`Bench`，
   `Suite` 不声明类别），名字之后的属性说明它如何运行（资源、时限、隔离、重试、诊断）并由其声明的用例继承；静态用例
