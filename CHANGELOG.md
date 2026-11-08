@@ -22,6 +22,9 @@
 
 ### Added
 
+- **mcpplibs.os 0.4.1.** `stdio::capture` 在捕获期间把一个标准流保存为文件（经 openkal、C 库与期间启动的程序写出的内容），
+  `text()` 交回内容并恢复该流；`process::resources` 给出本程序及其已回收子程序的处理器时间、最大常驻集与读写字节数。
+  测试成员移到 0.4.1。
 - **mtest 0.4.1.** 四个包的 0.4.1（同一标签、同一归档）：返回值的用例体不能通过编译；静态清单跨源文件读取
   项目自己的套件类型（`types_of`）；标签选择 `a&b` 表示同时具有两个标签的用例。测试成员移到 0.4.1。
 - **mtest 0.4.0.** `mcpplibs.mtest`、`mcpplibs.mtest.gtest`、`mcpplibs.mtest.capi`、`mcpplibs.mtest.manifest` 的 0.4.0
