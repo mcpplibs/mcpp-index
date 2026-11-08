@@ -22,6 +22,11 @@
 
 ### Added
 
+- **mtest 0.3.0.** `mcpplibs.mtest`、`mcpplibs.mtest.gtest`、`mcpplibs.mtest.capi` 的 0.3.0 与新包
+  `mcpplibs.mtest.manifest`（同一标签、同一归档）：一个对象即一个用例，类型即类别（`UTest`、`CTS`、`E2E`、`Bench`，
+  `Suite` 不声明类别），名字之后的属性说明它如何运行（资源、时限、隔离、重试、诊断）并由其声明的用例继承；静态用例
+  清单成为独立的包，读测试的工具不必链接测试库。测试成员 `mtest`、`mtest-gtest`、`mtest-capi` 移到 0.3.0，新成员
+  `mtest-manifest` 检验清单。
 - **mtest 0.2.0.** `mcpplibs.mtest`、`mcpplibs.mtest.gtest`、`mcpplibs.mtest.capi` 的 0.2.0（同一标签、同一归档）：
   `mcpplibs.mtest.manifest` 从源文本读出测试文件声明的用例（静态用例清单）；引擎增加 `[discover.<name>]` 组、
   用例属性、`--shard`、覆盖映射与 `list --static`。测试成员 `mtest`、`mtest-gtest`、`mtest-capi` 随之移到 0.2.0。

@@ -1,0 +1,11 @@
+# mcpplibs.mtest.manifest test project: the cases a source file declares, read from its text --
+# an object, the cases it declares, their kinds and attributes -- through the published index.
+[package]
+name    = "mtest-manifest-tests"
+version = "0.1.0"
+
+[indices]
+# Use the complete candidate built-in index prepared by tests/run_members.sh.
+
+[dependencies]
+mcpplibs.mtest.manifest = "0.3.0"

@@ -126,6 +126,7 @@ members = [
     "tests/examples/mtest",
     "tests/examples/mtest-capi",
     "tests/examples/mtest-gtest",
+    "tests/examples/mtest-manifest",
     "tests/examples/muduo",
     "tests/examples/libmysqlclient",
     "tests/examples/mysql-connector-cpp",
