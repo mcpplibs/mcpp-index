@@ -22,6 +22,11 @@
 
 ### Added
 
+- **mtest 0.1.0.** `mcpplibs.mtest`, the C++ library of the mtest test system (cases, expectations, fixtures, bench,
+  conformance and end-to-end helpers, no macro and no header, speaking the mtest test protocol); its GoogleTest
+  adapter `mcpplibs.mtest.gtest`; its C ABI `mcpplibs.mtest.capi`. The three share one tag and one archive of
+  mcpp-community/mtest, each descriptor naming its member's manifest. The test members `mtest`, `mtest-gtest` and
+  `mtest-capi` consume them.
 - **mcpplibs.os 0.4.0.** `is_openkal` names a build for the openkal target, as each `is_<platform>` names its own
   (`is_image` remains as a deprecated alias); `can_run_on(p)` and `on<P>(f)` ask one platform question of a native
   build and an image alike; the platform modules are defined in an image where it can answer them; the effective user

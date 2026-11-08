@@ -1,0 +1,53 @@
+-- mcpplibs.mtest.capi --- the C ABI of the mtest test protocol.
+--
+-- A package of mcpp-community/mtest (one tag, one archive): include/mtest.h and
+-- a shared library through which a program of any language with a C FFI
+-- reports by the protocol.
+package = {
+    spec        = "1",
+    namespace   = "mcpplibs.mtest",
+    name        = "capi",
+    description = "mtest's C ABI: the test protocol's events for any language with a C FFI",
+    licenses    = {"Apache-2.0"},
+    repo        = "https://github.com/mcpp-community/mtest",
+    type        = "package",
+
+    extensions = {
+        autoupdate = {
+            tag = "v${version}",
+            url = "https://github.com/mcpp-community/mtest/archive/refs/tags/${tag}.tar.gz",
+        },
+    },
+
+    xpm = {
+        linux = {
+            ["0.1.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.1.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mtest/releases/download/v0.1.0/mtest-v0.1.0.tar.gz",
+                },
+                sha256 = "2e09528d97173371e0238c720cb8ac80602241f4e05d55d3acb12f21b5c95c75",
+            },
+        },
+        macosx = {
+            ["0.1.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.1.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mtest/releases/download/v0.1.0/mtest-v0.1.0.tar.gz",
+                },
+                sha256 = "2e09528d97173371e0238c720cb8ac80602241f4e05d55d3acb12f21b5c95c75",
+            },
+        },
+        windows = {
+            ["0.1.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.1.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mtest/releases/download/v0.1.0/mtest-v0.1.0.tar.gz",
+                },
+                sha256 = "2e09528d97173371e0238c720cb8ac80602241f4e05d55d3acb12f21b5c95c75",
+            },
+        },
+    },
+
+    mcpp = "*/capi/mcpp.toml",
+}

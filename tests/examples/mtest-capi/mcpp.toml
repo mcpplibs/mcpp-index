@@ -1,0 +1,11 @@
+# mcpplibs.mtest.capi test project: a program reports a case through the C ABI (include/mtest.h and
+# its shared library), as a program of any language with a C FFI does.
+[package]
+name    = "mtest-capi-tests"
+version = "0.1.0"
+
+[indices]
+# Use the complete candidate built-in index prepared by tests/run_members.sh.
+
+[dependencies]
+mcpplibs.mtest.capi = "0.1.0"
