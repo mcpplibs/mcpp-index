@@ -25,6 +25,11 @@ def descriptor(name):
 
 
 class BaselineTests(unittest.TestCase):
+    def test_several_added_releases_are_proven_at_the_newest(self):
+        self.assertEqual(ci.newest({"0.2.0", "0.3.0"}), "0.3.0")
+        self.assertEqual(ci.newest({"0.9.0", "0.10.0"}), "0.10.0")
+        self.assertEqual(ci.newest({"2026.11.7.2", "2026.11.10.1"}), "2026.11.10.1")
+
     def test_one_consumer_uses_all_and_only_its_planned_candidates(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -112,6 +117,24 @@ sha256="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
                 result = tomllib.loads((dest / "mcpp.toml").read_text())
                 self.assertEqual(result["dependencies"]["mcpplibs.mwrap.example"], "1.0.1")
                 self.assertEqual((dest / "tests/probe.cpp").read_text(), 'int main() { return 0; }\n')
+
+    def test_an_unquoted_identity_key_is_replaced(self):
+        # The key mcpp recommends (2026.11.8.1): the identity, dotted and unquoted, which TOML
+        # reads as nested tables.
+        text = '[dev-dependencies]\nmcpplibs.mtest.capi = "0.2.0"\nmcpplibs.mtest = "0.2.0"\n'
+        replaced = ci.replace_candidate(text, "mcpplibs.mtest:capi", "0.3.0")
+        self.assertIn('mcpplibs.mtest.capi = "0.3.0"', replaced)
+        self.assertIn('mcpplibs.mtest = "0.2.0"', replaced)
+        replaced = ci.replace_candidate(text, "mcpplibs:mtest", "0.3.0")
+        self.assertIn('mcpplibs.mtest = "0.3.0"', replaced)
+        self.assertIn('mcpplibs.mtest.capi = "0.2.0"', replaced)
+
+    def test_a_package_below_a_namespace_does_not_name_the_namespace_package(self):
+        # `mcpplibs.mtest.capi = ...` reads as the table mcpplibs.mtest = {capi = ...}, which names
+        # mcpplibs.mtest:capi and not mcpplibs:mtest.
+        deps = tomllib.loads('[dependencies]\nmcpplibs.mtest.capi = "0.2.0"\n')["dependencies"]
+        self.assertTrue(ci.names_dependency(deps, "mcpplibs.mtest", "capi"))
+        self.assertFalse(ci.names_dependency(deps, "mcpplibs", "mtest"))
 
     def test_candidate_discovers_target_and_build_dependencies(self):
         with tempfile.TemporaryDirectory() as directory:

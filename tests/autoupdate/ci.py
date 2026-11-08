@@ -151,10 +151,7 @@ def direct_member(identity: str) -> str | None:
                 candidates.append((category, path.parent.name))
                 continue
             for deps in dependency_tables(manifest):
-                nested = deps
-                for part in namespace.split("."):
-                    nested = nested.get(part, {}) if isinstance(nested, dict) else {}
-                if (f"{namespace}.{name}" in deps or name in deps.get(namespace, {}) or name in nested):
+                if names_dependency(deps, namespace, name):
                     candidates.append((category, path.parent.name))
                     break
     if not candidates:
@@ -172,12 +169,24 @@ def member_manifest(member: str) -> Path:
     raise FileNotFoundError(f"consumer manifest not found: {member}")
 
 
+SPEC_KEYS = {"version", "path", "git", "branch", "tag", "rev", "features", "default-features",
+             "optional", "host-module", "tools", "artifacts", "visibility", "linkage", "embed"}
+
+
+def is_spec(value) -> bool:
+    """A dependency's specification, as opposed to the table of a namespace below it: a version
+    string, or a table of a specification's keys (`mcpplibs.mtest.capi = "0.2.0"` makes
+    `mcpplibs.mtest` the table `{capi = "0.2.0"}`, which names no dependency)."""
+    return isinstance(value, str) or (isinstance(value, dict) and bool(SPEC_KEYS & value.keys()))
+
+
 def names_dependency(deps: dict, namespace: str, name: str) -> bool:
     nested = deps
     for part in namespace.split("."):
         nested = nested.get(part, {}) if isinstance(nested, dict) else {}
-    return (f"{namespace}.{name}" in deps
-            or name in deps.get(namespace, {}) or name in nested)
+    return (is_spec(deps.get(f"{namespace}.{name}"))
+            or is_spec(deps.get(namespace, {}).get(name) if isinstance(deps.get(namespace), dict) else None)
+            or (isinstance(nested, dict) and is_spec(nested.get(name))))
 
 
 # The runner platforms, by the spelling a member's `cfg(os = ...)` uses.
@@ -232,6 +241,16 @@ def condition_platforms(condition: str) -> set[str]:
     return out
 
 
+def version_key(version: str) -> tuple:
+    """A dotted version's order: its numeric parts as numbers, any other part
+    after them as text (`0.10.0` after `0.9.0`)."""
+    return tuple((0, int(p), "") if p.isdigit() else (1, 0, p) for p in re.split(r"[.+-]", version))
+
+
+def newest(versions: set[str]) -> str:
+    return max(versions, key=version_key)
+
+
 def matrix(plan: Path, output: Path, base: str):
     build_plan = json.loads(plan.read_text(encoding="utf-8"))
     # A normal bump PR already contains its candidate, so discovery says up-to-date.
@@ -247,9 +266,10 @@ def matrix(plan: Path, output: Path, base: str):
             added = {v for plat, entries in new.items() for v in entries if v not in old.get(plat, {})}
             if not added:
                 continue
-            if len(added) != 1:
-                raise RuntimeError(f"expected one added candidate for {info['id']}: {added}")
-            candidate = added.pop()
+            # A change that adds several releases of one package (two releases cut
+            # while its pull request was open) is proven at the newest: the one
+            # consumers are moved to, and whose archive the older ones precede.
+            candidate = newest(added)
             assets = []
             for plat, platform in info["platforms"].items():
                 if candidate not in platform["entries"]:
@@ -301,9 +321,12 @@ def matrix(plan: Path, output: Path, base: str):
 
 
 def replace_candidate(text: str, identity: str, version: str) -> str:
+    # The key as a consumer writes it: the bare name under the namespace's
+    # table, or the identity key, quoted or not (`mcpplibs.mtest.capi = ...`,
+    # the form mcpp recommends since 2026.11.8.1).
     namespace, name = identity.split(":", 1)
     text, replacements = re.subn(
-        rf'(?m)^(\s*(?:{re.escape(name)}|"{re.escape(namespace)}\.{re.escape(name)}")\s*=\s*(?:\{{\s*version\s*=\s*)?")[^"]+(".*)$',
+        rf'(?m)^(\s*(?:{re.escape(name)}|"?{re.escape(namespace)}\.{re.escape(name)}"?)\s*=\s*(?:\{{\s*version\s*=\s*)?")[^"]+(".*)$',
         lambda m: m[1] + version + m[2], text)
     if not replacements:
         # A platform the member selects (mcpp SPEC-013).
