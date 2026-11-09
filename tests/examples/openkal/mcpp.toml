@@ -18,25 +18,25 @@ name    = "openkal-tests"
 version = "0.1.0"
 
 [dependencies.mcpplibs]
-openkal = "0.24.0"
+openkal = "0.25.0"
 
 [target.'cfg(os = "linux")'.dependencies.mcpplibs]
-openkal-linux = "0.25.0"
+openkal-linux = "0.26.0"
 
 [target.'cfg(os = "macos")'.dependencies.mcpplibs]
-openkal-macos = "0.22.1"
+openkal-macos = "0.23.0"
 
 [target.'cfg(windows)'.dependencies.mcpplibs]
-openkal-windows = "0.20.0"
+openkal-windows = "0.21.0"
 
 [target.'cfg(all(os = "linux", env = "musl"))'.dependencies.mcpplibs]
 openkal-llvm-runtime = "0.19.2"
 
 [target.'cfg(arch = "wasm32")'.dependencies.mcpplibs]
-openkal-emscripten = "0.13.0"
+openkal-emscripten = "0.14.0"
 
 [target.'cfg(arch = "riscv64")'.dependencies.mcpplibs]
-openkal-opensbi = "0.8.3"
+openkal-opensbi = "0.9.0"
 
 # This member names mcpplibs packages, which the workspace root's single
 # redirect does not carry, so it states its own (mcpp.toml at the root says why
