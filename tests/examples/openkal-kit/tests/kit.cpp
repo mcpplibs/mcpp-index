@@ -11,11 +11,11 @@ int main() {
     auto check = [&](bool held, const char* what) {
         if (!held) { std::printf("FAIL: %s\n", what); ++failures; }
     };
-    const auto r = parse_v4("127.0.0.1:443", 13);
-    check(r.ok && r.ep.addr_len == 4 && r.ep.port == 443, "an address with a port parses");
+    const auto r = parse_v4("127.0.0.1:8080", 14);
+    check(r.ok && r.ep.addr_len == 4 && r.ep.port == 8080, "an address with a port parses");
     char out[32];
     const auto f = format_v4(r.ep, out, sizeof out);
-    check(f.ok && f.n == 13 && std::memcmp(out, "127.0.0.1:443", 13) == 0,
+    check(f.ok && f.n == 14 && std::memcmp(out, "127.0.0.1:8080", 14) == 0,
           "and is written back as it was given");
     check(!parse_v4("256.0.0.1", 9).ok, "an octet past 255 is refused");
     check(!parse_v4("1.2.3", 5).ok, "three octets are refused");

@@ -9,7 +9,7 @@ version = "0.1.0"
 
 [dependencies.mcpplibs]
 openkal     = "0.25.0"
-openkal-kit = "0.3.0"
+openkal-kit = "0.3.1"
 
 [target.'cfg(os = "linux")'.dependencies.mcpplibs]
 openkal-linux = "0.26.0"
