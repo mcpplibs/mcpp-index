@@ -25,6 +25,10 @@
 
 ### Added
 
+- **mcpplibs.os 0.4.4.** 两个平台模块加入系统的对象模型：`windows::com`（COM 与 Windows Runtime：套间、对象与按槽调用、
+  `query`、`create`、`hstring`、`activate`、`factory`、`delegate`）和 `macos::objc`（Objective-C 运行时：`id`、`send<R>`、
+  autorelease pool、类与选择子、框架、NSString、`define_class`、`block`）；每个目标都声明、只在自己的平台定义，镜像里不定义；
+  库在首次使用时加载，不增加程序的链接输入（mcpplibs/os#24）。
 - **openkal 0.25 一族，一次变更：openkal 0.25.0、openkal-kit 0.3.1、openkal-linux 0.26.0、openkal-macos 0.23.0、
   openkal-windows 0.21.0、openkal-emscripten 0.14.0、openkal-opensbi 0.9.0。** 规范新增 `kal_fs_hard_link`（按卷由
   `KAL_FS_PROP_HARD_LINKS` 回答，条款 11 第 59 条），`kal_process_stop_requested` 的字改为计数每次结束请求（第 60 条）；一致性
