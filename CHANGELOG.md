@@ -22,6 +22,8 @@
 
 ### Added
 
+- **mcpplibs.cmdline 0.0.3.** `value_type<T>()` 声明选项取 `T` 类型的数字，解析时用 `std::from_chars` 校验，不合法即解析错误；
+  `value_as<T>()` 读回。测试成员移到 0.0.3，并检验这两项。
 - **mtest 0.5.2.** 四个包的 0.5.2：自启动副本的测试以对象 `child` 声明副本所做之事、以 `child_command` 启动之，
   故不再定义 `main`，同一目录的文件可为一个程序；库对 mcpplibs.os 的要求为 `^0.4.1`。测试成员移到 0.5.2。
 - **mtest 0.5.1.** 四个包的 0.5.1：协议标记在只保留可达部分的链接（`--gc-sections`）中保留，`mcpp test`
