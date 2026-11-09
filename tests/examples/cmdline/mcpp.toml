@@ -10,4 +10,4 @@ name    = "cmdline-tests"
 version = "0.1.0"
 
 [dependencies]
-cmdline = "0.0.3"
+mcpplibs.cmdline = "0.0.3"
