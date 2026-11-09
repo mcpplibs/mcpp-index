@@ -15,6 +15,9 @@
 
 ### Chore
 
+- **CI 的 mcpp 由 2026.11.7.2 改为 2026.11.9.1**（xpkgindex-update、openkal-compat 与 `tests/openkal/pins.toml`），以满足
+  openkal-platform 0.24.5 的版本下限。
+
 - **validate：llvm 腿不再从 Ubuntu 镜像安装 ffmpeg 开发包，改为在 `/usr/include` 下放置 FFmpeg 公开头文件同名、内容为
   `#error` 的文件。** 文件名取自 compat.ffmpeg 描述符所指发布（按描述符的 sha256 校验）。宿主头文件一旦被包含即在包含处报错，
   比安装另一版本的头文件更直接地检验包含顺序；2026-11-06 起 ubuntu-26.04 运行器上 ffmpeg 依赖闭包（约 100 MiB）的下载在每个
@@ -22,6 +25,9 @@
 
 ### Added
 
+- **openkal-platform 0.24.5、openkal-image 0.5.4（openkal-ld、openkal-run、openkal-tools、openkal-bind）、mcpplibs.os 0.4.2，
+  一次变更。** openkal-run 以能力 `mcpp:kernel-abi=openkal` 声明其 openkal 实现，并按系统给出缺省实现（`[defaults]`）；图中已有的
+  实现优先。平台要求 mcpp 2026.11.9.1。os 0.4.2 新增 `fs::watcher`（mcpplibs/os#21），测试改为 mtest 的用例。
 - **mcpplibs.cmdline 0.0.3.** `value_type<T>()` 声明选项取 `T` 类型的数字，解析时用 `std::from_chars` 校验，不合法即解析错误；
   `value_as<T>()` 读回。测试成员移到 0.0.3，并检验这两项。
 - **mtest 0.5.2.** 四个包的 0.5.2：自启动副本的测试以对象 `child` 声明副本所做之事、以 `child_command` 启动之，
