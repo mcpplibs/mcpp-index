@@ -25,6 +25,12 @@
 
 ### Added
 
+- **openkal 0.25 一族，一次变更：openkal 0.25.0、openkal-kit 0.3.0、openkal-linux 0.26.0、openkal-macos 0.23.0、
+  openkal-windows 0.21.0、openkal-emscripten 0.14.0、openkal-opensbi 0.9.0。** 规范新增 `kal_fs_hard_link`（按卷由
+  `KAL_FS_PROP_HARD_LINKS` 回答，条款 11 第 59 条），`kal_process_stop_requested` 的字改为计数每次结束请求（第 60 条）；一致性
+  套件按 mtest 测试协议报告，并核对实现清单的 `provides-interfaces`、`kal_interfaces()` 与导出名。各实现提供上述两项，测试改为
+  mtest 的用例；openkal-emscripten 声明 `requires = ["mcpp:c-abi"]`。`tests/examples/openkal` 改用此族，新增成员
+  `tests/examples/openkal-kit` 作为 kit 的直接使用者。
 - **mcpplibs.os 0.4.3.** 依赖改为同时容纳 openkal 0.24 与 0.25 两族的版本区间（openkal `>=0.24.0, <0.26.0`，各实现同理），
   mcpp 版本下限不变；openkal 实现以 mtest 测试自身时，经 mtest 到达 os 的图得以解析（mcpplibs/os#23）。
 - **openkal-platform 0.24.5、openkal-image 0.5.4（openkal-ld、openkal-run、openkal-tools、openkal-bind）、mcpplibs.os 0.4.2，

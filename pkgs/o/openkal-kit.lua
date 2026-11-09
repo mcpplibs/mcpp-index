@@ -41,6 +41,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.3.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal/archive/refs/tags/kit-0.3.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal/releases/download/kit-0.3.0/openkal-kit-0.3.0.tar.gz",
+                },
+                sha256 = "c7365e916662679cd99e91c547eb42c3c4fc2eacbdc842668a14d30d09db99e4",
+            },
             ["0.2.0"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal/archive/refs/tags/kit-0.2.0.tar.gz",
@@ -57,6 +64,13 @@ package = {
             },
         },
         macosx = {
+            ["0.3.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal/archive/refs/tags/kit-0.3.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal/releases/download/kit-0.3.0/openkal-kit-0.3.0.tar.gz",
+                },
+                sha256 = "c7365e916662679cd99e91c547eb42c3c4fc2eacbdc842668a14d30d09db99e4",
+            },
             ["0.2.0"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal/archive/refs/tags/kit-0.2.0.tar.gz",
@@ -73,6 +87,13 @@ package = {
             },
         },
         windows = {
+            ["0.3.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal/archive/refs/tags/kit-0.3.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal/releases/download/kit-0.3.0/openkal-kit-0.3.0.tar.gz",
+                },
+                sha256 = "c7365e916662679cd99e91c547eb42c3c4fc2eacbdc842668a14d30d09db99e4",
+            },
             ["0.2.0"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal/archive/refs/tags/kit-0.2.0.tar.gz",
