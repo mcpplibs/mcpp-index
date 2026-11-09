@@ -25,6 +25,8 @@
 
 ### Added
 
+- **mcpplibs.os 0.4.3.** 依赖改为同时容纳 openkal 0.24 与 0.25 两族的版本区间（openkal `>=0.24.0, <0.26.0`，各实现同理），
+  mcpp 版本下限不变；openkal 实现以 mtest 测试自身时，经 mtest 到达 os 的图得以解析（mcpplibs/os#23）。
 - **openkal-platform 0.24.5、openkal-image 0.5.4（openkal-ld、openkal-run、openkal-tools、openkal-bind）、mcpplibs.os 0.4.2，
   一次变更。** openkal-run 以能力 `mcpp:kernel-abi=openkal` 声明其 openkal 实现，并按系统给出缺省实现（`[defaults]`）；图中已有的
   实现优先。平台要求 mcpp 2026.11.9.1。os 0.4.2 新增 `fs::watcher`（mcpplibs/os#21），测试改为 mtest 的用例。
