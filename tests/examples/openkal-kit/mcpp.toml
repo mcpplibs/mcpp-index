@@ -1,0 +1,26 @@
+# openkal-kit test project: the facilities composed from openkal's interfaces,
+# consumed as a program consumes them --- the kit, the specification it is
+# written against, and the implementation for this system. The observation is
+# of behaviour (tests/kit.cpp): an endpoint is parsed and written back, and a
+# malformed one is refused.
+[package]
+name    = "openkal-kit-tests"
+version = "0.1.0"
+
+[dependencies.mcpplibs]
+openkal     = "0.25.0"
+openkal-kit = "0.3.1"
+
+[target.'cfg(os = "linux")'.dependencies.mcpplibs]
+openkal-linux = "0.26.0"
+
+[target.'cfg(os = "macos")'.dependencies.mcpplibs]
+openkal-macos = "0.23.0"
+
+[target.'cfg(windows)'.dependencies.mcpplibs]
+openkal-windows = "0.21.0"
+
+# This member names mcpplibs packages, which the workspace root's single
+# redirect does not carry, so it states its own.
+[indices]
+mcpplibs = { path = "../../.." }

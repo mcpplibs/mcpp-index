@@ -260,6 +260,7 @@ members = [
     "tests/examples/rapidcsv",
     "tests/examples/mcr",
     "tests/examples/openkal",
+    "tests/examples/openkal-kit",
     "tests/examples/openkal-musl",
     "tests/examples/openkal-platform",
     "tests/examples/compiler-rt-builtins",
