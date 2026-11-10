@@ -25,6 +25,8 @@
 
 ### Added
 
+- **openkal-posix 0.1.0。** 写在 POSIX C 库之上的 openkal 实现，为没有自身实现的系统服务；提供十五个接口（net、datagram、
+  prof、debug 不提供，名字不定义）；声明 `requires = ["mcpp:c-abi"]`。新增成员 `tests/examples/openkal-posix`（Linux、macOS）。
 - **openkal-musl 0.29.0 与 openkal-llvm-runtime 0.20.0，一次变更。** musl 的 `execvp`、`execvpe`、`execlp` 与 `posix_spawnp`
   按 `kal_env_system` 所述系统的约定查找程序（Windows：PATH 以 `;` 分隔，无后缀的名字依次试 `PATHEXT` 各后缀）；`link`、`linkat`
   经 `kal_fs_hard_link` 实现；声明 `requires = ["mcpp:kernel-abi=openkal"]`；依赖改为 openkal 0.25 一族。llvm-runtime 依赖

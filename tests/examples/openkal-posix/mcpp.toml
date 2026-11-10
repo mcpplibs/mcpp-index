@@ -1,0 +1,17 @@
+# openkal-posix test project: openkal above the system's own C library, on the
+# systems this index's runners have one (Linux, macOS). The observation is of
+# behaviour through the C surface (tests/kal.cpp): the interfaces it states, a
+# write to a stream, the environment and the system's name, a file written and
+# read back. On Windows nothing is named and the program observes nothing.
+[package]
+name    = "openkal-posix-tests"
+version = "0.1.0"
+
+[target.'cfg(any(os = "linux", os = "macos"))'.dependencies.mcpplibs]
+openkal       = "0.25.0"
+openkal-posix = "0.1.0"
+
+# This member names mcpplibs packages, which the workspace root's single
+# redirect does not carry, so it states its own.
+[indices]
+mcpplibs = { path = "../../.." }
