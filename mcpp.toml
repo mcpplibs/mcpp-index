@@ -261,6 +261,7 @@ members = [
     "tests/examples/mcr",
     "tests/examples/openkal",
     "tests/examples/openkal-kit",
+    "tests/examples/openkal-posix",
     "tests/examples/openkal-musl",
     "tests/examples/openkal-platform",
     "tests/examples/compiler-rt-builtins",
