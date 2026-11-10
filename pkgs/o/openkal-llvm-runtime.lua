@@ -64,6 +64,9 @@
 -- It pins openkal-musl 0.19.0, which carries the matching change to
 -- `bits/setjmp.h`.
 --
+--
+-- 0.20.1 adds FreeBSD above openkal-musl 0.29.1 (x86_64 and aarch64). No
+-- other row changed.
 package = {
     spec        = "1",
     namespace   = "mcpplibs",
@@ -75,6 +78,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.20.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.20.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-llvm-runtime/releases/download/0.20.1/openkal-llvm-runtime-0.20.1.tar.gz",
+                },
+                sha256 = "6739ffdc6c114ea8fa576e228f88b868c47c234a2bb2d0fc9b1c5e969c42b432",
+            },
             ["0.20.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.20.0.tar.gz",
@@ -511,6 +521,13 @@ package = {
             },
         },
         macosx = {
+            ["0.20.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.20.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-llvm-runtime/releases/download/0.20.1/openkal-llvm-runtime-0.20.1.tar.gz",
+                },
+                sha256 = "6739ffdc6c114ea8fa576e228f88b868c47c234a2bb2d0fc9b1c5e969c42b432",
+            },
             ["0.20.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.20.0.tar.gz",
@@ -947,6 +964,13 @@ package = {
             },
         },
         windows = {
+            ["0.20.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.20.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-llvm-runtime/releases/download/0.20.1/openkal-llvm-runtime-0.20.1.tar.gz",
+                },
+                sha256 = "6739ffdc6c114ea8fa576e228f88b868c47c234a2bb2d0fc9b1c5e969c42b432",
+            },
             ["0.20.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-llvm-runtime/archive/refs/tags/0.20.0.tar.gz",
