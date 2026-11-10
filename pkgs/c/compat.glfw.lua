@@ -155,6 +155,17 @@ package = {
             },
         },
         windows = {
+            -- THE WIN32 BACKEND CALLS THE WINDOWS SYSTEM INTERFACE DIRECTLY
+            -- (<windows.h>, user32, gdi32): a requirement on the kernel-abi
+            -- layer of the target side (mcpp SPEC-002 §2.2), as the Linux row
+            -- states glibc. Every route that has the Win32 API answers it --
+            -- the MSVC row, the MinGW-w64 payload and the mingw-w64-sysroot
+            -- base -- under every mcpp the index admits, since the answer is
+            -- the target's system. A Windows identity whose system interface
+            -- is another (openkal-musl over openkal-windows answers `openkal`)
+            -- has no window system, and is refused at resolution, naming this
+            -- requirement.
+            requires = { "mcpp:kernel-abi=windows" },
             cflags = { "-D_GLFW_WIN32", "-DUNICODE", "-D_UNICODE" },
             sources = {
                 "src/win32_time.c",
