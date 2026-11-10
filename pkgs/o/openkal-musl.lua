@@ -68,6 +68,8 @@
 -- 0.29.1 adds FreeBSD: the rows x86_64-freebsd-musl and aarch64-freebsd-musl,
 -- over openkal-freebsd's standalone arrangement, which the package's manifest
 -- names under `cfg(os = "freebsd")`. No other row changed.
+--
+-- 0.29.2 places further images with openkal-ld ^0.6.0 (openkal-image 0.6.0).
 package = {
     spec        = "1",
     namespace   = "mcpplibs",
@@ -79,6 +81,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.29.2"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-musl/archive/refs/tags/0.29.2.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-musl/releases/download/0.29.2/openkal-musl-0.29.2.tar.gz",
+                },
+                sha256 = "c0961da4912b8e87b4564710b395bdf2e5a0bbf7fd32c4cbf85945dc95aad6d3",
+            },
             ["0.29.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-musl/archive/refs/tags/0.29.1.tar.gz",
@@ -529,6 +538,13 @@ package = {
             },
         },
         macosx = {
+            ["0.29.2"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-musl/archive/refs/tags/0.29.2.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-musl/releases/download/0.29.2/openkal-musl-0.29.2.tar.gz",
+                },
+                sha256 = "c0961da4912b8e87b4564710b395bdf2e5a0bbf7fd32c4cbf85945dc95aad6d3",
+            },
             ["0.29.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-musl/archive/refs/tags/0.29.1.tar.gz",
@@ -979,6 +995,13 @@ package = {
             },
         },
         windows = {
+            ["0.29.2"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-musl/archive/refs/tags/0.29.2.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-musl/releases/download/0.29.2/openkal-musl-0.29.2.tar.gz",
+                },
+                sha256 = "c0961da4912b8e87b4564710b395bdf2e5a0bbf7fd32c4cbf85945dc95aad6d3",
+            },
             ["0.29.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-musl/archive/refs/tags/0.29.1.tar.gz",
