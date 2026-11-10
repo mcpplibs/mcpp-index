@@ -28,11 +28,12 @@
 
 ### Added
 
-- **openkal-freebsd 0.1.0（新包）、openkal-musl 0.29.1、openkal-llvm-runtime 0.20.1、openkal-image 0.6.0（openkal-run、
+- **openkal-freebsd 0.1.0（新包）、openkal-musl 0.29.1 与 0.29.2、openkal-llvm-runtime 0.20.1、openkal-image 0.6.0 与 0.6.1（openkal-run、
   openkal-ld、openkal-bind、openkal-tools）、mtest 0.6.0（mcpplibs.mtest、.capi、.gtest、.manifest），一次变更。**
   openkal-freebsd 在 FreeBSD 的系统调用接口上实现 openkal，可与系统 C 库并存（hosted），也可置于 openkal-musl 之下
   （`standalone`）；openkal-musl 与 openkal-llvm-runtime 增加 `x86_64-freebsd-musl` 与 `aarch64-freebsd-musl` 两行。
-  openkal-run 只绑定其实现提供的接口（mcpp 2026.11.10.1 的 `MCPP_KERNEL_ABI_INTERFACES`）。mtest 0.6.0 实现 mcpp 测试
+  openkal-run 只绑定其实现提供的接口（mcpp 2026.11.10.1 的 `MCPP_KERNEL_ABI_INTERFACES`），0.6.1 在 FreeBSD 上以
+  openkal-freebsd 为缺省实现；openkal-musl 0.29.2 改用 openkal-ld ^0.6.0。mtest 0.6.0 实现 mcpp 测试
   规范中每个用例的检查计数、输出与测试会话，并在入口中声明。
 
 - **openkal-posix 0.1.0。** 写在 POSIX C 库之上的 openkal 实现，为没有自身实现的系统服务；提供十五个接口（net、datagram、

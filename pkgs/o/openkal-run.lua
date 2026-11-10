@@ -10,7 +10,7 @@
 --
 -- 0.6.0 binds only the interfaces its implementation provides, as mcpp
 -- 2026.11.10.1 states them to its build program (MCPP_KERNEL_ABI_INTERFACES),
--- and needs that release.
+-- and needs that release. 0.6.1 names openkal-freebsd as the default on FreeBSD.
 package = {
     spec        = "1",
     namespace   = "mcpplibs",
@@ -22,6 +22,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.6.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-image/archive/refs/tags/0.6.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-image/releases/download/0.6.1/openkal-image-0.6.1.tar.gz",
+                },
+                sha256 = "36b792acadf4423aa5b4a90a020bb4b3dddd085ae0239f7860d12a02db0bfd99",
+            },
             ["0.6.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-image/archive/refs/tags/0.6.0.tar.gz",
@@ -213,6 +220,13 @@ package = {
             },
         },
         macosx = {
+            ["0.6.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-image/archive/refs/tags/0.6.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-image/releases/download/0.6.1/openkal-image-0.6.1.tar.gz",
+                },
+                sha256 = "36b792acadf4423aa5b4a90a020bb4b3dddd085ae0239f7860d12a02db0bfd99",
+            },
             ["0.6.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-image/archive/refs/tags/0.6.0.tar.gz",
@@ -404,6 +418,13 @@ package = {
             },
         },
         windows = {
+            ["0.6.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-image/archive/refs/tags/0.6.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-image/releases/download/0.6.1/openkal-image-0.6.1.tar.gz",
+                },
+                sha256 = "36b792acadf4423aa5b4a90a020bb4b3dddd085ae0239f7860d12a02db0bfd99",
+            },
             ["0.6.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-image/archive/refs/tags/0.6.0.tar.gz",
