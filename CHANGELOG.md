@@ -25,6 +25,10 @@
 
 ### Added
 
+- **openkal-musl 0.29.0 与 openkal-llvm-runtime 0.20.0，一次变更。** musl 的 `execvp`、`execvpe`、`execlp` 与 `posix_spawnp`
+  按 `kal_env_system` 所述系统的约定查找程序（Windows：PATH 以 `;` 分隔，无后缀的名字依次试 `PATHEXT` 各后缀）；`link`、`linkat`
+  经 `kal_fs_hard_link` 实现；声明 `requires = ["mcpp:kernel-abi=openkal"]`；依赖改为 openkal 0.25 一族。llvm-runtime 依赖
+  openkal-musl `^0.29.0`，其测试改为 mtest 的用例。`tests/examples/openkal-musl` 与 `tests/examples/openkal` 改用新版本。
 - **mcpplibs.os 0.4.4.** 两个平台模块加入系统的对象模型：`windows::com`（COM 与 Windows Runtime：套间、对象与按槽调用、
   `query`、`create`、`hstring`、`activate`、`factory`、`delegate`）和 `macos::objc`（Objective-C 运行时：`id`、`send<R>`、
   autorelease pool、类与选择子、框架、NSString、`define_class`、`block`）；每个目标都声明、只在自己的平台定义，镜像里不定义；
