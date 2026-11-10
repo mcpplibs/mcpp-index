@@ -28,6 +28,10 @@
 
 ### Added
 
+- **openkal-platform 0.26.0。** hosted 部分增加 `x86_64-freebsd-musl` 与 `aarch64-freebsd-musl`：openkal-freebsd 0.1.0
+  standalone 之上的 openkal-musl 0.29.2，以及 openkal-llvm-runtime 0.20.1，链接为一个静态程序。版本组为 openkal-image 0.6.1、
+  openkal-musl 0.29.2、openkal-llvm-runtime 0.20.1 与 openkal-freebsd 0.1.0，运行器的宿主包含 FreeBSD；要求 mcpp 2026.11.10.1。
+  mcpp 2026.11.10.2 经此版本服务这两行。
 - **openkal-freebsd 0.1.0（新包）、openkal-musl 0.29.1 与 0.29.2、openkal-llvm-runtime 0.20.1、openkal-image 0.6.0 与 0.6.1（openkal-run、
   openkal-ld、openkal-bind、openkal-tools）、mtest 0.6.0（mcpplibs.mtest、.capi、.gtest、.manifest），一次变更。**
   openkal-freebsd 在 FreeBSD 的系统调用接口上实现 openkal，可与系统 C 库并存（hosted），也可置于 openkal-musl 之下
