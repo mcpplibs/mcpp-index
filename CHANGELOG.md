@@ -9,6 +9,11 @@
 
 ### Fixed
 
+- **compat.glfw：Win32 后端以 `requires = { "mcpp:kernel-abi=windows" }` 陈述它直接调用的系统接口。** MSVC 行、MinGW-w64 载荷与
+  mingw-w64-sysroot 基座都回答 `windows`，且本索引接受的每个 mcpp 版本都如此回答（载荷的 kernel-abi 即目标的系统）；openkal-musl
+  经 openkal-windows 的 Windows 身份回答 `openkal`，没有窗口系统，在解析期以该要求被拒绝，不再在 `<windows.h>` 处编译失败。
+  要求写在 `c-abi=ucrt` 上则会使 2026.11.3.1–2026.11.10.1 在 MSVC 上拒绝本包（这些版本对 MSVC 回答 `msvc`）。
+
 - **compat.mimalloc：ok 映像不再链接 `-lpthread`、`-lrt`，Linux 不再链接 `-latomic`。** ok 映像（`<arch>-openkal`）原先读 `linux`
   块，链接时找不到这两个归档；新增 `openkal` 块，不列链接参数。`-latomic` 上游只在找到时才链接，mimalloc 的原子操作在本索引
   构建的各架构上都是无锁的，LLVM 工具链在图中 C 库之上没有这个归档。
