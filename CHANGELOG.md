@@ -33,6 +33,10 @@
 
 ### Added
 
+- **mtest 0.6.3.** 四个包的 0.6.3（同一标签、同一归档）：`mcpplibs.mtest.cts` 让一致性套件对着一个主体运行
+  （`cts::against`、`cts::needs`）——用例需要而主体声明不具备的能力记为跳过（`unsupported: …`），既不算通过也不算失败；
+  运行要求而主体不具备的能力失败一次。协议不变。含 0.6.1（`skip_exit`：以退出状态判定的程序声明表示跳过的状态）与
+  0.6.2（源码写出的版本与清单一致）；这两个版本未单独收录。
 - **openkal-platform 0.26.0。** hosted 部分增加 `x86_64-freebsd-musl` 与 `aarch64-freebsd-musl`：openkal-freebsd 0.1.0
   standalone 之上的 openkal-musl 0.29.2，以及 openkal-llvm-runtime 0.20.1，链接为一个静态程序。版本组为 openkal-image 0.6.1、
   openkal-musl 0.29.2、openkal-llvm-runtime 0.20.1 与 openkal-freebsd 0.1.0，运行器的宿主包含 FreeBSD；要求 mcpp 2026.11.10.1。
