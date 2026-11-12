@@ -28,6 +28,13 @@ package = {
                 },
                 sha256 = "90970a8eaac8ea6bb9815757f670617d82f9a38ec1a7af644a2c969d2cb38ddc",
             },
+            ["0.21.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-windows/archive/refs/tags/0.21.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-windows/releases/download/0.21.1/openkal-windows-0.21.1.tar.gz",
+                },
+                sha256 = "c220fa8f190b0a7ffa1b6b30887b1013df3acd548113c007ece86fd2ae8c0e22",
+            },
             ["0.21.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-windows/archive/refs/tags/0.21.0.tar.gz",
@@ -275,6 +282,13 @@ package = {
                 },
                 sha256 = "90970a8eaac8ea6bb9815757f670617d82f9a38ec1a7af644a2c969d2cb38ddc",
             },
+            ["0.21.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-windows/archive/refs/tags/0.21.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-windows/releases/download/0.21.1/openkal-windows-0.21.1.tar.gz",
+                },
+                sha256 = "c220fa8f190b0a7ffa1b6b30887b1013df3acd548113c007ece86fd2ae8c0e22",
+            },
             ["0.21.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-windows/archive/refs/tags/0.21.0.tar.gz",
@@ -521,6 +535,13 @@ package = {
                     CN = "https://gitcode.com/mcpp-res/openkal-windows/releases/download/0.22.1/openkal-windows-0.22.1.tar.gz",
                 },
                 sha256 = "90970a8eaac8ea6bb9815757f670617d82f9a38ec1a7af644a2c969d2cb38ddc",
+            },
+            ["0.21.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-windows/archive/refs/tags/0.21.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-windows/releases/download/0.21.1/openkal-windows-0.21.1.tar.gz",
+                },
+                sha256 = "c220fa8f190b0a7ffa1b6b30887b1013df3acd548113c007ece86fd2ae8c0e22",
             },
             ["0.21.0"] = {
                 url = {
