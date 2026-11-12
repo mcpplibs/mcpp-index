@@ -8,4 +8,4 @@ description = "Consume the immutable liblzma wrapper: an .xz stream through the 
 # An explicit empty table overrides the legacy workspace redirect.
 
 [dependencies]
-"mcpplibs.mwrap.xz" = "5.8.3"
+"mcpplibs.mwrap.xz" = "5.8.3.1"
