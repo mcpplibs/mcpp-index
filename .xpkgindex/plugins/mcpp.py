@@ -110,7 +110,7 @@ OPENKAL_FAMILY = {
 _IMPORT_RE = re.compile(r"^\s*import\s+([A-Za-z_][\w.]*)\s*;", re.M)
 _INCLUDE_RE = re.compile(r"^\s*#include\s+([<\"][^>\"]+[>\"])", re.M)
 _TAG_RE = re.compile(r"/archive/refs/tags/(.+?)\.(?:tar\.gz|zip|tgz)$")
-# Release assets carry the tag in the path instead — `tensorvia-cpu` publishes
+# Release assets carry the tag in the path instead — `aimol.tensorvia` publishes
 # that way, and matching only archive URLs left it with no upstream data.
 _RELEASE_TAG_RE = re.compile(r"/releases/download/([^/]+)/")
 _IMPORT_IN_TEXT = re.compile(r"\bimport\s+([A-Za-z_][\w.]*)\s*;")
@@ -176,7 +176,7 @@ def _project_manifest(text: str) -> Dict[str, Any]:
     sources = [str(s) for s in sources] if isinstance(sources, list) else []
 
     # `[lib] path = "src/x.cppm"` is the other way a manifest names its
-    # library — tensorvia-cpu uses it instead of `[targets.x]`, and reading
+    # library — aimol.tensorvia uses it instead of `[targets.x]`, and reading
     # only one shape left that package with no upstream data at all.
     lib = data.get("lib") or {}
     lib_path = str(lib.get("path") or "")

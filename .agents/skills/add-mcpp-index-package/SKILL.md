@@ -31,7 +31,7 @@ description: Use when adding a new third-party library/package to the mcpp-index
 
 - **(a) 第三方上游库**:其上游自身不提供 mcpp 支持(如 cJSON、Eigen、nlohmann),由本仓以 `compat` 形态适配。
 - **(b) 基于 mcpp 开发的库**:其上游已是 mcpp 工程(自带 `mcpp.toml`,可由 `mcpp emit xpkg` 产出描述符,且具备自有
-  release),仅需登记进索引(如 `mcpplibs.*`、`tensorvia-cpu`)。此类库通常采用 **Form A**,描述符只声明元数据与
+  release),仅需登记进索引(如 `mcpplibs.*`、`aimol.tensorvia`)。此类库通常采用 **Form A**,描述符只声明元数据与
   下载地址,无需内联构建信息。
 
 本流程不适用于修改 mcpp 本体、修改 xlings 引擎或纯文档变更,上述内容不在本仓范围内。
@@ -43,7 +43,7 @@ description: Use when adding a new third-party library/package to the mcpp-index
 1. **调研来源与形态**(决定模板,为最关键步骤)。
    - 首先判定来源:属于 (a) 第三方上游库,还是 (b) 基于 mcpp 开发的库。
      - 对 (b),形态已确定(Form A 模块库),版本与 release 由上游提供,因此本步骤较为简单:可直接采用上游
-       `mcpp emit xpkg` 的描述符,或参照 `pkgs/t/tensorvia-cpu.lua` 编写;工作重心在镜像、登记与验证。
+       `mcpp emit xpkg` 的描述符,或参照 `pkgs/t/tensorvia.lua` 编写;工作重心在镜像、登记与验证。
      - 对 (a),需按下文判定形态。
    - 确定上游仓库与**最新 tag/版本**(`git ls-remote --tags <repo>` 配合 `sort -V | tail`;须注意大版本跳跃,
      如 Eigen 由 3.4 跃迁至 5.x)。

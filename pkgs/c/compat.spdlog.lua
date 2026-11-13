@@ -37,7 +37,7 @@
 --
 -- No CN mirror yet: `url` is a plain string (upstream GitHub release only), the
 -- documented fallback when there is no mcpp-res write access (docs/cn-mirror.md;
--- precedent: pkgs/t/tensorvia-cpu.lua). CN users fall back to the upstream
+-- precedent: pkgs/t/tensorvia.lua). CN users fall back to the upstream
 -- source. A maintainer can later rewrite each `url` to a { GLOBAL, CN } table
 -- (sha256 unchanged) once the gitcode mcpp-res/spdlog mirror exists.
 package = {

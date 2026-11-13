@@ -33,7 +33,7 @@ fallback is a plain-string url (upstream release only) — lint imposes no mirro
 ```
 
 - CN users fall back to the upstream source: slower to reach, but functionally unaffected.
-- Existing precedent: `pkgs/t/tensorvia-cpu.lua` (a user's own mcpp library, no CN mirror, a single upstream string
+- Existing precedent: `pkgs/t/tensorvia.lua` (a user's own mcpp library, no CN mirror, a single upstream string
   url on all three platforms).
 - Later, once access is granted or a maintainer supplies the mirror, that version's `url` can be rewritten into a
   `{ GLOBAL=…, CN=… }` table (the sha256 stays the same).
