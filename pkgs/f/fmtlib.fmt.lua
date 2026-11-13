@@ -1,3 +1,10 @@
+local versions = {
+    ["12.2.1"] = {
+        url = "https://github.com/fmtlib/fmt/archive/refs/tags/12.2.1.tar.gz",
+        sha256 = "449374d74f31b67796dece454d59b93e6f1538efcce0e9ac78000c98142c139e",
+    },
+}
+
 -- Form B inline descriptor for {fmt} exposed as the C++23 module `fmt`, so
 -- users can write `import fmt;` out of the box (no `#include` needed). This is
 -- the module sibling of the header-based `compat.fmt` package. Namespaced under
@@ -61,18 +68,21 @@ package = {
                 url    = "https://github.com/fmtlib/fmt/archive/refs/tags/12.2.0.tar.gz",
                 sha256 = "8b852bb5aa6e7d8564f9e81394055395dd1d1936d38dfd3a17792a02bebd7af0",
             },
+            ["12.2.1"] = versions["12.2.1"],
         },
         macosx = {
             ["12.2.0"] = {
                 url    = "https://github.com/fmtlib/fmt/archive/refs/tags/12.2.0.tar.gz",
                 sha256 = "8b852bb5aa6e7d8564f9e81394055395dd1d1936d38dfd3a17792a02bebd7af0",
             },
+            ["12.2.1"] = versions["12.2.1"],
         },
         windows = {
             ["12.2.0"] = {
                 url    = "https://github.com/fmtlib/fmt/archive/refs/tags/12.2.0.tar.gz",
                 sha256 = "8b852bb5aa6e7d8564f9e81394055395dd1d1936d38dfd3a17792a02bebd7af0",
             },
+            ["12.2.1"] = versions["12.2.1"],
         },
     },
 
