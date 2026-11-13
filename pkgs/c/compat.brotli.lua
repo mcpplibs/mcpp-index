@@ -1,3 +1,10 @@
+local versions = {
+    ["1.2.1"] = {
+        url = "https://github.com/google/brotli/archive/refs/tags/v1.2.1.tar.gz",
+        sha256 = "98d35d11a78dc453aebb7d10c3748f3f73ff78c8267c0dc697b8631f67bf7e8f",
+    },
+}
+
 -- Form B C-source compat descriptor for Brotli. The three source globs match
 -- upstream v1.2.0's BROTLI_COMMON_SOURCES, BROTLI_DEC_SOURCES, and
 -- BROTLI_ENC_SOURCES CMake sets; the CLI, tests, fuzzers, and the optional C++
@@ -24,18 +31,21 @@ package = {
                 url    = "https://github.com/google/brotli/archive/refs/tags/v1.2.0.tar.gz",
                 sha256 = "816c96e8e8f193b40151dad7e8ff37b1221d019dbcb9c35cd3fadbfe6477dfec",
             },
+            ["1.2.1"] = versions["1.2.1"],
         },
         macosx = {
             ["1.2.0"] = {
                 url    = "https://github.com/google/brotli/archive/refs/tags/v1.2.0.tar.gz",
                 sha256 = "816c96e8e8f193b40151dad7e8ff37b1221d019dbcb9c35cd3fadbfe6477dfec",
             },
+            ["1.2.1"] = versions["1.2.1"],
         },
         windows = {
             ["1.2.0"] = {
                 url    = "https://github.com/google/brotli/archive/refs/tags/v1.2.0.tar.gz",
                 sha256 = "816c96e8e8f193b40151dad7e8ff37b1221d019dbcb9c35cd3fadbfe6477dfec",
             },
+            ["1.2.1"] = versions["1.2.1"],
         },
     },
 
