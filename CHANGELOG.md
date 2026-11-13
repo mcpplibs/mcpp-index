@@ -1,10 +1,6 @@
 # Changelog
 
-维护说明：未发版的变更记录在 `## [Unreleased]` ### Added
-
-- **mtest 0.7.2.** 四个包的 0.7.2（同一标签、同一归档）：`mcpplibs.mtest.bench` 新增 `bench::each`，逐次计时并给出分布（`name`、`.p95`、`.p99`、`.max`、`.mean`、`.per_item`），测量体可暂停并声明条目数；只增不改。
-
-下；准备发版时，按
+维护说明：未发版的变更记录在 `## [Unreleased]` 下；准备发版时，按
 `vX.Y.Z` 标题格式将累计条目整理到对应版本节，并按改动性质归入
 `Added`、`Changed`、`Fixed`、`Docs` 或 `Chore`。每条记录只保留用户和维护者
 需要知道的主线变化，不逐行复制提交差异。
