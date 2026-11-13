@@ -1,3 +1,10 @@
+local versions = {
+    ["0.6.1"] = {
+        url = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.6.1.tar.gz",
+        sha256 = "6ff334cc0b0eda000391a83a765454c5a828bd21416f1d9bb38709f939c72cab",
+    },
+}
+
 -- mcpplibs.mtest.manifest --- mtest's static case manifest.
 --
 -- A package of mcpp-community/mtest (one tag, one archive): the cases a source
@@ -99,6 +106,7 @@ package = {
                 },
                 sha256 = "b695022706d5fac107918c1d9461b953a8f462c63b78acacf52ea427e7009187",
             },
+            ["0.6.1"] = versions["0.6.1"],
         },
         macosx = {
             ["0.7.2"] = {
@@ -178,6 +186,7 @@ package = {
                 },
                 sha256 = "b695022706d5fac107918c1d9461b953a8f462c63b78acacf52ea427e7009187",
             },
+            ["0.6.1"] = versions["0.6.1"],
         },
         windows = {
             ["0.7.2"] = {
@@ -257,6 +266,7 @@ package = {
                 },
                 sha256 = "b695022706d5fac107918c1d9461b953a8f462c63b78acacf52ea427e7009187",
             },
+            ["0.6.1"] = versions["0.6.1"],
         },
     },
 
