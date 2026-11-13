@@ -20,6 +20,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.7.2"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.7.2.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mtest/releases/download/v0.7.2/mtest-v0.7.2.tar.gz",
+                },
+                sha256 = "c4e6e3d526da16f4f0ce983e4ccf5a3470ce2e603dd49cfb779ade58dd9e705a",
+            },
             ["0.7.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.7.1.tar.gz",
@@ -106,6 +113,13 @@ package = {
             },
         },
         macosx = {
+            ["0.7.2"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.7.2.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mtest/releases/download/v0.7.2/mtest-v0.7.2.tar.gz",
+                },
+                sha256 = "c4e6e3d526da16f4f0ce983e4ccf5a3470ce2e603dd49cfb779ade58dd9e705a",
+            },
             ["0.7.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.7.1.tar.gz",
@@ -192,6 +206,13 @@ package = {
             },
         },
         windows = {
+            ["0.7.2"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.7.2.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mtest/releases/download/v0.7.2/mtest-v0.7.2.tar.gz",
+                },
+                sha256 = "c4e6e3d526da16f4f0ce983e4ccf5a3470ce2e603dd49cfb779ade58dd9e705a",
+            },
             ["0.7.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.7.1.tar.gz",
