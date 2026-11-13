@@ -29,6 +29,10 @@
 -- 0.7.2 adds `bench::each` to `mcpplibs.mtest.bench`: every call measured by
 -- itself (`name`, `.p95`, `.p99`, `.max`, `.mean`, `.per_item`), with a lap that
 -- pauses and states items.
+--
+-- 0.8.0 states where a case runs (`only{}`, `except{}` over mcpplibs.os's
+-- platforms and architectures) and what it needs of the machine (`capability`,
+-- declared in code and answered by the program under any runner).
 package = {
     spec        = "1",
     namespace   = "mcpplibs",
@@ -47,6 +51,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.8.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.8.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mtest/releases/download/v0.8.0/mtest-v0.8.0.tar.gz",
+                },
+                sha256 = "6ea516f470ae0aeea49039c071dda97b1403d71577539530d95fa0b959d12f26",
+            },
             ["0.7.2"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.7.2.tar.gz",
@@ -140,6 +151,13 @@ package = {
             },
         },
         macosx = {
+            ["0.8.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.8.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mtest/releases/download/v0.8.0/mtest-v0.8.0.tar.gz",
+                },
+                sha256 = "6ea516f470ae0aeea49039c071dda97b1403d71577539530d95fa0b959d12f26",
+            },
             ["0.7.2"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.7.2.tar.gz",
@@ -233,6 +251,13 @@ package = {
             },
         },
         windows = {
+            ["0.8.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.8.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mtest/releases/download/v0.8.0/mtest-v0.8.0.tar.gz",
+                },
+                sha256 = "6ea516f470ae0aeea49039c071dda97b1403d71577539530d95fa0b959d12f26",
+            },
             ["0.7.2"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.7.2.tar.gz",
