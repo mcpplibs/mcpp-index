@@ -27,19 +27,19 @@ package = {
         linux = {
             ["1.0.0"] = {
                 url    = "https://github.com/julixian/tomlkitpp/archive/refs/tags/v1.0.0.tar.gz",
-                sha256 = "b011a2a7a177e3256c2c2d469b65c0a8a85dd8017956092168f0394cc61c49a1",
+                sha256 = "0a242d7eed2bf1fc785b6becf45b78f948c07c4e36097f4b898e300239691979",
             },
         },
         macosx = {
             ["1.0.0"] = {
                 url    = "https://github.com/julixian/tomlkitpp/archive/refs/tags/v1.0.0.tar.gz",
-                sha256 = "b011a2a7a177e3256c2c2d469b65c0a8a85dd8017956092168f0394cc61c49a1",
+                sha256 = "0a242d7eed2bf1fc785b6becf45b78f948c07c4e36097f4b898e300239691979",
             },
         },
         windows = {
             ["1.0.0"] = {
                 url    = "https://github.com/julixian/tomlkitpp/archive/refs/tags/v1.0.0.tar.gz",
-                sha256 = "b011a2a7a177e3256c2c2d469b65c0a8a85dd8017956092168f0394cc61c49a1",
+                sha256 = "0a242d7eed2bf1fc785b6becf45b78f948c07c4e36097f4b898e300239691979",
             },
         },
     },

@@ -4,11 +4,12 @@
 
 - **Upstream Repository**: `https://github.com/julixian/tomlkitpp`
 - **Package Identity**: `namespace = "julixian"`, `name = "tomlkitpp"` (`pkgs/j/julixian.tomlkitpp.lua`)
-- **Version & Tag**: `1.0.0` (`v1.0.0`, SHA256 `b011a2a7a177e3256c2c2d469b65c0a8a85dd8017956092168f0394cc61c49a1`, verified across repeated downloads)
+- **Version & Tag**: `1.0.0` (`v1.0.0`, SHA256 `0a242d7eed2bf1fc785b6becf45b78f948c07c4e36097f4b898e300239691979`, verified across repeated downloads)
 - **License**: `Apache-2.0`
 - **Shape**: **Form A** native `mcpp` C++23 module library (`export module tomlkitpp;`).
   - Upstream ships a `[workspace]` manifest at the repository root (`mcpp.toml`) covering both the library (`tomlkitpp/`) and the `toml-test` compliance adapter (`tools/toml-test-adapter/`).
   - The self-contained library package manifest lives at `tomlkitpp/mcpp.toml`, referenced via `mcpp = "*/tomlkitpp/mcpp.toml"`.
+  - Ships a default starter template at `templates/quickstart/` for `mcpp new <name> --template julixian.tomlkitpp`.
 
 ## 2. Mirror & Autoupdate
 
