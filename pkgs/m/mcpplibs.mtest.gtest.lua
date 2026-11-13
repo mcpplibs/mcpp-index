@@ -1,3 +1,10 @@
+local versions = {
+    ["0.6.1"] = {
+        url = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.6.1.tar.gz",
+        sha256 = "6ff334cc0b0eda000391a83a765454c5a828bd21416f1d9bb38709f939c72cab",
+    },
+}
+
 -- mcpplibs.mtest.gtest --- GoogleTest speaking the mtest test protocol.
 --
 -- A package of mcpp-community/mtest (one tag, one archive): a test main that
@@ -111,6 +118,7 @@ package = {
                 },
                 sha256 = "2e09528d97173371e0238c720cb8ac80602241f4e05d55d3acb12f21b5c95c75",
             },
+            ["0.6.1"] = versions["0.6.1"],
         },
         macosx = {
             ["0.7.2"] = {
@@ -204,6 +212,7 @@ package = {
                 },
                 sha256 = "2e09528d97173371e0238c720cb8ac80602241f4e05d55d3acb12f21b5c95c75",
             },
+            ["0.6.1"] = versions["0.6.1"],
         },
         windows = {
             ["0.7.2"] = {
@@ -297,6 +306,7 @@ package = {
                 },
                 sha256 = "2e09528d97173371e0238c720cb8ac80602241f4e05d55d3acb12f21b5c95c75",
             },
+            ["0.6.1"] = versions["0.6.1"],
         },
     },
 
