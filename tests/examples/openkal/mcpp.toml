@@ -9,10 +9,10 @@
 # (tests/autoupdate/ci.py, `member_platforms`): an implementation for another
 # system is not in the host's lock, so asking that runner would prove nothing.
 #
-# The last three entries are named under conditions no runner here builds for
-# --- a musl environment, WebAssembly, a 64-bit RISC-V machine --- so the
-# candidate gate schedules none of them, and their own repositories measure
-# them on their targets.
+# The last five entries are named under conditions no runner here builds for
+# --- a musl environment, WebAssembly, a 64-bit RISC-V machine, FreeBSD, UEFI
+# firmware --- so the candidate gate schedules none of them, and their own
+# repositories measure them on their targets.
 [package]
 name    = "openkal-tests"
 version = "0.1.0"
@@ -40,6 +40,12 @@ openkal-emscripten = "0.14.0"
 
 [target.'cfg(arch = "riscv64")'.dependencies.mcpplibs]
 openkal-opensbi = "0.9.0"
+
+[target.'cfg(os = "freebsd")'.dependencies.mcpplibs]
+openkal-freebsd = "0.1.2"
+
+[target.'cfg(os = "uefi")'.dependencies.mcpplibs]
+openkal-uefi = "0.9.0"
 
 # This member names mcpplibs packages, which the workspace root's single
 # redirect does not carry, so it states its own (mcpp.toml at the root says why
