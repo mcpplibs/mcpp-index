@@ -7,6 +7,11 @@
 
 ## [Unreleased]
 
+### Added
+
+- **mtest 0.7.2.** 四个包的 0.7.2（同一标签、同一归档）：`mcpplibs.mtest.bench` 新增 `bench::each`，逐次计时并给出分布（`name`、`.p95`、`.p99`、`.max`、`.mean`、`.per_item`），
+  测量体可暂停并声明条目数；只增不改。
+
 ### Fixed
 
 - **compat.glfw：Win32 后端以 `requires = { "mcpp:kernel-abi=windows" }` 陈述它直接调用的系统接口。** MSVC 行、MinGW-w64 载荷与
