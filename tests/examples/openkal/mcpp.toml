@@ -17,11 +17,14 @@
 name    = "openkal-tests"
 version = "0.1.0"
 
-[dependencies.mcpplibs]
-openkal = "0.25.0"
+# The specification is chosen for the whole graph: a patch release (openkal
+# clause 8) is consumed by implementations written against an earlier patch of
+# its minor version, which is what a candidate for it measures here.
+[dependencies]
+mcpplibs.openkal = { version = "0.25.0", override = true }
 
 [target.'cfg(os = "linux")'.dependencies.mcpplibs]
-openkal-linux = "0.26.0"
+openkal-linux = "0.26.2"
 
 [target.'cfg(os = "macos")'.dependencies.mcpplibs]
 openkal-macos = "0.23.0"
