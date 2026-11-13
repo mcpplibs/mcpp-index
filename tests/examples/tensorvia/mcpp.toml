@@ -1,0 +1,17 @@
+# aimol.tensorvia test project: the module imports, CPU tensors round-trip
+# through ops, and reductions read back the scalar the API contract promises.
+# No accelerator is selected here, so this member exercises exactly the CPU
+# artifact an unqualified consumer gets; the device lanes need a GPU and their
+# payloads stay unpulled in CI.
+[package]
+name    = "tensorvia-tests"
+version = "0.1.0"
+
+[indices]
+# A member-level [indices] REPLACES the inherited table: the root's `compat`
+# alias cannot resolve `aimol.*`. Point the `aimol` alias at this repo instead
+# (the same shape taskflow-module uses for `taskflow`).
+aimol = { path = "../../.." }
+
+[dev-dependencies]
+aimol.tensorvia = "0.3.0"

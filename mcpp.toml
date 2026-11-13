@@ -270,6 +270,7 @@ members = [
     "tests/examples/openlifa.openas",
     "tests/examples/openlifa.openmui",
     "tests/examples/os",
+    "tests/examples/tensorvia",
 ]
 
 # ── The index redirect, hoisted to the workspace root ───────────────────
