@@ -33,6 +33,9 @@
 
 ### Added
 
+- **mtest 0.8.0.** 四个包的 0.8.0（同一标签、同一归档）：用例以 `only{}`、`except{}` 陈述其运行的平台与架构（mcpplibs.os 的名字），
+  在场所之外跳过并说明原因；`capability` 在代码中声明机器能力，由程序在任一运行器下回答；`case` 事件新增可选字段
+  `only`、`except`、`capabilities`、`reason`；`mtest ci coverage` 按用例陈述的场所检查。只增不改。
 - **mtest 0.7.2.** 四个包的 0.7.2（同一标签、同一归档）：`mcpplibs.mtest.bench` 新增 `bench::each`，逐次计时并给出分布（`name`、`.p95`、`.p99`、`.max`、`.mean`、`.per_item`），
   测量体可暂停并声明条目数；只增不改。
 - **mtest 0.6.3.** 四个包的 0.6.3（同一标签、同一归档）：`mcpplibs.mtest.cts` 让一致性套件对着一个主体运行
