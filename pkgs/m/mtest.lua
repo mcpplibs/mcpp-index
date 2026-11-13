@@ -16,6 +16,11 @@
 -- lacks is skipped as unsupported, and what the run requires and the subject
 -- lacks fails; the protocol is unchanged. It carries 0.6.1 (`skip_exit`) and
 -- 0.6.2 (the sources write the version the manifests state).
+--
+-- 0.7.0 adds to `mcpplibs.mtest.e2e` the matchers that carry a session
+-- (`succeeded`, `exited`, `contains`, `matches`, `shell_line`) and an
+-- interactive session over one pipe (`e2e::session`: expect and send); the
+-- engine's capabilities, coverage, plan and resume are the program's.
 package = {
     spec        = "1",
     namespace   = "mcpplibs",
@@ -34,6 +39,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.7.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.7.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mtest/releases/download/v0.7.0/mtest-v0.7.0.tar.gz",
+                },
+                sha256 = "ab312f844066e6070c929be3eabee9091a903b550b8220c8c59d098e17b42bd6",
+            },
             ["0.6.3"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.6.3.tar.gz",
@@ -106,6 +118,13 @@ package = {
             },
         },
         macosx = {
+            ["0.7.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.7.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mtest/releases/download/v0.7.0/mtest-v0.7.0.tar.gz",
+                },
+                sha256 = "ab312f844066e6070c929be3eabee9091a903b550b8220c8c59d098e17b42bd6",
+            },
             ["0.6.3"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.6.3.tar.gz",
@@ -178,6 +197,13 @@ package = {
             },
         },
         windows = {
+            ["0.7.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.7.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mtest/releases/download/v0.7.0/mtest-v0.7.0.tar.gz",
+                },
+                sha256 = "ab312f844066e6070c929be3eabee9091a903b550b8220c8c59d098e17b42bd6",
+            },
             ["0.6.3"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.6.3.tar.gz",
