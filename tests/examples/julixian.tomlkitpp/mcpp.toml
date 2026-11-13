@@ -1,0 +1,15 @@
+# julixian.tomlkitpp test project: consumes the native Form A C++23 module
+# `tomlkitpp` and verifies TOML v1.1.0 parsing, multidimensional subscript edits,
+# and comment/format-preserving round-trip serialization under `mcpp test`.
+#
+# Overrides the workspace-root `compat` redirect with `julixian` so the package
+# resolves from this checkout.
+[indices]
+julixian = { path = "../../.." }
+
+[package]
+name    = "julixian-tomlkitpp-tests"
+version = "0.1.0"
+
+[dependencies.julixian]
+tomlkitpp = "1.0.0"
