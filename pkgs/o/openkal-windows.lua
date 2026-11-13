@@ -21,12 +21,26 @@ package = {
 
     xpm = {
         linux = {
+            ["0.22.2"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-windows/archive/refs/tags/0.22.2.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-windows/releases/download/0.22.2/openkal-windows-0.22.2.tar.gz",
+                },
+                sha256 = "2ed786294cddbceecd8aa3cfa8e347d0f3215c932856c3f3a26dad51b7c97079",
+            },
             ["0.22.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-windows/archive/refs/tags/0.22.1.tar.gz",
                     CN = "https://gitcode.com/mcpp-res/openkal-windows/releases/download/0.22.1/openkal-windows-0.22.1.tar.gz",
                 },
                 sha256 = "90970a8eaac8ea6bb9815757f670617d82f9a38ec1a7af644a2c969d2cb38ddc",
+            },
+            ["0.21.2"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-windows/archive/refs/tags/0.21.2.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-windows/releases/download/0.21.2/openkal-windows-0.21.2.tar.gz",
+                },
+                sha256 = "5935a6fced92732aa260d3b4d8231486d025b1695d6b820cdf5d16c436dd1775",
             },
             ["0.21.1"] = {
                 url = {
@@ -275,12 +289,26 @@ package = {
             },
         },
         macosx = {
+            ["0.22.2"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-windows/archive/refs/tags/0.22.2.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-windows/releases/download/0.22.2/openkal-windows-0.22.2.tar.gz",
+                },
+                sha256 = "2ed786294cddbceecd8aa3cfa8e347d0f3215c932856c3f3a26dad51b7c97079",
+            },
             ["0.22.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-windows/archive/refs/tags/0.22.1.tar.gz",
                     CN = "https://gitcode.com/mcpp-res/openkal-windows/releases/download/0.22.1/openkal-windows-0.22.1.tar.gz",
                 },
                 sha256 = "90970a8eaac8ea6bb9815757f670617d82f9a38ec1a7af644a2c969d2cb38ddc",
+            },
+            ["0.21.2"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-windows/archive/refs/tags/0.21.2.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-windows/releases/download/0.21.2/openkal-windows-0.21.2.tar.gz",
+                },
+                sha256 = "5935a6fced92732aa260d3b4d8231486d025b1695d6b820cdf5d16c436dd1775",
             },
             ["0.21.1"] = {
                 url = {
@@ -529,12 +557,26 @@ package = {
             },
         },
         windows = {
+            ["0.22.2"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-windows/archive/refs/tags/0.22.2.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-windows/releases/download/0.22.2/openkal-windows-0.22.2.tar.gz",
+                },
+                sha256 = "2ed786294cddbceecd8aa3cfa8e347d0f3215c932856c3f3a26dad51b7c97079",
+            },
             ["0.22.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-windows/archive/refs/tags/0.22.1.tar.gz",
                     CN = "https://gitcode.com/mcpp-res/openkal-windows/releases/download/0.22.1/openkal-windows-0.22.1.tar.gz",
                 },
                 sha256 = "90970a8eaac8ea6bb9815757f670617d82f9a38ec1a7af644a2c969d2cb38ddc",
+            },
+            ["0.21.2"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-windows/archive/refs/tags/0.21.2.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-windows/releases/download/0.21.2/openkal-windows-0.21.2.tar.gz",
+                },
+                sha256 = "5935a6fced92732aa260d3b4d8231486d025b1695d6b820cdf5d16c436dd1775",
             },
             ["0.21.1"] = {
                 url = {
