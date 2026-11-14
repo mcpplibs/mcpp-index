@@ -20,6 +20,8 @@ STATIC_NOTICES = {
     "mcpplibs.mwrap.xz": ("xz.cppm", "upstream/xz/COPYING.0BSD", b"Permission to use, copy, modify", b"XZ Utils authors"),
     "mcpplibs.mwrap.xxhash": ("xxhash.cppm", "upstream/xxhash/LICENSE", b"BSD 2-Clause", b"Yann Collet"),
     "mcpplibs.mwrap.libarchive": ("libarchive.cppm", "upstream/libarchive/COPYING", b"Tim Kientzle", b"Tim Kientzle"),
+    "mcpplibs.mwrap.meshoptimizer": ("meshoptimizer.cppm", "upstream/meshoptimizer/LICENSE.md", b"MIT License", b"Arseny Kapoulkine"),
+    "mcpplibs.mwrap.cgltf": ("cgltf.cppm", "upstream/cgltf/LICENSE", b"Permission is hereby granted", b"Kuhlmann"),
     "mcpplibs.mwrap.libc": ("libc.cppm", None, b"", b"ISO/IEC 9899:2018"),
 }
 
@@ -59,7 +61,12 @@ def main():
             subprocess.run(command, cwd=temporary, env=env, check=True)
         project = temporary / "installed-quickstart"
         manifest = tomllib.loads((project / "mcpp.toml").read_text(encoding="utf-8"))
-        dependency = manifest["dependencies"][identity]
+        # The key as written: quoted (one key) or dotted (nested tables), the form mcpp 2026.11.8.1 asks for.
+        dependency = manifest["dependencies"].get(identity)
+        if dependency is None:
+            dependency = manifest["dependencies"]
+            for part in identity.split("."):
+                dependency = dependency[part]
         actual_version = dependency if isinstance(dependency, str) else dependency["version"]
         assert actual_version == version, dependency
         if isinstance(dependency, dict):

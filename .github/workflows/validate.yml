@@ -1718,6 +1718,16 @@ jobs:
         shell: bash
         run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.xxhash@0.8.3 --deploy
 
+      - name: Installed meshoptimizer wrapper archive, actual default simplification template and its relocated notices
+        if: contains(format(' {0} ', env.MEMBERS), ' meshoptimizer-simplify ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.meshoptimizer@1.3 --deploy
+
+      - name: Installed cgltf wrapper archive, actual default inspection template and its relocated notices
+        if: contains(format(' {0} ', env.MEMBERS), ' cgltf-inspect ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.cgltf@1.15 --deploy
+
       - name: Installed libarchive wrapper archive, actual default archive template and its relocated notices
         if: contains(format(' {0} ', env.MEMBERS), ' libarchive-bundle ') && matrix.toolchain == 'default'
         shell: bash

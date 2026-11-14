@@ -35,6 +35,8 @@ members = [
     "tests/mwrap/zstd-squeeze",
     "tests/mwrap/xz-pack",
     "tests/mwrap/xxhash-digest",
+    "tests/mwrap/meshoptimizer-simplify",
+    "tests/mwrap/cgltf-inspect",
     "tests/mwrap/libarchive-bundle",
     "tests/mwrap/libc-stdio",
     "tests/mwrap/miniaudio-engine",
