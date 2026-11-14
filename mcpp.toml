@@ -40,6 +40,7 @@ members = [
     "tests/mwrap/manifold-boolean",
     "tests/mwrap/jolt-world",
     "tests/mwrap/recastnavigation-path",
+    "tests/mwrap/acl-clip",
     "tests/mwrap/basis-universal-transcode",
     "tests/mwrap/libjpeg-turbo-decode",
     "tests/mwrap/libarchive-bundle",

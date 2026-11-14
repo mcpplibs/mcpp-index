@@ -41,6 +41,14 @@
 
 ### Added
 
+- **mcpplibs.mwrap.acl 2.1.0（新包）。** acl-m：Animation Compression Library 2.1.0（在给定误差内压缩骨骼动画片段与标量轨道，
+  并在任意时刻回放）及其固定的 Realtime Math 2.2.0 的 C++23 模块，以 `export using` 在上游的命名空间 `acl`、`rtm`、`rtm::constants`
+  里导出两库头文件的全部公开名字（197 个类型、454 个函数）；15 个内部链接的 `constexpr` 常量（`k_invalid_track_index`、
+  `k_num_quality_tiers` 等）以原名、原类型和原值位于 `mcpplibs::mwrap::acl`。导出清单由 clang 读头文件推出并在 CI 中审计。封装仓库
+  从上游发布包取源码（应用上游提交 0b06bd1 的一处修复），以 `RTM_NO_INTRINSICS`、`ACL_NO_INTRINSICS`、`-ffp-contract=off`、不用快速
+  数学构建：同一个片段在 Linux x86-64 与 arm64、macOS、Windows、wasm32 上，dev 与 release，压缩字节与回放姿态的哈希相同（钉住）。
+  不含 `io`（SJSON 读写）与引擎插件。消费者测试 `tests/mwrap/acl-clip`，安装后模板检查带 `--deploy`。GLOBAL 为 GitHub 发布资产，
+  CN 为 GitCode `mcpp-res/mwrap-acl` 镜像，sha256 相同。
 - **mcpplibs.mwrap.recastnavigation 1.6.0（新包）。** recastnavigation-m：Recast & Detour 1.6.0（由三角形构建导航网格、寻路、群体、
   带障碍物的分块网格）的 C++23 模块，以 `export using` 在全局命名空间导出 Recast、Detour、DetourCrowd、DetourTileCache 头文件的
   全部公开名字（99 个类型、75 个无作用域枚举的枚举项、170 个函数）；52 个内部链接的 `static const` 常量（`DT_VERTS_PER_POLYGON`、
