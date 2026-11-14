@@ -9,6 +9,9 @@
 
 ### Fixed
 
+- **openkal 0.25.2。** 一致性套件经弱引用到达每个名字而不要求其存在：丢弃无引用定义的链接保留实现所定义的名字，第 9 条的比较据此读取
+  （第 11 条第 63 项）。仓库的测试采用 mtest 布局（`tests/unit`、`tests/e2e`，套件位于 `tests/cts`，原 `conformance/`）；
+  `tools/run-conformance.sh` 的调用方式不变。声明无变化，按 0.25.1 编写的实现仍然符合（mcpplibs/openkal#67）。
 - **mcpplibs.mwrap.meshoptimizer 1.3.1（包装修订 1）。** 库以 `-ffp-contract=off`、不开 fast math 编译：同样的输入在每个平台上逐位得到同样的
   meshlet、聚类与简化结果。1.3 按平台默认编译，arm64 把乘与加合成一次舍入，打乱的 48 × 48 网格得到的 meshlet 与 x86-64 不同（由一个
   消费者在 ubuntu-24.04-arm 上的测试发现）。上游源码不变；消费者测试 `tests/mwrap/meshoptimizer-simplify` 改用 1.3.1。
