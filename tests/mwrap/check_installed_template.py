@@ -22,6 +22,7 @@ STATIC_NOTICES = {
     "mcpplibs.mwrap.libarchive": ("libarchive.cppm", "upstream/libarchive/COPYING", b"Tim Kientzle", b"Tim Kientzle"),
     "mcpplibs.mwrap.meshoptimizer": ("meshoptimizer.cppm", "upstream/meshoptimizer/LICENSE.md", b"MIT License", b"Arseny Kapoulkine"),
     "mcpplibs.mwrap.cgltf": ("cgltf.cppm", "upstream/cgltf/LICENSE", b"Permission is hereby granted", b"Kuhlmann"),
+    "mcpplibs.mwrap.manifold": ("manifold.cppm", "upstream/manifold/LICENSE", b"Apache License", b"The Manifold Authors"),
     "mcpplibs.mwrap.libc": ("libc.cppm", None, b"", b"ISO/IEC 9899:2018"),
 }
 
