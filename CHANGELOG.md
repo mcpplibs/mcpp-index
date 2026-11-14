@@ -9,6 +9,8 @@
 
 ### Fixed
 
+- **mtest 0.8.4.** 四个包的 0.8.4（同一标签、同一归档）：测试程序在不能启动程序的系统上（`wasm32-emscripten`）可以链接——以命令探测的
+  能力在该目标上于编译期回答“不具备”，不再触及进程接口；0.8.0 至 0.8.3 在该目标上链接不出任何测试程序。其余目标不变。
 - **compat.glfw：Win32 后端以 `requires = { "mcpp:kernel-abi=windows" }` 陈述它直接调用的系统接口。** MSVC 行、MinGW-w64 载荷与
   mingw-w64-sysroot 基座都回答 `windows`，且本索引接受的每个 mcpp 版本都如此回答（载荷的 kernel-abi 即目标的系统）；openkal-musl
   经 openkal-windows 的 Windows 身份回答 `openkal`，没有窗口系统，在解析期以该要求被拒绝，不再在 `<windows.h>` 处编译失败。
