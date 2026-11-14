@@ -9,6 +9,9 @@
 
 ### Fixed
 
+- **mtest 0.8.5.** 四个包的 0.8.5（同一标签、同一归档）：`e2e::run` 的结果在输出达到上限时如实说明——`outcome` 带回
+  `out_truncated`、`err_truncated` 与 `held_open`，`command` 可声明各输出的上限（`out_limit`、`err_limit`，默认值不变），
+  失败的 `succeeded`、`exited` 指出被截断的输出及其长度（mcpp-community/mtest#22）。其余行为不变。
 - **mtest 0.8.4.** 四个包的 0.8.4（同一标签、同一归档）：测试程序在不能启动程序的系统上（`wasm32-emscripten`）可以链接——以命令探测的
   能力在该目标上于编译期回答“不具备”，不再触及进程接口；0.8.0 至 0.8.3 在该目标上链接不出任何测试程序。其余目标不变。
 - **compat.glfw：Win32 后端以 `requires = { "mcpp:kernel-abi=windows" }` 陈述它直接调用的系统接口。** MSVC 行、MinGW-w64 载荷与
