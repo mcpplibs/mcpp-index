@@ -9,6 +9,9 @@
 
 ### Fixed
 
+- **openkal-macos 0.23.3。** 构建程序只在请求了目标且链接不带 SDK 时提供 libSystem 的替身；它读取 mcpp 的 `MCPP_TARGET_SDK`
+  （mcpp 2026.11.14.1）。在 Mac 上以 `--target aarch64-macos` 构建时链接带 SDK，替身的名字不再遮蔽 SDK 的 libSystem
+  （`undefined symbol: strlen`）；较早的 mcpp 不设该变量，沿用原条件（mcpplibs/openkal-macos#49）。
 - **openkal 0.25.2。** 一致性套件经弱引用到达每个名字而不要求其存在：丢弃无引用定义的链接保留实现所定义的名字，第 9 条的比较据此读取
   （第 11 条第 63 项）。仓库的测试采用 mtest 布局（`tests/unit`、`tests/e2e`，套件位于 `tests/cts`，原 `conformance/`）；
   `tools/run-conformance.sh` 的调用方式不变。声明无变化，按 0.25.1 编写的实现仍然符合（mcpplibs/openkal#67）。
