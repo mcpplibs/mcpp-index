@@ -9,6 +9,9 @@
 
 ### Fixed
 
+- **mcpplibs.mwrap.meshoptimizer 1.3.1（包装修订 1）。** 库以 `-ffp-contract=off`、不开 fast math 编译：同样的输入在每个平台上逐位得到同样的
+  meshlet、聚类与简化结果。1.3 按平台默认编译，arm64 把乘与加合成一次舍入，打乱的 48 × 48 网格得到的 meshlet 与 x86-64 不同（由一个
+  消费者在 ubuntu-24.04-arm 上的测试发现）。上游源码不变；消费者测试 `tests/mwrap/meshoptimizer-simplify` 改用 1.3.1。
 - **mtest 0.8.5.** 四个包的 0.8.5（同一标签、同一归档）：`e2e::run` 的结果在输出达到上限时如实说明——`outcome` 带回
   `out_truncated`、`err_truncated` 与 `held_open`，`command` 可声明各输出的上限（`out_limit`、`err_limit`，默认值不变），
   失败的 `succeeded`、`exited` 指出被截断的输出及其长度（mcpp-community/mtest#22）。其余行为不变。
