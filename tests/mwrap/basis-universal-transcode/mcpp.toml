@@ -1,6 +1,6 @@
 [package]
 name = "basis-universal-transcode"
-version = "2.50"
+version = "2.50.1"
 description = "Consume the immutable Basis Universal wrapper: the transcoder made ready, what it can write and how large a block is, what is no KTX2 file refused, the adapted constants"
 
 [indices]
@@ -8,4 +8,4 @@ description = "Consume the immutable Basis Universal wrapper: the transcoder mad
 # An explicit empty table overrides the legacy workspace redirect.
 
 [dependencies]
-mcpplibs.mwrap.basis_universal = "2.50"
+mcpplibs.mwrap.basis_universal = "2.50.1"
