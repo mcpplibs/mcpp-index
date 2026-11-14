@@ -450,7 +450,10 @@ env:
   #
   # 2026.11.7.2: the built-in platform as one release, and the floor
   # mcpplibs.mtest 0.1.0 states.
-  MCPP_VERSION: "2026.11.7.2"
+  #
+  # 2026.11.14.1: the newest release; the index validates with the engine its
+  # consumers install (openkal-run 0.6.3 states 2026.11.13.1).
+  MCPP_VERSION: "2026.11.14.1"
 
 jobs:
   lint:
