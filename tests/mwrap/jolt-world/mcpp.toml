@@ -1,0 +1,15 @@
+[package]
+name = "jolt-world"
+version = "5.6.0"
+description = "Consume the immutable Jolt Physics wrapper: a world of bodies stepped, queried, saved and restored to the same bits, with one worker and several"
+
+[indices]
+# Use the complete candidate built-in index prepared by tests/run_members.sh.
+# An explicit empty table overrides the legacy workspace redirect.
+
+[dependencies]
+mcpplibs.mwrap.jolt = "5.6.0"
+
+# Jolt's inline math compiled here too, as the library is built.
+[build]
+cxxflags = ["-ffp-contract=off"]
