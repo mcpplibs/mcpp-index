@@ -41,6 +41,15 @@
 
 ### Added
 
+- **mcpplibs.mwrap.jolt 5.6.0（新包）。** jolt-m：Jolt Physics 5.6.0（刚体与软体物理：形状、约束、查询、角色、载具）的 C++23
+  模块，以 `export using` 在上游的命名空间里导出 `<Jolt/…>` 下各头文件的全部公开名字（`JPH` 450 个类型、127 个函数与运算符、
+  6 个对象，及嵌套命名空间 `ClosestPoint`、`HalfFloatConversion`、`ScaleHelpers`、`StreamUtils`、`literals` 的名字）；50 个内部链接的
+  常量（`cMaxPhysicsJobs`、`cDefaultConvexRadius`、`JPH_PI` 等；常量数组为 `std::array`）以原名位于 `mcpplibs::mwrap::jolt`。导出清单
+  由 clang 读头文件推出并在 CI 中审计；`JPH::FPControlWord` 只在上游声明它的平台（SSE、Arm）导出。封装仓库从上游 5.6.0 发布包取
+  源码并以跨平台确定模式构建（`JPH_CROSS_PLATFORM_DETERMINISTIC`、`-ffp-contract=off`、不用快速数学，`JPH_NO_DEBUG` 使各配置相同）：
+  同一场景在 Linux x86-64 与 arm64、macOS、Windows、wasm32 上，dev 与 release，0、1、4 个工作线程，哈希相同（钉住）。不含调试
+  渲染器、性能剖析、对象流与 GPU 计算后端。消费者测试 `tests/mwrap/jolt-world`，安装后模板检查带 `--deploy`。GLOBAL 为 GitHub
+  发布资产，CN 为 GitCode `mcpp-res/mwrap-jolt` 镜像，sha256 相同。
 - **mcpplibs.mwrap.basis_universal 2.50.1（新包）。** basis-universal-m：Basis Universal 2.50 转码器（把 KTX2 与 `.basis` 纹理转成
   像素或 GPU 自己的压缩格式）的 C++23 模块，`<transcoder/basisu_transcoder.h>` 在 `basist`、`basisu` 及其内部命名空间声明的
   603 个名字（148 个类型、273 个函数、70 个对象、112 个无作用域枚举的枚举项）以原名导出；头文件里 139 个内部链接的标量常量
