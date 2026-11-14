@@ -46,7 +46,7 @@
   （`zstd/zstddeclib.c`），按上游默认方式构建（全部格式、KTX2、Zstandard），关闭浮点收缩；不含编码器。封装的测试读取上游
   自己的 KTX2 测试文件：ETC1S 照片转成 RGBA 像素与 BC7、ETC2、ASTC 块的哈希在四个平台行一致，同一幅 XUASTC 图的两种打包
   给出同一幅图。消费者测试 `tests/mwrap/basis-universal-transcode`，安装后模板检查带 `--deploy`。GLOBAL 为 GitHub 发布资产，
-  CN 为 GitCode `mcpp-res/mwrap-basis-universal` 镜像，sha256 相同。封装修订 2.50.1（取代 2.50）：在每个目标上都启用不透明块的
+  CN 为 GitCode `mcpp-res/mwrap-basis-universal` 镜像，sha256 相同。封装修订 2.50.1（2.50 保留）：在每个目标上都启用不透明块的
   较大 ASTC 表（上游在 Emscripten 下关闭它），编译为 WebAssembly 时的 ASTC 块与原生构建相同；平台列表加入 emscripten。
 
 - **mcpplibs.mwrap.libjpeg_turbo 3.2.1（新包）。** libjpeg-turbo-m：libjpeg-turbo 的 TurboJPEG API（JPEG 压缩、解压、无损变换）的

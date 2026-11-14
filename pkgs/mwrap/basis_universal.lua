@@ -24,6 +24,13 @@ package = {
     },
     xpm = {
         linux = {
+            ["2.50"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/basis-universal-m/releases/download/mwrap-2.50/basis-universal-m-2.50.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mwrap-basis-universal/releases/download/2.50/basis-universal-m-2.50.tar.gz",
+                },
+                sha256 = "eb114f2026bb408fd73cc77852fc7539441d2717bac36bdc10bf7f4d09228921",
+            },
             ["2.50.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/basis-universal-m/releases/download/mwrap-2.50.1/basis-universal-m-2.50.1.tar.gz",
@@ -33,6 +40,13 @@ package = {
             },
         },
         macosx = {
+            ["2.50"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/basis-universal-m/releases/download/mwrap-2.50/basis-universal-m-2.50.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mwrap-basis-universal/releases/download/2.50/basis-universal-m-2.50.tar.gz",
+                },
+                sha256 = "eb114f2026bb408fd73cc77852fc7539441d2717bac36bdc10bf7f4d09228921",
+            },
             ["2.50.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/basis-universal-m/releases/download/mwrap-2.50.1/basis-universal-m-2.50.1.tar.gz",
@@ -42,6 +56,13 @@ package = {
             },
         },
         windows = {
+            ["2.50"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/basis-universal-m/releases/download/mwrap-2.50/basis-universal-m-2.50.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mwrap-basis-universal/releases/download/2.50/basis-universal-m-2.50.tar.gz",
+                },
+                sha256 = "eb114f2026bb408fd73cc77852fc7539441d2717bac36bdc10bf7f4d09228921",
+            },
             ["2.50.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/basis-universal-m/releases/download/mwrap-2.50.1/basis-universal-m-2.50.1.tar.gz",
