@@ -38,6 +38,13 @@
 
 ### Added
 
+- **mcpplibs.mwrap.meshoptimizer 1.3、mcpplibs.mwrap.cgltf 1.15（新包）。** 两个 mwrap 包：meshoptimizer-m 以 `export using`
+  导出 `<meshoptimizer.h>` 的全部公开名字（9 个类型、20 个枚举值、89 个函数），`MESHOPTIMIZER_VERSION` 在 `.macros` 中为同名常量；
+  cgltf-m 导出 `<cgltf.h>` 的全部公开名字（72 个类型、102 个枚举值、37 个函数），并再导出 `.write`（`<cgltf_write.h>`）。
+  本索引没有这两个库的 compat 包，封装仓库各自从上游发布包取源码（校验和在 `upstream/documents.json`）并自行构建；导出清单由
+  各仓库的 `tools/surface.py` 从头文件推出并在 CI 中审计。消费者测试 `tests/mwrap/meshoptimizer-simplify`、
+  `tests/mwrap/cgltf-inspect`，安装后模板检查带 `--deploy`（`STATIC_NOTICES`）；该检查读取生成的清单时同时接受带引号与
+  点分两种依赖键。GLOBAL 为 GitHub 发布资产，CN 为 GitCode `mcpp-res/mwrap-<lib>` 镜像，sha256 相同。
 - **mtest 0.8.3.** 四个包的 0.8.3（同一标签、同一归档；含未入索引的 0.8.1、0.8.2 的内容）：`bench::each` 的一次调用可以说明自己的组成
   （`part`、`time`、`value`），给出最慢的几次、超过上限的次数与分配计数；`bench::laps` 是同一测量的循环形式；
   程序单独运行时打印测得的数字，并按标识、名字或带 `*` 的模式选择用例。只增不改。

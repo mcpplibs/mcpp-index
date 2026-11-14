@@ -1,0 +1,11 @@
+[package]
+name = "meshoptimizer-simplify"
+version = "1.3"
+description = "Consume the immutable meshoptimizer wrapper: index a grid, order it for the vertex cache, simplify it, cut meshlets, and round-trip both codecs"
+
+[indices]
+# Use the complete candidate built-in index prepared by tests/run_members.sh.
+# An explicit empty table overrides the legacy workspace redirect.
+
+[dependencies]
+mcpplibs.mwrap.meshoptimizer = "1.3"
