@@ -1738,6 +1738,11 @@ jobs:
         shell: bash
         run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.jolt@5.6.0 --deploy
 
+      - name: Installed recastnavigation wrapper archive, actual default path template and its relocated notices
+        if: contains(format(' {0} ', env.MEMBERS), ' recastnavigation-path ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.recastnavigation@1.6.0 --deploy
+
       - name: Installed libjpeg-turbo wrapper archive, actual default decoding template and its relocated notices
         if: contains(format(' {0} ', env.MEMBERS), ' libjpeg-turbo-decode ') && matrix.toolchain == 'default'
         shell: bash

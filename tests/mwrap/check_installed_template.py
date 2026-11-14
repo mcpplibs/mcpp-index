@@ -23,6 +23,7 @@ STATIC_NOTICES = {
     "mcpplibs.mwrap.meshoptimizer": ("meshoptimizer.cppm", "upstream/meshoptimizer/LICENSE.md", b"MIT License", b"Arseny Kapoulkine"),
     "mcpplibs.mwrap.cgltf": ("cgltf.cppm", "upstream/cgltf/LICENSE", b"Permission is hereby granted", b"Kuhlmann"),
     "mcpplibs.mwrap.manifold": ("manifold.cppm", "upstream/manifold/LICENSE", b"Apache License", b"The Manifold Authors"),
+    "mcpplibs.mwrap.recastnavigation": ("recastnavigation.cppm", "upstream/recastnavigation/License.txt", b"This software is provided 'as-is'", b"Recast & Detour is Copyright (c) 2009 Mikko"),
     "mcpplibs.mwrap.jolt": ("jolt.cppm", "upstream/jolt/LICENSE", b"Permission is hereby granted", b"Jolt Physics is Copyright (c) 2021 Jorrit"),
     "mcpplibs.mwrap.libjpeg_turbo": ("libjpeg_turbo.cppm", "upstream/libjpeg-turbo/README.ijg", b"Independent JPEG Group", b"libjpeg-turbo Project"),
     "mcpplibs.mwrap.basis_universal": ("basis_universal.cppm", "upstream/basis_universal/NOTICE", b"Binomial LLC", b"Basis Universal"),
