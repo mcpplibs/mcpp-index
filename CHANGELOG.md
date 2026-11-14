@@ -38,6 +38,16 @@
 
 ### Added
 
+- **mcpplibs.mwrap.basis_universal 2.50（新包）。** basis-universal-m：Basis Universal 2.50 转码器（把 KTX2 与 `.basis` 纹理转成
+  像素或 GPU 自己的压缩格式）的 C++23 模块，`<transcoder/basisu_transcoder.h>` 在 `basist`、`basisu` 及其内部命名空间声明的
+  603 个名字（148 个类型、273 个函数、70 个对象、112 个无作用域枚举的枚举项）以原名导出；头文件里 139 个内部链接的标量常量
+  以原名位于 `mcpplibs::mwrap::basis_universal::<所在命名空间>`，11 个无法重新给出的内部链接名字（`static` 函数、常量表、
+  非常量表达式的 `const float`）留给头文件。封装仓库逐字节收录 v2_50 发布包的 `transcoder/` 与上游随附的 Zstandard 解码器
+  （`zstd/zstddeclib.c`），按上游默认方式构建（全部格式、KTX2、Zstandard），关闭浮点收缩；不含编码器。封装的测试读取上游
+  自己的 KTX2 测试文件：ETC1S 照片转成 RGBA 像素与 BC7、ETC2、ASTC 块的哈希在四个平台行一致，同一幅 XUASTC 图的两种打包
+  给出同一幅图。消费者测试 `tests/mwrap/basis-universal-transcode`，安装后模板检查带 `--deploy`。GLOBAL 为 GitHub 发布资产，
+  CN 为 GitCode `mcpp-res/mwrap-basis-universal` 镜像，sha256 相同。
+
 - **mcpplibs.mwrap.libjpeg_turbo 3.2.1（新包）。** libjpeg-turbo-m：libjpeg-turbo 的 TurboJPEG API（JPEG 压缩、解压、无损变换）的
   C++23 模块，`<turbojpeg.h>` 的 7 个枚举、68 个枚举值、4 个类型、80 个函数以原名导出；头文件里的 43 个常量宏、9 个
   `static const` 常量与表、3 个带参数的宏（`tj3Init`、`TJSCALED`、`TJPAD`）以原名位于 `mcpplibs::mwrap::libjpeg_turbo`。
