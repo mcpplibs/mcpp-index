@@ -8,4 +8,4 @@ description = "Consume the immutable meshoptimizer wrapper: index a grid, order 
 # An explicit empty table overrides the legacy workspace redirect.
 
 [dependencies]
-mcpplibs.mwrap.meshoptimizer = "1.3"
+mcpplibs.mwrap.meshoptimizer = "1.3.1"
