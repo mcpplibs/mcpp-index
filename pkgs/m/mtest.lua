@@ -45,6 +45,10 @@
 --
 -- 0.8.5 says when an output was cut at its limit: `e2e::outcome` carries
 -- `out_truncated`, `err_truncated` and `held_open`; `e2e::command` states its limits.
+--
+-- 0.9.0 reads a selection's `!<id>` (the case and the cases it declares are left out)
+-- and `?<id>` (selected where declared, not missing otherwise), so a runner divides a
+-- long case by the cases it declares (SPEC-017 P4.3).
 package = {
     spec        = "1",
     namespace   = "mcpplibs",
@@ -63,6 +67,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.9.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.9.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mtest/releases/download/v0.9.0/mtest-v0.9.0.tar.gz",
+                },
+                sha256 = "686046fff9a8b6b3f163cc6c6964605e1d195506c35277844e36852bbd42c373",
+            },
             ["0.8.5"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.8.5.tar.gz",
@@ -184,6 +195,13 @@ package = {
             },
         },
         macosx = {
+            ["0.9.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.9.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mtest/releases/download/v0.9.0/mtest-v0.9.0.tar.gz",
+                },
+                sha256 = "686046fff9a8b6b3f163cc6c6964605e1d195506c35277844e36852bbd42c373",
+            },
             ["0.8.5"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.8.5.tar.gz",
@@ -305,6 +323,13 @@ package = {
             },
         },
         windows = {
+            ["0.9.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.9.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mtest/releases/download/v0.9.0/mtest-v0.9.0.tar.gz",
+                },
+                sha256 = "686046fff9a8b6b3f163cc6c6964605e1d195506c35277844e36852bbd42c373",
+            },
             ["0.8.5"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.8.5.tar.gz",
