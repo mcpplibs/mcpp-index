@@ -97,7 +97,9 @@ mcpp new --list-templates mcpplibs.mwrap.opencv@5.0.0
 mcpp new viewer --template mcpplibs.mwrap.opencv@5.0.0:window
 ```
 
-模板是纯数据，不执行 hook。当前 mcpp 的 self.name 为完整包选择器，应作为一个带引号的 key：
+模板是纯数据，不执行 hook。当前 mcpp 的 self.name 为完整包选择器，应作为一个带引号的 key（mcpp 2026.11.8.1 起，不需要引号的
+key 带引号会被提示，`--strict` 下被拒绝；以该版本测试的模板把同一选择器写成点分 key `{{self.name}} = "{{self.version}}"`，
+指向同一个包，`tests/mwrap/check_installed_template.py` 两种写法都读）：
 
 ```toml
 [dependencies]
