@@ -1741,7 +1741,7 @@ jobs:
       - name: Installed Basis Universal wrapper archive, actual default KTX2 template and its relocated notices
         if: contains(format(' {0} ', env.MEMBERS), ' basis-universal-transcode ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.basis_universal@2.50 --deploy
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.basis_universal@2.50.1 --deploy
 
       - name: Installed libarchive wrapper archive, actual default archive template and its relocated notices
         if: contains(format(' {0} ', env.MEMBERS), ' libarchive-bundle ') && matrix.toolchain == 'default'

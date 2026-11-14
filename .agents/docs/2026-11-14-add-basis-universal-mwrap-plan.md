@@ -1,4 +1,4 @@
-# Add mcpplibs.mwrap.basis_universal (basis-universal-m 2.50)
+# Add mcpplibs.mwrap.basis_universal (basis-universal-m 2.50, revision 2.50.1)
 
 ## Form
 
@@ -12,7 +12,9 @@
   (`transcoder/`: one source file with its headers and tables) and the Zstandard decoder upstream ships beside it
   (`zstd/zstddeclib.c`, `zstd.h`, `zstd_errors.h`) — 33 files, checksums in `upstream/documents.json` — and builds
   them as upstream's default build does (every format, KTX2, Zstandard), with one choice: floating-point contraction
-  off. The encoder, the command line tool and the bindings are not vendored. It deploys upstream's README, LICENSE
+  off. Revision 2.50.1 (tag `mwrap-2.50.1`, asset `basis-universal-m-2.50.1.tar.gz`, `6ee80feb…4f8e`) is listed beside 2.50 and is the one to use: it also
+  builds the larger ASTC table for opaque blocks on every target (`BASISD_SUPPORT_ASTC_HIGHER_OPAQUE_QUALITY=1`, which
+  upstream turns off under Emscripten), so ASTC blocks are the same as WebAssembly as natively. The encoder, the command line tool and the bindings are not vendored. It deploys upstream's README, LICENSE
   and NOTICE and Zstandard's LICENSE with its own LICENSE/NOTICE (`runtime.deploy`). No dependencies.
 
 ## Module
