@@ -41,6 +41,14 @@
 
 ### Added
 
+- **mcpplibs.mwrap.recastnavigation 1.6.0（新包）。** recastnavigation-m：Recast & Detour 1.6.0（由三角形构建导航网格、寻路、群体、
+  带障碍物的分块网格）的 C++23 模块，以 `export using` 在全局命名空间导出 Recast、Detour、DetourCrowd、DetourTileCache 头文件的
+  全部公开名字（99 个类型、75 个无作用域枚举的枚举项、170 个函数）；52 个内部链接的 `static const` 常量（`DT_VERTS_PER_POLYGON`、
+  `DT_SUCCESS`、`RC_WALKABLE_AREA`、`RC_PI` 等）以原名、原类型和原值位于 `mcpplibs::mwrap::recastnavigation`。导出清单由 clang 读头文件
+  推出并在 CI 中审计。封装仓库从上游 1.6.0 发布包取源码，以 `-ffp-contract=off`、不用快速数学构建，`NDEBUG` 使各配置相同：同一
+  组三角形与群体在 Linux x86-64 与 arm64、macOS、Windows、wasm32 上，dev 与 release，网格字节与群体位置的哈希相同（钉住）。不含
+  DebugUtils 与演示程序。消费者测试 `tests/mwrap/recastnavigation-path`，安装后模板检查带 `--deploy`。GLOBAL 为 GitHub 发布资产，
+  CN 为 GitCode `mcpp-res/mwrap-recastnavigation` 镜像，sha256 相同。
 - **mcpplibs.mwrap.jolt 5.6.0（新包）。** jolt-m：Jolt Physics 5.6.0（刚体与软体物理：形状、约束、查询、角色、载具）的 C++23
   模块，以 `export using` 在上游的命名空间里导出 `<Jolt/…>` 下各头文件的全部公开名字（`JPH` 450 个类型、127 个函数与运算符、
   6 个对象，及嵌套命名空间 `ClosestPoint`、`HalfFloatConversion`、`ScaleHelpers`、`StreamUtils`、`literals` 的名字）；50 个内部链接的
