@@ -9,6 +9,9 @@
 
 ### Fixed
 
+- **openkal 0.25.3。** 一致性套件是独立的 mtest 项目（`tests/cts/mtest.toml`）：引擎在套件目录启动程序并把运行记录存入
+  `tests/cts/.mtest`。0.25.2 下引擎取仓库根的项目，记录写入根存储，交给运行器（Web 上的 `node`）的程序名按错误的目录解析。
+  条款与声明无变化（mcpplibs/openkal#68）。
 - **openkal-macos 0.23.3。** 构建程序只在请求了目标且链接不带 SDK 时提供 libSystem 的替身；它读取 mcpp 的 `MCPP_TARGET_SDK`
   （mcpp 2026.11.14.1）。在 Mac 上以 `--target aarch64-macos` 构建时链接带 SDK，替身的名字不再遮蔽 SDK 的 libSystem
   （`undefined symbol: strlen`）；较早的 mcpp 不设该变量，沿用原条件（mcpplibs/openkal-macos#49）。
