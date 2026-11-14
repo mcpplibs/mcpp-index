@@ -8,10 +8,13 @@
   package `mcpplibs.mwrap.recastnavigation`, version 1.6.0 (the first indexed release of the identity), tag `mwrap-1.6.0`;
   release asset `recastnavigation-m-1.6.0.tar.gz` (`13382f6c…daa05`), CN mirror `gitcode.com/mcpp-res/mwrap-recastnavigation`
   with identical bytes.
-- Implementation ownership: the library has no compat package in this index, so the wrapper vendors the four libraries
-  (Recast, Detour, DetourCrowd, DetourTileCache: `Include/` and `Source/`) from the release archive (checksums of every
-  file in `upstream/documents.json`) and builds them with `-ffp-contract=off` and no fast math, with `NDEBUG` in every
-  profile (upstream declares its assert hooks only without it). DebugUtils, the demo and upstream's tests are not
+- Implementation ownership: this index has `compat.recastnavigation` 1.6.0 (the same release). The wrapper does not
+  depend on it: what it is for is the same mesh bytes and crowd places on every platform and in every profile, which
+  needs the library itself compiled with `-ffp-contract=off`, no fast math and `NDEBUG` in every profile (upstream
+  declares its assert hooks only without it), flags a dependency's build does not take from its consumer. It vendors
+  the four libraries (Recast, Detour, DetourCrowd, DetourTileCache: `Include/` and `Source/`) from the release archive
+  (checksums of every file in `upstream/documents.json`) and builds them so. A program links one of the two, not both
+  (docs/mwrap.md: one owner of an implementation in a program). DebugUtils, the demo and upstream's tests are not
   vendored. It deploys upstream's README and License.txt with its own LICENSE/NOTICE (`runtime.deploy`).
 
 ## Module

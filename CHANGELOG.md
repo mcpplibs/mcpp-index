@@ -45,7 +45,7 @@
   带障碍物的分块网格）的 C++23 模块，以 `export using` 在全局命名空间导出 Recast、Detour、DetourCrowd、DetourTileCache 头文件的
   全部公开名字（99 个类型、75 个无作用域枚举的枚举项、170 个函数）；52 个内部链接的 `static const` 常量（`DT_VERTS_PER_POLYGON`、
   `DT_SUCCESS`、`RC_WALKABLE_AREA`、`RC_PI` 等）以原名、原类型和原值位于 `mcpplibs::mwrap::recastnavigation`。导出清单由 clang 读头文件
-  推出并在 CI 中审计。封装仓库从上游 1.6.0 发布包取源码，以 `-ffp-contract=off`、不用快速数学构建，`NDEBUG` 使各配置相同：同一
+  推出并在 CI 中审计。封装仓库从上游 1.6.0 发布包取源码（不依赖 `compat.recastnavigation`：确定性要求库本身以 `-ffp-contract=off`、不用快速数学、各配置都定义 `NDEBUG` 编译，依赖的构建不接受消费者的这些标志；一个程序只链接两者之一），以这些标志构建：同一
   组三角形与群体在 Linux x86-64 与 arm64、macOS、Windows、wasm32 上，dev 与 release，网格字节与群体位置的哈希相同（钉住）。不含
   DebugUtils 与演示程序。消费者测试 `tests/mwrap/recastnavigation-path`，安装后模板检查带 `--deploy`。GLOBAL 为 GitHub 发布资产，
   CN 为 GitCode `mcpp-res/mwrap-recastnavigation` 镜像，sha256 相同。
