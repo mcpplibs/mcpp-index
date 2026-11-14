@@ -23,6 +23,7 @@ STATIC_NOTICES = {
     "mcpplibs.mwrap.meshoptimizer": ("meshoptimizer.cppm", "upstream/meshoptimizer/LICENSE.md", b"MIT License", b"Arseny Kapoulkine"),
     "mcpplibs.mwrap.cgltf": ("cgltf.cppm", "upstream/cgltf/LICENSE", b"Permission is hereby granted", b"Kuhlmann"),
     "mcpplibs.mwrap.manifold": ("manifold.cppm", "upstream/manifold/LICENSE", b"Apache License", b"The Manifold Authors"),
+    "mcpplibs.mwrap.libjpeg_turbo": ("libjpeg_turbo.cppm", "upstream/libjpeg-turbo/README.ijg", b"Independent JPEG Group", b"libjpeg-turbo Project"),
     "mcpplibs.mwrap.libc": ("libc.cppm", None, b"", b"ISO/IEC 9899:2018"),
 }
 

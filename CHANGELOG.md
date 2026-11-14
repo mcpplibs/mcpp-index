@@ -38,6 +38,14 @@
 
 ### Added
 
+- **mcpplibs.mwrap.libjpeg_turbo 3.2.1（新包）。** libjpeg-turbo-m：libjpeg-turbo 的 TurboJPEG API（JPEG 压缩、解压、无损变换）的
+  C++23 模块，`<turbojpeg.h>` 的 7 个枚举、68 个枚举值、4 个类型、80 个函数以原名导出；头文件里的 43 个常量宏、9 个
+  `static const` 常量与表、3 个带参数的宏（`tj3Init`、`TJSCALED`、`TJPAD`）以原名位于 `mcpplibs::mwrap::libjpeg_turbo`。
+  封装仓库逐字节收录 3.2.1 发布包中 TurboJPEG 静态库的源文件，按上游的清单构建：不带 SIMD 扩展（C 代码，默认路径全程
+  整数运算，各平台结果相同）、libspng 链接 `compat.zlib`（上游的 `WITH_SYSTEM_ZLIB`）、关闭浮点收缩。封装的测试里上游的
+  `testorig.jpg` 解码结果与上游回归测试期望的 MD5 一致。消费者测试 `tests/mwrap/libjpeg-turbo-decode`，安装后模板检查带
+  `--deploy`。GLOBAL 为 GitHub 发布资产，CN 为 GitCode `mcpp-res/mwrap-libjpeg-turbo` 镜像，sha256 相同。
+
 - **mcpplibs.mwrap.manifold 3.5.5.1（新包）。** manifold-m：Manifold（始终保持流形的实体几何库）的 C++23 模块，以 `export using`
   在上游的命名空间里导出 `<manifold/manifold.h>` 与 `<manifold/polygon.h>` 的全部公开名字（`manifold` 36 个类型、10 个函数，
   `manifold::math` 16 个函数，`linalg` 10 个类型、116 个函数与运算符）；7 个内部链接的 `constexpr` 常量（`kPi`、

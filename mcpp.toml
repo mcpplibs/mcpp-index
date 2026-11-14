@@ -38,6 +38,7 @@ members = [
     "tests/mwrap/meshoptimizer-simplify",
     "tests/mwrap/cgltf-inspect",
     "tests/mwrap/manifold-boolean",
+    "tests/mwrap/libjpeg-turbo-decode",
     "tests/mwrap/libarchive-bundle",
     "tests/mwrap/libc-stdio",
     "tests/mwrap/miniaudio-engine",
