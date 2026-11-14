@@ -7,6 +7,13 @@
 
 ## [Unreleased]
 
+### Added
+
+- **djgpp-platform 0.1.0（新包）。** DJGPP 构建的 32 位 DOS 程序的平台包：行 `i586-dos-djgpp`（COFF 目标文件、`.exe`、ILP32、
+  执行系统 `dos`），其 GCC 由行的 GCC 目标 `i586-pc-msdosdjgpp` 指定（xim 包 `i586-pc-msdosdjgpp-gcc` 12.2.0），运行器为带
+  DOSBox Staging 配置的 dirun。仅 C：DJGPP 的 GCC 12.2.0 不支持 C++ 模块的依赖扫描。它与 openkal 的 DOS 路线
+  （openkal-platform 的 `i686-dos-musl`，社区默认）并存；需要 mcpp 2026.11.13.1（mcpplibs/djgpp-platform#1）。
+
 ### Fixed
 
 - **openkal 0.25.3。** 一致性套件是独立的 mtest 项目（`tests/cts/mtest.toml`）：引擎在套件目录启动程序并把运行记录存入
