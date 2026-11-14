@@ -9,6 +9,10 @@
 
 ### Added
 
+- **openkal-platform 0.28.0。** 增加四行：`i686-linux-musl`（Linux 的 32 位行）、`x86_64-uefi`（openkal-uefi 0.10.0 之上的 UEFI 应用，
+  OVMF 下由 dirun 运行；ok 映像也可作为被承载程序打包为 UEFI）、`i686-openkal`（i386 的 ok 映像）与 `i686-dos-musl`（openkal-dos 之上的 DOS 程序，
+  仅为技术实验）。版本组随 openkal 0.25.3、openkal-macos 0.23.3、openkal-musl 0.29.6、openkal-llvm-runtime 0.20.3 与 openkal-image 0.6.3；
+  需要 mcpp 2026.11.14.1（mcpplibs/openkal-platform#31）。
 - **djgpp-platform 0.1.0（新包）。** DJGPP 构建的 32 位 DOS 程序的平台包：行 `i586-dos-djgpp`（COFF 目标文件、`.exe`、ILP32、
   执行系统 `dos`），其 GCC 由行的 GCC 目标 `i586-pc-msdosdjgpp` 指定（xim 包 `i586-pc-msdosdjgpp-gcc` 12.2.0），运行器为带
   DOSBox Staging 配置的 dirun。仅 C：DJGPP 的 GCC 12.2.0 不支持 C++ 模块的依赖扫描。它与 openkal 的 DOS 路线
