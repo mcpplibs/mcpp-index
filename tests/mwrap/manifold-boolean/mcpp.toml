@@ -1,6 +1,6 @@
 [package]
 name = "manifold-boolean"
-version = "3.5.5"
+version = "3.5.5.1"
 description = "Consume the immutable Manifold wrapper: booleans of solids and their volumes, a mesh in and out, the same mesh twice, an outline extruded and sliced"
 
 [indices]
@@ -8,4 +8,4 @@ description = "Consume the immutable Manifold wrapper: booleans of solids and th
 # An explicit empty table overrides the legacy workspace redirect.
 
 [dependencies]
-mcpplibs.mwrap.manifold = "3.5.5"
+mcpplibs.mwrap.manifold = "3.5.5.1"

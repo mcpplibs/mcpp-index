@@ -38,11 +38,12 @@
 
 ### Added
 
-- **mcpplibs.mwrap.manifold 3.5.5（新包）。** manifold-m：Manifold（始终保持流形的实体几何库）的 C++23 模块，以 `export using`
+- **mcpplibs.mwrap.manifold 3.5.5.1（新包）。** manifold-m：Manifold（始终保持流形的实体几何库）的 C++23 模块，以 `export using`
   在上游的命名空间里导出 `<manifold/manifold.h>` 与 `<manifold/polygon.h>` 的全部公开名字（`manifold` 36 个类型、10 个函数，
   `manifold::math` 16 个函数，`linalg` 10 个类型、116 个函数与运算符）；7 个内部链接的 `constexpr` 常量（`kPi`、
   `DEFAULT_SEGMENTS`、`linalg::identity` 等）以原名位于 `mcpplibs::mwrap::manifold`。导出清单由 clang 读头文件推出并在 CI 中审计。
-  封装仓库从上游发布包取源码并自行构建：单线程（`MANIFOLD_PAR=-1`，不依赖 oneTBB），不含 `CrossSection`（上游实现依赖
+  封装仓库从上游 3.5.5 发布包取源码并自行构建：与上游一样关闭浮点收缩（封装修订 3.5.5.1 补上，3.5.5 未入索引），
+  单线程（`MANIFOLD_PAR=-1`，不依赖 oneTBB），同样的输入在各平台给出逐位相同的三角形（次序随标准库的排序而不同），不含 `CrossSection`（上游实现依赖
   Clipper2，3.5.5 中不依赖它的后端只是占位）。消费者测试 `tests/mwrap/manifold-boolean`，安装后模板检查带 `--deploy`。
   GLOBAL 为 GitHub 发布资产，CN 为 GitCode `mcpp-res/mwrap-manifold` 镜像，sha256 相同。
 - **mcpplibs.mwrap.meshoptimizer 1.3、mcpplibs.mwrap.cgltf 1.15（新包）。** 两个 mwrap 包：meshoptimizer-m 以 `export using`

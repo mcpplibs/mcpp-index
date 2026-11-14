@@ -1,4 +1,4 @@
--- Immutable upstream-aligned mwrap source release (manifold-m mwrap-3.5.5);
+-- Immutable upstream-aligned mwrap source release (manifold-m mwrap-3.5.5.1, wrapper revision 1 of upstream 3.5.5);
 -- GLOBAL and CN bytes are identical.
 --
 -- The wrapper is Apache-2.0; the library it vendors and links statically,
@@ -20,30 +20,30 @@ package = {
     },
     xpm = {
         linux = {
-            ["3.5.5"] = {
+            ["3.5.5.1"] = {
                 url = {
-                    GLOBAL = "https://github.com/mcpplibs/manifold-m/releases/download/mwrap-3.5.5/manifold-m-3.5.5.tar.gz",
-                    CN = "https://gitcode.com/mcpp-res/mwrap-manifold/releases/download/3.5.5/manifold-m-3.5.5.tar.gz",
+                    GLOBAL = "https://github.com/mcpplibs/manifold-m/releases/download/mwrap-3.5.5.1/manifold-m-3.5.5.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mwrap-manifold/releases/download/3.5.5.1/manifold-m-3.5.5.1.tar.gz",
                 },
-                sha256 = "87325649c4f7f653e7fffd929a030d3fdd252bd2cdabae920d6cb88afdfacb85",
+                sha256 = "d80aa82f45a6aa10cf4d8611ad5c2140fb837015630f7710ee6ee4e078fd7d3a",
             },
         },
         macosx = {
-            ["3.5.5"] = {
+            ["3.5.5.1"] = {
                 url = {
-                    GLOBAL = "https://github.com/mcpplibs/manifold-m/releases/download/mwrap-3.5.5/manifold-m-3.5.5.tar.gz",
-                    CN = "https://gitcode.com/mcpp-res/mwrap-manifold/releases/download/3.5.5/manifold-m-3.5.5.tar.gz",
+                    GLOBAL = "https://github.com/mcpplibs/manifold-m/releases/download/mwrap-3.5.5.1/manifold-m-3.5.5.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mwrap-manifold/releases/download/3.5.5.1/manifold-m-3.5.5.1.tar.gz",
                 },
-                sha256 = "87325649c4f7f653e7fffd929a030d3fdd252bd2cdabae920d6cb88afdfacb85",
+                sha256 = "d80aa82f45a6aa10cf4d8611ad5c2140fb837015630f7710ee6ee4e078fd7d3a",
             },
         },
         windows = {
-            ["3.5.5"] = {
+            ["3.5.5.1"] = {
                 url = {
-                    GLOBAL = "https://github.com/mcpplibs/manifold-m/releases/download/mwrap-3.5.5/manifold-m-3.5.5.tar.gz",
-                    CN = "https://gitcode.com/mcpp-res/mwrap-manifold/releases/download/3.5.5/manifold-m-3.5.5.tar.gz",
+                    GLOBAL = "https://github.com/mcpplibs/manifold-m/releases/download/mwrap-3.5.5.1/manifold-m-3.5.5.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mwrap-manifold/releases/download/3.5.5.1/manifold-m-3.5.5.1.tar.gz",
                 },
-                sha256 = "87325649c4f7f653e7fffd929a030d3fdd252bd2cdabae920d6cb88afdfacb85",
+                sha256 = "d80aa82f45a6aa10cf4d8611ad5c2140fb837015630f7710ee6ee4e078fd7d3a",
             },
         },
     },
