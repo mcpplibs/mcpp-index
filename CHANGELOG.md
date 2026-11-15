@@ -20,6 +20,7 @@
 
 ### Fixed
 
+- **openkal-musl 0.29.7。** 在 hosted 安排中，`uname` 的 `sysname` 报程序所运行的系统（Linux、FreeBSD、Darwin、Windows_NT、UEFI、MS-DOS）；ok 映像仍报 `openkal`（mcpplibs/openkal-musl#96）。
 - **mcpplibs.mwrap.recastnavigation 1.6.0.2（包装修订 2）。** 网格在每个平台上逐字节相同。1.6.0.1 的 Detour BV 树与 Recast 轮廓孔洞合并
   用 C 库的 `qsort` 排序，`qsort` 不稳定，glibc、macOS、Windows UCRT 与 emscripten 对相等键的排列不同，带并列键的网格（网格状布局
   很常见）因而得到不同的字节，其上的群体走到不同位置。补丁 0004 让这五处改用 `std::stable_sort`（同一比较函数，值得回馈上游）；新测试
