@@ -20,6 +20,11 @@
 
 ### Fixed
 
+- **openkal-image 0.6.4（openkal-run、openkal-ld、openkal-tools、openkal-bind）。** okrun 在匹配前对每个映像名作词法规整，绝对名与相对名
+  一样：空分量（`//`）与 `.` 去掉，`..` 去掉前一分量；此前绝对名原样匹配，含 `//` 的名字被拒绝。发布工作流在发布时自动运行，每个
+  发布都带产物，并增加 FreeBSD x86_64 与 aarch64（在 FreeBSD 机器中运行后附加）（mcpplibs/openkal-image#40）。
+- **openkal-macos 0.23.4。** libSystem 的桩为 x86_64 列出 `__bzero`：clang 在该架构上把清零的 `memset` 降为 `__bzero`，无 SDK 的
+  链接因此失败，`x86_64-macos-musl` 的发布构建对任何程序都失败；CI 在 Linux 上链接、在 Intel Mac 上运行（mcpplibs/openkal-macos#50）。
 - **mcpplibs.mwrap.recastnavigation 1.6.0.1（包装修订 1）。** 群体的避障在每个平台上逐位相同。1.6.0 的 DetourCrowd 避障与 DetourTileCache
   有向盒绕过 Detour 自己的钩子直接调用 C 库的 `cosf`、`sinf`，而钩子本身也转给 libm：glibc、macOS、Windows UCRT 与 emscripten 相差
   一个 ulp，开启 `DT_CROWD_OBSTACLE_AVOIDANCE` 的群体因平台走到不同位置。三个补丁（`patches/`，预先应用在 `upstream/`，
