@@ -107,6 +107,16 @@ link prints mcpp's "one library, two providers" note for zlib
 (`compat.zlib` vs glib's runtime `libz.so.1`, mcpp#519). The descriptor
 already documents why libz is not staged.
 
+## CI status
+
+PR #804 (run `43730038159`), all legs green: `lint`, `select`, `build`, `scan`,
+`mirror-cn-reachable`, `graphics install: no side effects on unrelated
+members`, workspace linux default + llvm 0–3/4, macOS, Windows, and the
+`candidate (compat:eui-neo 0.6.3)` install/build legs on linux
+default/llvm, macosx and windows. The Windows candidate + workspace legs are
+what validate `-luuid` and `serial.cpp`'s `windows.h` branch; the macOS leg
+validates the termios branch and the framework links.
+
 ## Notes
 
 - macOS and Windows legs are unverified locally; the CI `workspace` legs are
