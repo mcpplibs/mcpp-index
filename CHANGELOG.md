@@ -9,6 +9,9 @@
 
 ### Added
 
+- **mcpp.plugins 0.22.0。** dist-web 的页面是该格式唯一的可分发物，长期运行的 `web` 运行器（emrun）提供该目录并打开页面；
+  被拒绝的请求以警告陈述；mcpp 2026.11.16.1 起 dist-web 向引擎陈述它包装的程序（`mcpp::pack_program`，协议 19），
+  多程序的包无需指名即打包该程序。包的下限仍为 mcpp 2026.10.30.1；`latest` 指向 0.22.0（mcpp-community/mcpp-plugins#54）。
 - **openkal-platform 0.28.0。** 增加四行：`i686-linux-musl`（Linux 的 32 位行）、`x86_64-uefi`（openkal-uefi 0.10.0 之上的 UEFI 应用，
   OVMF 下由 dirun 运行；ok 映像也可作为被承载程序打包为 UEFI）、`i686-openkal`（i386 的 ok 映像）与 `i686-dos-musl`（openkal-dos 之上的 DOS 程序，
   仅为技术实验）。版本组随 openkal 0.25.3、openkal-macos 0.23.3、openkal-musl 0.29.6、openkal-llvm-runtime 0.20.3 与 openkal-image 0.6.3；
