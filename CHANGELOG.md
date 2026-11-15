@@ -20,6 +20,13 @@
 
 ### Fixed
 
+- **mcpplibs.mwrap.recastnavigation 1.6.0.1（包装修订 1）。** 群体的避障在每个平台上逐位相同。1.6.0 的 DetourCrowd 避障与 DetourTileCache
+  有向盒绕过 Detour 自己的钩子直接调用 C 库的 `cosf`、`sinf`，而钩子本身也转给 libm：glibc、macOS、Windows UCRT 与 emscripten 相差
+  一个 ulp，开启 `DT_CROWD_OBSTACLE_AVOIDANCE` 的群体因平台走到不同位置。三个补丁（`patches/`，预先应用在 `upstream/`，
+  `documents.json` 记录每个文件在发布包中与打补丁后的校验和）：0001 改调 `dtMathCosf`/`dtMathSinf`（值得回馈上游）；0002 让钩子和
+  Recast 求坡度的 `cosf` 使用 `port/DeterministicMath.cpp`（只用 IEEE 运算，遍历全部 float 实测误差 0.500000001 ulp）；0003 修正
+  `adaptiveDivs` 为偶数时读取未初始化方向、32 方向 4 圈时写出数组末尾的上游缺陷（上游 issue #496、#798）。消费者测试
+  `tests/mwrap/recastnavigation-path` 改用 1.6.0.1。
 - **openkal 0.25.3。** 一致性套件是独立的 mtest 项目（`tests/cts/mtest.toml`）：引擎在套件目录启动程序并把运行记录存入
   `tests/cts/.mtest`。0.25.2 下引擎取仓库根的项目，记录写入根存储，交给运行器（Web 上的 `node`）的程序名按错误的目录解析。
   条款与声明无变化（mcpplibs/openkal#68）。
