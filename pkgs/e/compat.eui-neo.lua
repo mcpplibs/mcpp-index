@@ -40,7 +40,30 @@
 -- fails with "malformed mcpp segment", measured), so one header must serve
 -- every published version, and the template is what makes that possible.
 --
--- The build recipe below tracks upstream `CMakeLists.txt` (v0.6.2): CORE_SOURCES
+-- 0.6.3: CORE_SOURCES and VULKAN_SOURCES are byte-identical to 0.6.2, so the
+-- lib's source list, deps, features and flags carry over unchanged. The
+-- release is keyboard navigation + accessibility semantics snapshots, data-
+-- table virtualization, the system save/directory dialogs, input undo budgets
+-- and the line-chart sampling path. What it DOES move, and what a bump has to
+-- follow:
+--   * `platform.cpp` grows the Windows directory picker (IFileOpenDialog,
+--     SHCreateItemFromParsingName, CLSID_FileOpenDialog), so upstream's link
+--     line now names ole32/comdlg32/uuid. This descriptor already carried
+--     ole32 + comdlg32 from the 0.6.1 CI work; `-luuid` is the new one (the
+--     IID_/CLSID_ symbols). The linux/macOS implementations shell out to
+--     zenity/kdialog/osascript, so they add no link-time dependency.
+--   * `modules/serial/` is upstream's first optional module with a TU of its
+--     own (`serial.cpp`, built as `eui::module_serial` in CMake, NOT part of
+--     CORE_SOURCES). It is exposed as the `serial` feature; `modules/keyboard`
+--     is header-only and already reachable through the `*` include root.
+--   * `core/accessibility.h` + `include/eui/accessibility.h` are header-only:
+--     `include/eui_neo.h` re-exports the snapshot types, nothing gains a TU.
+--   * the SDL2 branch of `window_backend.cpp` keeps 0.6.2's hoisted
+--     sendX11MoveResizeForWindow definition (diffed, `#endif` position
+--     unchanged), so the template stub below stays inert on non-linux and the
+--     linux `SDL_VIDEO_DRIVER_X11` define stays a no-op in practice.
+--
+-- The build recipe below tracks upstream `CMakeLists.txt` (v0.6.3): CORE_SOURCES
 -- plus the OpenGL backend and, for the glfw window backend, `ime_bridge.c`.
 -- 0.5.5 grew a Shadertoy subsystem: render_backend.h and include/eui/types.h now
 -- include core/render/shadertoy.h unconditionally, and opengl_backend.cpp calls
@@ -281,6 +304,14 @@ package = {
                 url    = "https://github.com/sudoevolve/EUI-NEO/archive/refs/tags/v0.6.2.tar.gz",
                 sha256 = "189d97aadb044de653237e12ac97d6fa92f1a65952854e3db6211d360f4d4124",
             },
+            -- 0.6.3: CORE_SOURCES/VULKAN_SOURCES byte-identical to 0.6.2; the
+            -- windows leg gains -luuid and the descriptor gains the `serial`
+            -- feature (see the file-top note). No CN mirror yet — plain-string
+            -- GLOBAL url, same as 0.6.2.
+            ["0.6.3"] = {
+                url    = "https://github.com/sudoevolve/EUI-NEO/archive/refs/tags/v0.6.3.tar.gz",
+                sha256 = "08074e2fb72662c8a4c2f7d75dec558aed2c751545797e0ccccbdbe8f439b669",
+            },
         },
         macosx = {
             ["0.5.3"] = {
@@ -338,6 +369,11 @@ package = {
                 url    = "https://github.com/sudoevolve/EUI-NEO/archive/refs/tags/v0.6.2.tar.gz",
                 sha256 = "189d97aadb044de653237e12ac97d6fa92f1a65952854e3db6211d360f4d4124",
             },
+            -- 0.6.3: see the linux block — plain-string GLOBAL, no CN mirror.
+            ["0.6.3"] = {
+                url    = "https://github.com/sudoevolve/EUI-NEO/archive/refs/tags/v0.6.3.tar.gz",
+                sha256 = "08074e2fb72662c8a4c2f7d75dec558aed2c751545797e0ccccbdbe8f439b669",
+            },
         },
         windows = {
             ["0.5.3"] = {
@@ -394,6 +430,11 @@ package = {
             ["0.6.2"] = {
                 url    = "https://github.com/sudoevolve/EUI-NEO/archive/refs/tags/v0.6.2.tar.gz",
                 sha256 = "189d97aadb044de653237e12ac97d6fa92f1a65952854e3db6211d360f4d4124",
+            },
+            -- 0.6.3: see the linux block — plain-string GLOBAL, no CN mirror.
+            ["0.6.3"] = {
+                url    = "https://github.com/sudoevolve/EUI-NEO/archive/refs/tags/v0.6.3.tar.gz",
+                sha256 = "08074e2fb72662c8a4c2f7d75dec558aed2c751545797e0ccccbdbe8f439b669",
             },
         },
     },
@@ -727,6 +768,18 @@ inline bool sendX11MoveResizeForWindow(W* window, int direction) {
                 defines = { "EUI_HAS_MD4C=1" },
                 deps    = { ["compat.md4c"] = "0.5.3" },
             },
+            -- 0.6.3: `modules/serial/` is upstream's first optional module that
+            -- is NOT header-only — CMake builds `serial.cpp` into a separate
+            -- `eui::module_serial` target that links `eui::neo`. An xpkg
+            -- descriptor models one lib target, so the module's TU rides here
+            -- as an extra `sources` entry: a consumer that names `serial` gets
+            -- core::serial::SerialPort in the same archive and includes it as
+            -- `<modules/serial/serial.h>` (the `*` include root already
+            -- exposes the whole tree). Off by default, like every other
+            -- feature: a consumer that does not open a port does not pay for
+            -- the termios/Win32 code. `modules/keyboard` needs no entry — it
+            -- is a single header with no TU behind it.
+            ["serial"] = { sources = { "*/modules/serial/serial.cpp" } },
         },
 
         -- ── Platform-specific ──────────────────────────────────────────────
@@ -787,10 +840,16 @@ inline bool sendX11MoveResizeForWindow(W* window, int direction) {
             -- the one TU in this package that had never been compiled — naming
             -- it costs nothing and the comment above is precisely about mcpp not
             -- inheriting CMake's defaults.
+            --
+            -- uuid is 0.6.3's addition: platform.cpp's directory picker uses
+            -- CoCreateInstance(CLSID_FileOpenDialog, … IID_PPV_ARGS) and
+            -- SHCreateItemFromParsingName, whose IID_/CLSID_ GUIDs live in
+            -- uuid.lib (upstream's own 0.6.3 link line grew ole32 comdlg32
+            -- uuid for the same TU). ole32/comdlg32 were already here.
             ldflags = {
                 "-lwinmm", "-lurlmon", "-lshell32",
                 "-luser32", "-limm32", "-lpdh", "-lole32",
-                "-lcomdlg32", "-lkernel32",
+                "-lcomdlg32", "-luuid", "-lkernel32",
             },
         },
 
