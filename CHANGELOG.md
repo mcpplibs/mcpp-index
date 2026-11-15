@@ -20,6 +20,9 @@
 
 ### Fixed
 
+- **openkal-emscripten 0.14.3。** 描述符权限表（4096 个条目与 64 个根）的成员默认值为 -1，两张表因此是已初始化数据：每个 Web
+  构建的程序带着约 80 KiB 不会用到的字节（一个交付预算 4,000,000 B 的站点因此超出 9,332 B）。默认值全部改为零，取用的槽位再设哨兵；
+  emsdk 6.0.9、-O2 下 `g_entries` 与 `g_roots` 从 `.data` 移到 `.bss`，行为不变（mcpplibs/openkal-emscripten#22）。
 - **openkal-image 0.6.4（openkal-run、openkal-ld、openkal-tools、openkal-bind）。** okrun 在匹配前对每个映像名作词法规整，绝对名与相对名
   一样：空分量（`//`）与 `.` 去掉，`..` 去掉前一分量；此前绝对名原样匹配，含 `//` 的名字被拒绝。发布工作流在发布时自动运行，每个
   发布都带产物，并增加 FreeBSD x86_64 与 aarch64（在 FreeBSD 机器中运行后附加）（mcpplibs/openkal-image#40）。
