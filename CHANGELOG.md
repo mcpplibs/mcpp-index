@@ -20,6 +20,8 @@
 
 ### Fixed
 
+- **openkal-platform 0.28.1（版本组补丁）。** okrun、okld 与工具取 openkal-run/openkal-ld/openkal-tools 0.6.4（okrun 以 uname 指名目标），
+  C 库取 openkal-musl 0.29.7，openkal-macos 0.23.4；行与键不变（mcpplibs/openkal-platform#32）。
 - **openkal-musl 0.29.7。** 在 hosted 安排中，`uname` 的 `sysname` 报程序所运行的系统（Linux、FreeBSD、Darwin、Windows_NT、UEFI、MS-DOS）；ok 映像仍报 `openkal`（mcpplibs/openkal-musl#96）。
 - **mcpplibs.mwrap.recastnavigation 1.6.0.2（包装修订 2）。** 网格在每个平台上逐字节相同。1.6.0.1 的 Detour BV 树与 Recast 轮廓孔洞合并
   用 C 库的 `qsort` 排序，`qsort` 不稳定，glibc、macOS、Windows UCRT 与 emscripten 对相等键的排列不同，带并列键的网格（网格状布局
