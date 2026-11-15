@@ -7,7 +7,7 @@
     "protobuf-protoc": "runs a host code generator",
     "sycl-runtime": "a vendor runtime distributed as binaries for the platform C runtime"
   },
-  "measured": "2026-09-23",
+  "measured": "2026-11-15",
   "members": {
     "archive": {
       "packages": [
@@ -20,13 +20,21 @@
       ],
       "portable": true,
       "targets": {
+        "aarch64-linux-musl": {
+          "kind": "posix",
+          "status": "runs"
+        },
         "x86_64-linux-gnu": {
           "kind": "posix",
           "status": "runs"
         },
-        "x86_64-windows-musl": {
+        "x86_64-linux-musl": {
           "kind": "posix",
           "status": "runs"
+        },
+        "x86_64-windows-musl": {
+          "diagnostic": "error: openkal-llvm-runtime is requested as '0.15.2' by archive-tests, and the platform openkal-platform 0.28.0 is a version group",
+          "status": "fails"
         }
       }
     },
@@ -36,13 +44,21 @@
       ],
       "portable": true,
       "targets": {
+        "aarch64-linux-musl": {
+          "kind": "posix",
+          "status": "runs"
+        },
         "x86_64-linux-gnu": {
           "kind": "posix",
           "status": "runs"
         },
-        "x86_64-windows-musl": {
+        "x86_64-linux-musl": {
           "kind": "posix",
           "status": "runs"
+        },
+        "x86_64-windows-musl": {
+          "diagnostic": "error: openkal-llvm-runtime is requested as '0.15.2' by argparse-tests, and the platform openkal-platform 0.28.0 is a version group",
+          "status": "fails"
         }
       }
     },
@@ -52,13 +68,21 @@
       ],
       "portable": true,
       "targets": {
+        "aarch64-linux-musl": {
+          "kind": "posix",
+          "status": "runs"
+        },
         "x86_64-linux-gnu": {
           "kind": "posix",
           "status": "runs"
         },
-        "x86_64-windows-musl": {
+        "x86_64-linux-musl": {
           "kind": "posix",
           "status": "runs"
+        },
+        "x86_64-windows-musl": {
+          "diagnostic": "error: openkal-llvm-runtime is requested as '0.15.2' by brotli-tests, and the platform openkal-platform 0.28.0 is a version group",
+          "status": "fails"
         }
       }
     },
@@ -68,13 +92,21 @@
       ],
       "portable": true,
       "targets": {
+        "aarch64-linux-musl": {
+          "kind": "posix",
+          "status": "runs"
+        },
         "x86_64-linux-gnu": {
           "kind": "posix",
           "status": "runs"
         },
-        "x86_64-windows-musl": {
+        "x86_64-linux-musl": {
           "kind": "posix",
           "status": "runs"
+        },
+        "x86_64-windows-musl": {
+          "diagnostic": "error: openkal-llvm-runtime is requested as '0.15.2' by c-ares-tests, and the platform openkal-platform 0.28.0 is a version group",
+          "status": "fails"
         }
       }
     },
@@ -84,13 +116,21 @@
       ],
       "portable": true,
       "targets": {
+        "aarch64-linux-musl": {
+          "kind": "posix",
+          "status": "runs"
+        },
         "x86_64-linux-gnu": {
           "kind": "posix",
           "status": "runs"
         },
-        "x86_64-windows-musl": {
+        "x86_64-linux-musl": {
           "kind": "posix",
           "status": "runs"
+        },
+        "x86_64-windows-musl": {
+          "diagnostic": "error: openkal-llvm-runtime is requested as '0.15.2' by capi-lua-tests, and the platform openkal-platform 0.28.0 is a version group",
+          "status": "fails"
         }
       }
     },
@@ -100,13 +140,21 @@
       ],
       "portable": true,
       "targets": {
+        "aarch64-linux-musl": {
+          "kind": "posix",
+          "status": "runs"
+        },
         "x86_64-linux-gnu": {
           "kind": "posix",
           "status": "runs"
         },
-        "x86_64-windows-musl": {
+        "x86_64-linux-musl": {
           "kind": "posix",
           "status": "runs"
+        },
+        "x86_64-windows-musl": {
+          "diagnostic": "error: openkal-llvm-runtime is requested as '0.15.2' by catch2-tests, and the platform openkal-platform 0.28.0 is a version group",
+          "status": "fails"
         }
       }
     },
@@ -116,13 +164,21 @@
       ],
       "portable": true,
       "targets": {
+        "aarch64-linux-musl": {
+          "kind": "posix",
+          "status": "runs"
+        },
         "x86_64-linux-gnu": {
           "kind": "posix",
           "status": "runs"
         },
-        "x86_64-windows-musl": {
+        "x86_64-linux-musl": {
           "kind": "posix",
           "status": "runs"
+        },
+        "x86_64-windows-musl": {
+          "diagnostic": "error: openkal-llvm-runtime is requested as '0.15.2' by cjson-tests, and the platform openkal-platform 0.28.0 is a version group",
+          "status": "fails"
         }
       }
     },
@@ -132,13 +188,21 @@
       ],
       "portable": true,
       "targets": {
+        "aarch64-linux-musl": {
+          "kind": "posix",
+          "status": "runs"
+        },
         "x86_64-linux-gnu": {
           "kind": "posix",
           "status": "runs"
         },
-        "x86_64-windows-musl": {
+        "x86_64-linux-musl": {
           "kind": "posix",
           "status": "runs"
+        },
+        "x86_64-windows-musl": {
+          "diagnostic": "error: openkal-llvm-runtime is requested as '0.15.2' by cli11-tests, and the platform openkal-platform 0.28.0 is a version group",
+          "status": "fails"
         }
       }
     },
@@ -148,13 +212,21 @@
       ],
       "portable": true,
       "targets": {
+        "aarch64-linux-musl": {
+          "kind": "posix",
+          "status": "runs"
+        },
         "x86_64-linux-gnu": {
           "kind": "posix",
           "status": "runs"
         },
-        "x86_64-windows-musl": {
+        "x86_64-linux-musl": {
           "kind": "posix",
           "status": "runs"
+        },
+        "x86_64-windows-musl": {
+          "diagnostic": "error: openkal-llvm-runtime is requested as '0.15.2' by cmdline-tests, and the platform openkal-platform 0.28.0 is a version group",
+          "status": "fails"
         }
       }
     },
@@ -164,15 +236,23 @@
       ],
       "portable": true,
       "targets": {
+        "aarch64-linux-musl": {
+          "diagnostic": "/home/runner/work/mcpp-index/mcpp-index/mcpp-2026.11.15.1-linux-x86_64/xpkgs/chriskohlhoff-x-asio/1.38.1/asio-asio-1-38-1/include/asio/detail/config.hpp:899:11: fatal error: 'linux/version.h' file not found",
+          "status": "fails"
+        },
         "x86_64-linux-gnu": {
           "declared": "not-portable",
           "declared_reason": "asio's detail/config.hpp:899 includes <linux/version.h> whenever __linux__ is defined, OUTSIDE every ASIO_DISABLE_* guard, so no configuration macro prevents it. openkal runs on the Linux kernel, so __linux__ is correct; the uapi headers glibc's userspace installs beside it are not part of what openkal presents.",
-          "diagnostic": "/home/runner/work/mcpp-index/mcpp-index/mcpp-2026.9.21.3-linux-x86_64/registry/data/xpkgs/chriskohlhoff-x-asio/1.38.1/asio-asio-1-38-1/include/asio/detail/config.hpp:899:11: fatal error: 'linux/version.h' file not found",
+          "diagnostic": "/home/runner/work/mcpp-index/mcpp-index/mcpp-2026.11.15.1-linux-x86_64/xpkgs/chriskohlhoff-x-asio/1.38.1/asio-asio-1-38-1/include/asio/detail/config.hpp:899:11: fatal error: 'linux/version.h' file not found",
+          "status": "fails"
+        },
+        "x86_64-linux-musl": {
+          "diagnostic": "/home/runner/work/mcpp-index/mcpp-index/mcpp-2026.11.15.1-linux-x86_64/xpkgs/chriskohlhoff-x-asio/1.38.1/asio-asio-1-38-1/include/asio/detail/config.hpp:899:11: fatal error: 'linux/version.h' file not found",
           "status": "fails"
         },
         "x86_64-windows-musl": {
-          "kind": "posix",
-          "status": "runs"
+          "diagnostic": "error: openkal-llvm-runtime is requested as '0.15.2' by cmp-module-tests, and the platform openkal-platform 0.28.0 is a version group",
+          "status": "fails"
         }
       }
     },
@@ -182,16 +262,24 @@
       ],
       "portable": true,
       "targets": {
+        "aarch64-linux-musl": {
+          "diagnostic": "ld.lld: error: /home/runner/work/mcpp-index/mcpp-index/tests/openkal-work/curl/.mcpp/.xlings/data/xpkgs/compat-x-openssl/3.5.1/lib/libssl.a(libssl-lib-bio_ssl.o) is incompatible with aarch64linux",
+          "status": "fails"
+        },
         "x86_64-linux-gnu": {
           "declared": "not-portable",
           "declared_reason": "curl's TLS backend here is compat.openssl, which builds through OpenSSL's own Configure from an install() hook and is therefore a glibc artefact: it declares provides = [\"platform-sdk\"] and fails this graph's link at setcontext and __isoc23_strtol, which musl does not have. Building OpenSSL inside the graph would change this cell.",
           "diagnostic": "ld.lld: error: undefined symbol: __memcpy_chk",
           "status": "fails"
         },
+        "x86_64-linux-musl": {
+          "diagnostic": "ld.lld: error: undefined symbol: __memcpy_chk",
+          "status": "fails"
+        },
         "x86_64-windows-musl": {
           "declared": "not-portable",
           "declared_reason": "curl's Windows configuration is Schannel plus the checked-in lib/config-win32.h, and both are selected by _WIN32, which a C library presenting POSIX on Windows does not define. With neither HAVE_CONFIG_H nor _WIN32, curl_setup.h reads no configuration at all and stops at curl_setup.h:591 'too small curl_off_t', which names a consequence and not the cause. compat.openssl has no Windows build, so there is no second TLS provider to fall back to.",
-          "diagnostic": "/home/runner/work/mcpp-index/mcpp-index/tests/openkal-work/curl/.mcpp/.xlings/data/xpkgs/compat-x-curl/8.21.0/curl-curl-8_21_0/lib/curl_setup.h:591:2: error: \"too small curl_off_t\"",
+          "diagnostic": "error: openkal-llvm-runtime is requested as '0.15.2' by curl-tests, and the platform openkal-platform 0.28.0 is a version group",
           "status": "fails"
         }
       }
@@ -202,13 +290,21 @@
       ],
       "portable": true,
       "targets": {
+        "aarch64-linux-musl": {
+          "kind": "posix",
+          "status": "runs"
+        },
         "x86_64-linux-gnu": {
           "kind": "posix",
           "status": "runs"
         },
-        "x86_64-windows-musl": {
+        "x86_64-linux-musl": {
           "kind": "posix",
           "status": "runs"
+        },
+        "x86_64-windows-musl": {
+          "diagnostic": "error: openkal-llvm-runtime is requested as '0.15.2' by doctest-tests, and the platform openkal-platform 0.28.0 is a version group",
+          "status": "fails"
         }
       }
     },
@@ -218,13 +314,21 @@
       ],
       "portable": true,
       "targets": {
+        "aarch64-linux-musl": {
+          "kind": "posix",
+          "status": "runs"
+        },
         "x86_64-linux-gnu": {
           "kind": "posix",
           "status": "runs"
         },
-        "x86_64-windows-musl": {
+        "x86_64-linux-musl": {
           "kind": "posix",
           "status": "runs"
+        },
+        "x86_64-windows-musl": {
+          "diagnostic": "error: openkal-llvm-runtime is requested as '0.15.2' by eigen-tests, and the platform openkal-platform 0.28.0 is a version group",
+          "status": "fails"
         }
       }
     },
@@ -234,13 +338,21 @@
       ],
       "portable": false,
       "targets": {
+        "aarch64-linux-musl": {
+          "kind": "platform",
+          "status": "runs"
+        },
         "x86_64-linux-gnu": {
           "kind": "platform",
           "status": "runs"
         },
-        "x86_64-windows-musl": {
+        "x86_64-linux-musl": {
           "kind": "platform",
           "status": "runs"
+        },
+        "x86_64-windows-musl": {
+          "diagnostic": "error: openkal-llvm-runtime is requested as '0.15.2' by expat-tests, and the platform openkal-platform 0.28.0 is a version group",
+          "status": "fails"
         }
       }
     },
@@ -250,13 +362,21 @@
       ],
       "portable": true,
       "targets": {
+        "aarch64-linux-musl": {
+          "kind": "posix",
+          "status": "runs"
+        },
         "x86_64-linux-gnu": {
           "kind": "posix",
           "status": "runs"
         },
-        "x86_64-windows-musl": {
+        "x86_64-linux-musl": {
           "kind": "posix",
           "status": "runs"
+        },
+        "x86_64-windows-musl": {
+          "diagnostic": "error: openkal-llvm-runtime is requested as '0.15.2' by fmtlib-fmt-tests, and the platform openkal-platform 0.28.0 is a version group",
+          "status": "fails"
         }
       }
     },
@@ -266,13 +386,21 @@
       ],
       "portable": true,
       "targets": {
+        "aarch64-linux-musl": {
+          "kind": "posix",
+          "status": "runs"
+        },
         "x86_64-linux-gnu": {
           "kind": "posix",
           "status": "runs"
         },
-        "x86_64-windows-musl": {
+        "x86_64-linux-musl": {
           "kind": "posix",
           "status": "runs"
+        },
+        "x86_64-windows-musl": {
+          "diagnostic": "error: openkal-llvm-runtime is requested as '0.15.2' by glm-tests, and the platform openkal-platform 0.28.0 is a version group",
+          "status": "fails"
         }
       }
     },
@@ -282,13 +410,21 @@
       ],
       "portable": true,
       "targets": {
+        "aarch64-linux-musl": {
+          "kind": "posix",
+          "status": "runs"
+        },
         "x86_64-linux-gnu": {
           "kind": "posix",
           "status": "runs"
         },
-        "x86_64-windows-musl": {
+        "x86_64-linux-musl": {
           "kind": "posix",
           "status": "runs"
+        },
+        "x86_64-windows-musl": {
+          "diagnostic": "error: openkal-llvm-runtime is requested as '0.15.2' by gzip-hpp-tests, and the platform openkal-platform 0.28.0 is a version group",
+          "status": "fails"
         }
       }
     },
@@ -298,13 +434,21 @@
       ],
       "portable": true,
       "targets": {
+        "aarch64-linux-musl": {
+          "kind": "posix",
+          "status": "runs"
+        },
         "x86_64-linux-gnu": {
           "kind": "posix",
           "status": "runs"
         },
-        "x86_64-windows-musl": {
+        "x86_64-linux-musl": {
           "kind": "posix",
           "status": "runs"
+        },
+        "x86_64-windows-musl": {
+          "diagnostic": "error: openkal-llvm-runtime is requested as '0.15.2' by libpng-tests, and the platform openkal-platform 0.28.0 is a version group",
+          "status": "fails"
         }
       }
     },
@@ -314,13 +458,21 @@
       ],
       "portable": true,
       "targets": {
+        "aarch64-linux-musl": {
+          "kind": "posix",
+          "status": "runs"
+        },
         "x86_64-linux-gnu": {
           "kind": "posix",
           "status": "runs"
         },
-        "x86_64-windows-musl": {
+        "x86_64-linux-musl": {
           "kind": "posix",
           "status": "runs"
+        },
+        "x86_64-windows-musl": {
+          "diagnostic": "error: openkal-llvm-runtime is requested as '0.15.2' by magic_enum-tests, and the platform openkal-platform 0.28.0 is a version group",
+          "status": "fails"
         }
       }
     },
@@ -330,13 +482,21 @@
       ],
       "portable": true,
       "targets": {
+        "aarch64-linux-musl": {
+          "kind": "posix",
+          "status": "runs"
+        },
         "x86_64-linux-gnu": {
           "kind": "posix",
           "status": "runs"
         },
-        "x86_64-windows-musl": {
+        "x86_64-linux-musl": {
           "kind": "posix",
           "status": "runs"
+        },
+        "x86_64-windows-musl": {
+          "diagnostic": "error: openkal-llvm-runtime is requested as '0.15.2' by md4c-tests, and the platform openkal-platform 0.28.0 is a version group",
+          "status": "fails"
         }
       }
     },
@@ -346,13 +506,21 @@
       ],
       "portable": true,
       "targets": {
-        "x86_64-linux-gnu": {
+        "aarch64-linux-musl": {
           "kind": "posix",
           "status": "runs"
         },
-        "x86_64-windows-musl": {
-          "diagnostic": "alloc ... FAIL (exit 1, 2.03s)",
+        "x86_64-linux-gnu": {
+          "diagnostic": "alloc ... FAIL (exit 139, 6.73s)",
           "status": "builds"
+        },
+        "x86_64-linux-musl": {
+          "diagnostic": "alloc ... FAIL (exit 139, 6.71s)",
+          "status": "builds"
+        },
+        "x86_64-windows-musl": {
+          "diagnostic": "error: openkal-llvm-runtime is requested as '0.15.2' by mimalloc-tests, and the platform openkal-platform 0.28.0 is a version group",
+          "status": "fails"
         }
       }
     },
@@ -362,13 +530,21 @@
       ],
       "portable": true,
       "targets": {
+        "aarch64-linux-musl": {
+          "kind": "posix",
+          "status": "runs"
+        },
         "x86_64-linux-gnu": {
           "kind": "posix",
           "status": "runs"
         },
-        "x86_64-windows-musl": {
+        "x86_64-linux-musl": {
           "kind": "posix",
           "status": "runs"
+        },
+        "x86_64-windows-musl": {
+          "diagnostic": "error: openkal-llvm-runtime is requested as '0.15.2' by nlohmann-json-tests, and the platform openkal-platform 0.28.0 is a version group",
+          "status": "fails"
         }
       }
     },
@@ -378,13 +554,21 @@
       ],
       "portable": false,
       "targets": {
+        "aarch64-linux-musl": {
+          "kind": "platform",
+          "status": "runs"
+        },
         "x86_64-linux-gnu": {
           "kind": "platform",
           "status": "runs"
         },
-        "x86_64-windows-musl": {
+        "x86_64-linux-musl": {
           "kind": "platform",
           "status": "runs"
+        },
+        "x86_64-windows-musl": {
+          "diagnostic": "error: openkal-llvm-runtime is requested as '0.15.2' by pcre2-tests, and the platform openkal-platform 0.28.0 is a version group",
+          "status": "fails"
         }
       }
     },
@@ -394,13 +578,21 @@
       ],
       "portable": true,
       "targets": {
+        "aarch64-linux-musl": {
+          "kind": "posix",
+          "status": "runs"
+        },
         "x86_64-linux-gnu": {
           "kind": "posix",
           "status": "runs"
         },
-        "x86_64-windows-musl": {
+        "x86_64-linux-musl": {
           "kind": "posix",
           "status": "runs"
+        },
+        "x86_64-windows-musl": {
+          "diagnostic": "error: openkal-llvm-runtime is requested as '0.15.2' by re2-tests, and the platform openkal-platform 0.28.0 is a version group",
+          "status": "fails"
         }
       }
     },
@@ -410,13 +602,21 @@
       ],
       "portable": true,
       "targets": {
+        "aarch64-linux-musl": {
+          "kind": "posix",
+          "status": "runs"
+        },
         "x86_64-linux-gnu": {
           "kind": "posix",
           "status": "runs"
         },
-        "x86_64-windows-musl": {
+        "x86_64-linux-musl": {
           "kind": "posix",
           "status": "runs"
+        },
+        "x86_64-windows-musl": {
+          "diagnostic": "error: openkal-llvm-runtime is requested as '0.15.2' by spdlog-tests, and the platform openkal-platform 0.28.0 is a version group",
+          "status": "fails"
         }
       }
     },
@@ -426,13 +626,21 @@
       ],
       "portable": true,
       "targets": {
+        "aarch64-linux-musl": {
+          "kind": "posix",
+          "status": "runs"
+        },
         "x86_64-linux-gnu": {
           "kind": "posix",
           "status": "runs"
         },
-        "x86_64-windows-musl": {
+        "x86_64-linux-musl": {
           "kind": "posix",
           "status": "runs"
+        },
+        "x86_64-windows-musl": {
+          "diagnostic": "error: openkal-llvm-runtime is requested as '0.15.2' by sqlite3-tests, and the platform openkal-platform 0.28.0 is a version group",
+          "status": "fails"
         }
       }
     },
@@ -442,13 +650,21 @@
       ],
       "portable": true,
       "targets": {
+        "aarch64-linux-musl": {
+          "kind": "posix",
+          "status": "runs"
+        },
         "x86_64-linux-gnu": {
           "kind": "posix",
           "status": "runs"
         },
-        "x86_64-windows-musl": {
+        "x86_64-linux-musl": {
           "kind": "posix",
           "status": "runs"
+        },
+        "x86_64-windows-musl": {
+          "diagnostic": "error: openkal-llvm-runtime is requested as '0.15.2' by tinyhttps-tests, and the platform openkal-platform 0.28.0 is a version group",
+          "status": "fails"
         }
       }
     },
@@ -458,13 +674,21 @@
       ],
       "portable": true,
       "targets": {
+        "aarch64-linux-musl": {
+          "kind": "posix",
+          "status": "runs"
+        },
         "x86_64-linux-gnu": {
           "kind": "posix",
           "status": "runs"
         },
-        "x86_64-windows-musl": {
+        "x86_64-linux-musl": {
           "kind": "posix",
           "status": "runs"
+        },
+        "x86_64-windows-musl": {
+          "diagnostic": "error: openkal-llvm-runtime is requested as '0.15.2' by xxhash-tests, and the platform openkal-platform 0.28.0 is a version group",
+          "status": "fails"
         }
       }
     },
@@ -474,13 +698,21 @@
       ],
       "portable": true,
       "targets": {
+        "aarch64-linux-musl": {
+          "kind": "posix",
+          "status": "runs"
+        },
         "x86_64-linux-gnu": {
           "kind": "posix",
           "status": "runs"
         },
-        "x86_64-windows-musl": {
+        "x86_64-linux-musl": {
           "kind": "posix",
           "status": "runs"
+        },
+        "x86_64-windows-musl": {
+          "diagnostic": "error: openkal-llvm-runtime is requested as '0.15.2' by yaml-cpp-tests, and the platform openkal-platform 0.28.0 is a version group",
+          "status": "fails"
         }
       }
     },
@@ -490,13 +722,21 @@
       ],
       "portable": true,
       "targets": {
+        "aarch64-linux-musl": {
+          "kind": "posix",
+          "status": "runs"
+        },
         "x86_64-linux-gnu": {
           "kind": "posix",
           "status": "runs"
         },
-        "x86_64-windows-musl": {
+        "x86_64-linux-musl": {
           "kind": "posix",
           "status": "runs"
+        },
+        "x86_64-windows-musl": {
+          "diagnostic": "error: openkal-llvm-runtime is requested as '0.15.2' by yaml-cpp-v080-tests, and the platform openkal-platform 0.28.0 is a version group",
+          "status": "fails"
         }
       }
     },
@@ -506,13 +746,21 @@
       ],
       "portable": true,
       "targets": {
+        "aarch64-linux-musl": {
+          "kind": "posix",
+          "status": "runs"
+        },
         "x86_64-linux-gnu": {
           "kind": "posix",
           "status": "runs"
         },
-        "x86_64-windows-musl": {
+        "x86_64-linux-musl": {
           "kind": "posix",
           "status": "runs"
+        },
+        "x86_64-windows-musl": {
+          "diagnostic": "error: openkal-llvm-runtime is requested as '0.15.2' by yyjson-tests, and the platform openkal-platform 0.28.0 is a version group",
+          "status": "fails"
         }
       }
     },
@@ -522,13 +770,45 @@
       ],
       "portable": true,
       "targets": {
+        "aarch64-linux-musl": {
+          "kind": "posix",
+          "status": "runs"
+        },
         "x86_64-linux-gnu": {
           "kind": "posix",
           "status": "runs"
         },
-        "x86_64-windows-musl": {
+        "x86_64-linux-musl": {
           "kind": "posix",
           "status": "runs"
+        },
+        "x86_64-windows-musl": {
+          "diagnostic": "error: openkal-llvm-runtime is requested as '0.15.2' by zlib-tests, and the platform openkal-platform 0.28.0 is a version group",
+          "status": "fails"
+        }
+      }
+    },
+    "zlib-ng": {
+      "packages": [
+        "compat.zlib-ng"
+      ],
+      "portable": true,
+      "targets": {
+        "aarch64-linux-musl": {
+          "kind": "posix",
+          "status": "runs"
+        },
+        "x86_64-linux-gnu": {
+          "kind": "posix",
+          "status": "runs"
+        },
+        "x86_64-linux-musl": {
+          "kind": "posix",
+          "status": "runs"
+        },
+        "x86_64-windows-musl": {
+          "diagnostic": "error: openkal-llvm-runtime is requested as '0.15.2' by zlib-ng-tests, and the platform openkal-platform 0.28.0 is a version group",
+          "status": "fails"
         }
       }
     }
@@ -543,8 +823,8 @@
     }
   },
   "pins": {
-    "mcpp": "2026.9.21.3",
-    "runtime": "0.15.1",
+    "mcpp": "2026.11.15.1",
+    "runtime": "0.15.2",
     "toolchain": "llvm@22.1.8"
   },
   "schema": 1
