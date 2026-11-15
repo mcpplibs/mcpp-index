@@ -1,6 +1,6 @@
 [package]
 name = "recastnavigation-path"
-version = "1.6.0.1"
+version = "1.6.0.2"
 description = "Consume the immutable Recast & Detour wrapper: a navigation mesh built from triangles, a path around a wall, a crowd walked through a doorway; the mesh's bytes and the crowd's places pinned"
 
 [indices]
@@ -8,7 +8,7 @@ description = "Consume the immutable Recast & Detour wrapper: a navigation mesh 
 # An explicit empty table overrides the legacy workspace redirect.
 
 [dependencies]
-mcpplibs.mwrap.recastnavigation = "1.6.0.1"
+mcpplibs.mwrap.recastnavigation = "1.6.0.2"
 
 # Detour's inline math compiled here too, as the library is built.
 [build]
