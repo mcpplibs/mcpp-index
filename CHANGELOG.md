@@ -20,6 +20,10 @@
 
 ### Fixed
 
+- **mcpplibs.mwrap.recastnavigation 1.6.0.2（包装修订 2）。** 网格在每个平台上逐字节相同。1.6.0.1 的 Detour BV 树与 Recast 轮廓孔洞合并
+  用 C 库的 `qsort` 排序，`qsort` 不稳定，glibc、macOS、Windows UCRT 与 emscripten 对相等键的排列不同，带并列键的网格（网格状布局
+  很常见）因而得到不同的字节，其上的群体走到不同位置。补丁 0004 让这五处改用 `std::stable_sort`（同一比较函数，值得回馈上游）；新测试
+  钉住分成四块的柱网大厅的字节与群体状态，各平台一致。消费者测试 `tests/mwrap/recastnavigation-path` 改用 1.6.0.2。
 - **openkal-emscripten 0.14.3。** 描述符权限表（4096 个条目与 64 个根）的成员默认值为 -1，两张表因此是已初始化数据：每个 Web
   构建的程序带着约 80 KiB 不会用到的字节（一个交付预算 4,000,000 B 的站点因此超出 9,332 B）。默认值全部改为零，取用的槽位再设哨兵；
   emsdk 6.0.9、-O2 下 `g_entries` 与 `g_roots` 从 `.data` 移到 `.bss`，行为不变（mcpplibs/openkal-emscripten#22）。
