@@ -31,10 +31,10 @@ package = {
 
     xpm = {
         linux   = {
-        ['0.3.2'] = { url = "https://github.com/Aimol-l/Tensorvia/releases/download/v0.3.2/tensorvia-0.3.2.tar.gz", sha256 = "518fd35e045a8763fb3d1f52a40b62d7d2c0e16e5af5ceb8cb2b04dcc59f193a" },
+        ['0.3.2'] = { url = "https://github.com/Aimol-l/Tensorvia/releases/download/v0.3.2/tensorvia-0.3.2.tar.gz", sha256 = "dbdb24dc42ad83838fc4b24b99a72059acb02bcf78c266d047c58c363f38fcca" },
         },
         windows = {
-        ['0.3.2'] = { url = "https://github.com/Aimol-l/Tensorvia/releases/download/v0.3.2/tensorvia-0.3.2.tar.gz", sha256 = "518fd35e045a8763fb3d1f52a40b62d7d2c0e16e5af5ceb8cb2b04dcc59f193a" },
+        ['0.3.2'] = { url = "https://github.com/Aimol-l/Tensorvia/releases/download/v0.3.2/tensorvia-0.3.2.tar.gz", sha256 = "dbdb24dc42ad83838fc4b24b99a72059acb02bcf78c266d047c58c363f38fcca" },
         },
     },
 
