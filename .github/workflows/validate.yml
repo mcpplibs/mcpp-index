@@ -1576,6 +1576,22 @@ jobs:
             mine="${kept# }"
           fi
 
+          # `tensorvia`: the package declares linux and windows only. Its CPU
+          # backend is AVX2 (`<immintrin.h>`), and the macOS runners are arm64,
+          # so the 0.3.1 tarball has no macOS table at all. Resolution refuses
+          # it naming the platform; the leg would only re-measure that.
+          if [ "${{ matrix.platform }}" = "macos" ]; then
+            kept=""
+            for m in $mine; do
+              case "$m" in
+                tensorvia)
+                  echo "skipping '$m' on the macOS leg: the package has no macOS artifact" ;;
+                *) kept="$kept $m" ;;
+              esac
+            done
+            mine="${kept# }"
+          fi
+
           echo "MEMBERS=$mine" >> "$GITHUB_ENV"
           echo "shard ${{ matrix.shard }}/${{ matrix.shards }}: ${mine:-<none>}"
 

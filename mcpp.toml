@@ -222,6 +222,7 @@ members = [
     "tests/examples/quill-module",
     "tests/examples/mp-units-module",
     "tests/examples/tinyhttps",
+    "tests/examples/tensorvia",
     "tests/examples/usockets",
     "tests/examples/opencl",
     "tests/examples/sycl-runtime",
