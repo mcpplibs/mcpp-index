@@ -77,7 +77,8 @@ namespace = "mcpplibs",      name = "capi.lua"  -- 短名仍带点
 指定平台时,采用条目列出它的平台。列表是派生数据,不手写:`python3 tools/platform_rows.py write pkgs/<x>/<name>.lua`
 读取最新版本的清单,列出 `[platform] targets`、`[[platform.define]]` 与 `[[platform.provider]] serves`(模式代表它
 匹配到的行),`[platform.hosted] targets` 中只列入引擎不认识或登记为 `planned` 的行,所以没有条目认领宿主自己的行。
-lint 作业运行 `tools/platform_rows.py check`:每份列表与清单一致,且一行只有一个平台。
+行全部属于引擎的平台不列出。不指名文件时,`write` 更新每个列出行的条目;新平台的条目需指名。lint 作业运行
+`tools/platform_rows.py check`:每份列表与清单一致,且一行只有一个平台。
 
 `mcpp`(常用键):
 

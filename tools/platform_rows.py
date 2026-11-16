@@ -6,9 +6,12 @@ row it has no answer for, it reads the rows that the index's platform entries li
 That list is derived data: it is what the platform's own manifest serves, at the
 entry's newest version, and is never written by hand.
 
-    platform_rows.py write pkgs/o/openkal-platform.lua [...]   derive and write the list
+    platform_rows.py write [pkgs/o/openkal-platform.lua ...]   derive and write the list
     platform_rows.py check [pkgs/*/*.lua ...]                  every list matches its manifest,
                                                                and no row has two platforms
+
+Without files, both take the entries that list their rows; a new platform's entry
+is named. An entry whose platform serves only the engine's rows lists none.
 
 A row is listed when the manifest serves it: `[platform] targets`,
 `[[platform.define]] triple`, and `[[platform.provider]] serves`, where a pattern
@@ -150,6 +153,14 @@ def written(text: str) -> list[str] | None:
 def write(path: Path) -> None:
     rows = derive(path)
     text = path.read_text()
+    if not rows:
+        # A platform whose rows are all the engine's states none: the column
+        # answers only for a row the built-in table does not.
+        if ROWS_LINE.search(text):
+            text = re.sub(r"^[ \t]*platform_rows\s*=\s*\{[^}]*\},?[ \t]*\n", "", text, count=1, flags=re.M)
+            path.write_text(text)
+        print(f"{path}: no rows")
+        return
     line = "    platform_rows = { " + ", ".join(f'"{r}"' for r in rows) + " },"
     if ROWS_LINE.search(text):
         text = ROWS_LINE.sub(line, text, count=1)
@@ -188,7 +199,10 @@ def main(argv: list[str]) -> int:
     if len(argv) < 2 or argv[1] not in ("write", "check"):
         print(__doc__)
         return 2
-    paths = [Path(a) for a in argv[2:]] or sorted(Path("pkgs").glob("*/*.lua"))
+    paths = [Path(a) for a in argv[2:]]
+    if not paths:
+        # Every entry that lists its rows; a new platform is named (`write pkgs/<l>/<name>.lua`).
+        paths = [p for p in sorted(Path("pkgs").glob("*/*.lua")) if written(p.read_text()) is not None]
     if argv[1] == "write":
         for p in paths:
             write(p)

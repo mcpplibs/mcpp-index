@@ -95,8 +95,9 @@ platform takes the one whose entry lists it. The list is derived, never written 
 `python3 tools/platform_rows.py write pkgs/<x>/<name>.lua` reads the manifest of the newest version and lists
 `[platform] targets`, `[[platform.define]]` and `[[platform.provider]] serves` (a pattern stands for the rows it
 matches), and of `[platform.hosted] targets` only the rows the engine does not know or holds as `planned`, so no
-entry claims a host's own row. The lint job runs `tools/platform_rows.py check`: every list matches its manifest, and
-a row has one platform.
+entry claims a host's own row. A platform whose rows are all the engine's lists none. With no file named, `write`
+renews every entry that lists its rows; a new platform's entry is named. The lint job runs
+`tools/platform_rows.py check`: every list matches its manifest, and a row has one platform.
 
 `mcpp` (common keys):
 
