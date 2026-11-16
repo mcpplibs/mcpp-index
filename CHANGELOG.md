@@ -9,6 +9,9 @@
 
 ### Added
 
+- **openkal-platform 0.29.0。** 启动机器或创建前缀的运行器声明 `enabled = false`（UEFI、DOS 与新增的宿主行运行器），由项目或本机启用；`x86_64-freebsd-musl`、`aarch64-freebsd-musl` 经 dirun 在 xim 的 FreeBSD 磁盘映像中运行，
+  `x86_64-windows-musl` 在 x86_64 Linux 上经 Wine 运行；UEFI 运行器传递 `--` 之后的参数，并要求 dirun 0.5.0 与 ovmf 9.2.4-3（其配置陈述 UEFI Shell 的引用规则，含空白的参数作为一个参数到达程序）；
+  okrun 增加宿主 `macos-x86_64` 与 `linux-i686`。版本组随 openkal-musl 0.29.8 与 openkal-uefi 0.11.0；需要 mcpp 2026.11.16.1（mcpplibs/openkal-platform#33）。
 - **openkal-uefi 0.11.0；openkal-musl 0.29.8。** openkal-uefi 在固件的简单文件系统上提供 `openkal.fs`（程序所在的卷，名为 `/`），读取 Shell 的参数，并在 `EFI_RNG_PROTOCOL` 上提供 `openkal.random`（固件未安装时为 `kal_err_not_supported`）；openkal-musl 0.29.8 在 `cfg(os = "uefi")` 下接受 openkal-uefi 0.11。二者属于 openkal-platform 0.29.0 的版本组。
 - **mcpp.plugins 0.22.0。** dist-web 的页面是该格式唯一的可分发物，长期运行的 `web` 运行器（emrun）提供该目录并打开页面；
   被拒绝的请求以警告陈述；mcpp 2026.11.16.1 起 dist-web 向引擎陈述它包装的程序（`mcpp::pack_program`，协议 19），
