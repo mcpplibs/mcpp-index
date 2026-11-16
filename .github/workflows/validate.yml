@@ -558,6 +558,10 @@ jobs:
       # release that republished an old tag would leave no other trace.
       - name: Lint duplicate versions
         run: lua5.4 tests/check_duplicate_versions.lua pkgs/*/*.lua
+      # A platform entry's `platform_rows` is derived from the manifest of its newest
+      # version (mcpp SPEC-013 §14): the list matches it, and a row has one platform.
+      - name: Platform rows match their manifests, one platform a row
+        run: python3 tools/platform_rows.py check
       - name: Check Quill install hook boundaries
         run: lua5.4 tests/check_quill_install.lua
       # The compatibility measurement's classifier decides a PUBLISHED figure

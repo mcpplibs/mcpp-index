@@ -72,6 +72,13 @@ namespace = "mcpplibs",      name = "capi.lua"  -- 短名仍带点
 - `url`:字符串,或 `{ GLOBAL=…, CN=… }` 表(本仓统一使用表形式)。
 - `sha256`:必填,等于实际下载字节的摘要。
 
+`platform_rows`(平台包的条目;mcpp >= 2026.11.17.1 读取,更早的 mcpp 忽略):平台服务的行,用于 mcpp 自身的目标表
+没有平台的行(mcpp SPEC-013 §14)——引擎不认识的行、`planned` 行、本机没有内置提供者服务的行。构建指名这样的行而没有
+指定平台时,采用条目列出它的平台。列表是派生数据,不手写:`python3 tools/platform_rows.py write pkgs/<x>/<name>.lua`
+读取最新版本的清单,列出 `[platform] targets`、`[[platform.define]]` 与 `[[platform.provider]] serves`(模式代表它
+匹配到的行),`[platform.hosted] targets` 中只列入引擎不认识或登记为 `planned` 的行,所以没有条目认领宿主自己的行。
+lint 作业运行 `tools/platform_rows.py check`:每份列表与清单一致,且一行只有一个平台。
+
 `mcpp`(常用键):
 
 | 键 | 说明 |
