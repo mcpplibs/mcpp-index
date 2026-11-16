@@ -29,17 +29,41 @@ package = {
                 url    = "https://github.com/julixian/tomlkitpp/archive/refs/tags/v1.0.0.tar.gz",
                 sha256 = "0a242d7eed2bf1fc785b6becf45b78f948c07c4e36097f4b898e300239691979",
             },
+            ["1.0.1"] = {
+                url    = "https://github.com/julixian/tomlkitpp/archive/refs/tags/v1.0.1.tar.gz",
+                sha256 = "f6060d839c32562ffc9fa279d4e57a0436de017b6d12ee6432049f05e054a899",
+            },
+            ["1.0.2"] = {
+                url    = "https://github.com/julixian/tomlkitpp/archive/refs/tags/v1.0.2.tar.gz",
+                sha256 = "7f7fca227005acab339ee08a1d5e321e7d5c48c83380100274a840d570913deb",
+            },
         },
         macosx = {
             ["1.0.0"] = {
                 url    = "https://github.com/julixian/tomlkitpp/archive/refs/tags/v1.0.0.tar.gz",
                 sha256 = "0a242d7eed2bf1fc785b6becf45b78f948c07c4e36097f4b898e300239691979",
             },
+            ["1.0.1"] = {
+                url    = "https://github.com/julixian/tomlkitpp/archive/refs/tags/v1.0.1.tar.gz",
+                sha256 = "f6060d839c32562ffc9fa279d4e57a0436de017b6d12ee6432049f05e054a899",
+            },
+            ["1.0.2"] = {
+                url    = "https://github.com/julixian/tomlkitpp/archive/refs/tags/v1.0.2.tar.gz",
+                sha256 = "7f7fca227005acab339ee08a1d5e321e7d5c48c83380100274a840d570913deb",
+            },
         },
         windows = {
             ["1.0.0"] = {
                 url    = "https://github.com/julixian/tomlkitpp/archive/refs/tags/v1.0.0.tar.gz",
                 sha256 = "0a242d7eed2bf1fc785b6becf45b78f948c07c4e36097f4b898e300239691979",
+            },
+            ["1.0.1"] = {
+                url    = "https://github.com/julixian/tomlkitpp/archive/refs/tags/v1.0.1.tar.gz",
+                sha256 = "f6060d839c32562ffc9fa279d4e57a0436de017b6d12ee6432049f05e054a899",
+            },
+            ["1.0.2"] = {
+                url    = "https://github.com/julixian/tomlkitpp/archive/refs/tags/v1.0.2.tar.gz",
+                sha256 = "7f7fca227005acab339ee08a1d5e321e7d5c48c83380100274a840d570913deb",
             },
         },
     },
