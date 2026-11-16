@@ -9,6 +9,7 @@
 
 ### Added
 
+- **openkal-uefi 0.11.0；openkal-musl 0.29.8。** openkal-uefi 在固件的简单文件系统上提供 `openkal.fs`（程序所在的卷，名为 `/`），读取 Shell 的参数，并在 `EFI_RNG_PROTOCOL` 上提供 `openkal.random`（固件未安装时为 `kal_err_not_supported`）；openkal-musl 0.29.8 在 `cfg(os = "uefi")` 下接受 openkal-uefi 0.11。二者属于 openkal-platform 0.29.0 的版本组。
 - **mcpp.plugins 0.22.0。** dist-web 的页面是该格式唯一的可分发物，长期运行的 `web` 运行器（emrun）提供该目录并打开页面；
   被拒绝的请求以警告陈述；mcpp 2026.11.16.1 起 dist-web 向引擎陈述它包装的程序（`mcpp::pack_program`，协议 19），
   多程序的包无需指名即打包该程序。包的下限仍为 mcpp 2026.10.30.1；`latest` 指向 0.22.0（mcpp-community/mcpp-plugins#54）。
