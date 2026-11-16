@@ -9,6 +9,7 @@
 
 ### Added
 
+- **mcpp.plugins 0.22.1。** 成员经 mcpplibs.os 0.4.4 访问系统：0.4.0 钉住 openkal 0.24.0，与含 openkal 0.25 的依赖图（openkal-platform 0.29）不能协调。包的下限仍为 mcpp 2026.10.30.1；`latest` 指向 0.22.1（mcpp-community/mcpp-plugins#55）。
 - **openkal-platform 0.29.0。** 启动机器或创建前缀的运行器声明 `enabled = false`（UEFI、DOS 与新增的宿主行运行器），由项目或本机启用；`x86_64-freebsd-musl`、`aarch64-freebsd-musl` 经 dirun 在 xim 的 FreeBSD 磁盘映像中运行，
   `x86_64-windows-musl` 在 x86_64 Linux 上经 Wine 运行；UEFI 运行器传递 `--` 之后的参数，并要求 dirun 0.5.0 与 ovmf 9.2.4-3（其配置陈述 UEFI Shell 的引用规则，含空白的参数作为一个参数到达程序）；
   okrun 增加宿主 `macos-x86_64` 与 `linux-i686`。版本组随 openkal-musl 0.29.8 与 openkal-uefi 0.11.0；需要 mcpp 2026.11.16.1（mcpplibs/openkal-platform#33）。
