@@ -116,6 +116,10 @@
   该检查同时按新的位置核对 SDK 的许可文件，并为本次运行请求项目根的编译数据库（`MCPP_COMPILE_COMMANDS`；mcpp 2026.10.26.1 起只在
   请求时写出），模板生成的清单保持原样；`mcpp pack` 改用 `--pkg-format`。
 
+- **mcpp.platforms 0.1.0 的条目列出每种宿主。** 条目此前只列 Linux，macOS 与 Windows 宿主无法安装该包
+  （`has no build for windows`），它服务的行在这两种宿主上无法经索引构建（mcpp e2e 1116 测得）。包是一份陈述，
+  各宿主使用同一个归档。
+
 - **CI 的 mcpp 由 2026.11.17.1 改为 2026.11.17.2**（validate、xpkgindex-update 与 openkal-compat）：该版的默认平台为
   openkal-platform 0.29.1，安装 ninja `1.12.1-mcpp.1`，随带 xlings 2026.11.17.2。
 

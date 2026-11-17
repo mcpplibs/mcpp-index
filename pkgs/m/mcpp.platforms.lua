@@ -10,8 +10,12 @@
 -- 0.1.0 (package floor mcpp 2026.11.17.1): FreeBSD 14.5, NetBSD 10.2 and
 -- OpenBSD 8.0, x86_64 and aarch64. NetBSD's C++ layer is libc++ from source
 -- (llvm.libcxx), so `import std` holds over the release's GCC 10 libstdc++
--- base. Runners: FreeBSD (both), NetBSD and OpenBSD (x86_64). The rows build on
--- Linux hosts (mcpp-community/mcpp-platforms#1).
+-- base. Runners: FreeBSD (both), NetBSD and OpenBSD (x86_64). The package is the
+-- same on every host, and the entry lists each: it listed Linux alone, and a
+-- macOS or Windows host could not install it ("has no build for windows"), so
+-- the rows it serves could not be built there from the index (measured in
+-- mcpp's e2e 1116, mcpp-community/mcpp#951). The rows build on Linux, macOS and
+-- Windows hosts with mcpp 2026.11.18.1 (mcpp-community/mcpp-platforms#4).
 package = {
     spec        = "1",
     namespace   = "mcpp",
@@ -33,8 +37,29 @@ package = {
 
     -- The descriptor points at the source archive of the tag; the CN asset is the
     -- same bytes, so one sha256 names both.
+    -- One archive for every host: the package is a statement, not a program.
     xpm = {
         linux = {
+            ["0.1.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-platforms/archive/refs/tags/0.1.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-platforms/releases/download/0.1.0/mcpp-platforms-0.1.0.tar.gz",
+                },
+                sha256 = "bd09836f9952af28ede3f9c4568aafd999ace803f2cad21fed0aa4ca495893f3",
+            },
+            ["latest"] = { ref = "0.1.0" },
+        },
+        macosx = {
+            ["0.1.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-platforms/archive/refs/tags/0.1.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-platforms/releases/download/0.1.0/mcpp-platforms-0.1.0.tar.gz",
+                },
+                sha256 = "bd09836f9952af28ede3f9c4568aafd999ace803f2cad21fed0aa4ca495893f3",
+            },
+            ["latest"] = { ref = "0.1.0" },
+        },
+        windows = {
             ["0.1.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-platforms/archive/refs/tags/0.1.0.tar.gz",
