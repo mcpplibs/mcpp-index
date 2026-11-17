@@ -1659,7 +1659,7 @@ jobs:
       - name: Installed FFmpeg wrapper archive and actual default project template
         if: contains(format(' {0} ', env.MEMBERS), ' ffmpeg-cpu ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.ffmpeg@8.1.2
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.ffmpeg@8.1.2.1
 
       - name: Installed ImGui wrapper archive and actual headless default template
         if: contains(format(' {0} ', env.MEMBERS), ' imgui-headless ') && matrix.toolchain == 'default'

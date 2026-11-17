@@ -36,7 +36,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--mcpp", default="mcpp")
     parser.add_argument("--toolchain", default="llvm@23.1.3")
-    parser.add_argument("--package", default="mcpplibs.mwrap.onnxruntime@1.25.1")
+    parser.add_argument("--package", default="mcpplibs.mwrap.onnxruntime@1.25.1.1")
     parser.add_argument("--deploy", action="store_true", help="pack, relocate and run the consumer; verify declared notices")
     parser.add_argument("--published-index", action="store_true", help="refresh the real public index instead of staging this checkout")
     parser.add_argument("--home", type=Path, help="reuse a dedicated test home across independent installed consumers")
