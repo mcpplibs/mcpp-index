@@ -458,7 +458,11 @@ env:
   # 2026.11.17.1: the newest release; it reads `license_files` and a
   # platform entry's `platform_rows` (the platform column), which this index
   # states.
-  MCPP_VERSION: "2026.11.17.1"
+  #
+  # 2026.11.17.2: the newest release; its default platform is
+  # openkal-platform 0.29.1, it installs ninja 1.12.1-mcpp.1 and bundles
+  # xlings 2026.11.17.2.
+  MCPP_VERSION: "2026.11.17.2"
 
 jobs:
   lint:
