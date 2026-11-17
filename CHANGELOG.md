@@ -97,6 +97,10 @@
 
 ### Chore
 
+- **已安装模板的检查：模板写引号键时只允许该弃用警告。** mcpp 2026.11.8.1 之前发布的 mwrap 模板以 `"{{self.name}}"` 写依赖键，
+  渲染为一个带引号的键；`--strict` 拒绝这一弃用读法，归档又不可改。检查在渲染出引号键时不加 `--strict` 构建，只允许该包的这条
+  弃用警告，其余警告仍失败；模板的下一版写不带引号的选择器后自动恢复严格构建（onnxruntime-m 1.25.1；opencv-m、ffmpeg-m 的模板同形）。
+
 - **CI 的 mcpp 由 2026.11.16.1 改为 2026.11.17.1**（validate、xpkgindex-update 与 openkal-compat），该版读取本索引陈述的
   `license_files` 与平台条目的 `platform_rows`（平台列）。
 

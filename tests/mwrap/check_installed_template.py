@@ -68,6 +68,7 @@ def main():
         project = temporary / "installed-quickstart"
         manifest = tomllib.loads((project / "mcpp.toml").read_text(encoding="utf-8"))
         # The key as written: quoted (one key) or dotted (nested tables), the form mcpp 2026.11.8.1 asks for.
+        quoted_key = identity in manifest["dependencies"]
         dependency = manifest["dependencies"].get(identity)
         if dependency is None:
             dependency = manifest["dependencies"]
@@ -77,27 +78,35 @@ def main():
         assert actual_version == version, dependency
         if isinstance(dependency, dict):
             assert "path" not in dependency and "git" not in dependency, dependency
-        build = [args.mcpp, "build", "--toolchain", args.toolchain]
-        if not args.legacy_exact_key:
-            build.append("--strict")
-        else:
+        # The build is strict unless the published template states a reading mcpp
+        # still accepts with a warning: then that warning, and no other, is allowed.
+        # A template's archive is immutable; its next release writes the current form.
+        #   - legacy exact key: an upstream nonnumeric release key, not a version range;
+        #   - quoted key: a template from before mcpp 2026.11.8.1 renders `"{{self.name}}"`,
+        #     one quoted key, where the selector is now written unquoted (mcpp#904).
+        allowed = []
+        if args.legacy_exact_key:
             assert not version[0].isdigit(), "This exception is only for upstream nonnumeric release keys"
+            allowed.append(f"[dependencies] {identity} = '{version}' is not a version RANGE ")
+        if quoted_key:
+            allowed.append(f'[dependencies] "{identity}" is deprecated since mcpp 2026.11.8.1')
+            print(f"note: the template of {identity}@{version} writes its dependency key quoted; "
+                  "its next release writes it unquoted", flush=True)
+        build = [args.mcpp, "build", "--toolchain", args.toolchain]
+        if not allowed:
+            build.append("--strict")
         for command in (build, [args.mcpp, "run", "--toolchain", args.toolchain] +
                         (["--", *args.run_arg] if args.run_arg else [])):
             print("+", " ".join(command), flush=True)
-            if args.legacy_exact_key and command is build:
-                # This is a supported exact index key, not a numeric range.
-                # --strict promotes its planner warning to an error. Preserve
-                # that upstream identity, but reject every other warning,
-                # including module/ABI compatibility degradations.
+            if allowed and command is build:
                 result = subprocess.run(command, cwd=project, env=env, text=True,
                                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                 print(result.stdout, end="", flush=True)
                 result.check_returncode()
-                allowed = f"[dependencies] {identity} = '{version}' is not a version RANGE "
                 for line in result.stdout.splitlines():
                     if "warning:" in line:
-                        assert line.split("warning:", 1)[1].strip().startswith(allowed), line
+                        said = line.split("warning:", 1)[1].strip()
+                        assert any(a in said for a in allowed), line
             else:
                 subprocess.run(command, cwd=project, env=env, check=True)
         print("Verified real indexed archive installation and unmodified template consumer", flush=True)
