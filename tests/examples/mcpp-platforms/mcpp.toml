@@ -1,0 +1,16 @@
+# mcpp:platforms test project. The package serves the rows of FreeBSD, NetBSD
+# and OpenBSD, which no member of this repository builds: the member names the
+# release for those rows, and the rows are built on Linux, macOS and Windows
+# hosts (and run where an image exists) by the package's own CI
+# (mcpp-community/mcpp-platforms) and by mcpp's e2e 1116. On a runner the
+# member's host build checks that a project naming the platform for another row
+# resolves, builds and tests unaffected.
+[package]
+name    = "mcpp-platforms-tests"
+version = "0.1.0"
+
+[target.'cfg(any(os = "freebsd", os = "netbsd", os = "openbsd"))']
+platform = "mcpp.platforms@0.1.0"
+
+[indices]
+mcpplibs = { path = "../../.." }
