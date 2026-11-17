@@ -9,6 +9,11 @@
 
 ### Added
 
+- **openkal-uefi 0.11.2、openkal-musl 0.29.9。** openkal-uefi 以 `-fno-builtin` 编译：发布档下测量 UTF-16 名字长度的循环被替换为
+  C 库的 `wcslen`（其 `wchar_t` 为 32 位），列目录给出 `f2.` 而不是 `f2.txt`，固件拒绝改名（mcpplibs/openkal-uefi#20）。openkal-musl
+  的 `chdir` 释放此前工作目录的句柄（DOS 的实现有 32 个目录，围绕每次列举改变目录的 shell 此后无法 `opendir`）；卷之下以分隔符
+  开头的名字是当前目录所在卷的根（`/work` 即 `C:/work`）（mcpplibs/openkal-musl#98）。
+
 - **djgpp-platform 0.2.0。** 运行器取 dirun 0.6.0 与 dosbox-staging 0.83.0-2（openkal-platform 的 DOS 行所用的包），运行指名的文件
   （`mcpp run --file`、`[test] files`）到达程序的工作目录；0.1.0 的 dirun 0.3.0 不放置这些文件，程序以状态 1 结束且无输出。运行器陈述
   `enabled = false`，与其他启动机器的运行器一致，以 `[target.i586-dos-djgpp] runner = true` 启用。条目列出它提供的行
