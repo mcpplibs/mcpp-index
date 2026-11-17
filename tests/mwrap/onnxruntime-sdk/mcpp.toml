@@ -8,7 +8,7 @@ description = "Exercise the official ONNX Runtime SDK through the local index"
 # An explicit empty table overrides the legacy workspace redirect.
 
 [dependencies.compat]
-onnxruntime = "1.25.1.1"
+onnxruntime = "1.25.1"
 
 [target.x86_64-linux-gnu]
 cxx_runtime = "toolchain-coupled"
