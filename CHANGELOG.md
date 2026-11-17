@@ -9,6 +9,12 @@
 
 ### Added
 
+- **djgpp-platform 0.2.0。** 运行器取 dirun 0.6.0 与 dosbox-staging 0.83.0-2（openkal-platform 的 DOS 行所用的包），运行指名的文件
+  （`mcpp run --file`、`[test] files`）到达程序的工作目录；0.1.0 的 dirun 0.3.0 不放置这些文件，程序以状态 1 结束且无输出。运行器陈述
+  `enabled = false`，与其他启动机器的运行器一致，以 `[target.i586-dos-djgpp] runner = true` 启用。条目列出它提供的行
+  `i586-dos-djgpp`（`platform_rows`），并写明清单路径；测试成员 `tests/examples/djgpp-platform` 为该行指名此版本，该行由包自己的
+  CI 构建与运行（mcpplibs/djgpp-platform#2）。
+
 - **mcpp.platforms 0.1.0（新包）。** 引擎不携带的系统的行：FreeBSD 14.5、NetBSD 10.2 与 OpenBSD 8.0，各为 x86_64 与 aarch64；每行的基础
   （xim 的 sysroot 包）与可引导该系统映像的运行器（FreeBSD 两种架构，NetBSD 与 OpenBSD 的 x86_64）。NetBSD 的 C++ 层为从源码构建的
   libc++（`llvm.libcxx`），因此在 GCC 10 的 libstdc++ 基础之上 `import std` 成立。项目以一个 `cfg` 表选择这些行，`runner = true`
