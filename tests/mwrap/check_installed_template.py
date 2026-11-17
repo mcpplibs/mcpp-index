@@ -56,7 +56,10 @@ def main():
             # index. No namespace views, source pre-seeding or dependency rewriting.
             shutil.copytree(root / "pkgs", index / "pkgs")
             shutil.copyfile(root / "index.toml", index / "index.toml")
-        env = dict(os.environ, MCPP_HOME=str(home))
+        # The checks below read the project's compile database at its root, which
+        # mcpp 2026.10.26.1+ publishes only on request (mcpp docs/04, compile_commands);
+        # the request is the run's, so the template's manifest stays as rendered.
+        env = dict(os.environ, MCPP_HOME=str(home), MCPP_COMPILE_COMMANDS="compile_commands.json")
         commands = [[args.mcpp, "self", "config", "--mirror", "GLOBAL"]]
         if args.published_index:
             commands.append([args.mcpp, "index", "update"])
@@ -68,6 +71,7 @@ def main():
         project = temporary / "installed-quickstart"
         manifest = tomllib.loads((project / "mcpp.toml").read_text(encoding="utf-8"))
         # The key as written: quoted (one key) or dotted (nested tables), the form mcpp 2026.11.8.1 asks for.
+        quoted_key = identity in manifest["dependencies"]
         dependency = manifest["dependencies"].get(identity)
         if dependency is None:
             dependency = manifest["dependencies"]
@@ -77,27 +81,35 @@ def main():
         assert actual_version == version, dependency
         if isinstance(dependency, dict):
             assert "path" not in dependency and "git" not in dependency, dependency
-        build = [args.mcpp, "build", "--toolchain", args.toolchain]
-        if not args.legacy_exact_key:
-            build.append("--strict")
-        else:
+        # The build is strict unless the published template states a reading mcpp
+        # still accepts with a warning: then that warning, and no other, is allowed.
+        # A template's archive is immutable; its next release writes the current form.
+        #   - legacy exact key: an upstream nonnumeric release key, not a version range;
+        #   - quoted key: a template from before mcpp 2026.11.8.1 renders `"{{self.name}}"`,
+        #     one quoted key, where the selector is now written unquoted (mcpp#904).
+        allowed = []
+        if args.legacy_exact_key:
             assert not version[0].isdigit(), "This exception is only for upstream nonnumeric release keys"
+            allowed.append(f"[dependencies] {identity} = '{version}' is not a version RANGE ")
+        if quoted_key:
+            allowed.append(f'[dependencies] "{identity}" is deprecated since mcpp 2026.11.8.1')
+            print(f"note: the template of {identity}@{version} writes its dependency key quoted; "
+                  "its next release writes it unquoted", flush=True)
+        build = [args.mcpp, "build", "--toolchain", args.toolchain]
+        if not allowed:
+            build.append("--strict")
         for command in (build, [args.mcpp, "run", "--toolchain", args.toolchain] +
                         (["--", *args.run_arg] if args.run_arg else [])):
             print("+", " ".join(command), flush=True)
-            if args.legacy_exact_key and command is build:
-                # This is a supported exact index key, not a numeric range.
-                # --strict promotes its planner warning to an error. Preserve
-                # that upstream identity, but reject every other warning,
-                # including module/ABI compatibility degradations.
+            if allowed and command is build:
                 result = subprocess.run(command, cwd=project, env=env, text=True,
                                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                 print(result.stdout, end="", flush=True)
                 result.check_returncode()
-                allowed = f"[dependencies] {identity} = '{version}' is not a version RANGE "
                 for line in result.stdout.splitlines():
                     if "warning:" in line:
-                        assert line.split("warning:", 1)[1].strip().startswith(allowed), line
+                        said = line.split("warning:", 1)[1].strip()
+                        assert any(a in said for a in allowed), line
             else:
                 subprocess.run(command, cwd=project, env=env, check=True)
         print("Verified real indexed archive installation and unmodified template consumer", flush=True)
@@ -116,15 +128,21 @@ def main():
         if args.deploy:
             mode = "self-contained" if sys.platform.startswith("linux") else "vendored"
             command = [args.mcpp, "pack", "--toolchain", args.toolchain, "--mode", mode,
-                       "--format", "dir", "--output", "deployment-audit"]
+                       "--pkg-format", "dir", "--output", "deployment-audit"]
             print("+", " ".join(command), flush=True)
             subprocess.run(command, cwd=project, env=env, check=True)
             bundle = project / "target/dist/deployment-audit"
             relocated = temporary / "relocated/bundle"
             shutil.copytree(bundle, relocated, symlinks=True)
             if identity == "mcpplibs.mwrap.onnxruntime":
-                notices = list(relocated.rglob("licenses/onnxruntime/ThirdPartyNotices.txt"))
-                assert len(notices) == 1 and notices[0].stat().st_size, notices
+                # The SDK's LICENSE and ThirdPartyNotices.txt are compat.onnxruntime's
+                # license_files, staged under share/licenses/<package>/ (mcpp
+                # 2026.11.17.1); the wrapper's own LICENSE and NOTICE are its deploy
+                # entries, beside the program under licenses/onnxruntime/wrapper.
+                listing = sorted(q.relative_to(relocated).as_posix() for q in relocated.rglob("*")
+                                 if q.is_file() and "licenses" in q.parts)
+                notices = list(relocated.rglob("share/licenses/*compat.onnxruntime/ThirdPartyNotices.txt"))
+                assert len(notices) == 1 and notices[0].stat().st_size, listing
                 installed = []
                 for entry in json.loads((project / "compile_commands.json").read_text(encoding="utf-8")):
                     arguments = entry["arguments"]
@@ -146,12 +164,15 @@ def main():
                 wrapper = next(Path(item["file"]).parent.parent for item in commands
                                if Path(item["file"]).name == "onnxruntime.cppm")
                 declared = tomllib.loads((wrapper / "mcpp.toml").read_text(encoding="utf-8"))["runtime"]["deploy"]
+                deployed = [q for q in relocated.rglob("licenses/onnxruntime")
+                            if q.is_dir() and "share" not in q.relative_to(relocated).parts]
+                assert len(deployed) == 1, listing
                 for entry in declared:
                     source = wrapper / entry["from"]
-                    destination = notices[0].parent / Path(entry["to"]).relative_to("licenses/onnxruntime") / source.name
-                    assert destination.is_file() and destination.read_bytes() == source.read_bytes(), destination
-                assert b"Apache License" in (notices[0].parent / "wrapper/LICENSE").read_bytes()
-                assert b"mcpp-community" in (notices[0].parent / "wrapper/NOTICE").read_bytes()
+                    destination = deployed[0] / Path(entry["to"]).relative_to("licenses/onnxruntime") / source.name
+                    assert destination.is_file() and destination.read_bytes() == source.read_bytes(), (destination, listing)
+                assert b"Apache License" in (deployed[0] / "wrapper/LICENSE").read_bytes()
+                assert b"mcpp-community" in (deployed[0] / "wrapper/NOTICE").read_bytes()
                 print("Verified separate SDK MIT and wrapper Apache-2.0 licenses, NOTICE and retained upstream bytes", flush=True)
             elif identity == "mcpplibs.mwrap.opencv":
                 commands = json.loads((project / "compile_commands.json").read_text(encoding="utf-8"))

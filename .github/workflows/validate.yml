@@ -454,7 +454,11 @@ env:
   # 2026.11.16.1: the newest release; the index validates with the engine its
   # consumers install (the engine's built-in platform is openkal-platform
   # 0.28.0, and it bundles xlings 2026.11.16.1).
-  MCPP_VERSION: "2026.11.16.1"
+  #
+  # 2026.11.17.1: the newest release; it reads `license_files` and a
+  # platform entry's `platform_rows` (the platform column), which this index
+  # states.
+  MCPP_VERSION: "2026.11.17.1"
 
 jobs:
   lint:

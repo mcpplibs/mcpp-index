@@ -9,6 +9,15 @@
 
 ### Added
 
+- **mcpp.platforms 0.1.0（新包）。** 引擎不携带的系统的行：FreeBSD 14.5、NetBSD 10.2 与 OpenBSD 8.0，各为 x86_64 与 aarch64；每行的基础
+  （xim 的 sysroot 包）与可引导该系统映像的运行器（FreeBSD 两种架构，NetBSD 与 OpenBSD 的 x86_64）。NetBSD 的 C++ 层为从源码构建的
+  libc++（`llvm.libcxx`），因此在 GCC 10 的 libstdc++ 基础之上 `import std` 成立。项目以一个 `cfg` 表选择这些行，`runner = true`
+  同意行的运行器；这些行在 Linux 宿主（x86_64、aarch64）上构建。条目列出其六行（`platform_rows`）；需要 mcpp 2026.11.17.1
+  （mcpp-community/mcpp-platforms#1）。
+- **openkal-platform 0.29.1（版本组补丁）。** 版本组取 openkal-uefi 0.11.1（Shell 的参数从加载选项中划分，引号内含空白的参数完整到达）
+  与 openkal-dos、openkal-dos-tools 0.1.1（栈取自 `PT_GNU_STACK`，位于保护页之上）；`i686-dos-musl` 以 1 MiB 栈链接；UEFI 运行器取
+  dirun 0.6.0 与 ovmf 9.2.4-4（应用得到可写的 FAT32 盘），FreeBSD 运行器取磁盘映像 14.5-1（命令在 `mcpp run --file` 交付的文件所在
+  目录中运行）；构建取 mcpp.plugins 0.22.1。需要 mcpp 2026.11.16.1（mcpplibs/openkal-platform#34）。
 - **mcpp.plugins 0.22.1。** 成员经 mcpplibs.os 0.4.4 访问系统：0.4.0 钉住 openkal 0.24.0，与含 openkal 0.25 的依赖图（openkal-platform 0.29）不能协调。包的下限仍为 mcpp 2026.10.30.1；`latest` 指向 0.22.1（mcpp-community/mcpp-plugins#55）。
 - **openkal-platform 0.29.0。** 启动机器或创建前缀的运行器声明 `enabled = false`（UEFI、DOS 与新增的宿主行运行器），由项目或本机启用；`x86_64-freebsd-musl`、`aarch64-freebsd-musl` 经 dirun 在 xim 的 FreeBSD 磁盘映像中运行，
   `x86_64-windows-musl` 在 x86_64 Linux 上经 Wine 运行；UEFI 运行器传递 `--` 之后的参数，并要求 dirun 0.5.0 与 ovmf 9.2.4-3（其配置陈述 UEFI Shell 的引用规则，含空白的参数作为一个参数到达程序）；
@@ -25,6 +34,15 @@
   执行系统 `dos`），其 GCC 由行的 GCC 目标 `i586-pc-msdosdjgpp` 指定（xim 包 `i586-pc-msdosdjgpp-gcc` 12.2.0），运行器为带
   DOSBox Staging 配置的 dirun。仅 C：DJGPP 的 GCC 12.2.0 不支持 C++ 模块的依赖扫描。它与 openkal 的 DOS 路线
   （openkal-platform 的 `i686-dos-musl`，社区默认）并存；需要 mcpp 2026.11.13.1（mcpplibs/djgpp-platform#1）。
+
+### Changed
+
+- **compat.onnxruntime 以 `license_files` 陈述 SDK 的许可文件**（`LICENSE` 与 `ThirdPartyNotices.txt`）。mcpp 2026.11.17.1 在每种打包模式中
+  把它们放在 `share/licenses/compat.onnxruntime/`；此前由 `deploy` 放在程序旁的 `licenses/onnxruntime/`。包装的 LICENSE 与 NOTICE
+  仍由 mcpplibs.mwrap.onnxruntime 自己的 `deploy` 放在 `licenses/onnxruntime/wrapper/`。
+- **compat.libgbm、compat.vulkan 与 compat.onnxruntime 以 `runtime_search_dirs` 陈述运行时搜索目录。** 同时写 `library_dirs`
+  （旧拼写，只映射到运行时搜索）与 `link_library_dirs` 的包均已改为 `runtime_search_dirs` 加 `link_library_dirs`；只写
+  `library_dirs` 的包不变（该拼写仍被读取）。docs/package-types 与 docs/descriptor-examples 用现行键名。
 
 ### Fixed
 
@@ -80,6 +98,15 @@
   构建的各架构上都是无锁的，LLVM 工具链在图中 C 库之上没有这个归档。
 
 ### Chore
+
+- **已安装模板的检查：模板写引号键时只允许该弃用警告。** mcpp 2026.11.8.1 之前发布的 mwrap 模板以 `"{{self.name}}"` 写依赖键，
+  渲染为一个带引号的键；`--strict` 拒绝这一弃用读法，归档又不可改。检查在渲染出引号键时不加 `--strict` 构建，只允许该包的这条
+  弃用警告，其余警告仍失败；模板的下一版写不带引号的选择器后自动恢复严格构建（onnxruntime-m 1.25.1；opencv-m、ffmpeg-m 的模板同形）。
+  该检查同时按新的位置核对 SDK 的许可文件，并为本次运行请求项目根的编译数据库（`MCPP_COMPILE_COMMANDS`；mcpp 2026.10.26.1 起只在
+  请求时写出），模板生成的清单保持原样；`mcpp pack` 改用 `--pkg-format`。
+
+- **CI 的 mcpp 由 2026.11.16.1 改为 2026.11.17.1**（validate、xpkgindex-update 与 openkal-compat），该版读取本索引陈述的
+  `license_files` 与平台条目的 `platform_rows`（平台列）。
 
 - **CI 的 mcpp 由 2026.11.9.1 改为 2026.11.10.1**（xpkgindex-update、openkal-compat 与 `tests/openkal/pins.toml`），以满足
   openkal-image 0.6.0 的版本下限。
