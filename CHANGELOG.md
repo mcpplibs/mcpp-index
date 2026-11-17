@@ -37,7 +37,9 @@
 
 ### Changed
 
-- **compat.onnxruntime 以 `license_files` 陈述 SDK 的许可文件**（`LICENSE` 与 `ThirdPartyNotices.txt`），由 mcpp 随包分发。
+- **compat.onnxruntime 以 `license_files` 陈述 SDK 的许可文件**（`LICENSE` 与 `ThirdPartyNotices.txt`）。mcpp 2026.11.17.1 在每种打包模式中
+  把它们放在 `share/licenses/compat.onnxruntime/`；此前由 `deploy` 放在程序旁的 `licenses/onnxruntime/`。包装的 LICENSE 与 NOTICE
+  仍由 mcpplibs.mwrap.onnxruntime 自己的 `deploy` 放在 `licenses/onnxruntime/wrapper/`。
 - **compat.libgbm、compat.vulkan 与 compat.onnxruntime 以 `runtime_search_dirs` 陈述运行时搜索目录。** 同时写 `library_dirs`
   （旧拼写，只映射到运行时搜索）与 `link_library_dirs` 的包均已改为 `runtime_search_dirs` 加 `link_library_dirs`；只写
   `library_dirs` 的包不变（该拼写仍被读取）。docs/package-types 与 docs/descriptor-examples 用现行键名。
@@ -100,6 +102,8 @@
 - **已安装模板的检查：模板写引号键时只允许该弃用警告。** mcpp 2026.11.8.1 之前发布的 mwrap 模板以 `"{{self.name}}"` 写依赖键，
   渲染为一个带引号的键；`--strict` 拒绝这一弃用读法，归档又不可改。检查在渲染出引号键时不加 `--strict` 构建，只允许该包的这条
   弃用警告，其余警告仍失败；模板的下一版写不带引号的选择器后自动恢复严格构建（onnxruntime-m 1.25.1；opencv-m、ffmpeg-m 的模板同形）。
+  该检查同时按新的位置核对 SDK 的许可文件，并为本次运行请求项目根的编译数据库（`MCPP_COMPILE_COMMANDS`；mcpp 2026.10.26.1 起只在
+  请求时写出），模板生成的清单保持原样；`mcpp pack` 改用 `--pkg-format`。
 
 - **CI 的 mcpp 由 2026.11.16.1 改为 2026.11.17.1**（validate、xpkgindex-update 与 openkal-compat），该版读取本索引陈述的
   `license_files` 与平台条目的 `platform_rows`（平台列）。
