@@ -2,11 +2,16 @@
 -- each member selected by a feature.
 --
 --   [dependencies.mcpp]
---   plugins = { version = "0.23.0", features = ["rules-spirv"], host-module = true }
+--   plugins = { version = "0.23.1", features = ["rules-spirv"], host-module = true }
 --
 --   // build.mcpp
 --   import mcpp;
 --   import mcpp.rules.spirv;
+--
+-- 0.23.1 (package floor mcpp 2026.10.30.1): dist-apk takes a Java or
+-- Kotlin root a build program generated inside its output directory as an
+-- input of the javac action, and declares no re-run glob there, which never
+-- matched and warned on every build.
 --
 -- 0.23.0 (package floor mcpp 2026.10.30.1): dist-deb and dist-rpm --
 -- `mcpp pack --pkg-format deb|rpm` installs the staged tree under
@@ -681,6 +686,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.23.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.23.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.23.1/mcpp-plugins-0.23.1.tar.gz",
+                },
+                sha256 = "3f8e0e9838ed3ad4fb5edb8ccbe3abfbfa42b236f409be2f64bf7f66f8006e50",
+            },
             ["0.23.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.23.0.tar.gz",
@@ -989,9 +1001,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.23.0" },
+            ["latest"] = { ref = "0.23.1" },
         },
         macosx = {
+            ["0.23.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.23.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.23.1/mcpp-plugins-0.23.1.tar.gz",
+                },
+                sha256 = "3f8e0e9838ed3ad4fb5edb8ccbe3abfbfa42b236f409be2f64bf7f66f8006e50",
+            },
             ["0.23.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.23.0.tar.gz",
@@ -1300,9 +1319,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.23.0" },
+            ["latest"] = { ref = "0.23.1" },
         },
         windows = {
+            ["0.23.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.23.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.23.1/mcpp-plugins-0.23.1.tar.gz",
+                },
+                sha256 = "3f8e0e9838ed3ad4fb5edb8ccbe3abfbfa42b236f409be2f64bf7f66f8006e50",
+            },
             ["0.23.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.23.0.tar.gz",
@@ -1611,7 +1637,7 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.23.0" },
+            ["latest"] = { ref = "0.23.1" },
         },
     },
 

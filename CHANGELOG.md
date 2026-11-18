@@ -7,6 +7,12 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- **mcpp.plugins 0.23.1。** `dist-apk` 把构建程序在输出目录（`mcpp::out_dir()`、`target/`）中生成的 Java 或 Kotlin 根只作为
+  `javac` 动作的输入，不再为其声明永远无法命中的重跑 glob，消除每次构建的警告。`latest` 指向 0.23.1
+  （mcpp-community/mcpp-plugins#57）。
+
 ### Added
 
 - **mcpp.plugins 0.23.0。** 新增 `dist-deb` 与 `dist-rpm`：`mcpp pack --pkg-format deb|rpm` 把暂存树装到 `/opt/<name>`，并加上
