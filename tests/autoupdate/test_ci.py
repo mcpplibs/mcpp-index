@@ -118,32 +118,6 @@ sha256="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
                 self.assertEqual(result["dependencies"]["mcpplibs.mwrap.example"], "1.0.1")
                 self.assertEqual((dest / "tests/probe.cpp").read_text(), 'int main() { return 0; }\n')
 
-    def test_legacy_fully_qualified_name_finds_the_short_consumer_key(self):
-        # `namespace = "huxerui", name = "huxerui.huxerui"` is the legacy
-        # fully-qualified spelling. mcpp reconstructs the FQN from
-        # `[dependencies.huxerui] huxerui = "..."`; writing the FQN as the leaf
-        # asks for `huxerui.huxerui.huxerui` and is refused.
-        deps = tomllib.loads('[dependencies.huxerui]\nhuxerui = "0.4.0"\n')["dependencies"]
-        self.assertTrue(ci.names_dependency(deps, "huxerui", "huxerui.huxerui"))
-        self.assertFalse(ci.names_dependency(
-            {"huxerui": {"other": "1.0.0"}}, "huxerui", "huxerui.huxerui"))
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            source = root / "tests/examples/huxerui-module"
-            source.mkdir(parents=True)
-            (source / "mcpp.toml").write_text(
-                '[package]\nname="consumer"\nversion="0.1.0"\n'
-                '[dependencies.huxerui]\nhuxerui = "0.4.0"\n')
-            plan = root / "plan.json"
-            plan.write_text(json.dumps({"packages": [
-                {"id": "huxerui:huxerui.huxerui", "candidate": "0.5.0"}]}))
-            with patch.object(ci, "ROOT", root):
-                self.assertEqual(ci.direct_member("huxerui:huxerui.huxerui"), "huxerui-module")
-                dest = root / "candidate"
-                ci.prepare(plan, "huxerui:huxerui.huxerui", dest)
-                result = tomllib.loads((dest / "mcpp.toml").read_text())
-                self.assertEqual(result["dependencies"]["huxerui"]["huxerui"], "0.5.0")
-
     def test_an_unquoted_identity_key_is_replaced(self):
         # The key mcpp recommends (2026.11.8.1): the identity, dotted and unquoted, which TOML
         # reads as nested tables.

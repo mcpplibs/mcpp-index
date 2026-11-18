@@ -133,23 +133,6 @@ def platform_conditions(manifest: dict, namespace: str, name: str):
         yield None
 
 
-def dependency_leaves(namespace: str, name: str) -> set[str]:
-    """The leaf names a consumer may write for `namespace:name`.
-
-    SPEC-001 keeps `name` atomic, so it is the leaf. Legacy descriptors repeat
-    the namespace inside `name` (`namespace = "huxerui", name =
-    "huxerui.huxerui"`); consumers still write `[dependencies.huxerui] huxerui
-    = "..."`, and mcpp reconstructs the fully-qualified wire key from that pair.
-    `mcpp` rejects the fully-qualified leaf for such a package
-    (`huxerui.huxerui.huxerui`), so both spellings must be recognized here.
-    """
-    prefix = namespace + "."
-    leaves = {name}
-    if name.startswith(prefix):
-        leaves.add(name[len(prefix):])
-    return leaves
-
-
 def direct_member(identity: str) -> str | None:
     namespace, name = identity.split(":", 1)
     candidates = []
@@ -201,12 +184,9 @@ def names_dependency(deps: dict, namespace: str, name: str) -> bool:
     nested = deps
     for part in namespace.split("."):
         nested = nested.get(part, {}) if isinstance(nested, dict) else {}
-    table = deps.get(namespace) if isinstance(deps.get(namespace), dict) else {}
-    leaves = dependency_leaves(namespace, name)
-    return (any(is_spec(deps.get(f"{namespace}.{leaf}")) for leaf in leaves)
-            or any(is_spec(table.get(leaf)) for leaf in leaves)
-            or (isinstance(nested, dict)
-                and any(is_spec(nested.get(leaf)) for leaf in leaves)))
+    return (is_spec(deps.get(f"{namespace}.{name}"))
+            or is_spec(deps.get(namespace, {}).get(name) if isinstance(deps.get(namespace), dict) else None)
+            or (isinstance(nested, dict) and is_spec(nested.get(name))))
 
 
 # The runner platforms, by the spelling a member's `cfg(os = ...)` uses.
@@ -343,16 +323,10 @@ def matrix(plan: Path, output: Path, base: str):
 def replace_candidate(text: str, identity: str, version: str) -> str:
     # The key as a consumer writes it: the bare name under the namespace's
     # table, or the identity key, quoted or not (`mcpplibs.mtest.capi = ...`,
-    # the form mcpp recommends since 2026.11.8.1). Legacy descriptors whose
-    # `name` repeats the namespace expose the short leaf too.
+    # the form mcpp recommends since 2026.11.8.1).
     namespace, name = identity.split(":", 1)
-    keys = set()
-    for leaf in dependency_leaves(namespace, name):
-        keys.update({leaf, f"{namespace}.{leaf}"})
-    alternatives = "|".join(rf'"?{re.escape(key)}"?' for key in
-                            sorted(keys, key=lambda key: (-len(key), key)))
     text, replacements = re.subn(
-        rf'(?m)^(\s*(?:{alternatives})\s*=\s*(?:\{{\s*version\s*=\s*)?")[^"]+(".*)$',
+        rf'(?m)^(\s*(?:{re.escape(name)}|"?{re.escape(namespace)}\.{re.escape(name)}"?)\s*=\s*(?:\{{\s*version\s*=\s*)?")[^"]+(".*)$',
         lambda m: m[1] + version + m[2], text)
     if not replacements:
         # A platform the member selects (mcpp SPEC-013).
@@ -386,8 +360,7 @@ def prepare(plan: Path, identity: str, output: Path, home: Path | None = None):
         # Standalone consumer: no inherited workspace or stale relative index redirects.
         text = re.sub(r'(?ms)^\[indices(?:\.[^\]]+)?\]\s*\n.*?(?=^\[|\Z)', '', text)
     else:
-        leaf = min(dependency_leaves(namespace, name), key=len)
-        text = f'[package]\nname = "candidate-{name}"\nversion = "0.1.0"\n\n[dependencies.{namespace}]\n{leaf} = "{version}"\n'
+        text = f'[package]\nname = "candidate-{name}"\nversion = "0.1.0"\n\n[dependencies.{namespace}]\n{name} = "{version}"\n'
         (output / "tests").mkdir(exist_ok=True)
         probes = {
             "hiredis": '#include <hiredis.h>\nint main() { auto *r = redisReaderCreate(); if (!r) return 1; redisReaderFree(r); }\n',
@@ -426,12 +399,8 @@ def verify(plan: Path, identity: str, consumer: Path):
     record = next(r for r in json.loads(plan.read_text(encoding="utf-8"))["packages"] if r["id"] == identity)
     namespace, name = identity.split(":", 1)
     lock = tomllib.loads((consumer / "mcpp.lock").read_text(encoding="utf-8"))
-    leaves = dependency_leaves(namespace, name)
-    keys = set(leaves)
-    keys.add(identity)
-    keys.update(f"{namespace}.{leaf}" for leaf in leaves)
     matches = [value for key, value in lock.get("package", {}).items()
-               if value.get("namespace") == namespace and key in keys]
+               if value.get("namespace") == namespace and key in (name, identity, f"{namespace}.{name}")]
     if not matches or any(v["version"] != record["candidate"] for v in matches):
         raise RuntimeError(f"lockfile does not prove {identity}@{record['candidate']}: {matches}")
     print(f"PROVEN: build resolved {identity}@{record['candidate']}")

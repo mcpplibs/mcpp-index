@@ -88,9 +88,10 @@ local versions = {
 package = {
     spec        = "1",
     namespace   = "huxerui",
-    -- FULLY-QUALIFIED, per mcpp#278 (INV-NAME). `namespace` plus a bare
-    -- `name` is the split form, which parses but can never be installed.
-    name        = "huxerui.huxerui",
+    -- Atomic, per mcpp SPEC-001 §3.2: hierarchy belongs in `namespace`.
+    -- mcpp reconstructs the wire key `huxerui.huxerui` from the consumer's
+    -- `[dependencies.huxerui] huxerui = "..."`.
+    name        = "huxerui",
     description = "HuxerUI — declarative cross-platform UI framework in C++20 (GTK4 on Linux, Win32/Direct2D, AppKit/Metal)",
     licenses    = {"MIT"},
     repo        = "https://github.com/HuxerUI/HuxerUI",
