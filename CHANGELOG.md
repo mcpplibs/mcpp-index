@@ -9,6 +9,11 @@
 
 ### Added
 
+- **openkal-platform 0.30.0。** 新增行 `i686-svr4-musl`：UNIX System V Release 4 及其后裔的 i386 内核接口上的程序，建立在
+  openkal-svr4 0.1.0 之上，该实现由提供者陈述为该行的 `kernel-abi` 层，系统 `svr4` 由平台自己陈述；运行器为 xim 的 `ibcs-us`
+  （Linux x86_64 上对该接口的模拟，按需启用），未在 System V 内核上运行，档位为 `preview`。版本组取 openkal-musl 0.29.10 与
+  openkal-llvm-runtime 0.20.4。需要 mcpp 2026.11.17.1（平台包陈述系统）。条目的 `platform_rows` 增加该行
+  （mcpplibs/openkal-platform#36）。
 - **openkal-svr4 0.1.0（新包）、openkal-musl 0.29.10、openkal-llvm-runtime 0.20.4。** openkal-svr4 是 openkal 在 UNIX System V
   Release 4 及其后裔（UnixWare、Solaris x86、OpenServer）的 i386 内核接口上的实现：七个接口（`abort`、`stream`、`memory`、`env`、
   `time`、`fs`、`terminal`），程序是经调用门进入内核的静态 ELF32，不链接也不读取系统的任何文件；仅在接口的模拟（xim 的
