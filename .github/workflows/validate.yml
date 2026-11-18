@@ -451,10 +451,22 @@ env:
   # 2026.11.7.2: the built-in platform as one release, and the floor
   # mcpplibs.mtest 0.1.0 states.
   #
-  # 2026.11.15.1: the newest release; the index validates with the engine its
-  # consumers install (openkal-platform 0.28.0 states 2026.11.14.1, and the
-  # engine's built-in platform is 0.28.0).
-  MCPP_VERSION: "2026.11.15.1"
+  # 2026.11.16.1: the newest release; the index validates with the engine its
+  # consumers install (the engine's built-in platform is openkal-platform
+  # 0.28.0, and it bundles xlings 2026.11.16.1).
+  #
+  # 2026.11.17.1: the newest release; it reads `license_files` and a
+  # platform entry's `platform_rows` (the platform column), which this index
+  # states.
+  #
+  # 2026.11.17.2: the newest release; its default platform is
+  # openkal-platform 0.29.1, it installs ninja 1.12.1-mcpp.1 and bundles
+  # xlings 2026.11.17.2.
+  #
+  # 2026.11.18.1: the newest release; its default platform is
+  # openkal-platform 0.29.2, and a row's object format and file names are
+  # read from data (the row, its system, the format's convention).
+  MCPP_VERSION: "2026.11.18.1"
 
 jobs:
   lint:
@@ -558,6 +570,10 @@ jobs:
       # release that republished an old tag would leave no other trace.
       - name: Lint duplicate versions
         run: lua5.4 tests/check_duplicate_versions.lua pkgs/*/*.lua
+      # A platform entry's `platform_rows` is derived from the manifest of its newest
+      # version (mcpp SPEC-013 §14): the list matches it, and a row has one platform.
+      - name: Platform rows match their manifests, one platform a row
+        run: python3 tools/platform_rows.py check
       - name: Check Quill install hook boundaries
         run: lua5.4 tests/check_quill_install.lua
       # The compatibility measurement's classifier decides a PUBLISHED figure
@@ -1576,6 +1592,22 @@ jobs:
             mine="${kept# }"
           fi
 
+          # `tensorvia`: the package declares linux and windows only. Its CPU
+          # backend is AVX2 (`<immintrin.h>`), and the macOS runners are arm64,
+          # so the 0.3.1 tarball has no macOS table at all. Resolution refuses
+          # it naming the platform; the leg would only re-measure that.
+          if [ "${{ matrix.platform }}" = "macos" ]; then
+            kept=""
+            for m in $mine; do
+              case "$m" in
+                tensorvia)
+                  echo "skipping '$m' on the macOS leg: the package has no macOS artifact" ;;
+                *) kept="$kept $m" ;;
+              esac
+            done
+            mine="${kept# }"
+          fi
+
           echo "MEMBERS=$mine" >> "$GITHUB_ENV"
           echo "shard ${{ matrix.shard }}/${{ matrix.shards }}: ${mine:-<none>}"
 
@@ -1620,7 +1652,7 @@ jobs:
       - name: Installed OpenCV archive, image template and relocated deployment
         if: contains(format(' {0} ', env.MEMBERS), ' opencv-cpu ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.opencv@5.0.0 --deploy
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.opencv@5.0.0.1 --deploy
 
       - name: Installed mwrap archive, project template and relocated deployment
         if: contains(format(' {0} ', env.MEMBERS), ' onnxruntime-cpu ') && matrix.toolchain == 'default'
@@ -1635,7 +1667,7 @@ jobs:
       - name: Installed FFmpeg wrapper archive and actual default project template
         if: contains(format(' {0} ', env.MEMBERS), ' ffmpeg-cpu ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.ffmpeg@8.1.2
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.ffmpeg@8.1.2.1
 
       - name: Installed ImGui wrapper archive and actual headless default template
         if: contains(format(' {0} ', env.MEMBERS), ' imgui-headless ') && matrix.toolchain == 'default'

@@ -38,5 +38,13 @@ int main() {
     if (!reparsed) return 11;
     if ((*reparsed)["server", "endpoint", "port"].get<int>() != 9090) return 12;
 
+    if (tomlkit::kLibraryVersion != "1.0.2") return 13;
+
+    // 1.0.2 regression: dotted key inside [a] traversing an earlier ImplicitSuper [a.b].
+    constexpr std::string_view dottedInput = "[a.b]\nx = 1\n\n[a]\nc.y = 2\n";
+    auto dottedDoc = tomlkit::tryParse(dottedInput);
+    if (!dottedDoc) return 14;
+    if (tomlkit::format(*dottedDoc) != dottedInput) return 15;
+
     return 0;
 }

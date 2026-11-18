@@ -9,6 +9,56 @@
 
 ### Added
 
+- **openkal-svr4 0.1.0（新包）、openkal-musl 0.29.10、openkal-llvm-runtime 0.20.4。** openkal-svr4 是 openkal 在 UNIX System V
+  Release 4 及其后裔（UnixWare、Solaris x86、OpenServer）的 i386 内核接口上的实现：七个接口（`abort`、`stream`、`memory`、`env`、
+  `time`、`fs`、`terminal`），程序是经调用门进入内核的静态 ELF32，不链接也不读取系统的任何文件；仅在接口的模拟（xim 的
+  `ibcs-us`，Linux x86_64）下运行过，未在 System V 内核上运行。行 `i686-svr4-musl` 由 openkal-platform 0.30.0 定义，该实现是其
+  `kernel-abi` 层。openkal-musl 0.29.10 与 openkal-llvm-runtime 0.20.4 中，包不认识的系统取一般的选择（i386 的无系统头文件、
+  builtins、486 的排除、分配器），此前这些选择以系统名单为条件；已有各行的选择不变（mcpplibs/openkal-svr4#1、
+  mcpplibs/openkal-musl#100、mcpplibs/openkal-llvm-runtime#75）。
+- **mcpp.plugins 0.25.0。** 新成员 `tools-steps`：多命令的步骤由成员描述为一组可移植操作（运行命令、touch、创建、删除、复制、
+  软链接、把运行时匹配的文件收进列表等），由后端执行，值原样传递；后端在 mcpp 原生支持之前为 `cmake -P`
+  （mcpp-community/mcpp#955）。`dist-apk` 与 `dist-apple` 改用它，不再有 shell 脚本作为动作程序；`latest` 指向 0.25.0
+  （mcpp-community/mcpp-plugins#59）。
+- **mcpp.plugins 0.24.0。** `dist-apk` 在 Windows 与 macOS 主机上与 Linux 一样打包：`d8`、`apksigner`、bundletool、Kotlin 编译器
+  与 coursier 改由 JDK 的 `java` 直接运行其 jar，流水线的 `/bin/sh` 辅助脚本合为一个由 `java` 运行的 Java 源文件，任何步骤都
+  不再需要 shell；CI 在 macOS 与 Windows 行打包 level 0 与 level 1。Windows 上 NDK 的 libc++ 模块源来自
+  `xim:android-ndk-libcxx-modules`。`latest` 指向 0.24.0（mcpp-community/mcpp-plugins#58）。
+- **mcpp.plugins 0.23.0。** 新增 `dist-deb` 与 `dist-rpm`：`mcpp pack --pkg-format deb|rpm` 把暂存树装到 `/opt/<name>`，并加上
+  `/usr/bin` 启动器、桌面项与图标；由 `xim:nfpm` 写出，仅在打包时按需安装，主机无需 `dpkg-deb` 或 `rpmbuild`；未变的树重新打包得到
+  相同字节。包的下限仍为 mcpp 2026.10.30.1；`latest` 指向 0.23.0（mcpp-community/mcpp-plugins#56）。
+- **openlifa.openas 0.2.1、openlifa.openmui 0.4.1。** openas 的包自 0.2.1 起以 `src/sdk.cppm` 为库的根，归档与源码给出同样的
+  三个模块（`openas`、`openas.conformance`、`openas.sdk`）；规范仍是 0.2。openmui 0.4.1 是规范 0.4：人的直接操作与接管
+  （S-14、S-15）、主题范围（ST-4）、动效槽与内置配方（M-7 至 M-10）、TypeScript 的规范声明、核心组件的视图 schema、
+  声明式数据文件的命名与 `$format`；`openmui.h` 的 `OMUI_SPEC_VERSION_MINOR` 为 4。两个仓库的设计分支已合入各自的 main。
+- **openkal-uefi 0.11.2、openkal-musl 0.29.9。** openkal-uefi 以 `-fno-builtin` 编译：发布档下测量 UTF-16 名字长度的循环被替换为
+  C 库的 `wcslen`（其 `wchar_t` 为 32 位），列目录给出 `f2.` 而不是 `f2.txt`，固件拒绝改名（mcpplibs/openkal-uefi#20）。openkal-musl
+  的 `chdir` 释放此前工作目录的句柄（DOS 的实现有 32 个目录，围绕每次列举改变目录的 shell 此后无法 `opendir`）；卷之下以分隔符
+  开头的名字是当前目录所在卷的根（`/work` 即 `C:/work`）（mcpplibs/openkal-musl#98）。
+
+- **djgpp-platform 0.2.0。** 运行器取 dirun 0.6.0 与 dosbox-staging 0.83.0-2（openkal-platform 的 DOS 行所用的包），运行指名的文件
+  （`mcpp run --file`、`[test] files`）到达程序的工作目录；0.1.0 的 dirun 0.3.0 不放置这些文件，程序以状态 1 结束且无输出。运行器陈述
+  `enabled = false`，与其他启动机器的运行器一致，以 `[target.i586-dos-djgpp] runner = true` 启用。条目列出它提供的行
+  `i586-dos-djgpp`（`platform_rows`），并写明清单路径；测试成员 `tests/examples/djgpp-platform` 为该行指名此版本，该行由包自己的
+  CI 构建与运行（mcpplibs/djgpp-platform#2）。
+
+- **mcpp.platforms 0.1.0（新包）。** 引擎不携带的系统的行：FreeBSD 14.5、NetBSD 10.2 与 OpenBSD 8.0，各为 x86_64 与 aarch64；每行的基础
+  （xim 的 sysroot 包）与可引导该系统映像的运行器（FreeBSD 两种架构，NetBSD 与 OpenBSD 的 x86_64）。NetBSD 的 C++ 层为从源码构建的
+  libc++（`llvm.libcxx`），因此在 GCC 10 的 libstdc++ 基础之上 `import std` 成立。项目以一个 `cfg` 表选择这些行，`runner = true`
+  同意行的运行器；这些行在 Linux 宿主（x86_64、aarch64）上构建。条目列出其六行（`platform_rows`）；需要 mcpp 2026.11.17.1
+  （mcpp-community/mcpp-platforms#1）。
+- **openkal-platform 0.29.1（版本组补丁）。** 版本组取 openkal-uefi 0.11.1（Shell 的参数从加载选项中划分，引号内含空白的参数完整到达）
+  与 openkal-dos、openkal-dos-tools 0.1.1（栈取自 `PT_GNU_STACK`，位于保护页之上）；`i686-dos-musl` 以 1 MiB 栈链接；UEFI 运行器取
+  dirun 0.6.0 与 ovmf 9.2.4-4（应用得到可写的 FAT32 盘），FreeBSD 运行器取磁盘映像 14.5-1（命令在 `mcpp run --file` 交付的文件所在
+  目录中运行）；构建取 mcpp.plugins 0.22.1。需要 mcpp 2026.11.16.1（mcpplibs/openkal-platform#34）。
+- **mcpp.plugins 0.22.1。** 成员经 mcpplibs.os 0.4.4 访问系统：0.4.0 钉住 openkal 0.24.0，与含 openkal 0.25 的依赖图（openkal-platform 0.29）不能协调。包的下限仍为 mcpp 2026.10.30.1；`latest` 指向 0.22.1（mcpp-community/mcpp-plugins#55）。
+- **openkal-platform 0.29.0。** 启动机器或创建前缀的运行器声明 `enabled = false`（UEFI、DOS 与新增的宿主行运行器），由项目或本机启用；`x86_64-freebsd-musl`、`aarch64-freebsd-musl` 经 dirun 在 xim 的 FreeBSD 磁盘映像中运行，
+  `x86_64-windows-musl` 在 x86_64 Linux 上经 Wine 运行；UEFI 运行器传递 `--` 之后的参数，并要求 dirun 0.5.0 与 ovmf 9.2.4-3（其配置陈述 UEFI Shell 的引用规则，含空白的参数作为一个参数到达程序）；
+  okrun 增加宿主 `macos-x86_64` 与 `linux-i686`。版本组随 openkal-musl 0.29.8 与 openkal-uefi 0.11.0；需要 mcpp 2026.11.16.1（mcpplibs/openkal-platform#33）。
+- **openkal-uefi 0.11.0；openkal-musl 0.29.8。** openkal-uefi 在固件的简单文件系统上提供 `openkal.fs`（程序所在的卷，名为 `/`），读取 Shell 的参数，并在 `EFI_RNG_PROTOCOL` 上提供 `openkal.random`（固件未安装时为 `kal_err_not_supported`）；openkal-musl 0.29.8 在 `cfg(os = "uefi")` 下接受 openkal-uefi 0.11。二者属于 openkal-platform 0.29.0 的版本组。
+- **mcpp.plugins 0.22.0。** dist-web 的页面是该格式唯一的可分发物，长期运行的 `web` 运行器（emrun）提供该目录并打开页面；
+  被拒绝的请求以警告陈述；mcpp 2026.11.16.1 起 dist-web 向引擎陈述它包装的程序（`mcpp::pack_program`，协议 19），
+  多程序的包无需指名即打包该程序。包的下限仍为 mcpp 2026.10.30.1；`latest` 指向 0.22.0（mcpp-community/mcpp-plugins#54）。
 - **openkal-platform 0.28.0。** 增加四行：`i686-linux-musl`（Linux 的 32 位行）、`x86_64-uefi`（openkal-uefi 0.10.0 之上的 UEFI 应用，
   OVMF 下由 dirun 运行；ok 映像也可作为被承载程序打包为 UEFI）、`i686-openkal`（i386 的 ok 映像）与 `i686-dos-musl`（openkal-dos 之上的 DOS 程序，
   仅为技术实验）。版本组随 openkal 0.25.3、openkal-macos 0.23.3、openkal-musl 0.29.6、openkal-llvm-runtime 0.20.3 与 openkal-image 0.6.3；
@@ -18,8 +68,20 @@
   DOSBox Staging 配置的 dirun。仅 C：DJGPP 的 GCC 12.2.0 不支持 C++ 模块的依赖扫描。它与 openkal 的 DOS 路线
   （openkal-platform 的 `i686-dos-musl`，社区默认）并存；需要 mcpp 2026.11.13.1（mcpplibs/djgpp-platform#1）。
 
+### Changed
+
+- **compat.onnxruntime 以 `license_files` 陈述 SDK 的许可文件**（`LICENSE` 与 `ThirdPartyNotices.txt`）。mcpp 2026.11.17.1 在每种打包模式中
+  把它们放在 `share/licenses/compat.onnxruntime/`；此前由 `deploy` 放在程序旁的 `licenses/onnxruntime/`。包装的 LICENSE 与 NOTICE
+  仍由 mcpplibs.mwrap.onnxruntime 自己的 `deploy` 放在 `licenses/onnxruntime/wrapper/`。
+- **compat.libgbm、compat.vulkan 与 compat.onnxruntime 以 `runtime_search_dirs` 陈述运行时搜索目录。** 同时写 `library_dirs`
+  （旧拼写，只映射到运行时搜索）与 `link_library_dirs` 的包均已改为 `runtime_search_dirs` 加 `link_library_dirs`；只写
+  `library_dirs` 的包不变（该拼写仍被读取）。docs/package-types 与 docs/descriptor-examples 用现行键名。
+
 ### Fixed
 
+- **mcpp.plugins 0.23.1。** `dist-apk` 把构建程序在输出目录（`mcpp::out_dir()`、`target/`）中生成的 Java 或 Kotlin 根只作为
+  `javac` 动作的输入，不再为其声明永远无法命中的重跑 glob，消除每次构建的警告。`latest` 指向 0.23.1
+  （mcpp-community/mcpp-plugins#57）。
 - **openkal-platform 0.28.1（版本组补丁）。** okrun、okld 与工具取 openkal-run/openkal-ld/openkal-tools 0.6.4（okrun 以 uname 指名目标），
   C 库取 openkal-musl 0.29.7，openkal-macos 0.23.4；行与键不变（mcpplibs/openkal-platform#32）。
 - **openkal-musl 0.29.7。** 在 hosted 安排中，`uname` 的 `sysname` 报程序所运行的系统（Linux、FreeBSD、Darwin、Windows_NT、UEFI、MS-DOS）；ok 映像仍报 `openkal`（mcpplibs/openkal-musl#96）。
@@ -72,6 +134,26 @@
   构建的各架构上都是无锁的，LLVM 工具链在图中 C 库之上没有这个归档。
 
 ### Chore
+
+- **已安装模板的检查：模板写引号键时只允许该弃用警告。** mcpp 2026.11.8.1 之前发布的 mwrap 模板以 `"{{self.name}}"` 写依赖键，
+  渲染为一个带引号的键；`--strict` 拒绝这一弃用读法，归档又不可改。检查在渲染出引号键时不加 `--strict` 构建，只允许该包的这条
+  弃用警告，其余警告仍失败；模板的下一版写不带引号的选择器后自动恢复严格构建（onnxruntime-m 1.25.1；opencv-m、ffmpeg-m 的模板同形）。
+  该检查同时按新的位置核对 SDK 的许可文件，并为本次运行请求项目根的编译数据库（`MCPP_COMPILE_COMMANDS`；mcpp 2026.10.26.1 起只在
+  请求时写出），模板生成的清单保持原样；`mcpp pack` 改用 `--pkg-format`。
+
+- **mcpp.platforms 0.1.0 的条目列出每种宿主。** 条目此前只列 Linux，macOS 与 Windows 宿主无法安装该包
+  （`has no build for windows`），它服务的行在这两种宿主上无法经索引构建（mcpp e2e 1116 测得）。包是一份陈述，
+  各宿主使用同一个归档。 测试成员 `tests/examples/mcpp-platforms` 为这些行指名此版本；行由包自己的 CI 在三种宿主上构建。
+
+- **CI 的 mcpp 由 2026.11.17.2 改为 2026.11.18.1**（validate、xpkgindex-update 与 openkal-compat）：该版的默认平台为
+  openkal-platform 0.29.2，行的对象格式与文件名读自数据（行、系统、格式的约定），mcpp.platforms 的 FreeBSD 行在 Windows
+  宿主上以行的名字构建。
+
+- **CI 的 mcpp 由 2026.11.17.1 改为 2026.11.17.2**（validate、xpkgindex-update 与 openkal-compat）：该版的默认平台为
+  openkal-platform 0.29.1，安装 ninja `1.12.1-mcpp.1`，随带 xlings 2026.11.17.2。
+
+- **CI 的 mcpp 由 2026.11.16.1 改为 2026.11.17.1**（validate、xpkgindex-update 与 openkal-compat），该版读取本索引陈述的
+  `license_files` 与平台条目的 `platform_rows`（平台列）。
 
 - **CI 的 mcpp 由 2026.11.9.1 改为 2026.11.10.1**（xpkgindex-update、openkal-compat 与 `tests/openkal/pins.toml`），以满足
   openkal-image 0.6.0 的版本下限。

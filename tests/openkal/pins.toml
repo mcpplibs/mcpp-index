@@ -18,6 +18,10 @@ toolchain = "llvm@22.1.8"
 # index requires mcpp >= 2026.9.18.1 but this is mcpp 2026.9.17.3 [E0006]"
 # before a single line of the member's own source is read.
 #
+# 2026-11-18: measurement engine 2026.11.18.1 (its built-in platform is
+# openkal-platform 0.29.2) matches all CI workflows, which moved to it in #822.
+# 2026-11-16: measurement engine 2026.11.16.1 (its built-in platform is
+# openkal-platform 0.28.0) matches all CI workflows.
 # 2026-11-15: measurement engine 2026.11.15.1 (its built-in platform is
 # openkal-platform 0.28.0) matches all CI workflows.
 # 2026-11-10: measurement engine 2026.11.10.1 (openkal-image 0.6.0 states mcpp >=
@@ -157,7 +161,7 @@ toolchain = "llvm@22.1.8"
 # openkal-musl 0.16.0 and openkal-llvm-runtime 0.12.0), because a pin that
 # moves onto an unreachable or divergent asset fails every member at once and
 # reports it as a compatibility result.
-mcpp      = "2026.11.15.1"
+mcpp      = "2026.11.18.1"
 
 # The Windows target is named for the C environment the graph presents there,
 # which is musl's (openkal-musl declares `[c-abi] presents = "posix"`), not

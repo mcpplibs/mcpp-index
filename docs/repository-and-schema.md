@@ -88,6 +88,17 @@ resolves.
 - `url`: a string, or a `{ GLOBAL=…, CN=… }` table (this repository uses the table form throughout).
 - `sha256`: required, and equal to the digest of the actual downloaded bytes.
 
+`platform_rows` (a platform package's entry; mcpp >= 2026.11.17.1 reads it, an earlier mcpp ignores it): the rows
+the platform serves, for the rows mcpp's own target table has no platform for (mcpp SPEC-013 §14) — a row the engine
+does not know, a `planned` row, a row no built-in provider serves on the host. A build that names such a row and no
+platform takes the one whose entry lists it. The list is derived, never written by hand:
+`python3 tools/platform_rows.py write pkgs/<x>/<name>.lua` reads the manifest of the newest version and lists
+`[platform] targets`, `[[platform.define]]` and `[[platform.provider]] serves` (a pattern stands for the rows it
+matches), and of `[platform.hosted] targets` only the rows the engine does not know or holds as `planned`, so no
+entry claims a host's own row. A platform whose rows are all the engine's lists none. With no file named, `write`
+renews every entry that lists its rows; a new platform's entry is named. The lint job runs
+`tools/platform_rows.py check`: every list matches its manifest, and a row has one platform.
+
 `mcpp` (common keys):
 
 | Key | Description |
