@@ -184,6 +184,10 @@ package = {
             ["3.4.18"] = {
                 url    = "https://github.com/libsdl-org/SDL/archive/refs/tags/release-3.4.18.tar.gz",
                 sha256 = "c4b08b950bd29d83caae0ab8d884298d27046a9d30700fb42841c50992665c90",
+                -- 1: the switches no-render and no-hidapi, read at the top of
+                -- the generated SDL_build_config.h (installed copies take them).
+                revision = 1,
+                floor    = 1,
             },
         },
         macosx = {
@@ -198,6 +202,10 @@ package = {
             ["3.4.18"] = {
                 url    = "https://github.com/libsdl-org/SDL/archive/refs/tags/release-3.4.18.tar.gz",
                 sha256 = "c4b08b950bd29d83caae0ab8d884298d27046a9d30700fb42841c50992665c90",
+                -- 1: the switches no-render and no-hidapi, read at the top of
+                -- the generated SDL_build_config.h (installed copies take them).
+                revision = 1,
+                floor    = 1,
             },
         },
         windows = {
@@ -212,6 +220,10 @@ package = {
             ["3.4.18"] = {
                 url    = "https://github.com/libsdl-org/SDL/archive/refs/tags/release-3.4.18.tar.gz",
                 sha256 = "c4b08b950bd29d83caae0ab8d884298d27046a9d30700fb42841c50992665c90",
+                -- 1: the switches no-render and no-hidapi, read at the top of
+                -- the generated SDL_build_config.h (installed copies take them).
+                revision = 1,
+                floor    = 1,
             },
         },
     },
@@ -856,6 +868,17 @@ typedef unsigned int uintptr_t;
 
 #endif /* platform config */
 
+/* The package's switches (features `no-render`, `no-hidapi`), after every
+   platform's config so they win over its defines: mcpp defines
+   MCPP_FEATURE_<NAME> for this package's own units when one is on. */
+#ifdef MCPP_FEATURE_NO_RENDER
+#define SDL_RENDER_DISABLED 1
+#endif
+#ifdef MCPP_FEATURE_NO_HIDAPI
+#define SDL_HIDAPI_DISABLED 1
+#undef SDL_JOYSTICK_HIDAPI
+#endif
+
 #endif /* SDL_build_config_h_ */
 ]==],
         },
@@ -928,6 +951,21 @@ typedef unsigned int uintptr_t;
 
         targets = { ["sdl3"] = { kind = "lib" } },
         deps    = {},
+
+        -- Subsystems an application may leave out, each a switch: mcpp's
+        -- MCPP_FEATURE_<NAME> turns on the `*_DISABLED` define at the top of
+        -- SDL_build_config.h above. Off by default: the default build is the
+        -- one it always was.
+        --   no-render  the 2D renderer (SDL_Renderer: its software, GPU and
+        --              Vulkan back ends, and the blitters and pixel
+        --              conversions only it reaches); SDL_GPU, windows,
+        --              surfaces and events stay
+        --   no-hidapi  HIDAPI's game-controller drivers (the evdev joystick
+        --              path stays)
+        features = {
+            ["no-render"] = {},
+            ["no-hidapi"] = {},
+        },
 
         linux = {
             sources = {
