@@ -2,11 +2,16 @@
 -- each member selected by a feature.
 --
 --   [dependencies.mcpp]
---   plugins = { version = "0.25.0", features = ["rules-spirv"], host-module = true }
+--   plugins = { version = "0.26.0", features = ["rules-spirv"], host-module = true }
 --
 --   // build.mcpp
 --   import mcpp;
 --   import mcpp.rules.spirv;
+--
+-- 0.26.0 (package floor mcpp 2026.10.30.1): a step program's glob takes
+-- exclusion patterns, in which `*` crosses a `/`; dist-apk empties its class
+-- directories before javac and kotlinc, so a source that left the package
+-- no longer leaves its class in the next one.
 --
 -- 0.25.0 (package floor mcpp 2026.10.30.1): tools-steps. A step of more than
 -- one command is a program of portable operations a member describes and a
@@ -696,6 +701,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.26.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.26.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.26.0/mcpp-plugins-0.26.0.tar.gz",
+                },
+                sha256 = "d59836507bbb31ef8ded10a245aa39a201e4e955119cfe87b158b00bb459c143",
+            },
             ["0.25.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.25.0.tar.gz",
@@ -1025,9 +1037,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.25.0" },
+            ["latest"] = { ref = "0.26.0" },
         },
         macosx = {
+            ["0.26.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.26.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.26.0/mcpp-plugins-0.26.0.tar.gz",
+                },
+                sha256 = "d59836507bbb31ef8ded10a245aa39a201e4e955119cfe87b158b00bb459c143",
+            },
             ["0.25.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.25.0.tar.gz",
@@ -1357,9 +1376,16 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.25.0" },
+            ["latest"] = { ref = "0.26.0" },
         },
         windows = {
+            ["0.26.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.26.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.26.0/mcpp-plugins-0.26.0.tar.gz",
+                },
+                sha256 = "d59836507bbb31ef8ded10a245aa39a201e4e955119cfe87b158b00bb459c143",
+            },
             ["0.25.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.25.0.tar.gz",
@@ -1689,7 +1715,7 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.25.0" },
+            ["latest"] = { ref = "0.26.0" },
         },
     },
 
