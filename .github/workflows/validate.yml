@@ -462,7 +462,11 @@ env:
   # 2026.11.17.2: the newest release; its default platform is
   # openkal-platform 0.29.1, it installs ninja 1.12.1-mcpp.1 and bundles
   # xlings 2026.11.17.2.
-  MCPP_VERSION: "2026.11.17.2"
+  #
+  # 2026.11.18.1: the newest release; its default platform is
+  # openkal-platform 0.29.2, and a row's object format and file names are
+  # read from data (the row, its system, the format's convention).
+  MCPP_VERSION: "2026.11.18.1"
 
 jobs:
   lint:
