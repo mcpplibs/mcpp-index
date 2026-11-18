@@ -1,18 +1,42 @@
+local versions = {
+    ["0.4.0"] = {
+        url = "https://github.com/HuxerUI/HuxerUI/archive/refs/tags/v0.4.0.tar.gz",
+        sha256 = "46631651105b4da2fa6651c842ce4d276334b3e06b27f93bb9c26167ec16fc38",
+    },
+}
+
 -- huxerui.huxerui — the HuxerUI SDK as a native mcpp module package.
 --
 -- Form A: upstream carries its own `mcpp.toml`, so this descriptor declares
 -- metadata and a download address and nothing else about the build. mcpp's
 -- default lookup finds `<verdir>/*/mcpp.toml` inside the GitHub tag archive's
--- `HuxerUI-0.3.0/` wrap. `import huxerui;` is upstream's own module interface
--- (`modules/huxerui.cppm`), not one authored here.
+-- `HuxerUI-<version>/` wrap. `import huxerui;` is upstream's own module
+-- interface (`modules/huxerui.cppm`), not one authored here.
+--
+-- ── 0.4.0 ─────────────────────────────────────────────────────────────────
+--
+-- The upstream manifest gains `!src/runtime/profiling.cpp` in `sources` and
+-- drops `defines = ["HUXERUI_ENABLE_PROFILING=1"]`; its macOS `[runtime]`
+-- framework list grows Contacts/CoreBluetooth/CoreLocation/EventKit/Photos.
+-- None of that reaches this descriptor: Form A downloads the tag archive and
+-- mcpp reads upstream's own manifest, so no build information is restated
+-- here. The four direct Linux dependencies and the 36-entry GTK closure in
+-- `xpm.linux.deps` are unchanged -- the v0.4.0 target table was diffed against
+-- v0.3.0's and is identical down to every pin. `FlatLightThemeSpec` /
+-- `FlatDarkThemeSpec` and `Color`/`Rect` used by the consumer test still
+-- exist, so the member only moves its pin.
+--
+-- 0.4.0 has no CN mirror yet. Per SOP a new version may name the GitHub
+-- release directly when the mcpp-res upload is not available; the mirror can
+-- be filled in later without touching the version block.
 --
 -- ── Two fields deliberately DISAGREE with `mcpp emit xpkg` ────────────────
 --
--- Running `mcpp emit xpkg` against the v0.3.0 tag emits `Apache-2.0` and
--- `github.com/Sunrisepeak/HuxerUI`. Both are wrong at the source and are
+-- Running `mcpp emit xpkg` against the v0.4.0 tag still emits `Apache-2.0`
+-- and `github.com/Sunrisepeak/HuxerUI`. Both are wrong at the source and are
 -- corrected here rather than copied:
 --
---   * LICENSE in the v0.3.0 tree is the MIT License, verbatim, and the
+--   * LICENSE in the v0.4.0 tree is the MIT License, verbatim, and the
 --     xim-pkgindex entry for the same SDK has always said MIT. The
 --     `license = "Apache-2.0"` line in upstream's mcpp.toml is a typo that
 --     seven manifests in that repo share; it is being fixed upstream
@@ -46,10 +70,11 @@
 -- So the closure is transcribed here, at PLATFORM level (a per-version
 -- `deps` does not take effect -- the same finding compat.eui-neo and
 -- compat.glx-runtime record). The 36 entries and their pins are copied
--- verbatim from the v0.3.0 tag's own mcpp.toml, which documents them as the
--- transitive .pc closure of gtk4 + epoxy + libsoup. They are what the
--- package's build compiles against AND what its consumer must have, so no
--- `runtime = { … }` split applies.
+-- verbatim from the v0.4.0 tag's own mcpp.toml, which documents them as the
+-- transitive .pc closure of gtk4 + epoxy + libsoup. It diffs against v0.3.0
+-- only in the prose line above the table; every pin is identical. They are
+-- what the package's build compiles against AND what its consumer must have,
+-- so no `runtime = { … }` split applies.
 --
 -- Keeping this list in step with upstream's is manual until mcpp can derive
 -- consumer dependencies from the target axis. A missing entry surfaces as
@@ -70,6 +95,17 @@ package = {
     licenses    = {"MIT"},
     repo        = "https://github.com/HuxerUI/HuxerUI",
     type        = "package",
+
+    extensions = {
+        -- Form A carries no build recipe, so a new tag needs nothing but a
+        -- version block: the daily updater can append it from this template.
+        -- GitHub only -- the mcpp-res mirror is manual and not declared here,
+        -- which is allowed for a new version.
+        autoupdate = {
+            tag = "v${version}",
+            url = "https://github.com/HuxerUI/HuxerUI/archive/refs/tags/${tag}.tar.gz",
+        },
+    },
 
     xpm = {
         linux = {
@@ -99,6 +135,7 @@ package = {
                 },
                 sha256 = "8b326d95015e92925229fdc1ababe4fdf32515e75764472591645622c1cfbb08",
             },
+            ["0.4.0"] = versions["0.4.0"],
         },
         macosx = {
             ["0.3.0"] = {
@@ -108,6 +145,7 @@ package = {
                 },
                 sha256 = "8b326d95015e92925229fdc1ababe4fdf32515e75764472591645622c1cfbb08",
             },
+            ["0.4.0"] = versions["0.4.0"],
         },
         windows = {
             -- NO `xim:wix`, and that is not an oversight.
@@ -147,11 +185,12 @@ package = {
                 },
                 sha256 = "8b326d95015e92925229fdc1ababe4fdf32515e75764472591645622c1cfbb08",
             },
+            ["0.4.0"] = versions["0.4.0"],
         },
     },
 
     -- NO `mcpp` SEGMENT, deliberately. This is shape D (external Form-A module
-    -- repo): the tag archive carries `HuxerUI-0.3.0/mcpp.toml`, and mcpp's
+    -- repo): the tag archive carries `HuxerUI-<version>/mcpp.toml`, and mcpp's
     -- default lookup finds `<verdir>/*/mcpp.toml` there. `mcpp emit xpkg`
     -- prints a table-form segment aimed at the publish flow; pasting it here
     -- makes the parser read this as an INLINE (Form B) descriptor and refuse

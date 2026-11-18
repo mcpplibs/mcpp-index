@@ -22,4 +22,4 @@ version = "0.1.0"
 standard = "c++20"
 
 [dependencies.huxerui]
-huxerui = "0.3.0"
+huxerui = "0.4.0"
