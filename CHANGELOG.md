@@ -9,6 +9,13 @@
 
 ### Added
 
+- **openkal-svr4 0.1.0（新包）、openkal-musl 0.29.10、openkal-llvm-runtime 0.20.4。** openkal-svr4 是 openkal 在 UNIX System V
+  Release 4 及其后裔（UnixWare、Solaris x86、OpenServer）的 i386 内核接口上的实现：七个接口（`abort`、`stream`、`memory`、`env`、
+  `time`、`fs`、`terminal`），程序是经调用门进入内核的静态 ELF32，不链接也不读取系统的任何文件；仅在接口的模拟（xim 的
+  `ibcs-us`，Linux x86_64）下运行过，未在 System V 内核上运行。行 `i686-svr4-musl` 由 openkal-platform 0.30.0 定义，该实现是其
+  `kernel-abi` 层。openkal-musl 0.29.10 与 openkal-llvm-runtime 0.20.4 中，包不认识的系统取一般的选择（i386 的无系统头文件、
+  builtins、486 的排除、分配器），此前这些选择以系统名单为条件；已有各行的选择不变（mcpplibs/openkal-svr4#1、
+  mcpplibs/openkal-musl#100、mcpplibs/openkal-llvm-runtime#75）。
 - **mcpp.plugins 0.25.0。** 新成员 `tools-steps`：多命令的步骤由成员描述为一组可移植操作（运行命令、touch、创建、删除、复制、
   软链接、把运行时匹配的文件收进列表等），由后端执行，值原样传递；后端在 mcpp 原生支持之前为 `cmake -P`
   （mcpp-community/mcpp#955）。`dist-apk` 与 `dist-apple` 改用它，不再有 shell 脚本作为动作程序；`latest` 指向 0.25.0

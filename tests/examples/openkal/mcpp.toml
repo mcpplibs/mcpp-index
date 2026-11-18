@@ -9,10 +9,10 @@
 # (tests/autoupdate/ci.py, `member_platforms`): an implementation for another
 # system is not in the host's lock, so asking that runner would prove nothing.
 #
-# The last six entries are named under conditions no runner here builds for
+# The last seven entries are named under conditions no runner here builds for
 # --- a musl environment, WebAssembly, a 64-bit RISC-V machine, FreeBSD, UEFI
-# firmware, DOS --- so the candidate gate schedules none of them, and their own
-# repositories measure them on their targets. openkal-dos-tools is released in
+# firmware, DOS, System V --- so the candidate gate schedules none of them, and
+# their own repositories measure them on their targets. openkal-dos-tools is released in
 # openkal-dos's archive, so this entry names it too (ci.py, a sibling).
 [package]
 name    = "openkal-tests"
@@ -50,6 +50,9 @@ openkal-uefi = "0.9.0"
 
 [target.'cfg(os = "dos")'.dependencies.mcpplibs]
 openkal-dos = "0.1.0"
+
+[target.'cfg(os = "svr4")'.dependencies.mcpplibs]
+openkal-svr4 = "0.1.0"
 
 # This member names mcpplibs packages, which the workspace root's single
 # redirect does not carry, so it states its own (mcpp.toml at the root says why
