@@ -7,12 +7,6 @@
 
 ## [Unreleased]
 
-### Fixed
-
-- **mcpp.plugins 0.23.1。** `dist-apk` 把构建程序在输出目录（`mcpp::out_dir()`、`target/`）中生成的 Java 或 Kotlin 根只作为
-  `javac` 动作的输入，不再为其声明永远无法命中的重跑 glob，消除每次构建的警告。`latest` 指向 0.23.1
-  （mcpp-community/mcpp-plugins#57）。
-
 ### Added
 
 - **mcpp.plugins 0.23.0。** 新增 `dist-deb` 与 `dist-rpm`：`mcpp pack --pkg-format deb|rpm` 把暂存树装到 `/opt/<name>`，并加上
@@ -70,6 +64,9 @@
 
 ### Fixed
 
+- **mcpp.plugins 0.23.1。** `dist-apk` 把构建程序在输出目录（`mcpp::out_dir()`、`target/`）中生成的 Java 或 Kotlin 根只作为
+  `javac` 动作的输入，不再为其声明永远无法命中的重跑 glob，消除每次构建的警告。`latest` 指向 0.23.1
+  （mcpp-community/mcpp-plugins#57）。
 - **openkal-platform 0.28.1（版本组补丁）。** okrun、okld 与工具取 openkal-run/openkal-ld/openkal-tools 0.6.4（okrun 以 uname 指名目标），
   C 库取 openkal-musl 0.29.7，openkal-macos 0.23.4；行与键不变（mcpplibs/openkal-platform#32）。
 - **openkal-musl 0.29.7。** 在 hosted 安排中，`uname` 的 `sysname` 报程序所运行的系统（Linux、FreeBSD、Darwin、Windows_NT、UEFI、MS-DOS）；ok 映像仍报 `openkal`（mcpplibs/openkal-musl#96）。
