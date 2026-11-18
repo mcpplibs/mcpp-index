@@ -9,6 +9,8 @@
 
 ### Added
 
+- **mcpp.plugins 0.26.0。** `tools-steps` 的 glob 支持排除模式（`*` 可跨越 `/`）；`dist-apk` 在 javac 和 kotlinc 编译前清空
+  class 目录，已移出包的源码不再把旧 class 带进下一次打包；`latest` 指向 0.26.0（mcpp-community/mcpp-plugins#60）。
 - **openkal-platform 0.30.0。** 新增行 `i686-svr4-musl`：UNIX System V Release 4 及其后裔的 i386 内核接口上的程序，建立在
   openkal-svr4 0.1.0 之上，该实现由提供者陈述为该行的 `kernel-abi` 层，系统 `svr4` 由平台自己陈述；运行器为 xim 的 `ibcs-us`
   （Linux x86_64 上对该接口的模拟，按需启用），未在 System V 内核上运行，档位为 `preview`。版本组取 openkal-musl 0.29.10 与
