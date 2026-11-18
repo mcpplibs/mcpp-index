@@ -9,6 +9,10 @@
 
 ### Added
 
+- **mcpp.plugins 0.25.0。** 新成员 `tools-steps`：多命令的步骤由成员描述为一组可移植操作（运行命令、touch、创建、删除、复制、
+  软链接、把运行时匹配的文件收进列表等），由后端执行，值原样传递；后端在 mcpp 原生支持之前为 `cmake -P`
+  （mcpp-community/mcpp#955）。`dist-apk` 与 `dist-apple` 改用它，不再有 shell 脚本作为动作程序；`latest` 指向 0.25.0
+  （mcpp-community/mcpp-plugins#59）。
 - **mcpp.plugins 0.24.0。** `dist-apk` 在 Windows 与 macOS 主机上与 Linux 一样打包：`d8`、`apksigner`、bundletool、Kotlin 编译器
   与 coursier 改由 JDK 的 `java` 直接运行其 jar，流水线的 `/bin/sh` 辅助脚本合为一个由 `java` 运行的 Java 源文件，任何步骤都
   不再需要 shell；CI 在 macOS 与 Windows 行打包 level 0 与 level 1。Windows 上 NDK 的 libc++ 模块源来自
