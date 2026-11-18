@@ -130,6 +130,10 @@
   （`has no build for windows`），它服务的行在这两种宿主上无法经索引构建（mcpp e2e 1116 测得）。包是一份陈述，
   各宿主使用同一个归档。 测试成员 `tests/examples/mcpp-platforms` 为这些行指名此版本；行由包自己的 CI 在三种宿主上构建。
 
+- **CI 的 mcpp 由 2026.11.17.2 改为 2026.11.18.1**（validate、xpkgindex-update 与 openkal-compat）：该版的默认平台为
+  openkal-platform 0.29.2，行的对象格式与文件名读自数据（行、系统、格式的约定），mcpp.platforms 的 FreeBSD 行在 Windows
+  宿主上以行的名字构建。
+
 - **CI 的 mcpp 由 2026.11.17.1 改为 2026.11.17.2**（validate、xpkgindex-update 与 openkal-compat）：该版的默认平台为
   openkal-platform 0.29.1，安装 ninja `1.12.1-mcpp.1`，随带 xlings 2026.11.17.2。
 
