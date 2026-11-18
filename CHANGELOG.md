@@ -9,6 +9,10 @@
 
 ### Added
 
+- **mcpp.plugins 0.24.0。** `dist-apk` 在 Windows 与 macOS 主机上与 Linux 一样打包：`d8`、`apksigner`、bundletool、Kotlin 编译器
+  与 coursier 改由 JDK 的 `java` 直接运行其 jar，流水线的 `/bin/sh` 辅助脚本合为一个由 `java` 运行的 Java 源文件，任何步骤都
+  不再需要 shell；CI 在 macOS 与 Windows 行打包 level 0 与 level 1。Windows 上 NDK 的 libc++ 模块源来自
+  `xim:android-ndk-libcxx-modules`。`latest` 指向 0.24.0（mcpp-community/mcpp-plugins#58）。
 - **mcpp.plugins 0.23.0。** 新增 `dist-deb` 与 `dist-rpm`：`mcpp pack --pkg-format deb|rpm` 把暂存树装到 `/opt/<name>`，并加上
   `/usr/bin` 启动器、桌面项与图标；由 `xim:nfpm` 写出，仅在打包时按需安装，主机无需 `dpkg-deb` 或 `rpmbuild`；未变的树重新打包得到
   相同字节。包的下限仍为 mcpp 2026.10.30.1；`latest` 指向 0.23.0（mcpp-community/mcpp-plugins#56）。
