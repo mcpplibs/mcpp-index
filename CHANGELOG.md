@@ -9,6 +9,9 @@
 
 ### Added
 
+- **mcpp.plugins 0.23.0。** 新增 `dist-deb` 与 `dist-rpm`：`mcpp pack --pkg-format deb|rpm` 把暂存树装到 `/opt/<name>`，并加上
+  `/usr/bin` 启动器、桌面项与图标；由 `xim:nfpm` 写出，仅在打包时按需安装，主机无需 `dpkg-deb` 或 `rpmbuild`；未变的树重新打包得到
+  相同字节。包的下限仍为 mcpp 2026.10.30.1；`latest` 指向 0.23.0（mcpp-community/mcpp-plugins#56）。
 - **openlifa.openas 0.2.1、openlifa.openmui 0.4.1。** openas 的包自 0.2.1 起以 `src/sdk.cppm` 为库的根，归档与源码给出同样的
   三个模块（`openas`、`openas.conformance`、`openas.sdk`）；规范仍是 0.2。openmui 0.4.1 是规范 0.4：人的直接操作与接管
   （S-14、S-15）、主题范围（ST-4）、动效槽与内置配方（M-7 至 M-10）、TypeScript 的规范声明、核心组件的视图 schema、
