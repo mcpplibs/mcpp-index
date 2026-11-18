@@ -9,6 +9,10 @@
 
 ### Added
 
+- **openlifa.openas 0.2.1、openlifa.openmui 0.4.1。** openas 的包自 0.2.1 起以 `src/sdk.cppm` 为库的根，归档与源码给出同样的
+  三个模块（`openas`、`openas.conformance`、`openas.sdk`）；规范仍是 0.2。openmui 0.4.1 是规范 0.4：人的直接操作与接管
+  （S-14、S-15）、主题范围（ST-4）、动效槽与内置配方（M-7 至 M-10）、TypeScript 的规范声明、核心组件的视图 schema、
+  声明式数据文件的命名与 `$format`；`openmui.h` 的 `OMUI_SPEC_VERSION_MINOR` 为 4。两个仓库的设计分支已合入各自的 main。
 - **openkal-uefi 0.11.2、openkal-musl 0.29.9。** openkal-uefi 以 `-fno-builtin` 编译：发布档下测量 UTF-16 名字长度的循环被替换为
   C 库的 `wcslen`（其 `wchar_t` 为 32 位），列目录给出 `f2.` 而不是 `f2.txt`，固件拒绝改名（mcpplibs/openkal-uefi#20）。openkal-musl
   的 `chdir` 释放此前工作目录的句柄（DOS 的实现有 32 个目录，围绕每次列举改变目录的 shell 此后无法 `opendir`）；卷之下以分隔符
