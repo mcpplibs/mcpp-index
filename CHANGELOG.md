@@ -9,9 +9,6 @@
 
 ### Added
 
-- **openkal-macos 0.23.5。** fork 的部件中系统库未导出的不再被调用：十三个私有名字（`_dyld_atfork_*`、`_malloc_fork_*`、
-  `_libc_fork_*`、`_pthread_atfork_*`、`_mach_fork_child` 等）改为弱导入，逐一判空后调用；libSystem 不含这些名字的 Darwin
-  （PureDarwin）上程序此前在装载时即失败（mcpplibs/openkal-macos#51）。
 - **openkal-platform 0.30.0。** 新增行 `i686-svr4-musl`：UNIX System V Release 4 及其后裔的 i386 内核接口上的程序，建立在
   openkal-svr4 0.1.0 之上，该实现由提供者陈述为该行的 `kernel-abi` 层，系统 `svr4` 由平台自己陈述；运行器为 xim 的 `ibcs-us`
   （Linux x86_64 上对该接口的模拟，按需启用），未在 System V 内核上运行，档位为 `preview`。版本组取 openkal-musl 0.29.10 与
