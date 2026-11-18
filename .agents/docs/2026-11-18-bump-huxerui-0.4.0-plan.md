@@ -70,6 +70,22 @@ Pinned `openxlings/xpkgindex-update@6c0bee2` from
 - `tests/autoupdate/ci.py audit --base HEAD` → 107 updateable GitHub-direct
   descriptors declared; all existing versions preserved.
 
+### Candidate matrix: legacy fully-qualified name
+
+The first PR CI run failed `scan` with `no candidate consumer:
+huxerui:huxerui.huxerui`. `direct_member` looked for the declared leaf
+`huxerui.huxerui`, but mcpp's consumer spelling is
+`[dependencies.huxerui] huxerui = "0.4.0"` — the fully-qualified leaf asks for
+`huxerui.huxerui.huxerui` and is refused (verified against the pinned engine).
+`tests/autoupdate/ci.py` now derives the short leaf from a legacy
+fully-qualified `name` for `direct_member`, `names_dependency`,
+`replace_candidate` and lock verification; the no-member fallback manifest uses
+the short leaf too. This is what lets the updater test huxerui at all — without
+it, every future version of this package would fail the candidate scan. The
+new unit test `test_legacy_fully_qualified_name_finds_the_short_consumer_key`
+covers detection and the prepared consumer; the matrix now selects
+`huxerui-module` for linux default/llvm, macOS and Windows.
+
 ## Test member
 
 `tests/examples/huxerui-module/mcpp.toml`: dependency pin `0.3.0` → `0.4.0`.
