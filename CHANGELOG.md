@@ -9,6 +9,11 @@
 
 ### Added
 
+- **openkal-image 0.7.0（openkal-ld、openkal-run、openkal-tools、openkal-bind）、openkal-musl 0.30.0、openkal-llvm-runtime 0.21.0：
+  openkal 0.26 一族的级联。** okrun 在程序被请求结束时写出映像中每个任务正在等待的 openkal 调用，再按请求结束程序
+  （mcpplibs/openkal-image#41）。openkal-musl 依赖 openkal ^0.26.0 与各实现、openkal-ld ^0.7.0，并删除启动的 512 项界限：
+  启动只受环境约束，环境因大小拒绝的启动报告 `E2BIG`（此前为 `ENOSPC`，mcpp-community/mcpp#958，mcpplibs/openkal-musl#101）。
+  openkal-llvm-runtime 依赖 openkal-musl ^0.30.0（mcpplibs/openkal-llvm-runtime#76）。
 - **mtest 0.10.0（mcpplibs.mtest、.manifest、.gtest、.capi）。** 程序超时时先记录它的进程（Linux 上为程序、它启动的进程与其进程组，
   含状态、等待的内核函数、处理器时间与结束请求对它的作用；其他系统为程序本身），再请求它结束，在宽限（`grace`，缺省 2 s）后
   记录仍在运行的进程并结束其单元；`timeout_record = false` 不记录（mcpp-community/mtest#25）。
