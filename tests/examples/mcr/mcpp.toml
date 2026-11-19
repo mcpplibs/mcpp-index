@@ -18,12 +18,5 @@ version = "0.1.0"
 mcr = "0.1.5"
 
 # mcr's own manifest (0.1.5 and 0.3.0) pins compat.openssl 3.5.1 beside
-# compat.curl, which links compat.openssl 3.5.9 since the index moved its
-# OpenSSL dependents to 3.5.9. One graph cannot hold both, so the root
-# chooses one for the whole graph — the remedy any consumer of mcr uses until
-# mcr's manifest moves. (Windows: mcr uses Schannel and no OpenSSL.)
-[target.'cfg(linux)'.dependencies.compat]
-openssl = { version = "3.5.9", override = true }
-
-[target.'cfg(macos)'.dependencies.compat]
-openssl = { version = "3.5.9", override = true }
+# compat.curl, which links 3.5.9; the workspace root's [workspace.dependencies]
+# chooses 3.5.9 for the graph (an override is read from the root only).
