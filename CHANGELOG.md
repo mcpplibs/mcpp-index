@@ -9,6 +9,9 @@
 
 ### Added
 
+- **mcpp.plugins 0.26.1。** `plugins-core` 与 `plugins-progress` 经 mcpplibs.os 0.4.5 访问系统，它接受 openkal 0.24 至 0.26，
+  openkal 为 0.26 的图（openkal-platform 0.31）因此可以包含插件；0.4.4 只接受 0.24 与 0.25，openkal-platform 0.31 的构建程序
+  因版本不可调和被拒。成员不变，包的引擎下界仍为 mcpp 2026.10.30.1。
 - **openkal-svr4 0.3.0。** 声明 `openkal.process` 与 `openkal.space`：程序可启动、等待、终止另一程序并为其提供流、空设备或
   通道（管道），并在其地址空间的副本中启动上下文（`kal_space_start`，基于 `fork`），C 库在其上组合出 `fork`；因此为该行构建的
   shell 或命令解释器可以启动外部命令。规范测试套件（openkal 0.26.0，特性 `env,time,fs,terminal,process,space`）在 System V 内核
