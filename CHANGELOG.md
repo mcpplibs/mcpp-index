@@ -9,6 +9,7 @@
 
 ### Added
 
+- **openkal-platform 0.31.0：openkal 0.26 一族。** 平台的各层、载体、工具与各行使用 openkal 0.26.0 及其各实现（openkal-linux 0.27.0、openkal-macos 0.24.0、openkal-windows 0.23.0、openkal-freebsd 0.2.0、openkal-uefi 0.12.0、openkal-dos 与 openkal-dos-tools 0.2.0、openkal-svr4 0.3.0）、openkal-musl 0.30.0、openkal-llvm-runtime 0.21.0 与 openkal-image 0.7.0。System V 一行可以启动其他程序：openkal-svr4 0.3.0 声明 `openkal.process` 与 `openkal.space`，运行器为 ibcs-us 4.3-2。构建程序链接 mcpp.plugins 0.26.1（mcpplibs.os 0.4.5 接受 openkal 0.26）；平台的引擎下界仍为 mcpp 2026.11.17.1。
 - **mcpp.platforms 0.2.1。** `aarch64-netbsd` 与 `aarch64-openbsd` 两行获得运行器（此前只构建）：dirun 0.8.0 在
   qemu-system-aarch64 的 `virt` 机器中、以 xim `ovmf` 的 AArch64 EDK II 固件启动 xim 的 `aarch64-netbsd-disk-image@10.2`
   （NetBSD 10.2 的 arm64 live 映像，已首次启动一次）与 `aarch64-openbsd-disk-image@8.0`（由发行版 arm64 介质自动安装，
