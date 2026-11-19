@@ -9,6 +9,11 @@
 
 ### Added
 
+- **openkal-svr4 0.3.0。** 声明 `openkal.process` 与 `openkal.space`：程序可启动、等待、终止另一程序并为其提供流、空设备或
+  通道（管道），并在其地址空间的副本中启动上下文（`kal_space_start`，基于 `fork`），C 库在其上组合出 `fork`；因此为该行构建的
+  shell 或命令解释器可以启动外部命令。规范测试套件（openkal 0.26.0，特性 `env,time,fs,terminal,process,space`）在 System V 内核
+  （AT&T UNIX System V/386 Release 4.0 Version 3.0，QEMU，xim 的 `svr4-disk-image`，仅技术验证）上 168 项成立、0 项不成立，
+  在 ibcs-us 4.3-2 的三种接口下各 157 项成立、0 项不成立；两者都由该包的 CI 运行。
 - **openkal-image 0.7.0（openkal-ld、openkal-run、openkal-tools、openkal-bind）、openkal-musl 0.30.0、openkal-llvm-runtime 0.21.0：
   openkal 0.26 一族的级联。** okrun 在程序被请求结束时写出映像中每个任务正在等待的 openkal 调用，再按请求结束程序
   （mcpplibs/openkal-image#41）。openkal-musl 依赖 openkal ^0.26.0 与各实现、openkal-ld ^0.7.0，并删除启动的 512 项界限：
