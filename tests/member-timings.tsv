@@ -55,3 +55,8 @@ windows	opencv-webp	1104
 linux	godot-sdk	300
 macos	godot-sdk	300
 windows	godot-sdk	700
+
+# Abseil wrapper: the member, then its installed archive, default template and notices.
+linux	abseil-basics	420
+macos	abseil-basics	300
+windows	abseil-basics	420

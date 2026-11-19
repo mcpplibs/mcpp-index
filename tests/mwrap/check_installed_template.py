@@ -29,6 +29,8 @@ STATIC_NOTICES = {
     "mcpplibs.mwrap.libjpeg_turbo": ("libjpeg_turbo.cppm", "upstream/libjpeg-turbo/README.ijg", b"Independent JPEG Group", b"libjpeg-turbo Project"),
     "mcpplibs.mwrap.basis_universal": ("basis_universal.cppm", "upstream/basis_universal/NOTICE", b"Binomial LLC", b"Basis Universal"),
     "mcpplibs.mwrap.libc": ("libc.cppm", None, b"", b"ISO/IEC 9899:2018"),
+    "mcpplibs.mwrap.abseil": ("abseil.cppm", "upstream/abseil-cpp/LICENSE", b"Apache License", b"The Abseil Authors"),
+    "mcpplibs.mwrap.openssl": ("openssl.cppm", "upstream/openssl/LICENSE.txt", b"Apache License", b"The OpenSSL Project Authors"),
 }
 
 
@@ -41,6 +43,7 @@ def main():
     parser.add_argument("--published-index", action="store_true", help="refresh the real public index instead of staging this checkout")
     parser.add_argument("--home", type=Path, help="reuse a dedicated test home across independent installed consumers")
     parser.add_argument("--run-arg", action="append", default=[])
+    parser.add_argument("--template", help="a named template of the package; omit for its default")
     parser.add_argument("--legacy-exact-key", action="store_true",
                         help="allow only mcpp's nonnumeric exact-version diagnostic; fail other build warnings")
     args = parser.parse_args()
@@ -64,7 +67,8 @@ def main():
         if args.published_index:
             commands.append([args.mcpp, "index", "update"])
         commands += [[args.mcpp, "new", "--list-templates", args.package],
-                     [args.mcpp, "new", "installed-quickstart", "--template", args.package]]
+                     [args.mcpp, "new", "installed-quickstart", "--template",
+                      args.package + (":" + args.template if args.template else "")]]
         for command in commands:
             print("+", " ".join(command), flush=True)
             subprocess.run(command, cwd=temporary, env=env, check=True)

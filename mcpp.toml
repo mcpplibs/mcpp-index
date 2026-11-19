@@ -45,6 +45,7 @@ members = [
     "tests/mwrap/libjpeg-turbo-decode",
     "tests/mwrap/libarchive-bundle",
     "tests/mwrap/libc-stdio",
+    "tests/mwrap/abseil-basics",
     "tests/mwrap/miniaudio-engine",
     "tests/mwrap/freetype-render",
     "tests/mwrap/harfbuzz-shape",

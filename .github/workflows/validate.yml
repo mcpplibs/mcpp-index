@@ -1779,6 +1779,11 @@ jobs:
         shell: bash
         run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.recastnavigation@1.6.0 --deploy
 
+      - name: Installed abseil wrapper archive, actual default basics template and its relocated notices
+        if: contains(format(' {0} ', env.MEMBERS), ' abseil-basics ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.abseil@20250512.1 --deploy
+
       - name: Installed ACL wrapper archive, actual default clip template and its relocated notices
         if: contains(format(' {0} ', env.MEMBERS), ' acl-clip ') && matrix.toolchain == 'default'
         shell: bash
