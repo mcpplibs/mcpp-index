@@ -9,6 +9,9 @@
 
 ### Added
 
+- **mcpplibs.os 0.4.5。** 启动因参数与环境的大小被拒绝时报告 `kal_err_no_space`（消息 `spawn-too-large`），上下文写明给出的参数与变量的个数和字节数；
+  能否声明一个单元是属性 `units_observable()`；`env::kernel_layer()` 回答程序之下 openkal 层的版本；范围接纳 openkal 0.26 一族
+  （openkal-linux 0.27、openkal-macos 0.24、openkal-windows 0.23、openkal-emscripten 0.15）（mcpplibs/os#25）。
 - **mcpp.platforms 0.2.0。** 新增 GNU/Hurd（`x86_64-hurd`，Debian 基础库，版本与其运行的映像一致）与 Haiku（`x86_64-haiku`，hrev60431）两行，
   均可 `import std`（GCC 15 的 std 模块），并在系统映像中经 dirun 运行；两行在 Linux 主机上构建，Hurd 亦可在 macOS 上构建；
   Windows 主机不可（mcpp-community/mcpp#965），Haiku 在不区分大小写的文件系统上不可（mcpp-community/mcpp-platforms#5）。
