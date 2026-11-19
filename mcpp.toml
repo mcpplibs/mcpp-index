@@ -46,6 +46,8 @@ members = [
     "tests/mwrap/libarchive-bundle",
     "tests/mwrap/libc-stdio",
     "tests/mwrap/abseil-basics",
+    "tests/mwrap/protobuf-message",
+    "tests/mwrap/protobuf-codegen",
     "tests/mwrap/miniaudio-engine",
     "tests/mwrap/freetype-render",
     "tests/mwrap/harfbuzz-shape",

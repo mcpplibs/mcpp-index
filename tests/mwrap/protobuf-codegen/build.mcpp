@@ -1,0 +1,12 @@
+// protoc over proto/ through the protogen rule, which the codegen feature
+// brings. Not on Windows, where compat.protobuf has no protoc: the import is
+// a compile-time dependency and cannot be conditional, so the guard is on the
+// call (the shape of tests/examples/grpc-codegen).
+import std;
+import mcpp;
+import protogen;
+
+int main() {
+    if (std::string_view(mcpp::target_os()) == "windows") return 0;
+    return protogen::generate_all() ? 0 : 1;
+}

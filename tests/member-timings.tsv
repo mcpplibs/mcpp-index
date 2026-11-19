@@ -58,5 +58,11 @@ windows	godot-sdk	700
 
 # Abseil wrapper: the member, then its installed archive, default template and notices.
 linux	abseil-basics	420
+linux	protobuf-message	900
+linux	protobuf-codegen	1200
 macos	abseil-basics	300
+macos	protobuf-message	600
+macos	protobuf-codegen	800
 windows	abseil-basics	420
+windows	protobuf-message	900
+windows	protobuf-codegen	300
