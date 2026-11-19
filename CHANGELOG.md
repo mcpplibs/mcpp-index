@@ -9,6 +9,15 @@
 
 ### Added
 
+- **openkal 0.26 一族，一次变更：openkal 0.26.0、openkal-kit 0.3.2、openkal-linux 0.27.0、openkal-macos 0.24.0、
+  openkal-windows 0.23.0、openkal-freebsd 0.2.0、openkal-uefi 0.12.0、openkal-dos 与 openkal-dos-tools 0.2.0、
+  openkal-svr4 0.2.0、openkal-posix 0.2.0、openkal-emscripten 0.15.0、openkal-opensbi 0.10.0。** 规范条款 7.6：
+  启动的参数向量与环境只受环境自身的界限约束，环境因大小拒绝的启动报告 `kal_err_no_space`（条款 11 第 64 条）；
+  各实现删除自己的条数界限（此前 512 项、报告内存不足），内核的 `E2BIG` 与 Windows 的长度拒绝转换为该值。
+  条款 7.18：单元引用写明系统的启动与进程空间，较早启动的引用与已由另一出生的程序持有的标识回答 `empty`，
+  另一空间与未保留原生标识的单元由 `kal_process_job_open` 以 `kal_err_not_supported` 拒绝，
+  `KAL_PROCESS_PROP_JOB_OBSERVE` 只在能建立引用处声明（第 65 条）。一致性套件 0.11.0 增加 2,000 个参数、
+  2,000 个变量与 1 MiB 参数的启动观察。测试工程的固定版本随之更新（mcpplibs/openkal#69 等）。
 - **mcpplibs.os 0.4.5。** 启动因参数与环境的大小被拒绝时报告 `kal_err_no_space`（消息 `spawn-too-large`），上下文写明给出的参数与变量的个数和字节数；
   能否声明一个单元是属性 `units_observable()`；`env::kernel_layer()` 回答程序之下 openkal 层的版本；范围接纳 openkal 0.26 一族
   （openkal-linux 0.27、openkal-macos 0.24、openkal-windows 0.23、openkal-emscripten 0.15）（mcpplibs/os#25）。
