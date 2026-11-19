@@ -15,5 +15,9 @@ version = "0.1.0"
 # The package is the mcpp-native library: its own tarball carries mcpp.toml,
 # which declares the public modules below. Import the umbrella root and each
 # wrapper so a regression in either surface fails this member.
+#
+# 0.1.2 includes <new> before <memory>, which libc++ needs for
+# std::allocator_traits::construct; 0.1.0 and 0.1.1 fail this member on a
+# libc++ target.
 [dependencies.YandereChan2]
-binary_tree = "0.1.0"
+binary_tree = "0.1.2"
