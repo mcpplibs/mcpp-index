@@ -26,18 +26,20 @@ independent of the package namespace and did not change in 0.1.3.
 
 - 0.1.0 failed the Linux LLVM run (clang + libc++) with
   `no matching 'operator new' function for non-allocating placement new
-  expression; include <new>`. `std::allocator_traits::construct` uses
-  placement new; MSVC STL and libstdc++ pull `<new>` in transitively, libc++
-  does not.
-- 0.1.1 added `<new>` after `<memory>`, which is too late: libc++ parses
-  `allocator_traits`/`construct_at` while reading `<memory>`.
-- 0.1.2 includes `<new>` before `<memory>` in `binary_tree.h`,
-  `parent_aware_binary_tree.h`, `intrusive_binary_tree.h` and
-  `cookie_allocator.h`, and in the global module fragments of the three module
-  interfaces. It fixed the libc++ issue but still used the old namespace.
-- 0.1.3 is the same tree with `[package] namespace = "yandere-chan"`, so the
+  expression; include <new>`. `std::allocator_traits::construct` instantiates
+  libc++'s `__construct_at`, whose default argument uses placement new.
+- The declaration has to be visible in the **consumer TU**, not only in the
+  module: the module's global-module-fragment `<new>` is not reachable from an
+  importer, so `import binary_tree;` alone still failed on libc++. 0.1.1 added
+  `<new>` after `<memory>` and 0.1.2 moved it before `<memory>` in the four
+  owning headers and the three module GMFs. That keeps the module interfaces
+  well-formed and fixes header-mode consumers, but a libc++ module consumer
+  still has to `#include <new>` before its imports. The test member does that;
+  on MSVC STL and libstdc++ it is a no-op.
+- 0.1.3 is the 0.1.2 tree with `[package] namespace = "yandere-chan"`, so the
   index identity is all-lowercase and the published manifest agrees with the
-  descriptor. 0.1.0-0.1.2 are not listed.
+  descriptor. 0.1.0-0.1.2 are not listed (old namespace; 0.1.0/0.1.1 also lack
+  the `<new>` change).
 
 ## Download and mirror
 
@@ -56,12 +58,13 @@ independent of the package namespace and did not change in 0.1.3.
 
 ## Test member
 
-- `tests/examples/binary_tree-module/`: imports the lib root `binary_tree`
-  and each wrapper module (`Yc.intrusive_binary_tree`, `Yc.binary_tree`,
-  `Yc.parent_aware_binary_tree`) with no `#include` and no include path, and
-  asserts insert / in-order `for_each` / copy / `parent_of_cnroot` /
-  intrusive-node behavior. Every check increments a failure counter, and the
-  process exits non-zero if any check fails.
+- `tests/examples/binary_tree-module/`: includes `<new>` (the libc++
+  consumer requirement described above), then imports the lib root
+  `binary_tree` and each wrapper module (`Yc.intrusive_binary_tree`,
+  `Yc.binary_tree`, `Yc.parent_aware_binary_tree`) with no library `#include`
+  and no include path, and asserts insert / in-order `for_each` / copy /
+  `parent_of_cnroot` / intrusive-node behavior. Every check increments a
+  failure counter, and the process exits non-zero if any check fails.
 - The member carries its own
   `[indices] yandere-chan = { path = "../../.." }` so the dependency resolves
   to the checked-in descriptor rather than the published remote index; the key

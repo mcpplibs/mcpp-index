@@ -10,12 +10,13 @@
 -- wrapper-directory pointer, not an inline Form B descriptor.
 --
 -- 0.1.3 is `git archive` of the tag, uploaded as a release asset. It renames
--- the package namespace to `yandere-chan` (lowercase) and contains the 0.1.2
--- libc++ fix; the module names are unchanged.
+-- the package namespace to `yandere-chan` (lowercase); the module names are
+-- unchanged.
 --
--- 0.1.0-0.1.2 are intentionally not listed: 0.1.0 and 0.1.1 fail a libc++
--- module consumer (placement new not declared when allocator_traits is
--- parsed), and 0.1.2 still carries the old namespace `YandereChan2`.
+-- 0.1.0-0.1.2 are intentionally not listed: all three carry the old
+-- `YandereChan2` namespace. 0.1.0 also predates the `<new>` includes that keep
+-- the module interfaces well-formed under libc++; a libc++ module consumer
+-- still needs `#include <new>` before importing (the test member does that).
 --
 -- Upstream tags are bare versions (`0.1.3`), so the xpm key carries the tag
 -- verbatim and autoupdate's tag pattern is `${version}`.
