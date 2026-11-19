@@ -9,6 +9,7 @@
 
 ### Added
 
+- **huxerui.huxerui 0.5.0。** 上游 0.5.0（Form A，`HuxerUI/HuxerUI` `v0.5.0`），Linux 依赖闭包仍为 `gtk4` / `libepoxy` / `glib` / `libsoup`；`tests/examples/huxerui-module` 升至 `0.5.0`，因 `gcc@16.1.0` 编译 `src/io/file_picker.cpp` 触发 ICE，Linux 测试暂时固定使用 `llvm@23.1.3`。
 - **openkal-svr4 0.1.0（新包）、openkal-musl 0.29.10、openkal-llvm-runtime 0.20.4。** openkal-svr4 是 openkal 在 UNIX System V
   Release 4 及其后裔（UnixWare、Solaris x86、OpenServer）的 i386 内核接口上的实现：七个接口（`abort`、`stream`、`memory`、`env`、
   `time`、`fs`、`terminal`），程序是经调用门进入内核的静态 ELF32，不链接也不读取系统的任何文件；仅在接口的模拟（xim 的

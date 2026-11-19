@@ -92,6 +92,10 @@ package = {
                 "xim:glib@2.88.3",
                 "xim:libsoup@3.6.6",
             },
+            ["0.5.0"] = {
+                url    = "https://github.com/HuxerUI/HuxerUI/archive/refs/tags/v0.5.0.tar.gz",
+                sha256 = "12d49d8f2f6d8b07322f19830598391a964c7d6b5d624c067e696e8d98178523",
+            },
             ["0.3.0"] = {
                 url    = {
                     GLOBAL = "https://github.com/HuxerUI/HuxerUI/archive/refs/tags/v0.3.0.tar.gz",
@@ -101,6 +105,10 @@ package = {
             },
         },
         macosx = {
+            ["0.5.0"] = {
+                url    = "https://github.com/HuxerUI/HuxerUI/archive/refs/tags/v0.5.0.tar.gz",
+                sha256 = "12d49d8f2f6d8b07322f19830598391a964c7d6b5d624c067e696e8d98178523",
+            },
             ["0.3.0"] = {
                 url    = {
                     GLOBAL = "https://github.com/HuxerUI/HuxerUI/archive/refs/tags/v0.3.0.tar.gz",
@@ -140,6 +148,10 @@ package = {
             -- for a tool almost none of them would ever run. Reported against
             -- xim-pkgindex separately; this descriptor should not have been
             -- asking for it either way.
+            ["0.5.0"] = {
+                url    = "https://github.com/HuxerUI/HuxerUI/archive/refs/tags/v0.5.0.tar.gz",
+                sha256 = "12d49d8f2f6d8b07322f19830598391a964c7d6b5d624c067e696e8d98178523",
+            },
             ["0.3.0"] = {
                 url    = {
                     GLOBAL = "https://github.com/HuxerUI/HuxerUI/archive/refs/tags/v0.3.0.tar.gz",
