@@ -1107,8 +1107,16 @@ jobs:
           # macos stays at 2. It has never been cancelled, so raising it would
           # be a prediction rather than a measurement; the formula's 4 is there
           # the day it is.
+          #
+          # ── 2026-11-20: macos 2 -> 3 ────────────────────────────────────
+          #
+          # Observed: on mcpp-index#845 `workspace (macos default 1/2)` was
+          # cancelled at the 90-minute cap. It carried grpc-cpu (1783s, untimed
+          # for macos and so priced at the default) and grpc-protobuf-stack,
+          # whose graph builds gRPC again (cancelled at unit 1800 of 1989).
+          # Both now have macos rows; three shards put them apart.
           ln=$(shards_for linux 6)
-          mn=$(shards_for macos 2)
+          mn=$(shards_for macos 3)
           wn=$(shards_for windows 5)
           # THE TWO LINUX LEGS ARE NOT THE SAME COST, AND THE PLANNER CANNOT
           # SEE THAT. `plan_shards.lua` takes a PLATFORM and reads one timing

@@ -20,7 +20,8 @@ linux	eui-neo-sdl2	591
 linux	godot-cpp-module-v10	568
 macos	grpc-codegen	1156
 macos	grpc-module	719
-macos	grpc-protobuf-stack	900
+macos	grpc-cpu	1800
+macos	grpc-protobuf-stack	1800
 macos	opencv-module-dnn	325
 macos	protobuf-protoc	314
 macos	godot-cpp-module	276
