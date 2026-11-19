@@ -9,6 +9,13 @@
 
 ### Added
 
+- **openkal-macos 0.24.1。** 由程序首个上下文之外的上下文处理的结束请求，仍以请求结束程序：`kal_process_end_as_requested`
+  向程序重发信号后，在以 128 加信号号退出之前等待至多 0.1 s 的投递，与 openkal-linux 相同。内核把发给程序的信号交给第一个
+  未屏蔽它的上下文，而非调用者；0.24.0 从另一上下文调用时退出先到，起动者看到 143 而非 SIGTERM（okrun 0.7.0 的 runner
+  任务即如此）。该包测试由第二个上下文处理请求的二十个副本：0.24.0 的实现上 9 个以 SIGTERM 结束，0.24.1 上 20 个
+  （mcpplibs/openkal-macos#52、#54）。该条目在 mcpp 2026.11.19.1 发布后列出：此后对版本组成员的范围请求取组的版本
+  （mcpp-community/mcpp#956），openkal-platform 0.31.0 的 macOS 行仍取 0.24.0；mcpp 2026.11.18.1 下 mcpplibs.os 的范围
+  取最新版本，平台的版本组拒绝构建，故首次列出后撤下（#847）。
 - **mcpplibs.mwrap.openssl 3.5.9、mcpplibs.mwrap.abseil 20250512.1、mcpplibs.mwrap.protobuf 35.1、mcpplibs.protogen 35.1（新包），
   mcpplibs.mwrap.grpc 1.83.0.1。** 三个新的 mwrap 封装，都是 compat 之上的薄封装，版本与上游一致：
   openssl-m（OpenSSL 3.5 LTS：头文件的全部声明以 `using` 导出，334 个 `static ossl_inline` 函数重新声明，11632 个常量与 510 个
