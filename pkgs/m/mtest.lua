@@ -49,6 +49,9 @@
 -- 0.9.0 reads a selection's `!<id>` (the case and the cases it declares are left out)
 -- and `?<id>` (selected where declared, not missing otherwise), so a runner divides a
 -- long case by the cases it declares (SPEC-017 P4.3).
+--
+-- 0.10.0 records a timed-out program's processes, asks it to end, and ends what still
+-- runs after its grace (`grace`, `timeout_record`).
 package = {
     spec        = "1",
     namespace   = "mcpplibs",
@@ -67,6 +70,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.10.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.10.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mtest/releases/download/v0.10.0/mtest-v0.10.0.tar.gz",
+                },
+                sha256 = "70c81ff6c6ef6a4b29918e0fa8105e87a5f5b373db584d37cb217772a733f818",
+            },
             ["0.9.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.9.0.tar.gz",
@@ -195,6 +205,13 @@ package = {
             },
         },
         macosx = {
+            ["0.10.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.10.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mtest/releases/download/v0.10.0/mtest-v0.10.0.tar.gz",
+                },
+                sha256 = "70c81ff6c6ef6a4b29918e0fa8105e87a5f5b373db584d37cb217772a733f818",
+            },
             ["0.9.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.9.0.tar.gz",
@@ -323,6 +340,13 @@ package = {
             },
         },
         windows = {
+            ["0.10.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.10.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mtest/releases/download/v0.10.0/mtest-v0.10.0.tar.gz",
+                },
+                sha256 = "70c81ff6c6ef6a4b29918e0fa8105e87a5f5b373db584d37cb217772a733f818",
+            },
             ["0.9.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.9.0.tar.gz",

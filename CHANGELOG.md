@@ -9,6 +9,9 @@
 
 ### Added
 
+- **mtest 0.10.0（mcpplibs.mtest、.manifest、.gtest、.capi）。** 程序超时时先记录它的进程（Linux 上为程序、它启动的进程与其进程组，
+  含状态、等待的内核函数、处理器时间与结束请求对它的作用；其他系统为程序本身），再请求它结束，在宽限（`grace`，缺省 2 s）后
+  记录仍在运行的进程并结束其单元；`timeout_record = false` 不记录（mcpp-community/mtest#25）。
 - **openkal 0.26 一族，一次变更：openkal 0.26.0、openkal-kit 0.3.2、openkal-linux 0.27.0、openkal-macos 0.24.0、
   openkal-windows 0.23.0、openkal-freebsd 0.2.0、openkal-uefi 0.12.0、openkal-dos 与 openkal-dos-tools 0.2.0、
   openkal-svr4 0.2.0、openkal-posix 0.2.0、openkal-emscripten 0.15.0、openkal-opensbi 0.10.0。** 规范条款 7.6：
