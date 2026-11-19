@@ -21,6 +21,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.23.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-windows/archive/refs/tags/0.23.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-windows/releases/download/0.23.0/openkal-windows-0.23.0.tar.gz",
+                },
+                sha256 = "82880c2f3c0770fb33feb74031565688ad35925c05a2cad14d84899768cd7bb6",
+            },
             ["0.22.2"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-windows/archive/refs/tags/0.22.2.tar.gz",
@@ -289,6 +296,13 @@ package = {
             },
         },
         macosx = {
+            ["0.23.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-windows/archive/refs/tags/0.23.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-windows/releases/download/0.23.0/openkal-windows-0.23.0.tar.gz",
+                },
+                sha256 = "82880c2f3c0770fb33feb74031565688ad35925c05a2cad14d84899768cd7bb6",
+            },
             ["0.22.2"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-windows/archive/refs/tags/0.22.2.tar.gz",
@@ -557,6 +571,13 @@ package = {
             },
         },
         windows = {
+            ["0.23.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-windows/archive/refs/tags/0.23.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-windows/releases/download/0.23.0/openkal-windows-0.23.0.tar.gz",
+                },
+                sha256 = "82880c2f3c0770fb33feb74031565688ad35925c05a2cad14d84899768cd7bb6",
+            },
             ["0.22.2"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-windows/archive/refs/tags/0.22.2.tar.gz",

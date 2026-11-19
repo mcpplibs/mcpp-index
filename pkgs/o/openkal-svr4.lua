@@ -15,6 +15,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.2.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-svr4/archive/refs/tags/0.2.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-svr4/releases/download/0.2.0/openkal-svr4-0.2.0.tar.gz",
+                },
+                sha256 = "1e54b5a8e8fa1dddf078258aa8bfd94b835abb5c6f97065a29ba6a4236165435",
+            },
             ["0.1.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-svr4/archive/refs/tags/0.1.0.tar.gz",
@@ -24,6 +31,13 @@ package = {
             },
         },
         macosx = {
+            ["0.2.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-svr4/archive/refs/tags/0.2.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-svr4/releases/download/0.2.0/openkal-svr4-0.2.0.tar.gz",
+                },
+                sha256 = "1e54b5a8e8fa1dddf078258aa8bfd94b835abb5c6f97065a29ba6a4236165435",
+            },
             ["0.1.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-svr4/archive/refs/tags/0.1.0.tar.gz",
@@ -33,6 +47,13 @@ package = {
             },
         },
         windows = {
+            ["0.2.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-svr4/archive/refs/tags/0.2.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-svr4/releases/download/0.2.0/openkal-svr4-0.2.0.tar.gz",
+                },
+                sha256 = "1e54b5a8e8fa1dddf078258aa8bfd94b835abb5c6f97065a29ba6a4236165435",
+            },
             ["0.1.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-svr4/archive/refs/tags/0.1.0.tar.gz",
