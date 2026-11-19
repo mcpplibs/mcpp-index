@@ -1,8 +1,7 @@
 # 新增 mcpplibs.mwrap.openssl / abseil / protobuf —— 设计方案
 
-状态：**第 4 版，待 review**（v4：命名改为 abseil-m、GitCode 上传策略、codegen 规则架构分析 §6.5）。第 1 版的决策已确认（§3）；第 2 版加入平台分析；本版吸收三路独立自审
-（规范符合性 / 技术与平台可行性 / 发布流程与风险）的结论，修订记录见 §11。
-review 通过前不创建仓库、不推送、不发布。
+状态：**已实施（v5）**。v4 经 review 确认（abseil-m 命名、GitCode 上传策略、codegen 规则架构 §6.5）；实施结果与偏差见 §12。
+修订记录：v2 加入平台分析；v3 吸收三路自审（§11）；v4 命名与上传策略；v5 实施结果。
 
 规范：[mwrap](../../docs/zh/mwrap.md) · [README 布局](../../docs/zh/mwrap-readme.md) · [许可](../../docs/zh/mwrap-licensing.md)。
 参照：libpng-m（compat 之上的薄封装、NOTICE 写法）、jolt-m / acl-m（导出审计、arm64 与 wasm 行）、miniaudio-m（compat 之上的 wasm 行）、
@@ -338,3 +337,40 @@ IDX 合入后的缺陷按规范追加修订尾号。
 | 流程 | 依赖方先切换会在同图中出现两份 OpenSSL | 与 grpc 1.83.0.1 同在 IDX；旧清单的风险写明 |
 | 流程 | 非默认模板未被安装检查覆盖；成员缺耗时行；index 无 wasm 作业 | §7；wasm 留在封装 CI |
 | 流程 | 没有回滚路径；CN 资产不可覆盖 | §8 先冷安装再镜像；请求预先授权 |
+
+## 12. 实施结果（v5，2026-11-20）
+
+| 仓库 | 合入 | 发布 | sha256（GitHub = GitCode） |
+|---|---|---|---|
+| abseil-m | #1 squash b206127 | mwrap-20250512.1 | 14cdfc1a08576e20f57b5d81a33333c4d6007d5efd141e5d3b5e9333c7ce198e |
+| protobuf-m | #1 squash d5ffe2d | mwrap-35.1 | 26b0305e7d602e049391aa579e7e3cef17ebedff27c4ff416054c03df9c687ed |
+| openssl-m | #1 squash 836b473 | mwrap-3.5.9 | df3d0458c18538b9dc680221e2e78e9b5eacc632d37c33efbc744ac64def5e8f |
+| grpc-m | #9 squash 48b91a5 | mwrap-1.83.0.1 | 5f71291472460f980f64e0d8d76ac8bccd5f76fa4ed3fd35904b22f8db9d17f9 |
+
+每个仓库一个 PR，CI 全绿后 squash 合入，main 的 CI 通过后打 tag；资产下载两次与 `.sha256` 一致，本机以真实归档跑
+`check_installed_template.py`（每个模板；默认模板带 `--deploy`）后才上传 GitCode，上传后再次下载核对字节。IDX 为 mcpp-index#845。
+
+与方案的偏差与实测结论：
+
+1. **openssl-m 的结构（review 后改为方案 C）。** 首版提交生成物（约 15.7 万行，98% 由 tools/surface.py 生成）。改为只提交紧凑记录
+   `src/surface.tsv`（25.7k 行：一行一项，带平台条件与宏的分类原因），由包的 `build.mcpp` 在构建时生成 `.crypto`、`.ssl`、`.macros`
+   三个模块单元与常量测试的比较（对包自身与每个消费者都运行）；生成结果与原生成物逐字节相同。`check_exports.py` 校验记录，
+   并在 Linux LLVM 行由 clang 重新推导、要求文本一致。规范已加入该做法（docs/mwrap.md）。
+2. **平台。** openssl-m：Linux aarch64 只用 LLVM（mcpp 在该平台的 gcc@16.1.0 是 musl 工具链，compat.openssl 在安装时按 glibc 构建）；
+   Windows 需在 OpenSSL 头文件前引入 `<windows.h>`（async API），`OSSL_BAD_ASYNC_FD`、`CRYPTO_ONCE_STATIC_INIT`、`OPENSSL_fork_*`
+   按平台条件导出。grpc-m 1.83.0.1 在 Windows 上可构建链接，但运行时启动即中止（exit 133），因此不声明 Windows。
+   protobuf-m 的 `codegen` 仅 Linux/macOS：compat.protobuf 35.1 在 Windows 构建 protoc 失败（"multiple rules generate bin/protobuf.lib"）。
+3. **mcr 与 compat.openssl。** yizhinailong.mcr 0.1.5 固定 3.5.1，与改用 3.5.9 的依赖同图时版本不可调和；成员或 target 表中的 override
+   在工作区内不生效，改为根 mcpp.toml 的 `[workspace.dependencies] compat.openssl = { version = "3.5.9", override = true }`。
+4. **protogen 的依赖名。** 规则中以限定名 `compat.protobuf` 取 dep_dir：grpcgen 与 protogen 同在时短名有歧义。
+5. **GCC 16 的模块合并。** 同一翻译单元 import protobuf 与 Abseil 时须 import Abseil 的分组模块（根模块带入 `abseil.log`，
+   GCC 随后报 "failed to read compiled module cluster … Bad file data"），且不在命名空间作用域对 protobuf 调用取 decltype
+   （GCC 报 descriptor.h 成员 "conflicting type for imported declaration"）。按此写法，`grpc-protobuf-stack` 在一个翻译单元中
+   import 四个封装，GCC 与 Clang 均通过；Clang 两种写法都接受。这两条已写在 protobuf-m 的 abseil_identity_test 与成员注释中。
+6. **成员。** 实际为 `abseil-basics`、`protobuf-message`、`protobuf-codegen`、`openssl-tls`、`grpc-protobuf-stack`（方案中的
+   `openssl-digest` 并入 `openssl-tls`；摘要由 openssl 的默认模板在 installed 检查中覆盖）；`grpc-cpu` 与 installed gRPC 模板改为 1.83.0.1。
+7. **候选索引固定。** 四个封装仓库的 CI 固定 IDX 候选 commit（compat.openssl 3.5.9 尚未发布）；下次版本升级时改回已发布索引。
+8. **本机环境（不影响 CI）。** 新建 home 时 compat.openssl 的安装 hook 经 xlings shim 调用 `gcc`，本机全局 subos 未装 gcc 时失败；
+   IDX 的测试 home 与 check_installed_template 的新 home 不受影响，openssl-m 的模板脚本在本机受影响（CI 通过）。
+
+待 IDX 合入后：`check_installed_template.py --published-index` 对四个包冷安装验收，含 `MCPP_INDEX_MIRROR=CN`。

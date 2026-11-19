@@ -20,6 +20,7 @@ linux	eui-neo-sdl2	591
 linux	godot-cpp-module-v10	568
 macos	grpc-codegen	1156
 macos	grpc-module	719
+macos	grpc-protobuf-stack	900
 macos	opencv-module-dnn	325
 macos	protobuf-protoc	314
 macos	godot-cpp-module	276
@@ -41,6 +42,7 @@ windows	protobuf-upb	151
 linux	ffmpeg-cpu	208
 linux	godot-math	758
 linux	grpc-cpu	1416
+linux	grpc-protobuf-stack	1800
 linux	grpc-tools	480
 linux	imgui-headless	168
 linux	llamacpp-cpu	264

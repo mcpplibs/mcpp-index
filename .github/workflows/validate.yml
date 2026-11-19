@@ -1281,7 +1281,7 @@ jobs:
           tar -xzf "$archive"
           echo "MCPP=$PWD/mcpp-${MCPP_VERSION}-${{ matrix.suffix }}/bin/mcpp" >> "$GITHUB_ENV"
       - name: Immutable archive, default scaffold, strict build and loopback RPC
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.grpc@1.83.0 --toolchain "${{ matrix.toolchain }}"
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.grpc@1.83.0.1 --toolchain "${{ matrix.toolchain }}"
 
   workspace:
     # The shard suffix appears only when the platform is actually split, and
