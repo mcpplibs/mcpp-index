@@ -1,12 +1,12 @@
-# binary_tree module-package test: consumes YandereChan2.binary_tree by import
+# binary_tree module-package test: consumes yandere-chan.binary_tree by import
 # only and asserts behavior under `mcpp test`.
 #
 # This member is the only place the descriptor's Form A lookup is exercised:
 # `[indices]` below overrides the workspace-root `compat` redirect, so
-# YandereChan2 resolves to this checkout (pkgs/y/YandereChan2.binary_tree.lua)
+# yandere-chan resolves to this checkout (pkgs/y/yandere-chan.binary_tree.lua)
 # rather than the published remote index. The key is the dependency NAMESPACE.
 [indices]
-YandereChan2 = { path = "../../.." }
+yandere-chan = { path = "../../.." }
 
 [package]
 name    = "binary_tree-module-tests"
@@ -16,8 +16,8 @@ version = "0.1.0"
 # which declares the public modules below. Import the umbrella root and each
 # wrapper so a regression in either surface fails this member.
 #
-# 0.1.2 includes <new> before <memory>, which libc++ needs for
-# std::allocator_traits::construct; 0.1.0 and 0.1.1 fail this member on a
-# libc++ target.
-[dependencies.YandereChan2]
-binary_tree = "0.1.2"
+# 0.1.3 carries the libc++ <new> fix and the lowercase namespace
+# yandere-chan; 0.1.0/0.1.1 fail a libc++ consumer and 0.1.2 has the old
+# namespace.
+[dependencies.yandere-chan]
+binary_tree = "0.1.3"
