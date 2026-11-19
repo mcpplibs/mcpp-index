@@ -9,6 +9,11 @@
 
 ### Added
 
+- **openkal-image 0.7.1（openkal-ld、openkal-run、openkal-tools、openkal-bind）。** 映像启动的映像文件或 okb 经运行器指名的加载器进入，
+  而非交给系统：受运行器的签名要求约束，观察到启动者给出的参数向量；不能发生的启动按原因拒绝（`kal_err_not_program`、
+  `kal_err_permission`），映像名（`kal_env_image`）为绝对路径（mcpplibs/openkal-image#42）；0.7.0 下映像启动映像文件在 Linux 上
+  以 SIGSEGV 结束。运行器在映像载入后才接管结束请求，等待请求的任务在程序结束前返回，程序按映像结束它的方式结束：GDB 15
+  继续到结束时不再停在 "Couldn't get registers: No such process"（mcpplibs/openkal-image#43）。依赖与 0.7.0 相同（openkal 0.26 一族）。
 - **openkal-macos 0.24.1。** 由程序首个上下文之外的上下文处理的结束请求，仍以请求结束程序：`kal_process_end_as_requested`
   向程序重发信号后，在以 128 加信号号退出之前等待至多 0.1 s 的投递，与 openkal-linux 相同。内核把发给程序的信号交给第一个
   未屏蔽它的上下文，而非调用者；0.24.0 从另一上下文调用时退出先到，起动者看到 143 而非 SIGTERM（okrun 0.7.0 的 runner
