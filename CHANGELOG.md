@@ -9,6 +9,27 @@
 
 ### Added
 
+- **mcpplibs.mwrap.openssl 3.5.9、mcpplibs.mwrap.abseil 20250512.1、mcpplibs.mwrap.protobuf 35.1、mcpplibs.protogen 35.1（新包），
+  mcpplibs.mwrap.grpc 1.83.0.1。** 三个新的 mwrap 封装，都是 compat 之上的薄封装，版本与上游一致：
+  openssl-m（OpenSSL 3.5 LTS：头文件的全部声明以 `using` 导出，334 个 `static ossl_inline` 函数重新声明，11632 个常量与 510 个
+  调用宏映射到 `mcpplibs::mwrap::openssl::macros`，其余宏由 `<mwrap/openssl/macros.hpp>` 提供；导出面记录在 `src/surface.tsv`，
+  由包的 build.mcpp 在构建时生成模块单元；Linux x86_64、Linux aarch64（LLVM）、macOS、Windows），abseil-m（Abseil LTS
+  20250512.1，按上游功能分组的子模块；Linux、macOS、Windows、Web），protobuf-m（Protocol Buffers 35.1：消息、描述符、反射、
+  知名类型、JSON 与文本格式、运行时解析 .proto；特性 `gzip`、`upb`、`codegen`；Linux、macOS、Windows、Web，`codegen` 仅
+  Linux 与 macOS）。protogen 是 protobuf-m 发布包中的 `rules/` 包：可 import 的 protoc 构建规则，每个 .proto 一条构建边，
+  `codegen` 特性转发它。grpc 1.83.0.1 是封装修订：改用 compat.openssl 3.5.9，与 openssl-m 同一 OpenSSL；gRPC 源码、模块与
+  API 不变，grpcgen 与 grpc-plugin 不变。四者共用 compat.abseil 20250512.1、compat.protobuf 35.1 与 compat.openssl 3.5.9，
+  同一程序只链接一份；成员 `grpc-protobuf-stack` 在一个翻译单元中 import 四者并核对 `absl::Status` 同一、OpenSSL 为 3.5.9。
+  GCC 16 下同时 import protobuf 与 Abseil 时，import Abseil 的分组模块而非根模块（根模块带入 `abseil.log`，GCC 随后读取模块失败），
+  且不在命名空间作用域对 protobuf 调用取 decltype（GCC 报告 descriptor.h 成员 "conflicting type for imported declaration"）；
+  Clang 两种写法都接受。GitHub 与 GitCode（mcpp-res/mwrap-openssl、mwrap-abseil、mwrap-protobuf、mwrap-grpc）字节一致。
+- **compat.openssl 3.5.9（3.5 LTS）。** 三个平台新增 3.5.9，3.5.1 保留；compat.curl、compat.httplib、compat.websocket、
+  compat.jwt-cpp、chriskohlhoff.asio 改用 3.5.9，compat.mysql-connector-cpp 26.7.0 以修订 1 改用 3.5.9。仍固定 3.5.1 的已发布
+  清单（如 yizhinailong.mcr 0.1.5）与它们同图时版本不可调和：在工作区根的 `[workspace.dependencies]` 写
+  `compat.openssl = { version = "3.5.9", override = true }` 选定一份（本仓库根 mcpp.toml 即如此）。
+- **mwrap 规范。** 上游库名取库本身的名字，不含仅区分语言的仓库后缀（abseil-cpp → abseil-m）；同一翻译单元中 `#include`
+  在 `import` 之前；以 Clang 审计导出面；手工无法维护的导出面以记录提交、由 build.mcpp 生成（docs/mwrap.md）。
+  `tests/mwrap/check_installed_template.py` 新增 `--template`，以覆盖非默认模板。
 - **mcpplibs.os 0.4.6。** 新增 `mcpplibs.os.text`：把被启动程序写出的文本按其编码解码为 UTF-8。编码为 `utf8`，或 `console`（Windows 控制台程序的约定：写入管道或文件时用所附着控制台的输出代码页，没有控制台时用系统的 ANSI 代码页；以 cl.exe 与 link.exe 测得，mcpp-community/mcpp#970）。`valid_utf8` 把不是 UTF-8 的序列按最大子部分替换为 U+FFFD。`windows::console_text_code_page` 与 `windows::utf8_from_code_page` 是其下的两项事实。openkal 的范围不变。
 - **openkal-platform 0.31.0：openkal 0.26 一族。** 平台的各层、载体、工具与各行使用 openkal 0.26.0 及其各实现（openkal-linux 0.27.0、openkal-macos 0.24.0、openkal-windows 0.23.0、openkal-freebsd 0.2.0、openkal-uefi 0.12.0、openkal-dos 与 openkal-dos-tools 0.2.0、openkal-svr4 0.3.0）、openkal-musl 0.30.0、openkal-llvm-runtime 0.21.0 与 openkal-image 0.7.0。System V 一行可以启动其他程序：openkal-svr4 0.3.0 声明 `openkal.process` 与 `openkal.space`，运行器为 ibcs-us 4.3-2。构建程序链接 mcpp.plugins 0.26.1（mcpplibs.os 0.4.5 接受 openkal 0.26）；平台的引擎下界仍为 mcpp 2026.11.17.1。
 - **mcpp.platforms 0.2.1。** `aarch64-netbsd` 与 `aarch64-openbsd` 两行获得运行器（此前只构建）：dirun 0.8.0 在

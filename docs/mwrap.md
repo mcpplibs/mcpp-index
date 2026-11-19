@@ -19,6 +19,9 @@ public names, namespaces, type identities, overloads and behavior.
 | Public API | original upstream spelling | `cv::Mat`, `Ort::Session` |
 | Macro mapping module | `<root>.macros` | `mcpplibs.mwrap.opencv.macros` |
 
+The upstream name is the library's own name, without a repository suffix that
+only marks the language: Abseil's repository is abseil-cpp, the wrapper is
+`abseil-m` and the package `mcpplibs.mwrap.abseil`.
 Do not add `-m` to package/module names or relocate ordinary upstream entities
 into a new C++ namespace. Preserve legacy published package identities and bytes;
 publish a new mwrap identity rather than rewriting old releases.
@@ -94,6 +97,15 @@ macros stay in `<mwrap/<library>/macros.hpp>`, included before imports.
 Preserve argument evaluation and call-site behavior; an assertion macro is not
 automatically equivalent to a function. Active macros expand even in qualified
 names, so test and document raw-header versus mapped-constant usage.
+
+A translation unit that both includes upstream headers and imports a wrapper
+puts every `#include` before the first `import` (GCC rejects a header after an
+import of a module that already declared its entities); state this in the README.
+Clang requires an operator found by argument-dependent lookup at namespace scope
+to be exported too, so audit the surface with Clang. A surface too large to keep
+by hand is derived by a tool into a compact record committed to the repository,
+and `build.mcpp` renders the module units from it at build time, so nothing
+generated is committed (openssl-m: `src/surface.tsv`, `tools/surface.py`).
 
 ## Features
 

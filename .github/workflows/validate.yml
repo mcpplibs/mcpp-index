@@ -1107,8 +1107,16 @@ jobs:
           # macos stays at 2. It has never been cancelled, so raising it would
           # be a prediction rather than a measurement; the formula's 4 is there
           # the day it is.
+          #
+          # ── 2026-11-20: macos 2 -> 3 ────────────────────────────────────
+          #
+          # Observed: on mcpp-index#845 `workspace (macos default 1/2)` was
+          # cancelled at the 90-minute cap. It carried grpc-cpu (1783s, untimed
+          # for macos and so priced at the default) and grpc-protobuf-stack,
+          # whose graph builds gRPC again (cancelled at unit 1800 of 1989).
+          # Both now have macos rows; three shards put them apart.
           ln=$(shards_for linux 6)
-          mn=$(shards_for macos 2)
+          mn=$(shards_for macos 3)
           wn=$(shards_for windows 5)
           # THE TWO LINUX LEGS ARE NOT THE SAME COST, AND THE PLANNER CANNOT
           # SEE THAT. `plan_shards.lua` takes a PLATFORM and reads one timing
@@ -1281,7 +1289,7 @@ jobs:
           tar -xzf "$archive"
           echo "MCPP=$PWD/mcpp-${MCPP_VERSION}-${{ matrix.suffix }}/bin/mcpp" >> "$GITHUB_ENV"
       - name: Immutable archive, default scaffold, strict build and loopback RPC
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.grpc@1.83.0 --toolchain "${{ matrix.toolchain }}"
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.grpc@1.83.0.1 --toolchain "${{ matrix.toolchain }}"
 
   workspace:
     # The shard suffix appears only when the platform is actually split, and
@@ -1778,6 +1786,31 @@ jobs:
         if: contains(format(' {0} ', env.MEMBERS), ' recastnavigation-path ') && matrix.toolchain == 'default'
         shell: bash
         run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.recastnavigation@1.6.0 --deploy
+
+      - name: Installed abseil wrapper archive, actual default basics template and its relocated notices
+        if: contains(format(' {0} ', env.MEMBERS), ' abseil-basics ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.abseil@20250512.1 --deploy
+
+      - name: Installed protobuf wrapper archive, actual default message template and its relocated notices
+        if: contains(format(' {0} ', env.MEMBERS), ' protobuf-message ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.protobuf@35.1 --deploy
+
+      - name: Installed protobuf wrapper archive, codegen template (protoc through the protogen rule)
+        if: contains(format(' {0} ', env.MEMBERS), ' protobuf-codegen ') && matrix.toolchain == 'default' && runner.os != 'Windows'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.protobuf@35.1 --template codegen
+
+      - name: Installed OpenSSL wrapper archive, actual default digest template and its relocated notices
+        if: contains(format(' {0} ', env.MEMBERS), ' openssl-tls ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.openssl@3.5.9 --deploy
+
+      - name: Installed OpenSSL wrapper archive, tls-loopback template (TLS 1.3 over memory BIOs)
+        if: contains(format(' {0} ', env.MEMBERS), ' openssl-tls ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.openssl@3.5.9 --template tls-loopback
 
       - name: Installed ACL wrapper archive, actual default clip template and its relocated notices
         if: contains(format(' {0} ', env.MEMBERS), ' acl-clip ') && matrix.toolchain == 'default'

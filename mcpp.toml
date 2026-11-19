@@ -45,11 +45,16 @@ members = [
     "tests/mwrap/libjpeg-turbo-decode",
     "tests/mwrap/libarchive-bundle",
     "tests/mwrap/libc-stdio",
+    "tests/mwrap/abseil-basics",
+    "tests/mwrap/protobuf-message",
+    "tests/mwrap/protobuf-codegen",
+    "tests/mwrap/openssl-tls",
     "tests/mwrap/miniaudio-engine",
     "tests/mwrap/freetype-render",
     "tests/mwrap/harfbuzz-shape",
     "tests/mwrap/sdl3-headless",
     "tests/mwrap/grpc-cpu",
+    "tests/mwrap/grpc-protobuf-stack",
     "tests/mwrap/grpc-tools",
     "tests/mwrap/godot-math",
     "tests/mwrap/godot-sdk",
@@ -313,5 +318,14 @@ members = [
 # asio itself comes from the published index while its `ssl` feature dep,
 # compat.openssl, resolves from this checkout — which is what lets an
 # unmerged compat descriptor be tested through a feature that activates it.
+
+# The index's OpenSSL dependents build on compat.openssl 3.5.9 (3.5 LTS).
+# yizhinailong.mcr's own manifest still pins 3.5.1 beside compat.curl (3.5.9),
+# and an override is read only from the root's tables, so the workspace
+# chooses 3.5.9 for every member graph that holds compat.openssl — what a
+# project depending on mcr writes in its own mcpp.toml.
+[workspace.dependencies]
+compat.openssl = { version = "3.5.9", override = true }
+
 [indices]
 compat = { path = "." }
