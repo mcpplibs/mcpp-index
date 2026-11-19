@@ -9,11 +9,6 @@
 
 ### Added
 
-- **openkal-macos 0.24.1。** 由程序首个上下文之外的上下文处理的结束请求，仍以请求结束程序：`kal_process_end_as_requested`
-  向程序重发信号后，在以 128 加信号号退出之前等待至多 0.1 s 的投递，与 openkal-linux 相同。内核把发给程序的信号交给第一个
-  未屏蔽它的上下文，而非调用者；0.24.0 从另一上下文调用时退出先到，起动者看到 143 而非 SIGTERM（okrun 0.7.0 的 runner
-  任务即如此）。该包测试由第二个上下文处理请求的二十个副本：0.24.0 的实现上 9 个以 SIGTERM 结束，0.24.1 上 20 个
-  （mcpplibs/openkal-macos#52、#54）。
 - **mcpplibs.os 0.4.6。** 新增 `mcpplibs.os.text`：把被启动程序写出的文本按其编码解码为 UTF-8。编码为 `utf8`，或 `console`（Windows 控制台程序的约定：写入管道或文件时用所附着控制台的输出代码页，没有控制台时用系统的 ANSI 代码页；以 cl.exe 与 link.exe 测得，mcpp-community/mcpp#970）。`valid_utf8` 把不是 UTF-8 的序列按最大子部分替换为 U+FFFD。`windows::console_text_code_page` 与 `windows::utf8_from_code_page` 是其下的两项事实。openkal 的范围不变。
 - **openkal-platform 0.31.0：openkal 0.26 一族。** 平台的各层、载体、工具与各行使用 openkal 0.26.0 及其各实现（openkal-linux 0.27.0、openkal-macos 0.24.0、openkal-windows 0.23.0、openkal-freebsd 0.2.0、openkal-uefi 0.12.0、openkal-dos 与 openkal-dos-tools 0.2.0、openkal-svr4 0.3.0）、openkal-musl 0.30.0、openkal-llvm-runtime 0.21.0 与 openkal-image 0.7.0。System V 一行可以启动其他程序：openkal-svr4 0.3.0 声明 `openkal.process` 与 `openkal.space`，运行器为 ibcs-us 4.3-2。构建程序链接 mcpp.plugins 0.26.1（mcpplibs.os 0.4.5 接受 openkal 0.26）；平台的引擎下界仍为 mcpp 2026.11.17.1。
 - **mcpp.platforms 0.2.1。** `aarch64-netbsd` 与 `aarch64-openbsd` 两行获得运行器（此前只构建）：dirun 0.8.0 在
