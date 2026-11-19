@@ -8,12 +8,6 @@
 //
 // Every check increments `failures`; the process exits non-zero when a check
 // does not hold, which is what makes this a test rather than a sample.
-//
-// <new> is a libc++ requirement, not a library header: libc++'s
-// allocator_traits::construct instantiates __construct_at, whose default
-// argument uses placement new; the module's own GMF include is not reachable
-// from the importer, so the consumer TU must declare placement new first.
-#include <new>
 
 import Yc.intrusive_binary_tree;
 import Yc.binary_tree;

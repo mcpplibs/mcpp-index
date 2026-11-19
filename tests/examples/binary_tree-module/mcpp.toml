@@ -14,10 +14,12 @@ version = "0.1.0"
 
 # The package is the mcpp-native library: its own tarball carries mcpp.toml,
 # which declares the public modules below. Import the umbrella root and each
-# wrapper so a regression in either surface fails this member.
+# wrapper so a regression in either surface fails this member. The umbrella
+# test also checks the exported placement-new declarations (no <new> include
+# anywhere in the consumer), which is what libc++ needs under clang's
+# combined module build (llvm/llvm-project#218246).
 #
-# 0.1.3 carries the libc++ <new> fix and the lowercase namespace
-# yandere-chan; 0.1.0/0.1.1 fail a libc++ consumer and 0.1.2 has the old
-# namespace.
+# 0.1.4 is the first release with the `yandere-chan` namespace and the exported
+# `operator new`/`operator delete`; earlier versions are not listed.
 [dependencies.yandere-chan]
-binary_tree = "0.1.3"
+binary_tree = "0.1.4"
