@@ -48,6 +48,7 @@ members = [
     "tests/mwrap/abseil-basics",
     "tests/mwrap/protobuf-message",
     "tests/mwrap/protobuf-codegen",
+    "tests/mwrap/openssl-tls",
     "tests/mwrap/miniaudio-engine",
     "tests/mwrap/freetype-render",
     "tests/mwrap/harfbuzz-shape",

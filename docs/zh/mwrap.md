@@ -17,6 +17,8 @@
 | API | 保留上游 | cv::Mat、Ort::Session |
 | 宏映射模块 | `<根模块>.macros` | mcpplibs.mwrap.opencv.macros |
 
+上游库名取库本身的名字，不含仅用于区分语言的仓库后缀：Abseil 的仓库是 abseil-cpp，
+封装仓库为 `abseil-m`，包为 `mcpplibs.mwrap.abseil`。
 包和模块名不带 -m，不创建另一套普通 API namespace。已发布旧身份、版本和内容保持不可变，
 通过新 mwrap 身份迁移。简单实现优先依赖 compat.xxx；复杂库可以 vendor 到 upstream/。
 同一程序的同一实现只能有一个所有者，不能把 compat 与 vendored 实现重复链接。
@@ -65,6 +67,12 @@ metadata 与上游锁文件仍明确记录来源。破坏性模块/API 变化必
 映射置于 mcpplibs::mwrap::<库名>::macros，保留原宏名。字符串化、token 拼接、条件编译、
 控制流宏通过 `<mwrap/<库名>/macros.hpp>` 保留，在 import 前 include。
 限定名仍会被宏展开；原始宏与映射常量的用法必须分别测试，断言函数不能默认代替断言宏。
+
+同一翻译单元既 include 上游头文件又 import 封装模块时，所有 `#include` 放在第一个 `import` 之前
+（GCC 拒绝在已声明同一实体的模块被 import 之后再引入头文件），README 写明。Clang 要求命名空间作用域上
+经实参依赖查找找到的运算符也要导出，因此以 Clang 审计导出面。手工无法维护的大型导出面由工具推导为
+紧凑的记录提交到仓库，由 `build.mcpp` 在构建时生成模块单元，不提交生成物
+（openssl-m：`src/surface.tsv`、`tools/surface.py`）。
 
 ## feature
 
