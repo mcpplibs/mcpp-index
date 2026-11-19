@@ -23,6 +23,12 @@
 -- (mcpp-community/mcpp-platforms#5). Both build on Linux hosts, Hurd also on macOS;
 -- not on Windows (mcpp-community/mcpp#965), and Haiku not on a case-insensitive
 -- file system (its string.h and String.h).
+--
+-- 0.2.1 (floor unchanged): aarch64-netbsd and aarch64-openbsd gain a runner, as
+-- aarch64-freebsd has one: dirun boots xim's aarch64-netbsd-disk-image@10.2 and
+-- aarch64-openbsd-disk-image@8.0 in qemu-system-aarch64's virt machine with the
+-- EDK II firmware of xim's ovmf (translated on an x86_64 host); no row changes
+-- (mcpp-community/mcpp-platforms#6).
 package = {
     spec        = "1",
     namespace   = "mcpp",
@@ -47,6 +53,13 @@ package = {
     -- One archive for every host: the package is a statement, not a program.
     xpm = {
         linux = {
+            ["0.2.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-platforms/archive/refs/tags/0.2.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-platforms/releases/download/0.2.1/mcpp-platforms-0.2.1.tar.gz",
+                },
+                sha256 = "5e0116a157a8f24e38021fdadab5f940d43792f96759304a788b065c1417eb39",
+            },
             ["0.2.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-platforms/archive/refs/tags/0.2.0.tar.gz",
@@ -61,9 +74,16 @@ package = {
                 },
                 sha256 = "bd09836f9952af28ede3f9c4568aafd999ace803f2cad21fed0aa4ca495893f3",
             },
-            ["latest"] = { ref = "0.2.0" },
+            ["latest"] = { ref = "0.2.1" },
         },
         macosx = {
+            ["0.2.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-platforms/archive/refs/tags/0.2.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-platforms/releases/download/0.2.1/mcpp-platforms-0.2.1.tar.gz",
+                },
+                sha256 = "5e0116a157a8f24e38021fdadab5f940d43792f96759304a788b065c1417eb39",
+            },
             ["0.2.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-platforms/archive/refs/tags/0.2.0.tar.gz",
@@ -78,9 +98,16 @@ package = {
                 },
                 sha256 = "bd09836f9952af28ede3f9c4568aafd999ace803f2cad21fed0aa4ca495893f3",
             },
-            ["latest"] = { ref = "0.2.0" },
+            ["latest"] = { ref = "0.2.1" },
         },
         windows = {
+            ["0.2.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-platforms/archive/refs/tags/0.2.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-platforms/releases/download/0.2.1/mcpp-platforms-0.2.1.tar.gz",
+                },
+                sha256 = "5e0116a157a8f24e38021fdadab5f940d43792f96759304a788b065c1417eb39",
+            },
             ["0.2.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-platforms/archive/refs/tags/0.2.0.tar.gz",
@@ -95,7 +122,7 @@ package = {
                 },
                 sha256 = "bd09836f9952af28ede3f9c4568aafd999ace803f2cad21fed0aa4ca495893f3",
             },
-            ["latest"] = { ref = "0.2.0" },
+            ["latest"] = { ref = "0.2.1" },
         },
     },
 
