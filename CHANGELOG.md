@@ -9,6 +9,9 @@
 
 ### Added
 
+- **mcpp.platforms 0.2.0。** 新增 GNU/Hurd（`x86_64-hurd`，Debian 基础库，版本与其运行的映像一致）与 Haiku（`x86_64-haiku`，hrev60431）两行，
+  均可 `import std`（GCC 15 的 std 模块），并在系统映像中经 dirun 运行；两行在 Linux 主机上构建，Hurd 亦可在 macOS 上构建；
+  Windows 主机不可（mcpp-community/mcpp#965），Haiku 在不区分大小写的文件系统上不可（mcpp-community/mcpp-platforms#5）。
 - **mcpp.plugins 0.26.0。** `tools-steps` 的 glob 支持排除模式（`*` 可跨越 `/`）；`dist-apk` 在 javac 和 kotlinc 编译前清空
   class 目录，已移出包的源码不再把旧 class 带进下一次打包；`latest` 指向 0.26.0（mcpp-community/mcpp-plugins#60）。
 - **openkal-platform 0.30.1。** 行 `i686-svr4-musl` 的链接声明程序头（`link/svr4.ld`）：与此前相同的三个段，不写 `PT_PHDR`。
