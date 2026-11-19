@@ -1,0 +1,19 @@
+# binary_tree module-package test: consumes YandereChan2.binary_tree by import
+# only and asserts behavior under `mcpp test`.
+#
+# This member is the only place the descriptor's Form A lookup is exercised:
+# `[indices]` below overrides the workspace-root `compat` redirect, so
+# YandereChan2 resolves to this checkout (pkgs/y/YandereChan2.binary_tree.lua)
+# rather than the published remote index. The key is the dependency NAMESPACE.
+[indices]
+YandereChan2 = { path = "../../.." }
+
+[package]
+name    = "binary_tree-module-tests"
+version = "0.1.0"
+
+# The package is the mcpp-native library: its own tarball carries mcpp.toml,
+# which declares the public modules below. Import the umbrella root and each
+# wrapper so a regression in either surface fails this member.
+[dependencies.YandereChan2]
+binary_tree = "0.1.0"
