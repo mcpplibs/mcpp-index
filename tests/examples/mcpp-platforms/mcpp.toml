@@ -10,7 +10,7 @@ name    = "mcpp-platforms-tests"
 version = "0.1.0"
 
 [target.'cfg(any(os = "freebsd", os = "netbsd", os = "openbsd", os = "hurd", os = "haiku"))']
-platform = "mcpp.platforms@0.2.0"
+platform = "mcpp.platforms@0.2.1"
 
 [indices]
 mcpplibs = { path = "../../.." }

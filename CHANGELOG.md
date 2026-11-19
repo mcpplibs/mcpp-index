@@ -9,6 +9,11 @@
 
 ### Added
 
+- **mcpp.platforms 0.2.1。** `aarch64-netbsd` 与 `aarch64-openbsd` 两行获得运行器（此前只构建）：dirun 0.8.0 在
+  qemu-system-aarch64 的 `virt` 机器中、以 xim `ovmf` 的 AArch64 EDK II 固件启动 xim 的 `aarch64-netbsd-disk-image@10.2`
+  （NetBSD 10.2 的 arm64 live 映像，已首次启动一次）与 `aarch64-openbsd-disk-image@8.0`（由发行版 arm64 介质自动安装，
+  Cortex-A72），在 x86_64 主机上由 QEMU 翻译运行。各行不变；该包 CI 在两行上运行检查程序（`import std`、异常、参数、状态 7）。
+
 - **mcpp.plugins 0.26.1。** `plugins-core` 与 `plugins-progress` 经 mcpplibs.os 0.4.5 访问系统，它接受 openkal 0.24 至 0.26，
   openkal 为 0.26 的图（openkal-platform 0.31）因此可以包含插件；0.4.4 只接受 0.24 与 0.25，openkal-platform 0.31 的构建程序
   因版本不可调和被拒。成员不变，包的引擎下界仍为 mcpp 2026.10.30.1。
