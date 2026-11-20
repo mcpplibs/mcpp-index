@@ -176,6 +176,7 @@ members = [
     "tests/examples/box2d",
     "tests/examples/pocketpy",
     "tests/examples/sheenbidi",
+    "tests/examples/slint",
     "tests/examples/spdlog",
     "tests/examples/fontconfig",
     "tests/examples/freetype",
