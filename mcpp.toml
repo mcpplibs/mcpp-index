@@ -145,6 +145,7 @@ members = [
     "tests/examples/mio",
     "tests/examples/mtest",
     "tests/examples/mtest-capi",
+    "tests/examples/mtest-doctest",
     "tests/examples/mtest-gtest",
     "tests/examples/mtest-manifest",
     "tests/examples/muduo",

@@ -52,6 +52,11 @@
 --
 -- 0.10.0 records a timed-out program's processes, asks it to end, and ends what still
 -- runs after its grace (`grace`, `timeout_record`).
+--
+-- 0.11.0 writes a case's steps and the surface it used (P5.6), checks a case's processes
+-- and diagnostic lines at its end, holds one budget for the machine (O11), waits at
+-- contention points under jitter (O12), records the machine's class, judges [budget] and
+-- [ledger.*] in the gate, and costs a file's first case and expectation 265 ms under GCC.
 package = {
     spec        = "1",
     namespace   = "mcpplibs",
@@ -70,6 +75,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.11.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.11.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mtest/releases/download/v0.11.0/mtest-v0.11.0.tar.gz",
+                },
+                sha256 = "457635770e34e1915b0ed87032c12f435f45a1477caaa60a4ffe9da56da7d398",
+            },
             ["0.10.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.10.0.tar.gz",
@@ -205,6 +217,13 @@ package = {
             },
         },
         macosx = {
+            ["0.11.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.11.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mtest/releases/download/v0.11.0/mtest-v0.11.0.tar.gz",
+                },
+                sha256 = "457635770e34e1915b0ed87032c12f435f45a1477caaa60a4ffe9da56da7d398",
+            },
             ["0.10.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.10.0.tar.gz",
@@ -340,6 +359,13 @@ package = {
             },
         },
         windows = {
+            ["0.11.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.11.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mtest/releases/download/v0.11.0/mtest-v0.11.0.tar.gz",
+                },
+                sha256 = "457635770e34e1915b0ed87032c12f435f45a1477caaa60a4ffe9da56da7d398",
+            },
             ["0.10.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.10.0.tar.gz",
