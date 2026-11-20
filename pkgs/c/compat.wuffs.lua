@@ -48,19 +48,28 @@ package = {
     xpm = {
         linux = {
             ["0.3.6"] = {
-                url    = "https://github.com/google/wuffs/archive/refs/tags/v0.3.6.tar.gz",
+                url = {
+                    GLOBAL = "https://github.com/google/wuffs/archive/refs/tags/v0.3.6.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/wuffs/releases/download/0.3.6/wuffs-0.3.6.tar.gz",
+                },
                 sha256 = "e669099e0f67123efa1d24f88f4ec26ef9875bc7d8957e0d4d9df9803ff5c039",
             },
         },
         macosx = {
             ["0.3.6"] = {
-                url    = "https://github.com/google/wuffs/archive/refs/tags/v0.3.6.tar.gz",
+                url = {
+                    GLOBAL = "https://github.com/google/wuffs/archive/refs/tags/v0.3.6.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/wuffs/releases/download/0.3.6/wuffs-0.3.6.tar.gz",
+                },
                 sha256 = "e669099e0f67123efa1d24f88f4ec26ef9875bc7d8957e0d4d9df9803ff5c039",
             },
         },
         windows = {
             ["0.3.6"] = {
-                url    = "https://github.com/google/wuffs/archive/refs/tags/v0.3.6.tar.gz",
+                url = {
+                    GLOBAL = "https://github.com/google/wuffs/archive/refs/tags/v0.3.6.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/wuffs/releases/download/0.3.6/wuffs-0.3.6.tar.gz",
+                },
                 sha256 = "e669099e0f67123efa1d24f88f4ec26ef9875bc7d8957e0d4d9df9803ff5c039",
             },
         },
