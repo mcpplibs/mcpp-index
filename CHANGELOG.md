@@ -9,6 +9,10 @@
 
 ### Added
 
+- **openkal-image 0.7.2（openkal-ld、openkal-run、openkal-tools、openkal-bind）。** 程序的副本按副本自己结束它的方式结束：库以在地址空间
+  副本中启动上下文（openkal.space）组成 `fork`，副本持有运行器的内存而不持有运行器等待结束请求的任务；0.7.1 下副本的 `kal_exit`
+  等待该任务返回而不终止，映像以 fork 加 exec 启动的程序不结束。运行器比较它所在的程序与其任务所属的程序（`kal_process_info`、
+  `KAL_PINFO_ID`）：在副本中不等待该任务，结束请求属于副本自己（mcpplibs/openkal-image#44、#45）。依赖与 0.7.1 相同（openkal 0.26 一族）。
 - **openkal-platform 0.31.1：版本组的补丁，两个成员。** openkal-image 0.7.1（载体 openkal-run、工具 okld/okrun/okprof 与构建依赖
   openkal-tools）：映像启动的映像文件经运行器的加载器进入，映像名为绝对路径；运行器在映像载入后接管结束请求，程序按映像结束它的
   方式结束（mcpplibs/openkal-image#42、#43）。openkal-macos 0.24.1：由程序首个上下文之外的上下文处理的结束请求仍以请求结束程序
