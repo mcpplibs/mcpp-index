@@ -9,6 +9,7 @@
 
 ### Added
 
+- **compat.slint 1.19.0：Slint 的 C++ SDK（`libslint_cpp`、头文件 `slint/`、`slint-compiler`），上游 CMake 的桌面默认功能集（GPL-3.0-only / Royalty-free-2.0 / Software-3.0 三选一）。** 载荷是生态里的 `xim:slint`（xlings-res/slint，GitHub 与 GitCode 逐字节相同；Linux x86_64、macOS arm64、Windows x86_64），由发布 tag 经 cargo 按默认功能集构建：Linux 上 `libslint_cpp` 只 NEEDED fontconfig 与 C 运行时（X11、Wayland、GL 均 dlopen）。描述符把载荷的 include、lib（Windows 为 bin 的 DLL）与 `slint-compiler` 放进包的目录，`SLINT_FEATURE_*` 由 `<slint.h>` 的默认功能集定义。成员 tests/examples/slint：SharedString、VectorModel、Color，解释器编译一段源码并在无头平台上驱动组件。Linux aarch64 暂缺：`xim:fontconfig` 尚无 aarch64 载荷。
 - **mcpplibs.mwrap.wuffs 0.3.6：wuffs-m（Wuffs 的 C++23 模块），基于 compat.wuffs 0.3.6。** 每个上游包一个模块（`.base`、`.png`、`.gif`、`.json`、`.gzip` 等 16 个）、`.aux`（`wuffs_aux`）与 `.macros`；由 clang AST 生成并审计：429 个全局名导出，315 个 `static inline` 函数在 `mcpplibs::mwrap::wuffs` 中同名同签名适配，296 个宏常量与 34 个函数名宏映射，11 个附原因列出。上游 `convert-to-nia` 的模块移植版与上游程序在 `test/data` 的 246 个文件上逐字节一致，82/82 个 NIA 校验和一致。成员 tests/mwrap/wuffs-decode；validate.yml 以真实归档做已安装模板与部署通知检查。CN：mcpp-res/mwrap-wuffs。
 - **compat.wuffs 0.3.6：Google 的 Wuffs，面向不可信文件格式的内存安全解码器（Apache-2.0）。** 上游只发布单文件 `release/c/wuffs-v0.3.c`：本包取 tag 归档，以一个生成的翻译单元在 `WUFFS_IMPLEMENTATION` 下按 C++ 编译，C API（`extern "C"`）与只在 C++ 下定义的 `wuffs_aux`（DecodeImage、DecodeJson、DecodeCbor）都在同一个库里；使用者按上游写法 `#include <wuffs-v0.3.c>`。成员 tests/examples/wuffs：版本串、gzip 经 C API、CRC-32 与 Adler-32 的标准校验值、PNG 经 DecodeImage 逐像素、截断 PNG 被拒绝、JSON 遍历。0.4 线上游仍为 alpha。
 - **openkal-platform 0.31.2：版本组的补丁，一个成员。** openkal-image 0.7.2（载体 openkal-run、工具 okld/okrun/okprof 与构建依赖
