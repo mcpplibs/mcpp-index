@@ -65,6 +65,7 @@ members = [
     "tests/examples/accesskit",
     "tests/examples/asio-module",
     "tests/examples/asio-ssl",
+    "tests/examples/binary_tree-module",
     "tests/examples/boost-asio",
     "tests/examples/boost-any",
     "tests/examples/boost-circular-buffer",
