@@ -9,6 +9,8 @@
 
 ### Added
 
+- **mcpplibs.cmdline 0.0.5.** `snapshot(const App&)` 是导出的函数，与 docs/api.md 所述一致：程序由解析它所用的定义列出自身的
+  命令与选项（mcpp 的 `mcpp emit surface`）。测试成员移到 0.0.5，并检验这一项。
 - **mtest 0.11.0（mcpplibs.mtest、.manifest、.gtest、.capi）与新包 mcpplibs.mtest.doctest。** 协议的 `step` 与 `exercise` 事件（P5.6）；
   用例结束时检查它启动的进程与诊断行；机器的一份预算（O11）与抖动（O12）；运行记录机器的类别；`[budget]` 与 `[ledger.*]`
   由门禁判定；GCC 上一个文件的首个用例与期望由 689 ms 降为 265 ms。`mcpplibs.mtest.doctest` 是 doctest 的协议适配器（1 级），
