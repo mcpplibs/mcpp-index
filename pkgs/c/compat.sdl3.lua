@@ -187,8 +187,10 @@ package = {
                 -- 1: the switches no-render and no-hidapi, read at the top of
                 -- the generated SDL_build_config.h (installed copies take them).
                 -- 2: the switch no-render-accelerated, beside them.
-                revision = 2,
-                floor    = 2,
+                -- 3: posix_spawn_file_actions_addchdir by its _np name alone,
+                --    so a system C library older than glibc 2.40 builds it.
+                revision = 3,
+                floor    = 3,
             },
         },
         macosx = {
@@ -206,8 +208,10 @@ package = {
                 -- 1: the switches no-render and no-hidapi, read at the top of
                 -- the generated SDL_build_config.h (installed copies take them).
                 -- 2: the switch no-render-accelerated, beside them.
-                revision = 2,
-                floor    = 2,
+                -- 3: posix_spawn_file_actions_addchdir by its _np name alone,
+                --    so a system C library older than glibc 2.40 builds it.
+                revision = 3,
+                floor    = 3,
             },
         },
         windows = {
@@ -225,8 +229,10 @@ package = {
                 -- 1: the switches no-render and no-hidapi, read at the top of
                 -- the generated SDL_build_config.h (installed copies take them).
                 -- 2: the switch no-render-accelerated, beside them.
-                revision = 2,
-                floor    = 2,
+                -- 3: posix_spawn_file_actions_addchdir by its _np name alone,
+                --    so a system C library older than glibc 2.40 builds it.
+                revision = 3,
+                floor    = 3,
             },
         },
     },
@@ -486,7 +492,11 @@ package = {
 /* #undef HAVE_SHELLSCALINGAPI_H */
 
 /* #undef USE_POSIX_SPAWN */
-#define HAVE_POSIX_SPAWN_FILE_ACTIONS_ADDCHDIR 1
+/* Only the _np name, which glibc has had since 2.29 (and musl since 1.1.24):
+   SDL_posixprocess.c then calls posix_spawn_file_actions_addchdir_np. The
+   plain name is glibc 2.40's; defined, a build against an older system C
+   library (a sysroot of glibc 2.39, Ubuntu 24.04) does not compile. */
+/* #undef HAVE_POSIX_SPAWN_FILE_ACTIONS_ADDCHDIR */
 #define HAVE_POSIX_SPAWN_FILE_ACTIONS_ADDCHDIR_NP 1
 
 /* #undef SDL_DISABLE_DLOPEN_NOTES */
