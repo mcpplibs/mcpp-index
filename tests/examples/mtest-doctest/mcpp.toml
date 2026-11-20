@@ -1,0 +1,12 @@
+# mcpplibs.mtest.doctest test project: doctest's cases begun by the adapter's main, which reports
+# them by the mtest protocol. The test file includes doctest's header and defines no
+# DOCTEST_CONFIG_IMPLEMENT*: the implementation is compiled once, in the adapter.
+[package]
+name    = "mtest-doctest-tests"
+version = "0.1.0"
+
+[indices]
+# Use the complete candidate built-in index prepared by tests/run_members.sh.
+
+[dev-dependencies]
+mcpplibs.mtest.doctest = "0.11.0"
