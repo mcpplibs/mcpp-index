@@ -9,6 +9,11 @@
 
 ### Added
 
+- **openkal-platform 0.31.1：版本组的补丁，两个成员。** openkal-image 0.7.1（载体 openkal-run、工具 okld/okrun/okprof 与构建依赖
+  openkal-tools）：映像启动的映像文件经运行器的加载器进入，映像名为绝对路径；运行器在映像载入后接管结束请求，程序按映像结束它的
+  方式结束（mcpplibs/openkal-image#42、#43）。openkal-macos 0.24.1：由程序首个上下文之外的上下文处理的结束请求仍以请求结束程序
+  （#849）。其余成员不变；平台的引擎下界仍为 mcpp 2026.11.17.1。mcpp 2026.11.19.1 下指名 0.31.0 的工程仍取 openkal-macos 0.24.0
+  （mcpp-community/mcpp#956）。
 - **openkal-image 0.7.1（openkal-ld、openkal-run、openkal-tools、openkal-bind）。** 映像启动的映像文件或 okb 经运行器指名的加载器进入，
   而非交给系统：受运行器的签名要求约束，观察到启动者给出的参数向量；不能发生的启动按原因拒绝（`kal_err_not_program`、
   `kal_err_permission`），映像名（`kal_env_image`）为绝对路径（mcpplibs/openkal-image#42）；0.7.0 下映像启动映像文件在 Linux 上
