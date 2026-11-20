@@ -1,0 +1,9 @@
+# compat.wuffs — Wuffs' decoders, its C API and the wuffs_aux C++ API, on data
+# whose decoding is known, on every platform the descriptor declares.
+[package]
+name     = "wuffs-tests"
+version  = "0.1.0"
+standard = "c++23"
+
+[dependencies]
+compat.wuffs = "0.3.6"
