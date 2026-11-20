@@ -1722,6 +1722,13 @@ jobs:
         shell: bash
         run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.sheenbidi@3.0.0 --deploy
 
+      - name: Installed Slint wrapper archive, actual default hello template (headless) and its relocated notices
+        if: contains(format(' {0} ', env.MEMBERS), ' slint-ui ') && matrix.toolchain == 'default'
+        shell: bash
+        env:
+          SLINT_HEADLESS: "1"
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.slint@1.19.0.1 --deploy
+
       - name: Installed Wuffs wrapper archive, actual default decode template and its relocated notices
         if: contains(format(' {0} ', env.MEMBERS), ' wuffs-decode ') && matrix.toolchain == 'default'
         shell: bash

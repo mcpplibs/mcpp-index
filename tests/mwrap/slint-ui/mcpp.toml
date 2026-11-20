@@ -1,0 +1,27 @@
+[package]
+name = "slint-ui"
+version = "1.19.0.1"
+description = "Consume the immutable Slint wrapper: the runtime types and the interpreter through the modules, a .slint file compiled by slint.mcpp.plugins into the module app.ui, a component driven headless, the features as constants"
+
+[language]
+standard   = "c++23"
+modules    = true
+import_std = false
+
+[indices]
+# Use the complete candidate built-in index prepared by tests/run_members.sh.
+# An explicit empty table overrides the legacy workspace redirect.
+
+[dependencies]
+mcpplibs.mwrap.slint = "1.19.0.1"
+
+# The build rule (module slint.mcpp.plugins): the project names the feature that claims `.slint`.
+[build-dependencies]
+mcpplibs.slintgen = { version = "1.19.0.1", features = ["slint"] }
+
+[build]
+sources = ["src/*.cpp", "ui/app.slint"]
+
+[targets.slint-ui]
+kind = "bin"
+main = "src/main.cpp"
