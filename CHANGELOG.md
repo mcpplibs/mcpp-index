@@ -174,6 +174,7 @@
 
 ### Fixed
 
+- **compat.c-ares：`CARES_STATICLIB` 传给使用方（Windows 上 gRPC 启动即崩溃的根因）。** 此前只有包自身以该宏编译，使用方看到的 `<ares.h>` 把每个入口声明为 `__declspec(dllimport)`，经 lld-link 本地补全的 `__imp_` 槽调用静态库（LNK4217）。lld-link 在不带 `/DEBUG` 时默认 `/OPT:REF`，该槽不保住它的定义：定义所在目标文件只因随后被丢弃的代码而载入时，定义被丢弃、槽内为映像基址。gRPC 的 `ares_library_init` 正是如此，`grpc_init` 跳到 PE 头（0xC0000005，mcpp 报 exit 133）；四行 C 即可复现（llvm 23.1.3）。上游的 Bazel（`defines`）与 CMake（INTERFACE 定义）都把该宏传给依赖方；此处按 compat.curl 的写法以 `default` 隐含的 feature `defines` 传递。在装有旧 compat.c-ares 的 home 上实测生效，无需 packaging revision；gRPC 的模块测试在 Windows 默认链接参数下通过（grpc-m#10）。
 - **mcpp.plugins 0.23.1。** `dist-apk` 把构建程序在输出目录（`mcpp::out_dir()`、`target/`）中生成的 Java 或 Kotlin 根只作为
   `javac` 动作的输入，不再为其声明永远无法命中的重跑 glob，消除每次构建的警告。`latest` 指向 0.23.1
   （mcpp-community/mcpp-plugins#57）。
