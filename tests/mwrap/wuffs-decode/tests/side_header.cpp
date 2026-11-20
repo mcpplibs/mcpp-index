@@ -2,6 +2,7 @@
 // its macros work beside it, and an adapted helper is the header's function.
 #include <mwrap/wuffs/macros.hpp>
 
+#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <type_traits>

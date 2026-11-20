@@ -9,6 +9,7 @@
 
 ### Added
 
+- **mcpplibs.mwrap.wuffs 0.3.6：wuffs-m（Wuffs 的 C++23 模块），基于 compat.wuffs 0.3.6。** 每个上游包一个模块（`.base`、`.png`、`.gif`、`.json`、`.gzip` 等 16 个）、`.aux`（`wuffs_aux`）与 `.macros`；由 clang AST 生成并审计：429 个全局名导出，315 个 `static inline` 函数在 `mcpplibs::mwrap::wuffs` 中同名同签名适配，296 个宏常量与 34 个函数名宏映射，11 个附原因列出。上游 `convert-to-nia` 的模块移植版与上游程序在 `test/data` 的 246 个文件上逐字节一致，82/82 个 NIA 校验和一致。成员 tests/mwrap/wuffs-decode；validate.yml 以真实归档做已安装模板与部署通知检查。CN：mcpp-res/mwrap-wuffs。
 - **compat.wuffs 0.3.6：Google 的 Wuffs，面向不可信文件格式的内存安全解码器（Apache-2.0）。** 上游只发布单文件 `release/c/wuffs-v0.3.c`：本包取 tag 归档，以一个生成的翻译单元在 `WUFFS_IMPLEMENTATION` 下按 C++ 编译，C API（`extern "C"`）与只在 C++ 下定义的 `wuffs_aux`（DecodeImage、DecodeJson、DecodeCbor）都在同一个库里；使用者按上游写法 `#include <wuffs-v0.3.c>`。成员 tests/examples/wuffs：版本串、gzip 经 C API、CRC-32 与 Adler-32 的标准校验值、PNG 经 DecodeImage 逐像素、截断 PNG 被拒绝、JSON 遍历。0.4 线上游仍为 alpha。
 - **openkal-platform 0.31.2：版本组的补丁，一个成员。** openkal-image 0.7.2（载体 openkal-run、工具 okld/okrun/okprof 与构建依赖
   openkal-tools）：程序的副本按副本自己结束它的方式结束，映像以 fork 加 exec 启动的程序不再停在副本的 `kal_exit` 中
