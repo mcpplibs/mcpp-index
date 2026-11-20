@@ -57,6 +57,9 @@
 -- and diagnostic lines at its end, holds one budget for the machine (O11), waits at
 -- contention points under jitter (O12), records the machine's class, judges [budget] and
 -- [ledger.*] in the gate, and costs a file's first case and expectation 265 ms under GCC.
+--
+-- 0.11.1 holds a command an end-to-end case runs to what its case has left of its time
+-- (`time_left()`).
 package = {
     spec        = "1",
     namespace   = "mcpplibs",
@@ -75,6 +78,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.11.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.11.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mtest/releases/download/v0.11.1/mtest-v0.11.1.tar.gz",
+                },
+                sha256 = "69c45ff361a99fc578de9450628d86cb64996dfd9c01ff4e9fd71710ec1b3509",
+            },
             ["0.11.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.11.0.tar.gz",
@@ -217,6 +227,13 @@ package = {
             },
         },
         macosx = {
+            ["0.11.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.11.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mtest/releases/download/v0.11.1/mtest-v0.11.1.tar.gz",
+                },
+                sha256 = "69c45ff361a99fc578de9450628d86cb64996dfd9c01ff4e9fd71710ec1b3509",
+            },
             ["0.11.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.11.0.tar.gz",
@@ -359,6 +376,13 @@ package = {
             },
         },
         windows = {
+            ["0.11.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.11.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mtest/releases/download/v0.11.1/mtest-v0.11.1.tar.gz",
+                },
+                sha256 = "69c45ff361a99fc578de9450628d86cb64996dfd9c01ff4e9fd71710ec1b3509",
+            },
             ["0.11.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.11.0.tar.gz",

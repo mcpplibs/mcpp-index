@@ -9,6 +9,9 @@
 
 ### Added
 
+- **mtest 0.11.1（mcpplibs.mtest、.manifest、.gtest、.capi、.doctest）。** `time_left()` 给出用例余下的时间（其自身与外层作用域的
+  `timeout` 中最早结束者）；`e2e::run` 让一条命令在此之内结束，扣除结束命令所需与留给用例报告的时间。成员 tests/examples/mtest-doctest
+  移到 0.11.1。
 - **mcpplibs.cmdline 0.0.5.** `snapshot(const App&)` 是导出的函数，与 docs/api.md 所述一致：程序由解析它所用的定义列出自身的
   命令与选项（mcpp 的 `mcpp emit surface`）。测试成员移到 0.0.5，并检验这一项。
 - **mtest 0.11.0（mcpplibs.mtest、.manifest、.gtest、.capi）与新包 mcpplibs.mtest.doctest。** 协议的 `step` 与 `exercise` 事件（P5.6）；
