@@ -159,7 +159,7 @@ tests/prepare_mwrap_indices.py 的 namespace 视图仅供隔离的单项目消�
 不能以独立项目通过证明混合 workspace 顺序可用。视图是不提交、不发布的输出，不是新的发布格式。
 
 正常安装由 tests/mwrap/check_installed_template.py 独立验证：把完整 pkgs/index.toml 发布布局放进独立 MCPP_HOME 的单一内置索引，
-下载真实且带校验的源码归档，执行 mcpp new，再原样构建/运行生成清单，不替换为 path 依赖。
+下载真实且带校验的源码归档，执行 mcpp new，再原样构建/运行生成清单，不替换为 path 依赖。该 home 默认从 GLOBAL 镜像下载，`--mirror CN` 改用 CN（发布时的 CN 验收）。
 Git 与发布的 pkgs/mwrap 目录始终一致。
 
 运行库、插件、构建模块耦合的测试可能同时依赖多个候选 namespace。使用 `python3 tests/prepare_builtin_index.py --home <独立测试目录>`，将完整且字节不变的候选布局放入该测试 home 的唯一内置索引；成员用空 `[indices]` 覆盖旧 workspace 路由。自动更新候选 CI 同样使用此模式。不要将同一个完整 checkout 注册为多个项目别名。这只是测试 home 准备，不需要发布 staging、路径转换或修改 mcpp 引擎。

@@ -43,6 +43,8 @@ def main():
     parser.add_argument("--package", default="mcpplibs.mwrap.onnxruntime@1.25.1.1")
     parser.add_argument("--deploy", action="store_true", help="pack, relocate and run the consumer; verify declared notices")
     parser.add_argument("--published-index", action="store_true", help="refresh the real public index instead of staging this checkout")
+    parser.add_argument("--mirror", choices=("GLOBAL", "CN"), default="GLOBAL",
+                        help="the download mirror of the run's home (mcpp self config --mirror)")
     parser.add_argument("--home", type=Path, help="reuse a dedicated test home across independent installed consumers")
     parser.add_argument("--run-arg", action="append", default=[])
     parser.add_argument("--template", help="a named template of the package; omit for its default")
@@ -65,7 +67,7 @@ def main():
         # mcpp 2026.10.26.1+ publishes only on request (mcpp docs/04, compile_commands);
         # the request is the run's, so the template's manifest stays as rendered.
         env = dict(os.environ, MCPP_HOME=str(home), MCPP_COMPILE_COMMANDS="compile_commands.json")
-        commands = [[args.mcpp, "self", "config", "--mirror", "GLOBAL"]]
+        commands = [[args.mcpp, "self", "config", "--mirror", args.mirror]]
         if args.published_index:
             commands.append([args.mcpp, "index", "update"])
         commands += [[args.mcpp, "new", "--list-templates", args.package],
