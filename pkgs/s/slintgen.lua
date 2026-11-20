@@ -1,33 +1,55 @@
--- slintgen -- slint-compiler as an importable build rule (module slint.mcpp.plugins).
+-- slintgen -- slint-compiler as an importable build rule.
 --
---   [build-dependencies]
---   mcpplibs.slintgen = { version = "1.19.0.1", features = ["slint"] }
+-- One name in three spellings, as mcpplibs.openkal-bind is (SPEC-007 R9.6, a
+-- third-party plugin's `mcpp.<namespace>.<name>`):
+--
+--   package    mcpplibs.slintgen
+--   module     mcpp.mcpplibs.slintgen
+--   namespace  mcpp::mcpplibs::slintgen
+--
+-- Most projects never name it: mcpplibs.mwrap.slint re-exports it, so
+--
+--   [dependencies]
+--   mcpplibs.mwrap.slint = "1.19.0.2"
 --
 --   // build.mcpp
 --   import mcpp;
---   import slint.mcpp.plugins;
---   int main() { return mcpp::plugins::slint::compile({}) ? 0 : 1; }
+--   import mcpp.mcpplibs.slintgen;
+--   int main() {
+--       mcpp::mcpplibs::slintgen::options o;
+--       o.sources = {"ui/app.slint"};
+--       return mcpp::mcpplibs::slintgen::compile(o) ? 0 : 1;
+--   }
+--
+-- A project without the wrapper writes `mcpplibs.slintgen = { version =
+-- "1.19.0.2", host-module = true }` under [build-dependencies] and depends on
+-- compat.slint for the SDK.
 --
 -- The rule is this ecosystem's own C++ (not upstream's), so it stays in
 -- `mcpplibs`; it ships in the rules/ directory of the slint-m archive, as
--- grpcgen ships in grpc-m's. The feature `slint` claims `.slint` as a source
--- the rule compiles; the project names it.
+-- grpcgen ships in grpc-m's.
 --
--- The module is named under the library's name, not `mcpp.plugins.*`: SPEC-007
--- R9.6 keeps that for the mcpp namespace and the index admits no package that
--- provides such a module (tests/run_members.sh). 1.19.0.1 is the wrapper
--- revision that renamed it; mwrap-1.19.0 was tagged and never indexed.
+-- 1.19.0 and 1.19.0.1: the module was `mcpp.plugins.slint` (never indexed) and
+-- `slint.mcpp.plugins` with a feature that claimed `.slint`; 1.19.0.2 is the
+-- name above and no feature. 1.19.0.1 keeps its published bytes.
 package = {
     spec        = "1",
     namespace   = "mcpplibs",
     name        = "slintgen",
-    description = "slint-compiler as an importable mcpp build rule (host-module slint.mcpp.plugins)",
+    description = "slint-compiler as an importable mcpp build rule (host-module mcpp.mcpplibs.slintgen)",
     licenses    = {"Apache-2.0"},
     repo        = "https://github.com/mcpplibs/slint-m",
     type        = "package",
 
     xpm = {
         linux = {
+            ["1.19.0.2"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/slint-m/releases/download/mwrap-1.19.0.2/slint-m-1.19.0.2.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mwrap-slint/releases/download/1.19.0.2/slint-m-1.19.0.2.tar.gz",
+                },
+                sha256 = "95021ff52af53930f2b9306f5612f421e9f79741d7465ec3d586e7eb1948c62d",
+            },
             ["1.19.0.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/slint-m/releases/download/mwrap-1.19.0.1/slint-m-1.19.0.1.tar.gz",
@@ -37,6 +59,13 @@ package = {
             },
         },
         macosx = {
+            ["1.19.0.2"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/slint-m/releases/download/mwrap-1.19.0.2/slint-m-1.19.0.2.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mwrap-slint/releases/download/1.19.0.2/slint-m-1.19.0.2.tar.gz",
+                },
+                sha256 = "95021ff52af53930f2b9306f5612f421e9f79741d7465ec3d586e7eb1948c62d",
+            },
             ["1.19.0.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/slint-m/releases/download/mwrap-1.19.0.1/slint-m-1.19.0.1.tar.gz",
@@ -46,6 +75,13 @@ package = {
             },
         },
         windows = {
+            ["1.19.0.2"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/slint-m/releases/download/mwrap-1.19.0.2/slint-m-1.19.0.2.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mwrap-slint/releases/download/1.19.0.2/slint-m-1.19.0.2.tar.gz",
+                },
+                sha256 = "95021ff52af53930f2b9306f5612f421e9f79741d7465ec3d586e7eb1948c62d",
+            },
             ["1.19.0.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/slint-m/releases/download/mwrap-1.19.0.1/slint-m-1.19.0.1.tar.gz",
