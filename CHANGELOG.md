@@ -230,6 +230,7 @@
 
 ### Chore
 
+- **已安装模板的检查可选镜像。** `tests/mwrap/check_installed_template.py` 新增 `--mirror {GLOBAL,CN}`（默认 GLOBAL）；此前固定为 GLOBAL，发布时的 CN 验收只能手工执行。`--published-index --mirror CN` 下 xxhash-m 0.8.3 的封装归档首次即从 gitcode.com 取得。
 - **已安装模板的检查：模板写引号键时只允许该弃用警告。** mcpp 2026.11.8.1 之前发布的 mwrap 模板以 `"{{self.name}}"` 写依赖键，
   渲染为一个带引号的键；`--strict` 拒绝这一弃用读法，归档又不可改。检查在渲染出引号键时不加 `--strict` 构建，只允许该包的这条
   弃用警告，其余警告仍失败；模板的下一版写不带引号的选择器后自动恢复严格构建（onnxruntime-m 1.25.1；opencv-m、ffmpeg-m 的模板同形）。
