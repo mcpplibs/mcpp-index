@@ -1,12 +1,13 @@
-// `ui/app.slint` reaches slint.mcpp.plugins from `[build] sources`; the module
+// ui/app.slint reaches mcpp.mcpplibs.slintgen as `options::sources`; the module
 // `app.ui` exports what the file exports and slint-compiler generates. The SDK
 // is compat.slint, reached through mcpplibs.mwrap.slint.
 import mcpp;
-import slint.mcpp.plugins;
+import mcpp.mcpplibs.slintgen;
 
 int main() {
-    mcpp::plugins::slint::options o;
-    o.module = "app.ui";
-    o.style  = "fluent";
-    return mcpp::plugins::slint::compile(o) ? 0 : 1;
+    mcpp::mcpplibs::slintgen::options o;
+    o.sources = {"ui/app.slint"};
+    o.module  = "app.ui";
+    o.style   = "fluent";
+    return mcpp::mcpplibs::slintgen::compile(o) ? 0 : 1;
 }

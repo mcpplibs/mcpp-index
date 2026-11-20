@@ -1,6 +1,6 @@
-# 实施方案：Slint 进入 mcpp 生态（compat.slint + mcpplibs.mwrap.slint + 构建规则 slint.mcpp.plugins）
+# 实施方案：Slint 进入 mcpp 生态（compat.slint + mcpplibs.mwrap.slint + 构建规则 mcpp.mcpplibs.slintgen）
 
-状态：已按维护者决定修订（2026-11-20）：规则放入 slint-m，模块名 `slint.mcpp.plugins`（`slint.mcpp.plugins` 被索引的 R9.6 收录门拒绝，见 §1 修订记录）。上游版本：Slint 1.19.0（2026-11-16）。
+状态：已按维护者决定修订（2026-11-20）：规则放入 slint-m，模块名 `mcpp.mcpplibs.slintgen`（`mcpp.mcpplibs.slintgen` 被索引的 R9.6 收录门拒绝，见 §1 修订记录）。上游版本：Slint 1.19.0（2026-11-16）。
 本文的事实均为实测或读源码所得，出处写在各条之后；未验证的部分列在 §9。
 
 ## 0. 目标
@@ -11,7 +11,7 @@
 |---|---|
 | `find_package(Slint)` + 预构建 SDK | `compat.slint` 的预构建档位（xlings-res，GitHub + GitCode） |
 | `FetchContent(... SOURCE_SUBDIR api/cpp)` + `SLINT_FEATURE_*` | `compat.slint` 的同名 feature；未预构建的组合走源码构建（cargo，§4.3） |
-| `slint_target_sources(...)` 与目标属性 | 构建规则 `slint.mcpp.plugins`（包 `mcpplibs.slintgen`，slint-m 的 `rules/`，§5） |
+| `slint_target_sources(...)` 与目标属性 | 构建规则 `mcpp.mcpplibs.slintgen`（包 `mcpplibs.slintgen`，slint-m 的 `rules/`，§5） |
 | `#include "app.h"` | 同上，另可 `import` 生成的组件模块（§5.3） |
 | — | `import mcpplibs.mwrap.slint;`（§6） |
 
@@ -21,14 +21,14 @@
 |---|---|---|
 | 上游库原样构建 | `compat.<名>` | `compat.slint` |
 | 通用 C++ 库的模块封装 | `mcpplibs.mwrap.<名>`（docs/mwrap.md） | `mcpplibs.mwrap.slint`，仓库 `mcpplibs/slint-m` |
-| mcpp 专用构建插件（导入引擎接口 `mcpp`） | 通常 `mcpp.<命名空间>.*`（R9.6）；保留的第二段只属于命名空间为 `mcpp` 的包 | 包 `mcpplibs.slintgen`（slint-m 的 `rules/`，与 grpc-m 的 `grpcgen` 同形），模块 `slint.mcpp.plugins` |
+| mcpp 专用构建插件（导入引擎接口 `mcpp`） | 通常 `mcpp.<命名空间>.*`（R9.6）；保留的第二段只属于命名空间为 `mcpp` 的包 | 包 `mcpplibs.slintgen`（slint-m 的 `rules/`，与 grpc-m 的 `grpcgen` 同形），模块 `mcpp.mcpplibs.slintgen` |
 
 **修订记录。** 初版把规则放进官方插件包 `mcpp.plugins`（feature `rules-slint`，模块 `mcpp.rules.slint`），依据是 `rules-qt`
-等先例与 R9.6。维护者决定改为放入 slint-m、模块名 `slint.mcpp.plugins`（mcpp-plugins#64 已不合入关闭）。代价已核实：
+等先例与 R9.6。维护者决定改为放入 slint-m、模块名 `mcpp.mcpplibs.slintgen`（mcpp-plugins#64 已不合入关闭）。代价已核实：
 (1) 实测：`mcpp.plugins.slint` 由命名空间不是 `mcpp` 的包提供，引擎每次构建警告，而索引的成员门（tests/run_members.sh）
-拒绝此类包，mcpp-index#861 因此失败；维护者改定模块名为 `slint.mcpp.plugins`（不以 `mcpp.` 起头，不受 R9.6 约束），
-以修订号 1.19.0.1 发布（mwrap-1.19.0 已打标签、未收录）；(2) `device_extensions` 的认领不经 `reexport` 传递，所以工程须自己在
-`[build-dependencies]` 写 `mcpplibs.slintgen = { …, features = ["slint"] }`，slint-m 不再 reexport 规则；
+拒绝此类包，mcpp-index#861 因此失败；维护者先改为 `slint.mcpp.plugins`（1.19.0.1），随后统一为同形的一个名字的三种拼写（1.19.0.2）：包 `mcpplibs.slintgen`、
+模块 `mcpp.mcpplibs.slintgen`、命名空间 `mcpp::mcpplibs::slintgen`（与 openkal-bind 同形，R9.6 的第三方写法）；mwrap-1.19.0 已打标签、未收录；(2) `device_extensions` 的认领不经 `reexport` 传递，故规则不带 feature：`.slint` 以 `options::sources` 传入，slint-m reexport
+规则（grpcgen 的形态），工程只依赖 `mcpplibs.mwrap.slint`；
 (3) 规则对 `mcpp.plugins`（feature `plugins-core`）的依赖写在规则包自己的 `[dependencies]`（mcpp 2026.10.11.1+ 形态）。
 
 规则不声明 SDK、不固定版本（与 `rules-qt` 相同）：`slint-compiler` 与运行时出自同一个 SDK，版本一致由载荷保证。
@@ -76,7 +76,7 @@ xlings-res（GitHub + GitCode）
   slint-vendor/<ver>/slint-<ver>-vendor.tar.zst              cargo vendor（源码构建离线依赖）
   skia-binaries/<key>/...                                    rust-skia 预构建的逐字节镜像
 mcpplibs/slint-m
-  src/*.cppm  include/mwrap/slint/macros.hpp  rules/（slintgen，模块 slint.mcpp.plugins）  templates/hello  tests  tools
+  src/*.cppm  include/mwrap/slint/macros.hpp  rules/（slintgen，模块 mcpp.mcpplibs.slintgen）  templates/hello  tests  tools
 ```
 
 ## 4. compat.slint
@@ -115,7 +115,7 @@ feature 名与上游 cargo 功能名逐一相同（kebab-case，与 mwrap 规范
 （如 `mcpp:slint-runtime`）互斥，`mcpplibs.mwrap.slint` 的 feature 经 `feature-deps` 选择提供者；或单一包内由
 install / build 程序按功能集选择载荷。以 S2 的实测结果定稿。
 
-## 5. 构建规则 slint.mcpp.plugins（slint-m 的 rules/）
+## 5. 构建规则 mcpp.mcpplibs.slintgen（slint-m 的 rules/）
 
 ### 5.1 形态
 
@@ -126,7 +126,7 @@ mcpp.plugins = { version = "0.26.1", features = ["plugins-core"] }
 
 [features.slint]
 sources           = ["src/slint.cppm"]
-rule_module       = "slint.mcpp.plugins"
+rule_module       = "mcpp.mcpplibs.slintgen"
 device_extensions = [".slint"]
 ```
 与 `rules-qt` 相同：不声明 SDK、不固定版本。`slint-compiler` 的来源按序：`options::compiler`；环境变量 `SLINT_COMPILER`；
@@ -165,7 +165,7 @@ device_extensions = [".slint"]
 - GCC 16 与 `.platform`：先以最小复现报告上游（lambda 位于 requires 子句）；在修复前 `.platform` 在 GCC 上以文本
   `#include <slint-platform.h>`（在 import 之前，规范已有此写法）提供，Clang 上导出；README 写明。
 - feature：与 compat.slint 同名转发；`slint-compiler` 经 compat.slint 的 `reexport` 到达使用方的构建程序；规则包
-  `mcpplibs.slintgen` 由使用方在 `[build-dependencies]` 写 `features = ["slint"]`（见 §1 修订记录）。
+  `mcpplibs.slintgen`（模块 `mcpp.mcpplibs.slintgen`）由封装包 reexport，使用方只依赖 `mcpplibs.mwrap.slint`（见 §1 修订记录）。
 - 模板 `hello`（默认）：计数器窗口；CI 中以软件渲染无头平台运行并断言；有桌面时开窗。
 - 许可：上游三选一（GPL-3.0-only / Royalty-free-2.0 / 商业），描述符列出三者，README 写明由使用方选择、Royalty-free
   不含嵌入式；封装层 Apache-2.0。
@@ -175,7 +175,7 @@ device_extensions = [".slint"]
 | 阶段 | 交付 | 验收 |
 |---|---|---|
 | 0（实测） | S1–S3（§9） | 结论写回本文 |
-| 1 | xlings-res `slint` 的 `default` 档（4 平台，GLOBAL + CN）；compat.slint 1.19.0（default 档，feature 与上游同名）；`slint.mcpp.plugins`；slint-m（核心、`.interpreter`、`.platform`、`.macros`）与 `hello` 模板 | Linux（gcc/llvm）、Linux arm64、macOS、Windows 的 CI：模板严格构建并无头运行；规则的增量测试；运行时依赖闭包只含声明的提供者；导出审计 |
+| 1 | xlings-res `slint` 的 `default` 档（4 平台，GLOBAL + CN）；compat.slint 1.19.0（default 档，feature 与上游同名）；`mcpp.mcpplibs.slintgen`；slint-m（核心、`.interpreter`、`.platform`、`.macros`）与 `hello` 模板 | Linux（gcc/llvm）、Linux arm64、macOS、Windows 的 CI：模板严格构建并无头运行；规则的增量测试；运行时依赖闭包只含声明的提供者；导出审计 |
 | 2 | `slint-vendor` 载荷；源码构建路径（任意功能组合） | 一个非档位组合（如 `default` + `gettext`）冷构建与二次缓存命中 |
 | 3 | `skia-binaries` 镜像；`full` 档；`renderer-skia*` | CN 镜像下无 GitHub 访问构建成功；Skia 渲染无头截图比对 |
 | 4 | linuxkms（compat.libinput soname）、Android / iOS / wasm / MCU 行、`backend-qt`、`gettext` | 各平台行的模板构建；KMS 以无显示设备的冒烟测试 |
