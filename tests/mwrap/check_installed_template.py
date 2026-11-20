@@ -31,6 +31,7 @@ STATIC_NOTICES = {
     "mcpplibs.mwrap.libc": ("libc.cppm", None, b"", b"ISO/IEC 9899:2018"),
     "mcpplibs.mwrap.abseil": ("abseil.cppm", "upstream/abseil-cpp/LICENSE", b"Apache License", b"The Abseil Authors"),
     "mcpplibs.mwrap.openssl": ("openssl.cppm", "upstream/openssl/LICENSE.txt", b"Apache License", b"The OpenSSL Project Authors"),
+    "mcpplibs.mwrap.wuffs": ("wuffs.cppm", "upstream/wuffs/LICENSE", b"Apache License", b"The Wuffs Authors"),
     "mcpplibs.mwrap.protobuf": ("protobuf.cppm", "upstream/protobuf/LICENSE", b"Redistribution and use in source and binary forms", b"Google"),
 }
 
