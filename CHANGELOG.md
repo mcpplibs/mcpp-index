@@ -19,6 +19,9 @@
   mcpp 按发起加载的对象判定它们可达。声明宿主能力的程序不能以 `--mode self-contained` 打包；已安装模板的部署检查在 mcpp
   按此拒绝时改用 `--mode vendored`（tests/mwrap/check_installed_template.py）。
 - **第四段的两种含义写入封装说明**（docs/mwrap.md）：上游的四段版本与封装修订；命令行的 `@<版本>` 按书写的前缀选择，`@=` 指名一个键。
+- **mtest 0.11.3（mcpplibs.mtest、.manifest、.gtest、.capi、.doctest）。** `mtest gate` 只在运行全部用例的集合（`full`、`release`、
+  声明了 `all` 的集合）中判定账本；其他集合的门禁判定失败与预算，并注明没有判定账本。库只改变它陈述的版本。成员
+  tests/examples/mtest-doctest 移到 0.11.3。
 - **mtest 0.11.2（mcpplibs.mtest、.manifest、.gtest、.capi、.doctest）。** 只作为选中用例的作用域运行的用例，其函数体中的
   `step`、`exercise`、`artifact`、`metric` 与 `fixture` 事件不指名用例；运行器不再把它记为没有结束的用例。成员
   tests/examples/mtest-doctest 移到 0.11.2。
