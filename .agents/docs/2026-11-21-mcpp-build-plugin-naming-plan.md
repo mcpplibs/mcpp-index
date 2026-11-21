@@ -256,7 +256,16 @@ T0 评审
 | 任务 | 结果 |
 |---|---|
 | T3 slint-m | PR #4 squash 合入（3a24e15），四个 CI 任务与 templates 通过；标签 `mwrap-1.19.0.3`，release 与 `mcpp-res/mwrap-slint` 的 `1.19.0.3` 归档逐字节一致（sha256 `d4e409ad…384b`） |
-| T1 + T4 mcpp-index | 合并为一个 PR（文档 + lint + `pkgs/mcpp/` 的第一个文件 + 老包冻结 + 成员 + 验收步骤），结果见 PR |
-| T5 mcpp issue | 一个 issue，见 PR 合入之后 |
-| T2 官方两包搬迁 | 视风险与 CI，单独处理或推后 |
+| T1 + T4 mcpp-index | 合并为一个 PR #868（3057883）：文档 + lint + `pkgs/mcpp/` 的第一个文件 + 老包冻结 + 成员 + 验收步骤；CI 全部通过（含 CI 固定的 mcpp 2026.11.18.1 上跑 `slint-rule`、`slint-ui`） |
+| 发布验收 | 索引发布后，`check_installed_template.py --published-index` 在 GLOBAL 与 CN 两个镜像上冷装 `mcpplibs.mwrap.slint@1.19.0.3`：hello 模板无头 counter = 3，7 个许可证文件逐字节一致，重定位后的应用包通过；新 id `mcpplibs.mplugin.slint@1.19.0` 从已发布索引直接解析并运行；冻结的 `mcpplibs.slintgen@1.19.0.2` 仍可解析、构建 |
+| T5 mcpp issue | 一个 issue：mcpp-community/mcpp#993（只提 issue，没有 PR） |
+| T2 官方两包搬迁 | **推后，未做。** 原因：索引的下限 `min_mcpp = "2026.9.18.3"` 早于 mwrap 目录（2026-10-25）的引入，没有验证过下限版本的客户端能否从 `pkgs/mcpp/` 找到已有的 `mcpp.plugins`；它被几乎所有工程使用，而搬迁没有使用方的收益。新包不受影响（旧客户端本来就不会请求它们）。若要做：先在 2026.9.18.3 上用 `pkgs/mcpp/` 的索引解析 `mcpp.plugins`，再单独开 PR；mcpp-plugins 的 README（155 行）也引用了 `pkgs/m/mcpp.plugins.lua`，要同步 |
 
+对 §6 的回写：
+- **U1**（客户端从 `pkgs/mcpp/` 解析）：已确认，在 CI 固定的 mcpp 与已发布的索引上都成功。
+- **U2**（`mcpplibs.mplugin` 视图）：不需要；成员使用整份候选索引。
+- **U4**（mcpp-plugins 发布流程引用路径）：已核对，没有脚本引用，只有 README 的一句话；登记由人工完成。
+- **U12**（规则版本 `1.19.0` 与包装包 `1.19.0.3` 脱钩）：已确认可行，解析与构建都正常；D10 保持。
+- **U13**（比固定版本更早的 mcpp）：仍未测。
+- **R11**：保持冻结；`mcpplibs.slintgen@1.19.0.1/.2` 仍可用。
+- 测试成员的一个教训：`tests/mwrap/<member>` 只有 `build.mcpp` 而没有 `tests/*.cpp` 时，`mcpp test` 报 “no tests found” 并显示 ok，没有真的构建。构建包的成员也需要一个测试文件（`slint-rule` 的 `tests/generated.cpp` 编译 build.mcpp 让规则产出的头文件）。另外规则在 `build.mcpp` 里只登记动作，头文件要在动作运行后才存在，所以 `build.mcpp` 里不能检查产物。
