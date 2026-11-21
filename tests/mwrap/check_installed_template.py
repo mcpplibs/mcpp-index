@@ -139,7 +139,19 @@ def main():
             command = [args.mcpp, "pack", "--toolchain", args.toolchain, "--mode", mode,
                        "--pkg-format", "dir", "--output", "deployment-audit"]
             print("+", " ".join(command), flush=True)
-            subprocess.run(command, cwd=project, env=env, check=True)
+            packed = subprocess.run(command, cwd=project, env=env, text=True,
+                                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            print(packed.stdout, end="", flush=True)
+            # A program whose packages state what the host provides (`[runtime] capabilities`,
+            # a display and a GL driver for compat.slint) cannot carry everything: the refusal
+            # names them, and the vendored form is the one that holds.
+            if packed.returncode != 0 and mode == "self-contained" \
+                    and "cannot be used by a program that needs the host to provide" in packed.stdout:
+                command[command.index("--mode") + 1] = "vendored"
+                print("+", " ".join(command), flush=True)
+                subprocess.run(command, cwd=project, env=env, check=True)
+            elif packed.returncode != 0:
+                raise subprocess.CalledProcessError(packed.returncode, command, packed.stdout)
             bundle = project / "target/dist/deployment-audit"
             relocated = temporary / "relocated/bundle"
             shutil.copytree(bundle, relocated, symlinks=True)

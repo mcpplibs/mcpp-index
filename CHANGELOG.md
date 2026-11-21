@@ -11,7 +11,8 @@
 
 - **compat.slint 声明它以 `dlopen` 加载的库。** libslint_cpp 的 winit 与 femtovg 后端加载的 X11、xcb、Xcursor、Xi、Xrender、
   xkbcommon、Wayland、EGL 与 GL 的 soname 记为运行期的必需（`runtime.dlopen_libs`），能力为 `display` 与 `opengl.egl.driver`；
-  mcpp 按发起加载的对象判定它们可达。
+  mcpp 按发起加载的对象判定它们可达。声明宿主能力的程序不能以 `--mode self-contained` 打包；已安装模板的部署检查在 mcpp
+  按此拒绝时改用 `--mode vendored`（tests/mwrap/check_installed_template.py）。
 - **第四段的两种含义写入封装说明**（docs/mwrap.md）：上游的四段版本与封装修订；命令行的 `@<版本>` 按书写的前缀选择，`@=` 指名一个键。
 - **mtest 0.11.2（mcpplibs.mtest、.manifest、.gtest、.capi、.doctest）。** 只作为选中用例的作用域运行的用例，其函数体中的
   `step`、`exercise`、`artifact`、`metric` 与 `fixture` 事件不指名用例；运行器不再把它记为没有结束的用例。成员
