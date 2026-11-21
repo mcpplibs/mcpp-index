@@ -9,6 +9,13 @@
 
 ### Added
 
+- **compat.slint 声明它以 `dlopen` 加载的库。** libslint_cpp 的 winit 与 femtovg 后端加载的 X11、xcb、Xcursor、Xi、Xrender、
+  xkbcommon、Wayland、EGL 与 GL 的 soname 记为运行期的必需（`runtime.dlopen_libs`），能力为 `display` 与 `opengl.egl.driver`；
+  mcpp 按发起加载的对象判定它们可达。
+- **第四段的两种含义写入封装说明**（docs/mwrap.md）：上游的四段版本与封装修订；命令行的 `@<版本>` 按书写的前缀选择，`@=` 指名一个键。
+- **mtest 0.11.2（mcpplibs.mtest、.manifest、.gtest、.capi、.doctest）。** 只作为选中用例的作用域运行的用例，其函数体中的
+  `step`、`exercise`、`artifact`、`metric` 与 `fixture` 事件不指名用例；运行器不再把它记为没有结束的用例。成员
+  tests/examples/mtest-doctest 移到 0.11.2。
 - **mtest 0.11.1（mcpplibs.mtest、.manifest、.gtest、.capi、.doctest）。** `time_left()` 给出用例余下的时间（其自身与外层作用域的
   `timeout` 中最早结束者）；`e2e::run` 让一条命令在此之内结束，扣除结束命令所需与留给用例报告的时间。成员 tests/examples/mtest-doctest
   移到 0.11.1。

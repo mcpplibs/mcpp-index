@@ -80,6 +80,13 @@ pins. A wrapper revision does not excuse undocumented breaking interface changes
 Non-numeric/prerelease upstream schemes need an explicit mapping preserving
 their meaning. Build metadata (`+...`) is not a sortable wrapper revision.
 
+A fourth segment has two meanings in this index: an upstream version of four
+parts (the Vulkan SDK's `1.4.321.0`) and a wrapper revision (`1.19.0.2`). The
+command line reads both by the written prefix (mcpp 2026.11.21.1 and later):
+`--template mcpplibs.mwrap.slint@1.19.0` selects the newest `1.19.0.x`, and
+`@=1.19.0.1` selects that one key. A revision only increases and is never
+reused for other bytes.
+
 ## Public interfaces and macros
 
 Prefer exporting the upstream entities with `export using`. Each entity has one
