@@ -60,6 +60,9 @@
 --
 -- 0.11.1 holds a command an end-to-end case runs to what its case has left of its time
 -- (`time_left()`).
+--
+-- 0.11.2: what a case that runs only as the scope of a selected case does (a step, an
+-- exercise, an artifact, a metric, a fixture) names no case.
 package = {
     spec        = "1",
     namespace   = "mcpplibs",
@@ -78,6 +81,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.11.2"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.11.2.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mtest/releases/download/v0.11.2/mtest-v0.11.2.tar.gz",
+                },
+                sha256 = "1236da4c4529faaf1c4524611e653f89c7fa43868d279357ade85cf7e3fcbc4c",
+            },
             ["0.11.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.11.1.tar.gz",
@@ -227,6 +237,13 @@ package = {
             },
         },
         macosx = {
+            ["0.11.2"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.11.2.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mtest/releases/download/v0.11.2/mtest-v0.11.2.tar.gz",
+                },
+                sha256 = "1236da4c4529faaf1c4524611e653f89c7fa43868d279357ade85cf7e3fcbc4c",
+            },
             ["0.11.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.11.1.tar.gz",
@@ -376,6 +393,13 @@ package = {
             },
         },
         windows = {
+            ["0.11.2"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.11.2.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mtest/releases/download/v0.11.2/mtest-v0.11.2.tar.gz",
+                },
+                sha256 = "1236da4c4529faaf1c4524611e653f89c7fa43868d279357ade85cf7e3fcbc4c",
+            },
             ["0.11.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.11.1.tar.gz",

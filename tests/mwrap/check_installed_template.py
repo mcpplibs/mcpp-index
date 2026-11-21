@@ -139,7 +139,20 @@ def main():
             command = [args.mcpp, "pack", "--toolchain", args.toolchain, "--mode", mode,
                        "--pkg-format", "dir", "--output", "deployment-audit"]
             print("+", " ".join(command), flush=True)
-            subprocess.run(command, cwd=project, env=env, check=True)
+            packed = subprocess.run(command, cwd=project, env=env, text=True,
+                                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            print(packed.stdout, end="", flush=True)
+            # A program whose packages state what the host provides (`[runtime] capabilities`,
+            # a display and a GL driver for compat.slint) cannot carry everything: the refusal
+            # names them, and the vendored form is the one that holds.
+            if packed.returncode != 0 and mode == "self-contained" \
+                    and "cannot be used by a program that needs the host to provide" in packed.stdout:
+                mode = "vendored"
+                command[command.index("--mode") + 1] = mode
+                print("+", " ".join(command), flush=True)
+                subprocess.run(command, cwd=project, env=env, check=True)
+            elif packed.returncode != 0:
+                raise subprocess.CalledProcessError(packed.returncode, command, packed.stdout)
             bundle = project / "target/dist/deployment-audit"
             relocated = temporary / "relocated/bundle"
             shutil.copytree(bundle, relocated, symlinks=True)
@@ -504,6 +517,7 @@ def main():
             runtime_env.update(HOME=str(empty_home), USERPROFILE=str(empty_home))
             if sys.platform.startswith("linux"):
                 runtime_env["PATH"] = "/usr/bin:/bin"
+            if mode == "self-contained":
                 launcher = relocated / "run.sh"
             else:
                 filename = "installed-quickstart" + (".exe" if os.name == "nt" else "")
@@ -514,7 +528,8 @@ def main():
                     system_root = os.environ.get("SystemRoot", r"C:\Windows")
                     runtime_env["PATH"] = os.pathsep.join([system_root, str(Path(system_root) / "System32")])
             subprocess.run([str(launcher)], cwd=empty_home, env=runtime_env, check=True)
-            if sys.platform.startswith("linux"):
+            # The loader travels only with a self-contained bundle.
+            if mode == "self-contained":
                 loader = relocated / "lib/ld-linux-x86-64.so.2"
                 listing = subprocess.run([str(loader), "--library-path", str(relocated / "lib"),
                                           "--list", str(relocated / "bin/installed-quickstart")],

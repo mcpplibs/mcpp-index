@@ -94,10 +94,20 @@ int mcpp_compat_slint_anchor() { return 0; }
         },
         sources = { "mcpp_generated/slint_sdk.cpp" },
 
+        -- libslint_cpp dlopen()s its windowing and GL libraries (the sonames
+        -- its winit and femtovg backends name, read from the library itself);
+        -- they are required at run time, and xim:slint declares the packages
+        -- that provide them, so its DT_RUNPATH reaches them.
         linux = { runtime = {
             libraries           = { "slint_cpp" },
             link_library_dirs   = { "mcpp_generated/slint/lib" },
             runtime_search_dirs = { "mcpp_generated/slint/lib" },
+            dlopen_libs = {
+                "libX11.so.6", "libX11-xcb.so.1", "libxcb.so.1", "libXcursor.so.1", "libXi.so.6",
+                "libXrender.so.1", "libxkbcommon.so.0", "libxkbcommon-x11.so.0",
+                "libwayland-client.so.0", "libwayland-egl.so.1", "libEGL.so.1", "libGL.so.1",
+            },
+            capabilities = { "display", "opengl.egl.driver" },
         } },
         macosx = { ldflags = { "-Wl,-rpath,@loader_path" }, runtime = {
             libraries           = { "slint_cpp" },
