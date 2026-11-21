@@ -9,6 +9,8 @@
 
 ### Added
 
+- **构建插件的命名与布局规范（docs/build-plugins.md）与第一个新形态的包 mcpplibs.mplugin.slint 1.19.0。** 构建插件的 id 是 `<owner>.mplugin.<name>`，模块名与 C++ 命名空间就是这个 id（`mcpplibs.mplugin.slint`、`mcpplibs::mplugin::slint`），`mcpp.*` 保留给官方；`mplugin` 是种类段，如同封装包的 `mwrap`，所以引擎不被遮蔽，规则代码直接写 `mcpp::…`，在 CI 固定的 mcpp（2026.11.18.1）上实测零警告。描述符放在新目录 `pkgs/mcpp/`（完整 id 作文件名；目录是 mcpp 自己加载的包，身份仍以描述符声明为准）。新增 lint：`tests/check_mplugin_layout.lua`（`<owner>.mplugin` ↔ `pkgs/mcpp/`，owner 与 name 是标识符）；`check_reserved_namespace.lua` 另拒绝 owner 为 `mcpp`、保留名、`platforms` 与种类段（`tests/test_check_mplugin.py`）。`mcpplibs.mplugin.slint@1.19.0` 的归档是 slint-m 的 `mwrap-1.19.0.3`（同一字节、GLOBAL 与 CN），规则版本与封装包修订脱钩；`mcpplibs.mwrap.slint@1.19.0.3` 把规则 reexport，使用方仍只依赖封装包。成员 tests/mwrap/slint-rule 只测 build.mcpp 对该描述符的解析与规则运行（构建包与库包分开测）。设计与实施计划见 `.agents/docs/2026-11-21-mcpp-build-plugin-naming-plan.md`。
+- **mcpplibs.slintgen 冻结：** 被 mcpplibs.mplugin.slint 取代；1.19.0.1 与 1.19.0.2 的行与归档保持原样、仍可使用，不再有新版本，描述写明 FROZEN。写了老 id 的工程改依赖名即可迁移；只依赖封装包的工程不受影响。
 - **compat.slint 声明它以 `dlopen` 加载的库。** libslint_cpp 的 winit 与 femtovg 后端加载的 X11、xcb、Xcursor、Xi、Xrender、
   xkbcommon、Wayland、EGL 与 GL 的 soname 记为运行期的必需（`runtime.dlopen_libs`），能力为 `display` 与 `opengl.egl.driver`；
   mcpp 按发起加载的对象判定它们可达。声明宿主能力的程序不能以 `--mode self-contained` 打包；已安装模板的部署检查在 mcpp

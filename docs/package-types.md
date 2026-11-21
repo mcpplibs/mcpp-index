@@ -2,6 +2,8 @@
 
 Module wrappers preserve upstream APIs under `mcpplibs.mwrap.<lib>`. Use `pkgs/mwrap/<lib>.lua`; see [the wrapper specification](mwrap.md). Every -m repository has English and Chinese READMEs.
 
+Build plugins (modules a `build.mcpp` imports) are `<owner>.mplugin.<name>`, descriptors in `pkgs/mcpp/`; see [build plugins](build-plugins.md).
+
 
 **English** | [简体中文](zh/package-types.md)
 

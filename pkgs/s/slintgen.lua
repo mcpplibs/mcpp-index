@@ -1,5 +1,8 @@
 -- slintgen -- slint-compiler as an importable build rule.
 --
+-- FROZEN: superseded by mcpplibs.mplugin.slint (pkgs/mcpp/, docs/build-plugins.md).
+-- This package keeps 1.19.0.1 and 1.19.0.2 as published and gets no more versions.
+--
 -- One name in three spellings, as mcpplibs.openkal-bind is (SPEC-007 R9.6, a
 -- third-party plugin's `mcpp.<namespace>.<name>`):
 --
@@ -36,7 +39,7 @@ package = {
     spec        = "1",
     namespace   = "mcpplibs",
     name        = "slintgen",
-    description = "slint-compiler as an importable mcpp build rule (host-module mcpp.mcpplibs.slintgen)",
+    description = "FROZEN: superseded by mcpplibs.mplugin.slint. slint-compiler as an importable mcpp build rule (host-module mcpp.mcpplibs.slintgen)",
     licenses    = {"Apache-2.0"},
     repo        = "https://github.com/mcpplibs/slint-m",
     type        = "package",
