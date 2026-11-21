@@ -259,7 +259,7 @@ T0 评审
 | T1 + T4 mcpp-index | 合并为一个 PR #868（3057883）：文档 + lint + `pkgs/mcpp/` 的第一个文件 + 老包冻结 + 成员 + 验收步骤；CI 全部通过（含 CI 固定的 mcpp 2026.11.18.1 上跑 `slint-rule`、`slint-ui`） |
 | 发布验收 | 索引发布后，`check_installed_template.py --published-index` 在 GLOBAL 与 CN 两个镜像上冷装 `mcpplibs.mwrap.slint@1.19.0.3`：hello 模板无头 counter = 3，7 个许可证文件逐字节一致，重定位后的应用包通过；新 id `mcpplibs.mplugin.slint@1.19.0` 从已发布索引直接解析并运行；冻结的 `mcpplibs.slintgen@1.19.0.2` 仍可解析、构建 |
 | T5 mcpp issue | 一个 issue：mcpp-community/mcpp#993（只提 issue，没有 PR） |
-| T2 官方两包搬迁 | **推后，未做。** 原因：索引的下限 `min_mcpp = "2026.9.18.3"` 早于 mwrap 目录（2026-10-25）的引入，没有验证过下限版本的客户端能否从 `pkgs/mcpp/` 找到已有的 `mcpp.plugins`；它被几乎所有工程使用，而搬迁没有使用方的收益。新包不受影响（旧客户端本来就不会请求它们）。若要做：先在 2026.9.18.3 上用 `pkgs/mcpp/` 的索引解析 `mcpp.plugins`，再单独开 PR；mcpp-plugins 的 README（155 行）也引用了 `pkgs/m/mcpp.plugins.lua`，要同步 |
+| T2 官方两包搬迁 | 单独的 PR：`mcpp.plugins`、`mcpp.platforms` 纯 `git mv` 进 `pkgs/mcpp/`；成员选择搬迁前后一致（`select_members.py`）；全量 CI（CI 固定的 mcpp 上跑所有用到 mcpp.plugins 的成员）通过后合入。**残余风险：** 索引下限 `min_mcpp = 2026.9.18.3` 的客户端是否按身份扫描子目录没有直接验证（我用下限客户端做的本地实验没有读到候选索引，改坏校验和也照常成功，所以没有判别力）；依据是 `docs/mwrap.md` 对客户端行为的说明、`pkgs/mwrap/` 同样依赖这一点、以及固定版本与最新版本上的实测。mcpp-plugins 的 README（155 行）引用旧路径，要同步 |
 
 对 §6 的回写：
 - **U1**（客户端从 `pkgs/mcpp/` 解析）：已确认，在 CI 固定的 mcpp 与已发布的索引上都成功。
