@@ -25,7 +25,8 @@
 -- The headers state them (SLINT_FEATURE_* in private/slint_generated_public.h),
 -- and a consumer needs no define. Built so, libslint_cpp NEEDs fontconfig and
 -- the C runtime only — X11, Wayland and GL are dlopen()ed — and xim:slint
--- declares xim:fontconfig, so the program's run-time closure is the ecosystem's.
+-- declares xim:fontconfig and the windowing libraries, so the program's run-time
+-- closure is the ecosystem's; on Linux the GL vendors come from compat.glx-runtime.
 -- Other feature sets (Skia, LinuxKMS) are later payloads of the same recipe;
 -- this version names none.
 --
@@ -96,18 +97,33 @@ int mcpp_compat_slint_anchor() { return 0; }
 
         -- libslint_cpp dlopen()s its windowing and GL libraries (the sonames
         -- its winit and femtovg backends name, read from the library itself);
-        -- they are required at run time, and xim:slint declares the packages
-        -- that provide them, so its DT_RUNPATH reaches them.
-        linux = { runtime = {
+        -- they are required at run time. xim:slint declares the packages that
+        -- provide the windowing libraries (X11, xcb, xkbcommon, wayland) and
+        -- libglvnd, so its DT_RUNPATH reaches them.
+        --
+        -- libglvnd is only the GL DISPATCHER. The GL VENDOR it dispatches to
+        -- (Mesa, or the host's NVIDIA driver through nvidia-gl-host-link, wired
+        -- into glvnd's glx-vendor directory) comes from the graphics bundle, and
+        -- that is what compat.glx-runtime depends on, as compat.glfw does. On an
+        -- NVIDIA X server the GLX vendor is NVIDIA's: without a provider glvnd
+        -- finds no vendor, glXChooseFBConfig gives no configuration and the
+        -- program aborts with "argument does not name a valid config" (femtovg
+        -- has no fallback). The capabilities below are the names compat.glx-runtime
+        -- provides (`x11.display`, `opengl.glx.driver`); `display` and
+        -- `opengl.egl.driver` were declared first and no package provides them
+        -- (tests/check_capability_providers.lua says so), so they are kept for the
+        -- reading of the packaging logic and are not satisfied by anything.
+        -- The Wayland EGL path has no provider yet and is not covered.
+        linux = { deps = { ["compat.glx-runtime"] = "2026.09.11" }, runtime = {
             libraries           = { "slint_cpp" },
             link_library_dirs   = { "mcpp_generated/slint/lib" },
             runtime_search_dirs = { "mcpp_generated/slint/lib" },
             dlopen_libs = {
                 "libX11.so.6", "libX11-xcb.so.1", "libxcb.so.1", "libXcursor.so.1", "libXi.so.6",
                 "libXrender.so.1", "libxkbcommon.so.0", "libxkbcommon-x11.so.0",
-                "libwayland-client.so.0", "libwayland-egl.so.1", "libEGL.so.1", "libGL.so.1",
+                "libwayland-client.so.0", "libwayland-egl.so.1", "libEGL.so.1", "libGL.so.1", "libGLX.so.0",
             },
-            capabilities = { "display", "opengl.egl.driver" },
+            capabilities = { "display", "opengl.egl.driver", "x11.display", "opengl.glx.driver" },
         } },
         macosx = { ldflags = { "-Wl,-rpath,@loader_path" }, runtime = {
             libraries           = { "slint_cpp" },

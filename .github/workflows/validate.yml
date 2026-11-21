@@ -478,6 +478,11 @@ jobs:
       - name: Build-plugin lints (tests of tests/check_mplugin_layout.lua and check_reserved_namespace.lua)
         run: python3 tests/test_check_mplugin.py
 
+      - name: Capability providers (a declared capability has a provider the package depends on; warnings)
+        run: |
+          python3 tests/test_check_capability_providers.py
+          lua5.4 tests/check_capability_providers.lua pkgs/*/*.lua
+
       - name: Lint package descriptors
         run: |
           fail=0
