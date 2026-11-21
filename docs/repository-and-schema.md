@@ -2,7 +2,7 @@
 
 **English** | [简体中文](zh/repository-and-schema.md)
 
-Module wrapper descriptors use `pkgs/mwrap/<lib>.lua` and their consumers use `tests/mwrap/<member>/`; see [the mwrap specification](mwrap.md). The category is flat and published unchanged. The workspace test source uses the current pinned mcpp; `index.toml` separately states the descriptor compatibility floor.
+Module wrapper descriptors use `pkgs/mwrap/<lib>.lua` and their consumers use `tests/mwrap/<member>/`; see [the mwrap specification](mwrap.md). Build plugins (`<owner>.mplugin.<name>`) and the mcpp project's own packages use `pkgs/mcpp/<full id>.lua`; see [build plugins](build-plugins.md). The category is flat and published unchanged. The workspace test source uses the current pinned mcpp; `index.toml` separately states the descriptor compatibility floor.
 
 ## Repository layout
 
@@ -20,7 +20,8 @@ tests/examples/<member>/     one test project per library (a workspace member; <
   tests/*.cpp                behavioral assertions (standalone main; a non-zero exit code is a failure)
 tests/check_mirror_urls.lua  lint: GLOBAL+CN table completeness, and that CN points at mcpp-res
 tests/check_package_name.lua lint: identity shape (name is a single atomic segment, hierarchy belongs to namespace)
-tests/check_reserved_namespace.lua lint: a namespace is not a reserved second segment of `mcpp.` (core, plugins, deps, rules, dist, tools)
+tests/check_reserved_namespace.lua lint: a namespace is not a reserved second segment of `mcpp.` (core, plugins, deps, rules, dist, tools); an `<owner>.mplugin` owner is not mcpp, a reserved name or a kind segment
+tests/check_mplugin_layout.lua lint: `<owner>.mplugin` descriptors are in pkgs/mcpp/, whose files are namespace `mcpp` or build plugins; identifiers
 tests/list_cn_urls.lua       extracts the CN urls for mirror-cn-reachable
 tests/run_members.sh         runs workspace members one at a time and times each. The entry point used both by CI
                              and locally; see "Running workspace members locally" below

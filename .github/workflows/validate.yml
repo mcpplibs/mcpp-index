@@ -475,6 +475,9 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install lua
         run: sudo apt-get install -y --no-install-recommends lua5.4
+      - name: Build-plugin lints (tests of tests/check_mplugin_layout.lua and check_reserved_namespace.lua)
+        run: python3 tests/test_check_mplugin.py
+
       - name: Lint package descriptors
         run: |
           fail=0
@@ -523,6 +526,14 @@ jobs:
             #    modules. The module names themselves are checked where members
             #    build (tests/run_members.sh), by the engine's own warning.
             if ! lua5.4 tests/check_reserved_namespace.lua "$f"; then
+              fail=1
+            fi
+            # 5c. The build-plugin layout (docs/build-plugins.md): a namespace
+            #    `<owner>.mplugin` is a descriptor of pkgs/mcpp/, whose files are
+            #    packages of namespace `mcpp` or build plugins; owner and name are
+            #    lower-case identifiers. The module being the package id is checked
+            #    in the plugin's own repository: the index cannot read the archive.
+            if ! lua5.4 tests/check_mplugin_layout.lua "$f"; then
               fail=1
             fi
             # 6. c++fly admission policy (mcpp design 2026-07-14 §11-Q2, v1):
@@ -1727,7 +1738,7 @@ jobs:
         shell: bash
         env:
           SLINT_HEADLESS: "1"
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.slint@1.19.0.2 --deploy
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.slint@1.19.0.3 --deploy
 
       - name: Installed Wuffs wrapper archive, actual default decode template and its relocated notices
         if: contains(format(' {0} ', env.MEMBERS), ' wuffs-decode ') && matrix.toolchain == 'default'

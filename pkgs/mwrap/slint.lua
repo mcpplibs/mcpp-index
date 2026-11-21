@@ -1,5 +1,5 @@
--- Immutable upstream-aligned mwrap source releases (slint-m mwrap-1.19.0.2, and
--- mwrap-1.19.0.1 with its published bytes);
+-- Immutable upstream-aligned mwrap source releases (slint-m mwrap-1.19.0.3, and
+-- mwrap-1.19.0.2 and mwrap-1.19.0.1 with their published bytes);
 -- GLOBAL and CN bytes are identical.
 --
 -- The wrapper is Apache-2.0. The library it links, compat.slint (Slint 1.19.0,
@@ -9,8 +9,9 @@
 -- license texts beside programs (runtime.deploy). Linux x86_64, macOS arm64 and
 -- Windows x86_64: compat.slint's payload has no Linux aarch64 row yet.
 --
--- The build rule mcpp.mcpplibs.slintgen is the separate package
--- mcpplibs.slintgen (rules/ of the same archive), re-exported from 1.19.0.2 on.
+-- The build rule is the separate package mcpplibs.mplugin.slint (rules/ of the
+-- same archive; module and C++ namespace of that name), re-exported from 1.19.0.3
+-- on; 1.19.0.2 and 1.19.0.1 carry the earlier name mcpplibs.slintgen.
 package = {
     spec = "1",
     namespace = "mcpplibs.mwrap",
@@ -27,6 +28,13 @@ package = {
     },
     xpm = {
         linux = {
+            ["1.19.0.3"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/slint-m/releases/download/mwrap-1.19.0.3/slint-m-1.19.0.3.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mwrap-slint/releases/download/1.19.0.3/slint-m-1.19.0.3.tar.gz",
+                },
+                sha256 = "d4e409ad021215cccedf45d3d66932b82fabcd07627c5d6ce6961a4ef88a384b",
+            },
             ["1.19.0.2"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/slint-m/releases/download/mwrap-1.19.0.2/slint-m-1.19.0.2.tar.gz",
@@ -43,6 +51,13 @@ package = {
             },
         },
         macosx = {
+            ["1.19.0.3"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/slint-m/releases/download/mwrap-1.19.0.3/slint-m-1.19.0.3.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mwrap-slint/releases/download/1.19.0.3/slint-m-1.19.0.3.tar.gz",
+                },
+                sha256 = "d4e409ad021215cccedf45d3d66932b82fabcd07627c5d6ce6961a4ef88a384b",
+            },
             ["1.19.0.2"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/slint-m/releases/download/mwrap-1.19.0.2/slint-m-1.19.0.2.tar.gz",
@@ -59,6 +74,13 @@ package = {
             },
         },
         windows = {
+            ["1.19.0.3"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/slint-m/releases/download/mwrap-1.19.0.3/slint-m-1.19.0.3.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mwrap-slint/releases/download/1.19.0.3/slint-m-1.19.0.3.tar.gz",
+                },
+                sha256 = "d4e409ad021215cccedf45d3d66932b82fabcd07627c5d6ce6961a4ef88a384b",
+            },
             ["1.19.0.2"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/slint-m/releases/download/mwrap-1.19.0.2/slint-m-1.19.0.2.tar.gz",

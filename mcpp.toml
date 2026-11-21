@@ -24,6 +24,7 @@ members = [
     "tests/mwrap/libpng-image",
     "tests/mwrap/libwebp-image",
     "tests/mwrap/slint-ui",
+    "tests/mwrap/slint-rule",
     "tests/mwrap/wuffs-decode",
     "tests/mwrap/concurrentqueue-mpmc",
     "tests/mwrap/fribidi-bidi",

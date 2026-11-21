@@ -2,7 +2,7 @@
 
 [English](../repository-and-schema.md) | **简体中文**
 
-模块封装描述符使用 `pkgs/mwrap/<lib>.lua`，消费者使用 `tests/mwrap/<member>/`，见 [mwrap 规范](mwrap.md)。分类目录平铺并原样发布。workspace 测试源码使用当前固定的 mcpp；`index.toml` 单独声明描述符兼容下限。
+模块封装描述符使用 `pkgs/mwrap/<lib>.lua`，消费者使用 `tests/mwrap/<member>/`，见 [mwrap 规范](mwrap.md)。构建插件（`<owner>.mplugin.<name>`）与 mcpp 项目自己的包使用 `pkgs/mcpp/<完整 id>.lua`，见[构建插件](build-plugins.md)。分类目录平铺并原样发布。workspace 测试源码使用当前固定的 mcpp；`index.toml` 单独声明描述符兼容下限。
 
 ## 仓库布局
 
@@ -19,7 +19,8 @@ tests/examples/<member>/     每库测试工程(workspace 成员;<member> 为包
   tests/*.cpp                行为断言(独立 main,退出码非 0 即失败)
 tests/check_mirror_urls.lua  lint:GLOBAL+CN 表完整性,以及 CN 指向 mcpp-res
 tests/check_package_name.lua lint:身份形态(name 为单一原子段,层级归 namespace)
-tests/check_reserved_namespace.lua lint:命名空间不得是 `mcpp.` 的保留第二段(core、plugins、deps、rules、dist、tools)
+tests/check_reserved_namespace.lua lint:命名空间不得是 `mcpp.` 的保留第二段(core、plugins、deps、rules、dist、tools);`<owner>.mplugin` 的 owner 不得是 mcpp、保留名或种类段
+tests/check_mplugin_layout.lua lint:`<owner>.mplugin` 描述符在 pkgs/mcpp/,其中的文件是 namespace `mcpp` 或构建插件;owner 与 name 是标识符
 tests/list_cn_urls.lua       抽取 CN url,供 mirror-cn-reachable 使用
 tests/run_members.sh         逐个运行 workspace 成员并计时。CI 与本地共用的入口,见下文「本地运行 workspace 成员」
 tests/plan_shards.lua        依实测耗时将成员分配到各分片。由 `select` job 调用一次,`run_members.sh --shard`
