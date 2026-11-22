@@ -271,6 +271,10 @@
   （`has no build for windows`），它服务的行在这两种宿主上无法经索引构建（mcpp e2e 1116 测得）。包是一份陈述，
   各宿主使用同一个归档。 测试成员 `tests/examples/mcpp-platforms` 为这些行指名此版本；行由包自己的 CI 在三种宿主上构建。
 
+- **CI 的 mcpp 由 2026.11.18.1 改为 2026.11.21.1**（validate、xpkgindex-update、openkal-compat 与 `tests/openkal/pins.toml`）：
+  该版的默认平台为 openkal-platform 0.31.2，首次运行安装 gcc 16.2.0、ninja `1.13.2-mcpp.1` 与 patchelf 0.19.3，随带
+  xlings 2026.11.21.1；缓存的依赖只在其编译时所用的模块接口下取用。索引的客户端下界（`min_mcpp`）不变。
+
 - **CI 的 mcpp 由 2026.11.17.2 改为 2026.11.18.1**（validate、xpkgindex-update 与 openkal-compat）：该版的默认平台为
   openkal-platform 0.29.2，行的对象格式与文件名读自数据（行、系统、格式的约定），mcpp.platforms 的 FreeBSD 行在 Windows
   宿主上以行的名字构建。
