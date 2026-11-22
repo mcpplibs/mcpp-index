@@ -165,13 +165,13 @@ Templates are data, without execution hooks. With the pinned current mcpp,
 
 ```toml
 [dependencies]
-"{{self.name}}" = { version = "{{self.version}}", features = ["imgproc", "imgcodecs-png"] }
+{{self.name}} = { version = "{{self.version}}", features = ["imgproc", "imgcodecs-png"] }
 ```
 
-Quote the selector as one key; do not place it under another namespace table.
-From mcpp 2026.11.8.1 a quoted key that needs no quotes is reported (and `--strict` refuses it); a template
-tested with that client writes the same selector as a dotted key, `{{self.name}} = "{{self.version}}"`, which
-names the same package. `tests/mwrap/check_installed_template.py` reads either form.
+Write the selector unquoted, as a dotted key; do not place it under another namespace table.
+A quoted key that needs no quotes is deprecated from mcpp 2026.11.8.1 (`--strict` refuses it) and
+is removed in 2027.2. `tests/mwrap/check_installed_template.py` refuses a template that writes it,
+and builds the rendered project with `--strict`.
 Declare required features explicitly and keep the library version tied to
 `{{self.version}}`. Test actual `mcpp new`, then build and run the generated
 project. A source candidate may use an isolated preseeded installed-package

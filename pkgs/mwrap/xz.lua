@@ -9,6 +9,10 @@
 -- The wrapper is Apache-2.0; the library it links, compat.xz (liblzma of XZ
 -- Utils 5.8.3), is 0BSD, linked statically: the package deploys its README and
 -- licenses beside programs (runtime.deploy).
+--
+-- 5.8.3.2 is a wrapper revision: its templates write the dependency selector
+-- unquoted (`mcpplibs.mwrap.xz = ...`); the quoted form is deprecated
+-- since mcpp 2026.11.8.1 and removed in 2027.2.
 package = {
     spec = "1",
     namespace = "mcpplibs.mwrap",
@@ -25,6 +29,13 @@ package = {
     },
     xpm = {
         linux = {
+            ["5.8.3.2"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/xz-m/releases/download/mwrap-5.8.3.2/xz-m-5.8.3.2.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mwrap-xz/releases/download/5.8.3.2/xz-m-5.8.3.2.tar.gz",
+                },
+                sha256 = "a83d709732fe1a225dacbdd39faaa0856f2801c516adedd9a3c0daf1c46420ad",
+            },
             ["5.8.3.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/xz-m/releases/download/mwrap-5.8.3.1/xz-m-5.8.3.1.tar.gz",
@@ -41,6 +52,13 @@ package = {
             },
         },
         macosx = {
+            ["5.8.3.2"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/xz-m/releases/download/mwrap-5.8.3.2/xz-m-5.8.3.2.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mwrap-xz/releases/download/5.8.3.2/xz-m-5.8.3.2.tar.gz",
+                },
+                sha256 = "a83d709732fe1a225dacbdd39faaa0856f2801c516adedd9a3c0daf1c46420ad",
+            },
             ["5.8.3.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/xz-m/releases/download/mwrap-5.8.3.1/xz-m-5.8.3.1.tar.gz",
@@ -57,6 +75,13 @@ package = {
             },
         },
         windows = {
+            ["5.8.3.2"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/xz-m/releases/download/mwrap-5.8.3.2/xz-m-5.8.3.2.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mwrap-xz/releases/download/5.8.3.2/xz-m-5.8.3.2.tar.gz",
+                },
+                sha256 = "a83d709732fe1a225dacbdd39faaa0856f2801c516adedd9a3c0daf1c46420ad",
+            },
             ["5.8.3.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/xz-m/releases/download/mwrap-5.8.3.1/xz-m-5.8.3.1.tar.gz",

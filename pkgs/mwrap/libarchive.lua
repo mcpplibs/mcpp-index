@@ -5,6 +5,10 @@
 -- (libarchive 3.8.7), is BSD-2-Clause with the exceptions its COPYING lists,
 -- linked statically: the package deploys its README and COPYING beside
 -- programs (runtime.deploy).
+--
+-- 3.8.7.1 is a wrapper revision: its templates write the dependency selector
+-- unquoted (`mcpplibs.mwrap.libarchive = ...`); the quoted form is deprecated
+-- since mcpp 2026.11.8.1 and removed in 2027.2.
 package = {
     spec = "1",
     namespace = "mcpplibs.mwrap",
@@ -21,6 +25,13 @@ package = {
     },
     xpm = {
         linux = {
+            ["3.8.7.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/libarchive-m/releases/download/mwrap-3.8.7.1/libarchive-m-3.8.7.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mwrap-libarchive/releases/download/3.8.7.1/libarchive-m-3.8.7.1.tar.gz",
+                },
+                sha256 = "15e94416622a9cf34011ef274cbe3d03da6fb46207ac63ad18d9dd725279eebb",
+            },
             ["3.8.7"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/libarchive-m/releases/download/mwrap-3.8.7/libarchive-m-3.8.7.tar.gz",
@@ -30,6 +41,13 @@ package = {
             },
         },
         macosx = {
+            ["3.8.7.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/libarchive-m/releases/download/mwrap-3.8.7.1/libarchive-m-3.8.7.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mwrap-libarchive/releases/download/3.8.7.1/libarchive-m-3.8.7.1.tar.gz",
+                },
+                sha256 = "15e94416622a9cf34011ef274cbe3d03da6fb46207ac63ad18d9dd725279eebb",
+            },
             ["3.8.7"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/libarchive-m/releases/download/mwrap-3.8.7/libarchive-m-3.8.7.tar.gz",
@@ -39,6 +57,13 @@ package = {
             },
         },
         windows = {
+            ["3.8.7.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/libarchive-m/releases/download/mwrap-3.8.7.1/libarchive-m-3.8.7.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mwrap-libarchive/releases/download/3.8.7.1/libarchive-m-3.8.7.1.tar.gz",
+                },
+                sha256 = "15e94416622a9cf34011ef274cbe3d03da6fb46207ac63ad18d9dd725279eebb",
+            },
             ["3.8.7"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/libarchive-m/releases/download/mwrap-3.8.7/libarchive-m-3.8.7.tar.gz",

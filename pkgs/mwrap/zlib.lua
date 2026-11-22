@@ -4,6 +4,10 @@
 -- The wrapper is Apache-2.0; the library it links, compat.zlib (zlib 1.3.2), is
 -- under the zlib license, linked statically: the package deploys zlib's README
 -- and LICENSE beside programs (runtime.deploy).
+--
+-- 1.3.2.1 is a wrapper revision: its templates write the dependency selector
+-- unquoted (`mcpplibs.mwrap.zlib = ...`); the quoted form is deprecated
+-- since mcpp 2026.11.8.1 and removed in 2027.2.
 package = {
     spec = "1",
     namespace = "mcpplibs.mwrap",
@@ -20,6 +24,13 @@ package = {
     },
     xpm = {
         linux = {
+            ["1.3.2.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/zlib-m/releases/download/mwrap-1.3.2.1/zlib-m-1.3.2.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mwrap-zlib/releases/download/1.3.2.1/zlib-m-1.3.2.1.tar.gz",
+                },
+                sha256 = "246a4cfc9027b210ae783cb27a78101704decf30505b606e4f2ba0e1243e64c8",
+            },
             ["1.3.2"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/zlib-m/releases/download/mwrap-1.3.2/zlib-m-1.3.2.tar.gz",
@@ -29,6 +40,13 @@ package = {
             },
         },
         macosx = {
+            ["1.3.2.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/zlib-m/releases/download/mwrap-1.3.2.1/zlib-m-1.3.2.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mwrap-zlib/releases/download/1.3.2.1/zlib-m-1.3.2.1.tar.gz",
+                },
+                sha256 = "246a4cfc9027b210ae783cb27a78101704decf30505b606e4f2ba0e1243e64c8",
+            },
             ["1.3.2"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/zlib-m/releases/download/mwrap-1.3.2/zlib-m-1.3.2.tar.gz",
@@ -38,6 +56,13 @@ package = {
             },
         },
         windows = {
+            ["1.3.2.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/zlib-m/releases/download/mwrap-1.3.2.1/zlib-m-1.3.2.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mwrap-zlib/releases/download/1.3.2.1/zlib-m-1.3.2.1.tar.gz",
+                },
+                sha256 = "246a4cfc9027b210ae783cb27a78101704decf30505b606e4f2ba0e1243e64c8",
+            },
             ["1.3.2"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/zlib-m/releases/download/mwrap-1.3.2/zlib-m-1.3.2.tar.gz",
