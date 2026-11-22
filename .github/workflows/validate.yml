@@ -472,7 +472,13 @@ env:
   # 1.13.2-mcpp.1 and patchelf 0.19.3, it bundles xlings 2026.11.21.1, and a
   # cached dependency is served only against the module interfaces it was
   # compiled with.
-  MCPP_VERSION: "2026.11.21.1"
+  #
+  # 2026.11.22.1: the newest release; its default platform is
+  # openkal-platform 0.31.2 and it bundles xlings 2026.11.21.1. An installed
+  # toolchain's companions are the first declaration its store holds, and two
+  # [indices] entries naming one location are refused, which is why the
+  # workspace states no index and each member states its own.
+  MCPP_VERSION: "2026.11.22.1"
 
 jobs:
   lint:
