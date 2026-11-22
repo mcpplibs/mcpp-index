@@ -1,35 +1,12 @@
 # Temporary probe (closed after it answers): (1) does MSVC's link.exe keep a
 # locally defined function reached only through an __imp_ slot under /OPT:REF,
-# where lld-link collects it; (2) does compat.xz stating LZMA_API_STATIC for its
-# consumers (a default-implied feature) end the archive members' crash.
+# where lld-link collects it; (2) do compat.xz and compat.libarchive stating their static-API macros for
+# their consumers (a default-implied feature) end the archive members' crash.
 name: probe-windows-archive
 on:
   pull_request:
     paths: ['.github/workflows/probe-windows-archive.yml']
 jobs:
-  link:
-    runs-on: windows-2022
-    timeout-minutes: 20
-    steps:
-      - name: link.exe and lld-link under /OPT:REF
-        shell: cmd
-        run: |
-          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat" >nul
-          > a.c echo __declspec(dllimport) int foo(void);
-          >> a.c echo int main(void) { return foo(); }
-          > b.c echo int foo(void) { return 42; }
-          cl /nologo /O2 /Gy /c a.c b.c
-          link /nologo /OPT:REF a.obj b.obj /OUT:msvc.exe
-          msvc.exe
-          echo RESULT msvc link.exe /OPT:REF exit=%ERRORLEVEL%
-          "C:\Program Files\LLVM\bin\lld-link.exe" --version
-          "C:\Program Files\LLVM\bin\lld-link.exe" /OPT:REF a.obj b.obj /OUT:lld.exe
-          lld.exe
-          echo RESULT lld-link /OPT:REF exit=%ERRORLEVEL%
-          "C:\Program Files\LLVM\bin\lld-link.exe" /OPT:NOREF a.obj b.obj /OUT:lld-noref.exe
-          lld-noref.exe
-          echo RESULT lld-link /OPT:NOREF exit=%ERRORLEVEL%
-          exit /b 0
   archive:
     runs-on: windows-2022
     timeout-minutes: 60
@@ -45,7 +22,7 @@ jobs:
           unzip -q m.zip
           echo "$PWD/mcpp-2026.11.21.1-windows-x86_64/bin" >> "$GITHUB_PATH"
           echo "MCPP_HOME=$HOME/.mcpp-probe" >> "$GITHUB_ENV"
-      - name: the archive members with compat.xz's LZMA_API_STATIC
+      - name: the archive members with LZMA_API_STATIC and LIBARCHIVE_STATIC
         run: |
           set +e
           for p in archive-tests libarchive-bundle; do
