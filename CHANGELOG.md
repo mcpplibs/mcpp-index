@@ -216,6 +216,13 @@
 
 ### Fixed
 
+- **compat.curand 在 LLVM 构建的程序上可加载。** `libcurand.so.10` 需要 `libgcc_s.so.1`；以 LLVM 构建的产物链接 compiler-rt 与
+  libunwind，不加载它，mcpp 的运行时闭包检查拒绝该程序（`libgcc_s.so.1 not found on the search path`，linux llvm 行的
+  cuda-curand 成员）。compat.curand 依赖 `xim:gcc-runtime`，并把其中的 `libgcc_s.so.1` 与 glibc 的兼容桩一同链接进库目录，
+  与 compat.sycl-runtime 同形。
+- **compat.libarchive 去掉 Linux uapi 功能的条件改为 `cfg(all(linux, kernel-abi = "openkal"))`。** 此前的条件
+  `c-abi = "musl"` 本为 openkal 的图，也命中原生 musl 工具链（`musl-gcc`），而后者自带内核头文件；功能缺席的是内核接口这一层，
+  不是 C 库。macOS 上的 `-U__APPLE__` 同样改按 `kernel-abi` 选择。
 - **Windows 上静态库为每个包含其头文件的单元陈述静态 API 宏（archive 与 libarchive-bundle 启动即崩溃的根因）。** `lzma.h` 与
   `archive.h` 在未定义 `LZMA_API_STATIC`、`LIBARCHIVE_STATIC` 时声明 dllimport；使用方经 lld-link 为本地定义造的 `__imp_` 槽调用，
   回收无引用节的链接（mcpp 2026.11.9.1 起测试的链接）丢弃槽后的函数，首次调用跳到映像首字节（退出 133）。MSVC 的 link.exe 保留

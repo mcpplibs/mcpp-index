@@ -59,7 +59,7 @@ package = {
             ["default"]   = { implies = { "staticlib" } },
             ["staticlib"] = { defines = { "LIBARCHIVE_STATIC" } },
         },
-        -- macOS with musl as the C library (an openkal graph). libarchive
+        -- macOS under openkal (`kernel-abi = "openkal"`). libarchive
         -- reads __APPLE__ as "the Apple SDK is present" (TargetConditionals.h,
         -- copyfile, quarantine) in four private translation units and in the
         -- generated configuration below; the SDK is not in that graph. The
@@ -67,17 +67,19 @@ package = {
         -- archive_entry.h do not test __APPLE__, so consumers read the same
         -- declarations. mcpp-index#434.
         target_cfg = {
-            -- Linux with musl as the C library (an openkal graph). The Linux
-            -- host configuration names the kernel's own headers (linux/fs.h,
+            -- Linux under openkal (`kernel-abi = "openkal"`). The Linux host
+            -- configuration names the kernel's own headers (linux/fs.h,
             -- linux/fiemap.h, linux/magic.h), which belong to the kernel's
             -- interface and not to that graph; they were reached before only
             -- because the compiler searched the host (mcpp#662). The same
             -- lines the configuration removes on every other system are
-            -- removed here.
-            ["cfg(all(linux, c-abi = \"musl\"))"] = {
+            -- removed here. The condition names the layer that lacks them,
+            -- not the C library: a native musl toolchain (`musl-gcc`) carries
+            -- the kernel's headers, and libarchive uses them there.
+            ["cfg(all(linux, kernel-abi = \"openkal\"))"] = {
                 cflags = { "-DMCPP_LIBARCHIVE_NO_LINUX_UAPI" },
             },
-            ["cfg(all(macos, c-abi = \"musl\"))"] = {
+            ["cfg(all(macos, kernel-abi = \"openkal\"))"] = {
                 cflags = { "-U__APPLE__" },
             },
         },
