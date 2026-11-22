@@ -87,7 +87,11 @@ def main():
             for part in identity.split("."):
                 dependency = dependency[part]
         actual_version = dependency if isinstance(dependency, str) else dependency["version"]
-        assert actual_version == version, dependency
+        # The command line's `@` selects by the written prefix (mcpp 2026.11.21.1+, SPEC-001 §4.5): the
+        # template is rendered for the newest key under it (`@1.3` renders 1.3.1), and the checks
+        # below read that key's install. An earlier mcpp renders the written key itself.
+        assert actual_version == version or actual_version.startswith(version + "."), dependency
+        version = actual_version
         if isinstance(dependency, dict):
             assert "path" not in dependency and "git" not in dependency, dependency
         # The build is strict unless the published template states a reading mcpp
