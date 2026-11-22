@@ -1692,7 +1692,7 @@ jobs:
       - name: Installed llama.cpp-m archive and actual CPU project template
         if: contains(format(' {0} ', env.MEMBERS), ' llamacpp-cpu ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.llamacpp@b10069 --legacy-exact-key
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.llamacpp@b10069.2 --legacy-exact-key
 
       - name: Installed FFmpeg wrapper archive and actual default project template
         if: contains(format(' {0} ', env.MEMBERS), ' ffmpeg-cpu ') && matrix.toolchain == 'default'
