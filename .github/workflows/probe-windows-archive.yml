@@ -32,6 +32,7 @@ jobs:
       - name: the crash, under cdb
         continue-on-error: true
         run: |
+          set +e
           cdb="/c/Program Files (x86)/Windows Kits/10/Debuggers/x64/cdb.exe"
           ls "$cdb" || true
           for exe in $(find target -name 'versions*.exe' -o -name 'compression*.exe' | head -4); do
@@ -42,4 +43,9 @@ jobs:
       - name: the link and compile lines
         continue-on-error: true
         run: |
-          for f in $(find target -name 'build.ninja' | head -2); do echo "== $f"; grep -n -i 'archive\|link\|/MD\|/MT\|-fms-runtime\|_DLL\|nodefaultlib' "$f" | grep -i 'versions\|runtime\|crt\|msvcrt\|libcmt\|ucrt' | head -40; done
+          set +e
+          for f in $(find target -name 'build.ninja' | head -3); do
+            echo "== $f"
+            grep -n 'compression' "$f" | head -20 | cut -c1-2000
+          done
+          for f in $(find target -name '*.rsp' | grep -i 'compression' | head -3); do echo "== $f"; cat "$f" | tr ' ' '\n' | head -120; done
