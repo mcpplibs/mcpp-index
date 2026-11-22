@@ -11,7 +11,7 @@ import tomllib
 
 PACKAGES = {
     "opencv": "5.0.0.1", "onnxruntime": "1.25.1.1", "llamacpp": "b10069",
-    "ffmpeg": "8.1.2.1", "grpc": "1.83.0", "imgui": "1.92.8.1", "godot_cpp": "10.0.0",
+    "ffmpeg": "8.1.2.1", "grpc": "1.83.0", "imgui": "1.92.8.1", "godot_cpp": "10.0.0.1",
 }
 
 
