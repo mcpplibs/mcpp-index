@@ -7,3 +7,7 @@ version = "0.1.0"
 
 [target.'cfg(linux)'.dependencies.compat]
 wamr = { version = "2.4.5", features = ["no-hw-bound-check", "instruction-metering", "thread-mgr"] }
+
+# The candidate index: this checkout (compat.*), not the published one.
+[indices]
+compat = { path = "../../.." }

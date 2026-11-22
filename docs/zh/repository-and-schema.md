@@ -8,13 +8,12 @@
 
 ```
 pkgs/<x>/<name>.lua          描述符。<x> 取完整包名首字母(compat.* → c,nlohmann.json → n,imgui → i)
-mcpp.toml                    workspace 清单(members 列表)+ 根级 [indices] compat = { path = "." },
-                             由成员继承(相对路径按 workspace 根解析,mcpp ≥ 0.0.97)
+mcpp.toml                    workspace 清单(members 列表);不写 [indices]
 tests/examples/<member>/     每库测试工程(workspace 成员;<member> 为包名去前缀,模块包为
-  mcpp.toml                  <name>-module)。消费 compat 的成员不写 [indices];消费其他
-                             命名空间的成员写恰好一条(模块包用 default),该声明**替换**
-                             根级表而非合并 —— 每个成员最多一个项目级索引 repo 是硬约束,
-                             详见下文「索引重定向」。依赖按平台自门控
+  mcpp.toml                  <name>-module)。消费 compat 的成员写 [indices] compat =
+                             { path = "<到仓根>" };消费其他命名空间的成员改写那一个(模块包用
+                             default)—— 每个成员一个项目级索引 repo,详见下文「索引重定向」。
+                             依赖按平台自门控
                              ([target.'cfg(...)'])
   tests/*.cpp                行为断言(独立 main,退出码非 0 即失败)
 tests/check_mirror_urls.lua  lint:GLOBAL+CN 表完整性,以及 CN 指向 mcpp-res
@@ -102,18 +101,16 @@ namespace = "mcpplibs",      name = "capi.lua"  -- 短名仍带点
 
 测试面要验证的是 **checkout 里的描述符**,而不是已发布的远程索引,这靠 `[indices]` 把命名空间重定向到本仓完成。
 
-**根级继承**:workspace 根的 `mcpp.toml` 声明 `[indices] compat = { path = "." }`,相对路径按 **workspace 根**解析(mcpp ≥ 0.0.97,[mcpp#224](https://github.com/mcpp-community/mcpp/issues/224)),成员直接继承,不必各写一份 `path = "../../.."`。
+**每个成员一条**:测试本 checkout 某个命名空间的成员自己写明它,`[indices] <ns> = { path = "<到仓根>" }`,相对路径以成员为锚。仓根不写。仓根的 `[indices]` 按位置到达成员,mcpp 自 2026.10.10.1 弃用、自 2027.1 移除这一读法;`[workspace.indices]` 则按名字与成员的项合并:以另一个命名空间指向 checkout 的成员会两次持有它,mcpp 以 `index-location-named-twice` 拒绝,mwrap 成员也会在候选索引之外再持有它。
 
-**为什么只有一条,而且是 `compat`**:
+**为什么每个成员一个命名空间**:
 
 - 索引表**按命名空间取键**。声明在一个没有任何依赖会请求的名字下,该索引根本不会被注册,解析会静默回落到已发布的远程索引 —— 此时被测的根本不是这个 checkout。
 - 同一路径声明成多个命名空间确实都会注册,但会变成 N 个各自独立的项目 repo,之后任何查找都以 N 路歧义失败(物理上是同一个描述符;[mcpp#238](https://github.com/mcpp-community/mcpp/issues/238) / [xlings#374](https://github.com/openxlings/xlings/issues/374),在 xlings 0.4.69 后由静默 exit 1 变为响亮报错)。
 
-所以根级只能承载一个命名空间,`compat` 是收益最大的那个(13 个成员 vs 其余合计 10 个)。
 
-**成员级覆盖**:消费其他命名空间的成员自己声明 `[indices]`,该表**替换**继承来的根级表而非与之合并 —— 这正是每个成员只保留一个项目索引 repo 的机制。
 
-**跨命名空间的取舍**:一个成员无法同时从本 checkout 解析两个命名空间。`tests/examples/asio-ssl` 有意利用了这一点:它不写成员级声明、继承根级 `compat`,于是 asio 本身走已发布的远程索引,而它的 `ssl` feature 依赖 `compat.openssl` 从本 checkout 解析 —— 这样**未合并的 compat 描述符可以通过一个已发布的消费者去验证**。反过来,本地 asio 描述符由 `tests/examples/asio-module` 覆盖。
+**跨命名空间的取舍**:一个成员无法同时从本 checkout 解析两个命名空间。`tests/examples/asio-ssl` 有意利用了这一点:它只写 `compat`,于是 asio 本身走已发布的远程索引,而它的 `ssl` feature 依赖 `compat.openssl` 从本 checkout 解析 —— 这样**未合并的 compat 描述符可以通过一个已发布的消费者去验证**。反过来,本地 asio 描述符由 `tests/examples/asio-module` 覆盖。
 
 **裸名依赖不适用**:重定向按**请求侧**的命名空间取键,而裸写的 `eigen = "5.0.1"` 是以默认命名空间发出的请求,即使最终落到 `compat` 描述符上,也会从远程索引解析。因此各成员一律使用限定写法;裸名解析本身由 mcpp 上游的 e2e 165 覆盖。
 
@@ -162,7 +159,7 @@ mcpp 跑 `xpkg parse`(strict:未知键即失败),所以需要更新文法/键的
 - `workspace (<平台> <分片>/<总数>)`:整个测试面就是一个 mcpp workspace,**唯一的构建/运行通道**——
   没有任何 shell 驱动的例外(公开模块包 imgui/ffmpeg/opencv/tinyhttps 也是普通成员,经成员级
   `[indices] default = { path = "../../.." }` 从 checkout 解析,mcpp ≥ 0.0.97;消费 `compat` 的
-  成员则继承根级声明,见上文「索引重定向」)。分片后缀仅在该平台确实被拆分时出现。
+  成员写 `[indices] compat = { path = "../../.." }`,见上文「索引重定向」)。分片后缀仅在该平台确实被拆分时出现。
   - 成员经 `tests/run_members.sh` 运行,该脚本亦即本地入口。只存在于 CI 的耗时表无法在决定优化对象时被
     参考,而与 CI 不同的本地测量装置度量的是另一回事。
   - 包构建缓存取全局,即 mcpp 的默认值。该步骤此前设 `MCPP_BUILD_CACHE: local` 以规避 mcpp#344 —— 同一

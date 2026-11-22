@@ -10,3 +10,7 @@ imgui = "1.93.0"
 glfw = "3.4.0.1"
 [target.'cfg(linux)'.build]
 ldflags = ["-ldl"]
+
+# The candidate index: this checkout (compat.*), not the published one.
+[indices]
+compat = { path = "../../.." }

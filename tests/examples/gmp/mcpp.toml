@@ -18,3 +18,7 @@ version = "0.1.0"
 
 [dependencies.compat]
 gmp = "6.3.0"
+
+# The candidate index: this checkout (compat.*), not the published one.
+[indices]
+compat = { path = "../../.." }

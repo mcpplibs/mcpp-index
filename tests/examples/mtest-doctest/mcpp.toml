@@ -5,8 +5,5 @@
 name    = "mtest-doctest-tests"
 version = "0.1.0"
 
-[indices]
-# Use the complete candidate built-in index prepared by tests/run_members.sh.
-
 [dev-dependencies]
 mcpplibs.mtest.doctest = "0.11.3"

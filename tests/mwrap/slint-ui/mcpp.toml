@@ -8,10 +8,6 @@ standard   = "c++23"
 modules    = true
 import_std = false
 
-[indices]
-# Use the complete candidate built-in index prepared by tests/run_members.sh.
-# An explicit empty table overrides the legacy workspace redirect.
-
 [dependencies]
 # The wrapper re-exports the build rule (module mcpplibs.mplugin.slint) and the
 # SDK: this is the whole dependency list.

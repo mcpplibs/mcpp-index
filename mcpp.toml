@@ -297,30 +297,19 @@ members = [
     "tests/examples/os",
 ]
 
-# ── The index redirect, hoisted to the workspace root ───────────────────
-# Members inherit this, and the relative `path` resolves against the
-# WORKSPACE ROOT rather than the member directory (mcpp#224, fixed in
-# 0.0.97) — so the 13 members that consume `compat` no longer each repeat
-# `path = "../../.."`, and member depth stops mattering.
+# ── The index each member tests through ─────────────────────────────────
+# Every member states its own `[indices]`: `compat = { path = "<to the
+# root>" }` for the members that resolve compat.* from this checkout, another
+# namespace's name for the members that test one, none for the mwrap members,
+# which take the complete candidate index tests/prepare_builtin_index.py puts
+# in their test home. The root states none. Its `[indices]` reached members by
+# position, a reading mcpp removes in 2027.1, and `[workspace.indices]` merges
+# with a member's entries by name: a member naming this checkout as
+# `mcpplibs` would hold it twice, which mcpp refuses
+# (`index-location-named-twice`; before, every lookup was ambiguous), and an
+# mwrap member would hold the checkout beside the candidate index.
 #
-# Why exactly ONE entry, and why `compat` specifically:
-#
-#   * The key is looked up by NAMESPACE. An index declared under a name that
-#     is not a namespace any dependency asks for is never registered, and
-#     resolution silently falls through to the published remote index — the
-#     checkout under test is then not what is being tested at all.
-#   * Declaring the same path under several namespaces does register them,
-#     as N separate project repos, and every lookup afterwards fails with an
-#     N-way ambiguity between what is physically one descriptor
-#     (mcpp#238 / xlings#374 — now a loud error rather than a silent exit 1).
-#
-# So the root can carry exactly one namespace, and `compat` is the one that
-# pays: 13 members against 10 for everything else combined. A member that
-# needs a different namespace declares its own `[indices]`, which REPLACES
-# this table rather than merging with it — which is precisely what keeps it
-# at one repo per member.
-#
-# A member inheriting this still resolves OTHER namespaces from the
+# A member that states `compat` still resolves OTHER namespaces from the
 # published remote index. tests/examples/asio-ssl leans on that deliberately:
 # asio itself comes from the published index while its `ssl` feature dep,
 # compat.openssl, resolves from this checkout — which is what lets an
@@ -333,6 +322,3 @@ members = [
 # project depending on mcr writes in its own mcpp.toml.
 [workspace.dependencies]
 compat.openssl = { version = "3.5.9", override = true }
-
-[indices]
-compat = { path = "." }

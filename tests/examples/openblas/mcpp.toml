@@ -10,3 +10,7 @@ version = "0.1.0"
 openblas = "0.3.33"
 [target.'cfg(windows)'.build]
 cxxflags = ["-DHAVE_OPENBLAS=1"]
+
+# The candidate index: this checkout (compat.*), not the published one.
+[indices]
+compat = { path = "../../.." }
