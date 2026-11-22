@@ -194,6 +194,19 @@
 
 ### Changed
 
+- **工作区不再陈述索引，每个成员陈述自己测试所经的索引。** 根 `mcpp.toml` 的 `[indices] compat = { path = "." }` 由位置读取
+  （2026.10.10.1 弃用，2027.1 移除）；149 个成员改为各自写 `compat = { path = "<到检出的相对路径>" }`，与已以其他名字指向检出的
+  79 个成员同形；57 个 mwrap 成员与 5 个 mtest 示例为避开根的重定向而写的空 `[indices]` 删去。改用 `[workspace.indices]` 不可行：
+  它按名字合并，79 个成员会得到同一检出的两个名字，安装以 ambiguous 失败（mcpp 2026.11.22.1 起以 `index-location-named-twice`
+  拒绝）。29 个成员清单的依赖选择器去掉引号（父包与子包并存者除外）。`tests/test_prepare_mwrap_indices.py`、docs/mwrap.md、
+  docs/repository-and-schema.md 随之改写。
+- **28 个封装包发布模板修订，模板写不加引号的选择器。** fribidi 1.0.16.1、imgui 1.92.8.1、libarchive 3.8.7.1、libpng 1.6.43.1、
+  lua 5.4.7.1、miniaudio 0.11.25.1、pocketpy 2.2.0.1、quickjs_ng 0.17.0.1、sdl3 3.4.18.1、xxhash 0.8.3.1、xz 5.8.3.2、zlib 1.3.2.1、
+  zstd 1.5.7.1、accesskit 0.23.1.1、box2d 3.2.0.1、concurrentqueue 1.0.5.1、dr_libs 2026.03.03.1、freetype 2.13.3.1、godot_cpp
+  10.0.0.1、harfbuzz 14.3.0.1、libc 17.0.0.1、libvpx 1.17.0.1、libwebp 1.5.0.1、llamacpp b10069.2、md4c 0.5.3.1、mimalloc 3.6.1.1、
+  opus 1.6.1.1、sheenbidi 3.0.0.1（各包最新标签的 `templates/**/mcpp.toml.in` 测得写 `"{{self.name}}"`）。原有 CN 镜像的包在
+  `mcpp-res/mwrap-<名>` 发布同一字节。llama.cpp-m 的 `mwrap-b10069.1` 打了标签而未发布（其发布门禁所在的 runner 映像换了 clang，
+  API 快照的读法不同），`b10069.2` 带同一改动。
 - **compat.onnxruntime 以 `license_files` 陈述 SDK 的许可文件**（`LICENSE` 与 `ThirdPartyNotices.txt`）。mcpp 2026.11.17.1 在每种打包模式中
   把它们放在 `share/licenses/compat.onnxruntime/`；此前由 `deploy` 放在程序旁的 `licenses/onnxruntime/`。包装的 LICENSE 与 NOTICE
   仍由 mcpplibs.mwrap.onnxruntime 自己的 `deploy` 放在 `licenses/onnxruntime/wrapper/`。
@@ -203,6 +216,18 @@
 
 ### Fixed
 
+- **Windows 上静态库为每个包含其头文件的单元陈述静态 API 宏（archive 与 libarchive-bundle 启动即崩溃的根因）。** `lzma.h` 与
+  `archive.h` 在未定义 `LZMA_API_STATIC`、`LIBARCHIVE_STATIC` 时声明 dllimport；使用方经 lld-link 为本地定义造的 `__imp_` 槽调用，
+  回收无引用节的链接（mcpp 2026.11.9.1 起测试的链接）丢弃槽后的函数，首次调用跳到映像首字节（退出 133）。MSVC 的 link.exe 保留
+  这些函数，lld-link 不保留（mcpp-community/mcpp#1002）。compat.xz、compat.libarchive、compat.fribidi（此前宏只在 Windows 的私有
+  cflags）与 compat.libcoro（此前为私有 `defines`）改为由 `default` 蕴含的 `staticlib` feature，与 compat.curl、compat.c-ares 同形；
+  compat.cpptrace、compat.libassert、compat.yaml-cpp 原以 `#include_next` 垫片传递宏，改为同一 feature，垫片删去（垫片不能用于
+  cl.exe）。docs/repository-and-schema.md 原称 feature 的 `defines` 只作用于包自身，与 mcpp 不符，已改正。windows-2022 上以修正复测，
+  两个成员通过。
+- **compat.sdl2 与 taskflow.taskflow 在 clang 23 的 MSVC ABI 下编译（修订 1）。** clang 23 把 `_m_prefetch` 作为内建函数，SDL 2.32.10
+  的 `SDL_endian.h` 在该 ABI 下定义它，compat.sdl2 在 install() 中移植上游 SDL2 分支以 `!_SDL_HAS_BUILTIN(_m_prefetch)` 保护的一行；
+  taskflow 4.1.0 的 `tfprof.hpp` 以 `static inline` 定义两个命名空间作用域的函数，两个模块分区的全局模块片段各包含一次而修饰名相同，
+  taskflow.taskflow 在 install() 中改为 `inline`。
 - **compat.c-ares：`CARES_STATICLIB` 传给使用方（Windows 上 gRPC 启动即崩溃的根因）。** 此前只有包自身以该宏编译，使用方看到的 `<ares.h>` 把每个入口声明为 `__declspec(dllimport)`，经 lld-link 本地补全的 `__imp_` 槽调用静态库（LNK4217）。lld-link 在不带 `/DEBUG` 时默认 `/OPT:REF`，该槽不保住它的定义：定义所在目标文件只因随后被丢弃的代码而载入时，定义被丢弃、槽内为映像基址。gRPC 的 `ares_library_init` 正是如此，`grpc_init` 跳到 PE 头（0xC0000005，mcpp 报 exit 133）；四行 C 即可复现（llvm 23.1.3）。上游的 Bazel（`defines`）与 CMake（INTERFACE 定义）都把该宏传给依赖方；此处按 compat.curl 的写法以 `default` 隐含的 feature `defines` 传递。在装有旧 compat.c-ares 的 home 上实测生效，无需 packaging revision；gRPC 的模块测试在 Windows 默认链接参数下通过（grpc-m#10）。
 - **mcpp.plugins 0.23.1。** `dist-apk` 把构建程序在输出目录（`mcpp::out_dir()`、`target/`）中生成的 Java 或 Kotlin 根只作为
   `javac` 动作的输入，不再为其声明永远无法命中的重跑 glob，消除每次构建的警告。`latest` 指向 0.23.1
@@ -261,19 +286,18 @@
 ### Chore
 
 - **已安装模板的检查可选镜像。** `tests/mwrap/check_installed_template.py` 新增 `--mirror {GLOBAL,CN}`（默认 GLOBAL）；此前固定为 GLOBAL，发布时的 CN 验收只能手工执行。`--published-index --mirror CN` 下 xxhash-m 0.8.3 的封装归档首次即从 gitcode.com 取得。
-- **已安装模板的检查：模板写引号键时只允许该弃用警告。** mcpp 2026.11.8.1 之前发布的 mwrap 模板以 `"{{self.name}}"` 写依赖键，
-  渲染为一个带引号的键；`--strict` 拒绝这一弃用读法，归档又不可改。检查在渲染出引号键时不加 `--strict` 构建，只允许该包的这条
-  弃用警告，其余警告仍失败；模板的下一版写不带引号的选择器后自动恢复严格构建（onnxruntime-m 1.25.1；opencv-m、ffmpeg-m 的模板同形）。
-  该检查同时按新的位置核对 SDK 的许可文件，并为本次运行请求项目根的编译数据库（`MCPP_COMPILE_COMMANDS`；mcpp 2026.10.26.1 起只在
+- **已安装模板的检查拒绝写引号键的模板，并以 `--strict` 构建。** 引号键自 mcpp 2026.11.8.1 弃用、2027.2 移除；写它的 28 个封装包
+  各发布一个修订（见 Changed），检查以这些修订为对象，不再为引号键放行弃用警告。该检查同时按新的位置核对 SDK 的许可文件，并为本次运行请求项目根的编译数据库（`MCPP_COMPILE_COMMANDS`；mcpp 2026.10.26.1 起只在
   请求时写出），模板生成的清单保持原样；`mcpp pack` 改用 `--pkg-format`。
 
 - **mcpp.platforms 0.1.0 的条目列出每种宿主。** 条目此前只列 Linux，macOS 与 Windows 宿主无法安装该包
   （`has no build for windows`），它服务的行在这两种宿主上无法经索引构建（mcpp e2e 1116 测得）。包是一份陈述，
   各宿主使用同一个归档。 测试成员 `tests/examples/mcpp-platforms` 为这些行指名此版本；行由包自己的 CI 在三种宿主上构建。
 
-- **CI 的 mcpp 由 2026.11.18.1 改为 2026.11.21.1**（validate、xpkgindex-update、openkal-compat 与 `tests/openkal/pins.toml`）：
+- **CI 的 mcpp 由 2026.11.18.1 改为 2026.11.22.1**（validate、xpkgindex-update、openkal-compat 与 `tests/openkal/pins.toml`）：
   该版的默认平台为 openkal-platform 0.31.2，首次运行安装 gcc 16.2.0、ninja `1.13.2-mcpp.1` 与 patchelf 0.19.3，随带
-  xlings 2026.11.21.1；缓存的依赖只在其编译时所用的模块接口下取用。索引的客户端下界（`min_mcpp`）不变。该版命令行的 `@` 按写出的前缀选择
+  xlings 2026.11.21.1；缓存的依赖只在其编译时所用的模块接口下取用；已安装工具链的配套载荷取 store 持有的第一个声明；
+  `[indices]` 中两项指向同一位置时拒绝（`index-location-named-twice`）。索引的客户端下界（`min_mcpp`）不变。该版命令行的 `@` 按写出的前缀选择
   （`--template ...@1.3` 渲染 1.3 下最新的 1.3.1），`tests/mwrap/check_installed_template.py` 据此检查模板写入的版本落在
   所请求的前缀之下，并读取所选版本的安装。
 
