@@ -44,8 +44,20 @@ package = {
         include_dirs = {"*", "*/libarchive", "mcpp_generated/include"},
         cflags       = {
             "-D_GNU_SOURCE",
-            "-DLIBARCHIVE_STATIC",
             "-DPLATFORM_CONFIG_H=\\\"mcpp_libarchive_config.h\\\"",
+        },
+        -- archive.h and archive_entry.h declare every function
+        -- __declspec(dllimport) on Windows unless LIBARCHIVE_STATIC is defined,
+        -- and this package is a static library. Every TU that includes them
+        -- needs it, this package's and its consumers': a consumer without it
+        -- calls through `__imp_archive_*` slots that lld-link makes, and a link
+        -- that collects unreferenced sections drops the functions behind them
+        -- (the first call jumps to the image's first byte; compat.xz states the
+        -- measurement). A feature's `defines` reach the consumer, and `default`
+        -- implies it unconditionally, as CURL_STATICLIB in compat.curl.
+        features     = {
+            ["default"]   = { implies = { "staticlib" } },
+            ["staticlib"] = { defines = { "LIBARCHIVE_STATIC" } },
         },
         -- macOS with musl as the C library (an openkal graph). libarchive
         -- reads __APPLE__ as "the Apple SDK is present" (TargetConditionals.h,

@@ -94,7 +94,7 @@ namespace = "mcpplibs",      name = "capi.lua"  -- 短名仍带点
 | `sources` | glob 列表,编入 lib 的源码 |
 | `cflags` / `cxxflags` / `ldflags` | 追加至对应规则 |
 | `targets` | `{ ["name"]={ kind="lib"/"bin", main=…, soname=… } }` |
-| `features` | `{ ["f"]={ sources={…}, defines={…}, deps={…}, implies={…}, requires={…} } }`;`defines` 只作用于**包自身**的 TU,消费端若要按 feature 分支须自行声明(见 `tests/examples/openssl`、`openblas` 的 `[target.'cfg(…)'.build] cxxflags`) |
+| `features` | `{ ["f"]={ sources={…}, defines={…}, deps={…}, implies={…}, requires={…} } }`;生效 feature 的 `defines` 作用于包自身的 TU,以及接收其包含目录的每个 TU(接口贡献);每个消费者都需要的宏,如静态库的 `CURL_STATICLIB`、`LZMA_API_STATIC`,写成由 `default` 蕴含的 `staticlib` feature(`compat.curl`、`compat.c-ares`、`compat.xz`) |
 | `deps` | `{ ["ns.name"]="ver" }`,扁平或点号式;feature 内同形 |
 
 ## 索引重定向(`[indices]`)

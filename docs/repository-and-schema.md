@@ -112,7 +112,7 @@ renews every entry that lists its rows; a new platform's entry is named. The lin
 | `sources` | glob list; the sources compiled into the lib |
 | `cflags` / `cxxflags` / `ldflags` | appended to the corresponding rule |
 | `targets` | `{ ["name"]={ kind="lib"/"bin", main=…, soname=… } }` |
-| `features` | `{ ["f"]={ sources={…}, defines={…}, deps={…}, implies={…}, requires={…} } }`; `defines` applies only to the **package's own** TUs, so a consumer that wants to branch on a feature must declare it itself (see the `[target.'cfg(…)'.build] cxxflags` in `tests/examples/openssl` and `openblas`) |
+| `features` | `{ ["f"]={ sources={…}, defines={…}, deps={…}, implies={…}, requires={…} } }`; an active feature's `defines` reach the package's own TUs and every TU that receives its include directories (an interface contribution); a define every consumer needs, such as a static library's `CURL_STATICLIB` or `LZMA_API_STATIC`, is a `staticlib` feature that `default` implies (`compat.curl`, `compat.c-ares`, `compat.xz`) |
 | `deps` | `{ ["ns.name"]="ver" }`, flat or dotted; the same shape inside a feature |
 
 ## Index redirection (`[indices]`)
