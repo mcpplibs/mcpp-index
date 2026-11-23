@@ -19,7 +19,7 @@ package = {
 
     -- The rows this platform serves, for mcpp's platform column (SPEC-013 §14): derived
     -- from the newest version's manifest by tools/platform_rows.py, never written by hand.
-    platform_rows = { "aarch64-freebsd-musl", "aarch64-openkal", "i686-dos-musl", "i686-linux-musl", "i686-openkal", "i686-svr4-musl", "x86_64-freebsd-musl", "x86_64-macos", "x86_64-openkal", "x86_64-uefi", "x86_64-windows-musl" },
+    platform_rows = { "aarch64-freebsd-musl", "aarch64-openkal", "i686-dos-musl", "i686-linux-musl", "i686-openkal", "i686-svr4-musl", "riscv64-none-musl", "x86_64-freebsd-musl", "x86_64-macos", "x86_64-openkal", "x86_64-uefi", "x86_64-windows-musl" },
     extensions = {
         autoupdate = {
             tag = "${version}",
