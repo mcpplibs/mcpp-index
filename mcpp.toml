@@ -300,6 +300,7 @@ members = [
     "tests/examples/openlifa.openas",
     "tests/examples/openlifa.openmui",
     "tests/examples/os",
+    "tests/examples/pdfium",
     "tests/examples/zxing-cpp",
 ]
 
