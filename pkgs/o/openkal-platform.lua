@@ -19,7 +19,7 @@ package = {
 
     -- The rows this platform serves, for mcpp's platform column (SPEC-013 §14): derived
     -- from the newest version's manifest by tools/platform_rows.py, never written by hand.
-    platform_rows = { "aarch64-freebsd-musl", "aarch64-openkal", "i686-dos-musl", "i686-linux-musl", "i686-openkal", "i686-svr4-musl", "riscv64-none-musl", "x86_64-freebsd-musl", "x86_64-macos", "x86_64-openkal", "x86_64-uefi", "x86_64-windows-musl" },
+    platform_rows = { "aarch64-freebsd-musl", "aarch64-openkal", "i686-dos-musl", "i686-linux-musl", "i686-openkal", "i686-svr4-musl", "riscv64-linux-musl", "riscv64-none-musl", "x86_64-freebsd-musl", "x86_64-macos", "x86_64-openkal", "x86_64-uefi", "x86_64-windows-musl" },
     extensions = {
         autoupdate = {
             tag = "${version}",
@@ -29,6 +29,13 @@ package = {
 
     xpm = {
         linux = {
+            ["0.32.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-platform/archive/refs/tags/0.32.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-platform/releases/download/0.32.1/openkal-platform-0.32.1.tar.gz",
+                },
+                sha256 = "cf6ff50dba8143628ad241ecbe778988d7133216ca1a44b38452ac66de3cccec",
+            },
             ["0.32.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-platform/archive/refs/tags/0.32.0.tar.gz",
@@ -318,6 +325,13 @@ package = {
             },
         },
         macosx = {
+            ["0.32.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-platform/archive/refs/tags/0.32.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-platform/releases/download/0.32.1/openkal-platform-0.32.1.tar.gz",
+                },
+                sha256 = "cf6ff50dba8143628ad241ecbe778988d7133216ca1a44b38452ac66de3cccec",
+            },
             ["0.32.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-platform/archive/refs/tags/0.32.0.tar.gz",
@@ -607,6 +621,13 @@ package = {
             },
         },
         windows = {
+            ["0.32.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-platform/archive/refs/tags/0.32.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-platform/releases/download/0.32.1/openkal-platform-0.32.1.tar.gz",
+                },
+                sha256 = "cf6ff50dba8143628ad241ecbe778988d7133216ca1a44b38452ac66de3cccec",
+            },
             ["0.32.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-platform/archive/refs/tags/0.32.0.tar.gz",
