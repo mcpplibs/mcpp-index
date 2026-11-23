@@ -1,0 +1,6 @@
+[package]
+name = "pdfium-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+pdfium = "8165"

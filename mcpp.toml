@@ -284,6 +284,7 @@ members = [
     "tests/examples/openlifa.openmui",
     "tests/examples/os",
     "tests/examples/zxing-cpp",
+    "tests/examples/pdfium",
 ]
 
 # ── The index redirect, hoisted to the workspace root ───────────────────
