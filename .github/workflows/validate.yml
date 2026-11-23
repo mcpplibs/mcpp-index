@@ -1153,8 +1153,19 @@ jobs:
           # at 90 minutes, its siblings finished in 77 to 84. One more shard
           # each puts the slowest under the cap with the margin a cold cache
           # needs; the formula's estimate (9 each) still prices both high.
+          #
+          # ── 2026-11-23: macos 4 -> 6, with its timing rows measured ─────
+          #
+          # Observed on the re-run of that sweep (run 45082422612): `macos
+          # default 0/4` and `3/4` cancelled at the cap with every member they
+          # reached passing, `2/4` finished in 86 minutes. The macOS rows of
+          # tests/member-timings.tsv were stale (grpc-codegen 1156s against 2103s
+          # measured; godot-cpp, grpc-tools and godot-math untimed at 90s against
+          # 875s, 778s and 541s), so LPT packed blind. With the rows measured
+          # from that run, four shards still put the slowest at about 86 minutes
+          # of members; six put it at about 58.
           ln=$(shards_for linux 6)
-          mn=$(shards_for macos 4)
+          mn=$(shards_for macos 6)
           wn=$(shards_for windows 6)
           # THE TWO LINUX LEGS ARE NOT THE SAME COST, AND THE PLANNER CANNOT
           # SEE THAT. `plan_shards.lua` takes a PLATFORM and reads one timing
