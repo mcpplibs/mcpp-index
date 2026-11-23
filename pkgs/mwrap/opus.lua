@@ -6,6 +6,10 @@
 -- compat.ogg (libogg 1.3.6). The package deploys each one's README and COPYING
 -- (libopus's with its royalty-free patent license references) beside programs
 -- (runtime.deploy).
+--
+-- 1.6.1.1 is a wrapper revision: its templates write the dependency selector
+-- unquoted (`mcpplibs.mwrap.opus = ...`); the quoted form is deprecated
+-- since mcpp 2026.11.8.1 and removed in 2027.2.
 package = {
     spec = "1",
     namespace = "mcpplibs.mwrap",
@@ -22,6 +26,13 @@ package = {
     },
     xpm = {
         linux = {
+            ["1.6.1.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/opus-m/releases/download/mwrap-1.6.1.1/opus-m-1.6.1.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mwrap-opus/releases/download/1.6.1.1/opus-m-1.6.1.1.tar.gz",
+                },
+                sha256 = "4683ce7c1224018c0963afcf90f188192aa71ad8983a216a34ba55b04b1cac38",
+            },
             ["1.6.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/opus-m/releases/download/mwrap-1.6.1/opus-m-1.6.1.tar.gz",
@@ -31,6 +42,13 @@ package = {
             },
         },
         macosx = {
+            ["1.6.1.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/opus-m/releases/download/mwrap-1.6.1.1/opus-m-1.6.1.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mwrap-opus/releases/download/1.6.1.1/opus-m-1.6.1.1.tar.gz",
+                },
+                sha256 = "4683ce7c1224018c0963afcf90f188192aa71ad8983a216a34ba55b04b1cac38",
+            },
             ["1.6.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/opus-m/releases/download/mwrap-1.6.1/opus-m-1.6.1.tar.gz",
@@ -40,6 +58,13 @@ package = {
             },
         },
         windows = {
+            ["1.6.1.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/opus-m/releases/download/mwrap-1.6.1.1/opus-m-1.6.1.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mwrap-opus/releases/download/1.6.1.1/opus-m-1.6.1.1.tar.gz",
+                },
+                sha256 = "4683ce7c1224018c0963afcf90f188192aa71ad8983a216a34ba55b04b1cac38",
+            },
             ["1.6.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/opus-m/releases/download/mwrap-1.6.1/opus-m-1.6.1.tar.gz",

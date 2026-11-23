@@ -16,3 +16,7 @@ version = "0.1.0"
 # The `compat` index redirect is inherited from the workspace root.
 [dependencies.compat]
 eui-neo = { version = "0.6.3", features = ["serial"] }
+
+# The candidate index: this checkout (compat.*), not the published one.
+[indices]
+compat = { path = "../../.." }

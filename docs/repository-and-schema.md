@@ -8,14 +8,12 @@ Module wrapper descriptors use `pkgs/mwrap/<lib>.lua` and their consumers use `t
 
 ```
 pkgs/<x>/<name>.lua          descriptors. <x> is the initial of the full package name (compat.* → c, nlohmann.json → n, imgui → i)
-mcpp.toml                    workspace manifest (the members list) + the root-level [indices] compat = { path = "." },
-                             inherited by members (relative paths resolve against the workspace root, mcpp >= 0.0.97)
+mcpp.toml                    workspace manifest (the members list); it states no [indices]
 tests/examples/<member>/     one test project per library (a workspace member; <member> is the package name minus its
-  mcpp.toml                  prefix, or <name>-module for module packages). Members consuming compat write no
-                             [indices]; members consuming another namespace write exactly one (module packages use
-                             default), and that declaration **replaces** the root-level table rather than merging with
-                             it — at most one project-level index repo per member is a hard constraint, see
-                             "Index redirection" below. Dependencies gate themselves per platform
+  mcpp.toml                  prefix, or <name>-module for module packages). Members consuming compat write
+                             [indices] compat = { path = "<to the root>" }; members consuming another namespace write
+                             that one instead (module packages use default) — one project-level index repo per member,
+                             see "Index redirection" below. Dependencies gate themselves per platform
                              ([target.'cfg(...)'])
   tests/*.cpp                behavioral assertions (standalone main; a non-zero exit code is a failure)
 tests/check_mirror_urls.lua  lint: GLOBAL+CN table completeness, and that CN points at mcpp-res
@@ -114,7 +112,7 @@ renews every entry that lists its rows; a new platform's entry is named. The lin
 | `sources` | glob list; the sources compiled into the lib |
 | `cflags` / `cxxflags` / `ldflags` | appended to the corresponding rule |
 | `targets` | `{ ["name"]={ kind="lib"/"bin", main=…, soname=… } }` |
-| `features` | `{ ["f"]={ sources={…}, defines={…}, deps={…}, implies={…}, requires={…} } }`; `defines` applies only to the **package's own** TUs, so a consumer that wants to branch on a feature must declare it itself (see the `[target.'cfg(…)'.build] cxxflags` in `tests/examples/openssl` and `openblas`) |
+| `features` | `{ ["f"]={ sources={…}, defines={…}, deps={…}, implies={…}, requires={…} } }`; an active feature's `defines` reach the package's own TUs and every TU that receives its include directories (an interface contribution); a define every consumer needs, such as a static library's `CURL_STATICLIB` or `LZMA_API_STATIC`, is a `staticlib` feature that `default` implies (`compat.curl`, `compat.c-ares`, `compat.xz`) |
 | `deps` | `{ ["ns.name"]="ver" }`, flat or dotted; the same shape inside a feature |
 
 ## Index redirection (`[indices]`)
@@ -122,12 +120,13 @@ renews every entry that lists its rows; a new platform's entry is named. The lin
 What the test surface has to validate is **the descriptors in the checkout**, not the published remote index, and
 `[indices]` is what redirects a namespace into this repository to make that happen.
 
-**Root-level inheritance**: the workspace root's `mcpp.toml` declares `[indices] compat = { path = "." }`, whose
-relative path resolves against the **workspace root** (mcpp >= 0.0.97,
-[mcpp#224](https://github.com/mcpp-community/mcpp/issues/224)), and members inherit it directly instead of each
-writing their own `path = "../../.."`.
+**One per member**: a member that tests a namespace of this checkout states it, `[indices] <ns> = { path = "<to the
+root>" }`, its relative path anchored at the member. The root states none. A root's `[indices]` reached members by
+position, a reading mcpp deprecated in 2026.10.10.1 and removes in 2027.1, and `[workspace.indices]` merges with a
+member's entries by name: a member naming the checkout under another namespace would hold it twice, which mcpp
+refuses (`index-location-named-twice`), and an mwrap member would hold it beside its candidate index.
 
-**Why there is only one, and why it is `compat`**:
+**Why one namespace per member**:
 
 - The index table is **keyed by namespace**. Declared under a name no dependency ever requests, the index is simply
   never registered, and resolution silently falls back to the published remote index — at which point what is under
@@ -138,15 +137,8 @@ writing their own `path = "../../.."`.
   [xlings#374](https://github.com/openxlings/xlings/issues/374) — a silent exit 1 before xlings 0.4.69, a loud error
   since).
 
-So the root level can carry exactly one namespace, and `compat` is the one that buys the most (13 members against 10
-for everything else combined).
-
-**Member-level override**: a member consuming another namespace declares its own `[indices]`, and that table
-**replaces** the inherited root-level one rather than merging with it — which is precisely the mechanism that keeps
-one project index repo per member.
-
 **The cross-namespace trade-off**: a single member cannot resolve two namespaces from this checkout. `tests/examples/asio-ssl`
-exploits that deliberately: it writes no member-level declaration and inherits the root `compat`, so asio itself comes
+exploits that deliberately: it states `compat` alone, so asio itself comes
 from the published remote index while its `ssl` feature dependency `compat.openssl` resolves from this checkout —
 which means **an unmerged compat descriptor can be validated through an already-published consumer**. The local asio
 descriptor is covered the other way round, by `tests/examples/asio-module`.
@@ -208,7 +200,7 @@ locally with `mcpp xpkg parse pkgs/<x>/<name>.lua`.
 - `workspace (<platform> <shard>/<count>)`: the whole test surface is one mcpp workspace and the **only build/run
   channel** — there is no shell-driven exception (the public module packages imgui/ffmpeg/opencv/tinyhttps are
   ordinary members too, resolving from the checkout through a member-level `[indices] default = { path = "../../.." }`,
-  mcpp >= 0.0.97; members consuming `compat` inherit the root-level declaration, see "Index redirection" above). The
+  mcpp >= 0.0.97; members consuming `compat` state `[indices] compat = { path = "../../.." }`, see "Index redirection" above). The
   shard suffix appears only where the platform is actually split.
   - Members run through `tests/run_members.sh`, the same script used locally. A timing table that exists only in CI
     cannot be consulted while deciding what to optimise, and a local harness that differs from CI measures something

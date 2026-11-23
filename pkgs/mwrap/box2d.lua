@@ -4,6 +4,10 @@
 -- The wrapper is Apache-2.0; the library it links, compat.box2d (Box2D 3.2.0,
 -- single precision, -ffp-contract=off), is MIT, linked statically: the package
 -- deploys Box2D's README and LICENSE beside programs (runtime.deploy).
+--
+-- 3.2.0.1 is a wrapper revision: its templates write the dependency selector
+-- unquoted (`mcpplibs.mwrap.box2d = ...`); the quoted form is deprecated
+-- since mcpp 2026.11.8.1 and removed in 2027.2.
 package = {
     spec = "1",
     namespace = "mcpplibs.mwrap",
@@ -20,6 +24,13 @@ package = {
     },
     xpm = {
         linux = {
+            ["3.2.0.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/box2d-m/releases/download/mwrap-3.2.0.1/box2d-m-3.2.0.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mwrap-box2d/releases/download/3.2.0.1/box2d-m-3.2.0.1.tar.gz",
+                },
+                sha256 = "a6fe9875e8824fe19c4591e502e20ad24ac6348e7542ece164d7a9c2eed66e39",
+            },
             ["3.2.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/box2d-m/releases/download/mwrap-3.2.0/box2d-m-3.2.0.tar.gz",
@@ -29,6 +40,13 @@ package = {
             },
         },
         macosx = {
+            ["3.2.0.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/box2d-m/releases/download/mwrap-3.2.0.1/box2d-m-3.2.0.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mwrap-box2d/releases/download/3.2.0.1/box2d-m-3.2.0.1.tar.gz",
+                },
+                sha256 = "a6fe9875e8824fe19c4591e502e20ad24ac6348e7542ece164d7a9c2eed66e39",
+            },
             ["3.2.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/box2d-m/releases/download/mwrap-3.2.0/box2d-m-3.2.0.tar.gz",
@@ -38,6 +56,13 @@ package = {
             },
         },
         windows = {
+            ["3.2.0.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/box2d-m/releases/download/mwrap-3.2.0.1/box2d-m-3.2.0.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mwrap-box2d/releases/download/3.2.0.1/box2d-m-3.2.0.1.tar.gz",
+                },
+                sha256 = "a6fe9875e8824fe19c4591e502e20ad24ac6348e7542ece164d7a9c2eed66e39",
+            },
             ["3.2.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/box2d-m/releases/download/mwrap-3.2.0/box2d-m-3.2.0.tar.gz",

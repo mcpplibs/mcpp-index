@@ -14,3 +14,7 @@ cxxflags = ["-ffp-contract=off"]
 
 [dependencies]
 compat.box2d = "3.2.0"
+
+# The candidate index: this checkout (compat.*), not the published one.
+[indices]
+compat = { path = "../../.." }

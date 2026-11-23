@@ -14,3 +14,7 @@ glm = "1.0.2"
 # OpenGL's -1..1, and the test below asserts exactly that difference.
 [build]
 cxxflags = ["-DGLM_FORCE_DEPTH_ZERO_TO_ONE", "-DGLM_ENABLE_EXPERIMENTAL"]
+
+# The candidate index: this checkout (compat.*), not the published one.
+[indices]
+compat = { path = "../../.." }

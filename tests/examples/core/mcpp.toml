@@ -18,3 +18,7 @@ khrplatform = "2026.05.31"
 ldflags = ["-ldl", "-lm"]
 [target.'cfg(macos)'.build]
 ldflags = ["-lm"]
+
+# The candidate index: this checkout (compat.*), not the published one.
+[indices]
+compat = { path = "../../.." }

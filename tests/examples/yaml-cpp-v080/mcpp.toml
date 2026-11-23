@@ -9,3 +9,7 @@ version = "0.1.0"
 
 [dependencies.compat]
 yaml-cpp = "0.8.0"
+
+# The candidate index: this checkout (compat.*), not the published one.
+[indices]
+compat = { path = "../../.." }

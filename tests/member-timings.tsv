@@ -8,6 +8,8 @@
 # times and completed installed-check step durations are both included.
 # Windows wrapper measurements: run 40121911805; job 120955178624
 # exhausted 90m during legacy opencv-module, while completed checks passed.
+# macOS member rows: run 45082422612 (2026-11-23), the per-member times of its
+# four shards; the wrapper rows, and the members it did not reach, keep theirs.
 linux	grpc-codegen	3463
 linux	grpc-module	1771
 linux	protobuf-protoc	885
@@ -18,18 +20,25 @@ linux	opencv-module	649
 linux	godot-cpp-module	627
 linux	eui-neo-sdl2	591
 linux	godot-cpp-module-v10	568
-macos	grpc-codegen	1156
+macos	grpc-codegen	2103
 macos	grpc-module	719
 macos	grpc-cpu	1800
-macos	grpc-protobuf-stack	1800
+macos	grpc-protobuf-stack	1767
 macos	opencv-module-dnn	325
-macos	protobuf-protoc	314
+macos	protobuf-protoc	623
 macos	godot-cpp-module	276
 macos	opencv-module	223
-macos	godot-cpp-v10	206
+macos	godot-cpp-v10	588
 macos	godot-cpp-module-v10	195
 macos	opencv-module-unifont	164
-macos	eui-neo-sdl2	138
+macos	eui-neo-sdl2	58
+macos	godot-cpp	875
+macos	grpc-tools	778
+macos	godot-math	541
+macos	opencv-cpu	388
+macos	ffmpeg	330
+macos	opencv-webp	281
+macos	openkal-platform	154
 windows	opencv-module	868
 windows	opencv-module-dnn	828
 windows	godot-cpp-module	707

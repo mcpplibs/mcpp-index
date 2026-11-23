@@ -1,4 +1,8 @@
 -- Immutable upstream-aligned mwrap source release; GLOBAL and CN bytes are identical.
+--
+-- 10.0.0.1 is a wrapper revision: its templates write the dependency selector
+-- unquoted (`mcpplibs.mwrap.godot_cpp = ...`); the quoted form is deprecated
+-- since mcpp 2026.11.8.1 and removed in 2027.2.
 package = {
     spec = "1",
     namespace = "mcpplibs.mwrap",
@@ -15,6 +19,13 @@ package = {
     },
     xpm = {
         linux = {
+            ["10.0.0.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/godot-cpp-m/releases/download/mwrap-10.0.0.1/godot-cpp-m-10.0.0.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mwrap-godot-cpp/releases/download/10.0.0.1/godot-cpp-m-10.0.0.1.tar.gz",
+                },
+                sha256 = "3dfa0507dcff404ac95cd7e2b66ef70c0bf7e56859f4b791cc484a9c9375dcf5",
+            },
             ["10.0.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/godot-cpp-m/releases/download/mwrap-10.0.0/godot-cpp-m-10.0.0.tar.gz",
@@ -24,6 +35,13 @@ package = {
             },
         },
         macosx = {
+            ["10.0.0.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/godot-cpp-m/releases/download/mwrap-10.0.0.1/godot-cpp-m-10.0.0.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mwrap-godot-cpp/releases/download/10.0.0.1/godot-cpp-m-10.0.0.1.tar.gz",
+                },
+                sha256 = "3dfa0507dcff404ac95cd7e2b66ef70c0bf7e56859f4b791cc484a9c9375dcf5",
+            },
             ["10.0.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/godot-cpp-m/releases/download/mwrap-10.0.0/godot-cpp-m-10.0.0.tar.gz",
@@ -33,6 +51,13 @@ package = {
             },
         },
         windows = {
+            ["10.0.0.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/godot-cpp-m/releases/download/mwrap-10.0.0.1/godot-cpp-m-10.0.0.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mwrap-godot-cpp/releases/download/10.0.0.1/godot-cpp-m-10.0.0.1.tar.gz",
+                },
+                sha256 = "3dfa0507dcff404ac95cd7e2b66ef70c0bf7e56859f4b791cc484a9c9375dcf5",
+            },
             ["10.0.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/godot-cpp-m/releases/download/mwrap-10.0.0/godot-cpp-m-10.0.0.tar.gz",

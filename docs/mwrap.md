@@ -165,13 +165,13 @@ Templates are data, without execution hooks. With the pinned current mcpp,
 
 ```toml
 [dependencies]
-"{{self.name}}" = { version = "{{self.version}}", features = ["imgproc", "imgcodecs-png"] }
+{{self.name}} = { version = "{{self.version}}", features = ["imgproc", "imgcodecs-png"] }
 ```
 
-Quote the selector as one key; do not place it under another namespace table.
-From mcpp 2026.11.8.1 a quoted key that needs no quotes is reported (and `--strict` refuses it); a template
-tested with that client writes the same selector as a dotted key, `{{self.name}} = "{{self.version}}"`, which
-names the same package. `tests/mwrap/check_installed_template.py` reads either form.
+Write the selector unquoted, as a dotted key; do not place it under another namespace table.
+A quoted key that needs no quotes is deprecated from mcpp 2026.11.8.1 (`--strict` refuses it) and
+is removed in 2027.2. `tests/mwrap/check_installed_template.py` refuses a template that writes it,
+and builds the rendered project with `--strict`.
 Declare required features explicitly and keep the library version tied to
 `{{self.version}}`. Test actual `mcpp new`, then build and run the generated
 project. A source candidate may use an isolated preseeded installed-package
@@ -227,13 +227,13 @@ CI check before reporting merge/release readiness.
 
 ## Candidate index tests across namespaces
 
-The pinned client can report duplicate candidates when a workspace mixes full project indices and namespace views. Mwrap workspace members retain an explicit empty `[indices]` table. `tests/run_members.sh` prepares one complete unchanged built-in candidate index before their tests; an unset MCPP_HOME uses the task-owned target/mwrap-test-home. CI prepares that candidate after refreshing the published registry. Keep the legacy workspace redirect semantics; `[workspace.indices]` merges entries and is not a mechanical spelling replacement.
+The pinned client can report duplicate candidates when a workspace mixes full project indices and namespace views. Mwrap workspace members state no `[indices]`, and the workspace root states none for them: each other member states the index it tests through (`compat = { path = "<to the root>" }` for this checkout), since mcpp removes the positional reading of a root's `[indices]` in 2027.1 and `[workspace.indices]` merges with a member's entries. `tests/run_members.sh` prepares one complete unchanged built-in candidate index before their tests; an unset MCPP_HOME uses the task-owned target/mwrap-test-home. CI prepares that candidate after refreshing the published registry.
 
 Namespace views created by tests/prepare_mwrap_indices.py remain available for isolated single-project consumers. Their descriptors preserve source bytes and SHA256 provenance. A standalone success does not certify a mixed workspace sequence. Views are ignored outputs, not a publication format.
 
 Normal installed consumers are tested independently by tests/mwrap/check_installed_template.py: it copies the complete pkgs/index.toml publication layout into one isolated built-in index, downloads the real checksummed source archive, runs mcpp new and builds/runs the generated manifest without a path substitution. Its home downloads from the GLOBAL mirror unless `--mirror CN` names the other (the CN acceptance of a release). The Git and published pkgs/mwrap directory layout remains identical.
 
-Coupled runtime/plugin/build-module consumers may require several candidate namespaces at once. Use `python3 tests/prepare_builtin_index.py --home <isolated-test-home>` to install the complete unchanged candidate layout as the test home's single built-in index; the member uses an empty `[indices]` table to override legacy workspace redirects. Updater candidate CI uses this mode too. Do not register the same full checkout through multiple project aliases. This is test-home preparation only: no publication staging, path conversion or mcpp engine change is required.
+Coupled runtime/plugin/build-module consumers may require several candidate namespaces at once. Use `python3 tests/prepare_builtin_index.py --home <isolated-test-home>` to install the complete unchanged candidate layout as the test home's single built-in index; the member states no `[indices]`. Updater candidate CI uses this mode too. Do not register the same full checkout through multiple project aliases. This is test-home preparation only: no publication staging, path conversion or mcpp engine change is required.
 
 For Linux consumers loading a C++ SDK through a C API, verify the C++ runtime contract as well as successful calls. The OpenCV/ORT integration exposed uncaught typed exceptions when a static runtime was embedded alongside the shared SDK runtime; `cxx_runtime = "toolchain-coupled"` fixed the same test. Templates must encode the verified contract and exercise a typed error path.
 

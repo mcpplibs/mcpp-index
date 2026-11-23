@@ -3,9 +3,5 @@ name = "wuffs-decode"
 version = "0.3.6"
 description = "Consume the immutable Wuffs wrapper: a PNG and a GIF decoded pixel by pixel, gzip inflated by the C API and the adapted static inline helpers, JSON walked by wuffs_aux, a truncated image refused, the mapped macros, the side header beside the import"
 
-[indices]
-# Use the complete candidate built-in index prepared by tests/run_members.sh.
-# An explicit empty table overrides the legacy workspace redirect.
-
 [dependencies]
 mcpplibs.mwrap.wuffs = "0.3.6"

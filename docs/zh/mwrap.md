@@ -108,13 +108,13 @@ mcpp new --list-templates mcpplibs.mwrap.opencv@5.0.0
 mcpp new viewer --template mcpplibs.mwrap.opencv@5.0.0:window
 ```
 
-模板是纯数据，不执行 hook。当前 mcpp 的 self.name 为完整包选择器，应作为一个带引号的 key（mcpp 2026.11.8.1 起，不需要引号的
-key 带引号会被提示，`--strict` 下被拒绝；以该版本测试的模板把同一选择器写成点分 key `{{self.name}} = "{{self.version}}"`，
-指向同一个包，`tests/mwrap/check_installed_template.py` 两种写法都读）：
+模板是纯数据，不执行 hook。当前 mcpp 的 self.name 为完整包选择器，写成不加引号的点分 key（不需要引号的 key 带引号自
+mcpp 2026.11.8.1 起弃用，`--strict` 下被拒绝，2027.2 移除；`tests/mwrap/check_installed_template.py` 拒绝写成引号键的模板，
+并以 `--strict` 构建渲染出的工程）：
 
 ```toml
 [dependencies]
-"{{self.name}}" = { version = "{{self.version}}", features = ["imgproc", "imgcodecs-png"] }
+{{self.name}} = { version = "{{self.version}}", features = ["imgproc", "imgcodecs-png"] }
 ```
 
 不能再把 self.name 放入另一层 namespace 表。版本与 self.version 绑定，明确所需 feature。
