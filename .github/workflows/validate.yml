@@ -478,7 +478,13 @@ env:
   # toolchain's companions are the first declaration its store holds, and two
   # [indices] entries naming one location are refused, which is why the
   # workspace states no index and each member states its own.
-  MCPP_VERSION: "2026.11.22.1"
+  #
+  # 2026.11.23.1: the newest release; its default platform is
+  # openkal-platform 0.32.1 and it bundles xlings 2026.11.23.1, whose
+  # collection keeps the store roots builds register. The runtime closure
+  # check expands $ORIGIN at the directory a library was opened in
+  # (mcpp-community/mcpp#1009), so cuda-curand on the LLVM leg passes.
+  MCPP_VERSION: "2026.11.23.1"
 
 jobs:
   lint:
