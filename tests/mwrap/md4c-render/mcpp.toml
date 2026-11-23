@@ -8,4 +8,4 @@ description = "Consume the immutable md4c wrapper: parse with callbacks and rend
 # An explicit empty table overrides the legacy workspace redirect.
 
 [dependencies]
-"mcpplibs.mwrap.md4c" = "0.5.3"
+mcpplibs.mwrap.md4c = "0.5.3.1"
