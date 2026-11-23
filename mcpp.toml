@@ -295,6 +295,7 @@ members = [
     "tests/examples/openlifa.openas",
     "tests/examples/openlifa.openmui",
     "tests/examples/os",
+    "tests/examples/zxing-cpp",
 ]
 
 # ── The index each member tests through ─────────────────────────────────
