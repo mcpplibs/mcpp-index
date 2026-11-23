@@ -1,0 +1,9 @@
+[package]
+name = "arrow-adbc-sqlite-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+arrow-adbc = { version = "25", features = ["sqlite"] }
+
+[indices]
+compat = { path = "../../.." }

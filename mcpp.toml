@@ -65,6 +65,8 @@ members = [
     "tests/examples/abseil",
     "tests/examples/archive",
     "tests/examples/argparse",
+    "tests/examples/arrow-adbc",
+    "tests/examples/arrow-adbc-sqlite",
     "tests/examples/accesskit",
     "tests/examples/asio-module",
     "tests/examples/asio-ssl",
