@@ -713,8 +713,10 @@ package = {
     xpm = {
         linux = {
             ["0.27.0"] = {
-                -- No CN mirror yet: the GitCode release asset is uploaded by a maintainer.
-                url = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.27.0.tar.gz",
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.27.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.27.0/mcpp-plugins-0.27.0.tar.gz",
+                },
                 sha256 = "eee3cd233e7aa455ab1324552b2c3a304e68e4b307f118e3a3448b539fdf3131",
             },
             ["0.26.1"] = {
@@ -1064,8 +1066,10 @@ package = {
         },
         macosx = {
             ["0.27.0"] = {
-                -- No CN mirror yet: the GitCode release asset is uploaded by a maintainer.
-                url = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.27.0.tar.gz",
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.27.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.27.0/mcpp-plugins-0.27.0.tar.gz",
+                },
                 sha256 = "eee3cd233e7aa455ab1324552b2c3a304e68e4b307f118e3a3448b539fdf3131",
             },
             ["0.26.1"] = {
@@ -1415,8 +1419,10 @@ package = {
         },
         windows = {
             ["0.27.0"] = {
-                -- No CN mirror yet: the GitCode release asset is uploaded by a maintainer.
-                url = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.27.0.tar.gz",
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.27.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.27.0/mcpp-plugins-0.27.0.tar.gz",
+                },
                 sha256 = "eee3cd233e7aa455ab1324552b2c3a304e68e4b307f118e3a3448b539fdf3131",
             },
             ["0.26.1"] = {
