@@ -2,11 +2,18 @@
 -- each member selected by a feature.
 --
 --   [dependencies.mcpp]
---   plugins = { version = "0.26.1", features = ["rules-spirv"], host-module = true }
+--   plugins = { version = "0.27.0", features = ["rules-spirv"], host-module = true }
 --
 --   // build.mcpp
 --   import mcpp;
 --   import mcpp.rules.spirv;
+--
+-- 0.27.0 (package floor mcpp 2026.10.30.1): rules-qml, QML applications on
+-- rules-qt: each module's moc, qmltyperegistrar, qmlcachegen, rcc and qsb as
+-- actions, the Qt QML modules the program imports placed beside it, and a
+-- qt.conf. rules-qt adds moc_json, moc_includes, i18n.extensions and
+-- compile_ex, off by default. A pack that carries the QML plugins' libraries
+-- needs mcpp 2026.11.23.1 (mcpp#1011).
 --
 -- 0.26.1 (package floor mcpp 2026.10.30.1): the members reach the system
 -- through mcpplibs.os 0.4.5, which accepts openkal 0.24 to 0.26, so a graph
@@ -705,6 +712,11 @@ package = {
 
     xpm = {
         linux = {
+            ["0.27.0"] = {
+                -- No CN mirror yet: the GitCode release asset is uploaded by a maintainer.
+                url = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.27.0.tar.gz",
+                sha256 = "eee3cd233e7aa455ab1324552b2c3a304e68e4b307f118e3a3448b539fdf3131",
+            },
             ["0.26.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.26.1.tar.gz",
@@ -1048,9 +1060,14 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.26.1" },
+            ["latest"] = { ref = "0.27.0" },
         },
         macosx = {
+            ["0.27.0"] = {
+                -- No CN mirror yet: the GitCode release asset is uploaded by a maintainer.
+                url = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.27.0.tar.gz",
+                sha256 = "eee3cd233e7aa455ab1324552b2c3a304e68e4b307f118e3a3448b539fdf3131",
+            },
             ["0.26.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.26.1.tar.gz",
@@ -1394,9 +1411,14 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.26.1" },
+            ["latest"] = { ref = "0.27.0" },
         },
         windows = {
+            ["0.27.0"] = {
+                -- No CN mirror yet: the GitCode release asset is uploaded by a maintainer.
+                url = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.27.0.tar.gz",
+                sha256 = "eee3cd233e7aa455ab1324552b2c3a304e68e4b307f118e3a3448b539fdf3131",
+            },
             ["0.26.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.26.1.tar.gz",
@@ -1740,7 +1762,7 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.26.1" },
+            ["latest"] = { ref = "0.27.0" },
         },
     },
 
