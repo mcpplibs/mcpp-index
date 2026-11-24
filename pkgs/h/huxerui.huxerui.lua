@@ -3,6 +3,10 @@ local versions = {
         url = "https://github.com/HuxerUI/HuxerUI/archive/refs/tags/v0.4.0.tar.gz",
         sha256 = "46631651105b4da2fa6651c842ce4d276334b3e06b27f93bb9c26167ec16fc38",
     },
+    ["0.5.5"] = {
+        url = "https://github.com/HuxerUI/HuxerUI/archive/refs/tags/v0.5.5.tar.gz",
+        sha256 = "a968ab1756dc4dda56cd39495706b2e60eca333104d05b7a8e133b45285a768e",
+    },
 }
 
 -- huxerui.huxerui — the HuxerUI SDK as a native mcpp module package.
@@ -29,6 +33,18 @@ local versions = {
 -- 0.4.0 has no CN mirror yet. Per SOP a new version may name the GitHub
 -- release directly when the mcpp-res upload is not available; the mirror can
 -- be filled in later without touching the version block.
+--
+-- ── 0.5.5 ─────────────────────────────────────────────────────────────────
+--
+-- Upstream moves `standard` to `c++23` (matching `mcpp:plugins` C++23 modules
+-- and Clang's `import std;` requirement on Windows), relocates its rule
+-- package to `buildtools/mcpp/huxerui-build-rules`, adds the opt-in
+-- `profiling` feature (`HUXERUI_ENABLE_PROFILING=1` + `src/runtime/profiling.cpp`),
+-- and adds `cpp_modules_gen` support for headers libraries. Form A requires no
+-- build recipe changes here, and Linux `xpm.linux.deps` is unchanged from
+-- v0.4.0 (the four direct GTK4/epoxy/glib/libsoup pins match v0.5.5's
+-- `xlings.workspace`). Like 0.4.0, 0.5.5 uses the plain GitHub URL without a
+-- CN mirror yet.
 --
 -- ── Two fields deliberately DISAGREE with `mcpp emit xpkg` ────────────────
 --
@@ -137,6 +153,7 @@ package = {
                 sha256 = "8b326d95015e92925229fdc1ababe4fdf32515e75764472591645622c1cfbb08",
             },
             ["0.4.0"] = versions["0.4.0"],
+            ["0.5.5"] = versions["0.5.5"],
         },
         macosx = {
             ["0.3.0"] = {
@@ -147,6 +164,7 @@ package = {
                 sha256 = "8b326d95015e92925229fdc1ababe4fdf32515e75764472591645622c1cfbb08",
             },
             ["0.4.0"] = versions["0.4.0"],
+            ["0.5.5"] = versions["0.5.5"],
         },
         windows = {
             -- NO `xim:wix`, and that is not an oversight.
@@ -187,6 +205,7 @@ package = {
                 sha256 = "8b326d95015e92925229fdc1ababe4fdf32515e75764472591645622c1cfbb08",
             },
             ["0.4.0"] = versions["0.4.0"],
+            ["0.5.5"] = versions["0.5.5"],
         },
     },
 
