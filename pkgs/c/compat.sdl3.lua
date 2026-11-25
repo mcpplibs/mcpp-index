@@ -1,3 +1,10 @@
+local versions = {
+    ["3.4.20"] = {
+        url = "https://github.com/libsdl-org/SDL/archive/refs/tags/release-3.4.20.tar.gz",
+        sha256 = "5cb56d4223a41283f3c2baf6f1263fba171692409ae405a50417a7c8e7e28deb",
+    },
+}
+
 -- compat.sdl3 — SDL3, the cross-platform window/input/audio layer, built from
 -- source.
 --
@@ -192,6 +199,7 @@ package = {
                 revision = 3,
                 floor    = 3,
             },
+            ["3.4.20"] = versions["3.4.20"],
         },
         macosx = {
             ["3.4.2"] = {
@@ -213,6 +221,7 @@ package = {
                 revision = 3,
                 floor    = 3,
             },
+            ["3.4.20"] = versions["3.4.20"],
         },
         windows = {
             ["3.4.2"] = {
@@ -234,6 +243,7 @@ package = {
                 revision = 3,
                 floor    = 3,
             },
+            ["3.4.20"] = versions["3.4.20"],
         },
     },
 
