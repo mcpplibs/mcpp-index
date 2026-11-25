@@ -10,16 +10,20 @@ import unittest
 
 
 class NamespaceViews(unittest.TestCase):
-    def test_workspace_members_override_project_aliases(self):
+    def test_mwrap_members_take_only_the_candidate_index(self):
+        # An mwrap member resolves from the complete candidate index in its test home; an index it
+        # or the workspace stated beside it (this checkout) would make each package two candidates.
         root = Path(__file__).resolve().parents[1]
-        workspace = tomllib.loads((root / "mcpp.toml").read_text())["workspace"]["members"]
+        workspace_manifest = tomllib.loads((root / "mcpp.toml").read_text())
+        self.assertNotIn("indices", workspace_manifest)
+        self.assertNotIn("indices", workspace_manifest.get("workspace", {}))
+        workspace = workspace_manifest["workspace"]["members"]
         members = [root / member / "mcpp.toml" for member in workspace if member.startswith("tests/mwrap/")]
         self.assertTrue(members)
         for manifest in members:
             with self.subTest(member=manifest.parent.name):
                 parsed = tomllib.loads(manifest.read_text())
-                self.assertIn("indices", parsed)
-                self.assertEqual(parsed["indices"], {})
+                self.assertFalse(parsed.get("indices"))
 
     def test_rebuild_removes_cross_namespace_candidates(self):
         with tempfile.TemporaryDirectory() as directory:

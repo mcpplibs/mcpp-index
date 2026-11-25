@@ -13,7 +13,12 @@
 // this program is told the memory it occupies and its peak, and a region is
 // reserved, backed, written, its backing returned and backed again reading
 // zero, and released; (0.21) where the implementation states it, part of an
-// executable region is a file's bytes, read from where the file holds them.
+// executable region is a file's bytes, read from where the file holds them;
+// (0.22) the null device beside a stream at one position is refused, and is
+// refused as unsupported where the implementation does not state it; (0.23) a
+// region at an address, zero; a read-only attenuation; the machine's memory
+// and the resource preference; (0.25) where the volume states it, a second name
+// for a file reads as the first, and a name that is taken is refused.
 // The terminal is not observed here,
 // because a test run has none; the implementations observe it on a terminal
 // they make.
@@ -105,6 +110,25 @@ int main() {
         kal_fs_remove(root, "okt.a", 5);
         kal_fs_remove(root, "okt.b", 5);
     }
+    if (root.h && (kal_fs_props(root) & KAL_FS_PROP_HARD_LINKS) != 0) {
+        kal_file f{};
+        if (kal_fs_open(root, "okt.h", 5, KAL_OPEN_WRITE | KAL_OPEN_CREATE | KAL_OPEN_TRUNCATE, &f) == kal_ok) {
+            kal_stream_write(kal_fs_stream(f), "linked", 6);
+            kal_fs_close_file(f);
+        }
+        check(kal_fs_hard_link(root, "okt.h", 5, root, "okt.l", 5) == kal_ok, "a file is given a second name");
+        char b[8] = {};
+        kal_file g{};
+        if (kal_fs_open(root, "okt.l", 5, KAL_OPEN_READ, &g) == kal_ok) {
+            check(kal_stream_read(kal_fs_stream(g), b, sizeof b) == 6 && b[0] == 'l' && b[5] == 'd',
+                  "and the second name reads as the first");
+            kal_fs_close_file(g);
+        }
+        check(kal_fs_hard_link(root, "okt.h", 5, root, "okt.l", 5) == kal_err_exists,
+              "a second name that is taken is refused");
+        kal_fs_remove(root, "okt.l", 5);
+        kal_fs_remove(root, "okt.h", 5);
+    }
 
     if ((kal_process_props() & KAL_PROCESS_PROP_ONE_STRING) == 0 && root.h) {
         // Where a program receives a vector, a joined command line has no
@@ -116,6 +140,29 @@ int main() {
         check(kal_process_spawn(&how, "x", 1, argv, lens, 1, nullptr, nullptr, 0, nullptr, &p)
                   == kal_err_not_supported,
               "a joined command line is refused where programs receive vectors");
+    }
+
+    if (root.h) {
+        const char* argv[] = { "x" };
+        const kal_uintptr lens[] = { 1 };
+        kal_process p{};
+        if ((kal_process_props() & KAL_PROCESS_PROP_NULL_STREAMS) == 0) {
+            const kal_spawn how{ root, root, nullptr, nullptr, 0, KAL_SPAWN_NULL_OUT };
+            check(kal_process_spawn(&how, "x", 1, argv, lens, 1, nullptr, nullptr, 0, nullptr, &p)
+                      == kal_err_not_supported,
+                  "the null device is refused where the implementation does not state it");
+        } else if (kal_process_props() & KAL_PROCESS_PROP_CHANNEL) {
+            kal_stream mine{}, theirs{};
+            if (kal_process_channel(&mine, &theirs) == kal_ok) {
+                const kal_spawn_streams placed{ kal_stream{0}, theirs, kal_stream{0} };
+                const kal_spawn how{ root, root, nullptr, nullptr, 0, KAL_SPAWN_NULL_OUT };
+                check(kal_process_spawn(&how, "x", 1, argv, lens, 1, nullptr, nullptr, 0, &placed, &p)
+                          == kal_err_invalid,
+                      "the null device beside a stream at one position is refused");
+                kal_process_channel_close(theirs);
+                kal_process_channel_close(mine);
+            }
+        }
     }
 
     if (root.h && (kal_interfaces() & KAL_IFACE_MAP) != 0) {
@@ -208,6 +255,46 @@ int main() {
             }
         }
         kal_fs_remove(root, "okt.x", 5);
+    }
+
+    // 0.23: a region at an address, and a region zero when returned; a
+    // directory attenuated read-only refuses a creation beneath it; the
+    // machine's memory and this program's resource preference are told.
+    if ((kal_interfaces() & KAL_IFACE_EXEC) && (kal_exec_props() & KAL_EXEC_PROP_PLACE)) {
+        const kal_uintptr a = 65536;
+        void* any = kal_exec_alloc(a);
+        if (any) {
+            kal_exec_free(any, a);
+            auto* r = static_cast<unsigned char*>(kal_exec_alloc_at(any, a));
+            check(r == any, "a region is reserved at the address asked for");
+            check(r && r[0] == 0 && r[a - 1] == 0, "and is zero");
+            if (r) {
+                check(kal_exec_alloc_at(r, a) == nullptr, "an address already held is refused");
+                kal_exec_free(r, a);
+            }
+        }
+    }
+    if (kal_fs_preopen_count() > 0 && kal_fs_preopen(0, &root, nullptr, 0, nullptr) == kal_ok
+        && (kal_fs_props(root) & KAL_FS_PROP_ATTENUATE)) {
+        kal_dir_rights rights{};
+        rights.self_size = sizeof rights;
+        rights.flags = KAL_DIR_READ_ONLY;
+        kal_dir ro{};
+        check(kal_fs_dir_attenuate(root, &rights, &ro) == kal_ok, "a directory is attenuated read-only");
+        kal_file f{};
+        check(kal_fs_open(ro, "okt.ro", 6, KAL_OPEN_WRITE | KAL_OPEN_CREATE, &f) != kal_ok,
+              "and a creation beneath it is refused");
+        kal_fs_remove(root, "okt.ro", 6);
+        kal_fs_close_dir(ro);
+    }
+    {
+        kal_memory_status m{};
+        m.self_size = sizeof m;
+        check(kal_memory_info(&m) != kal_ok || !(m.present & KAL_MSTATUS_TOTAL) || m.total_bytes > 0,
+              "the machine's memory is told where it is stated");
+        const int pref = kal_env_resources();
+        check(pref == KAL_RESOURCES_BALANCED || pref == KAL_RESOURCES_PERFORMANCE || pref == KAL_RESOURCES_ECONOMY,
+              "and the resource preference is one of three");
     }
 
     if (failures == 0) kal_stream_write(kal_stdout(), "openkal: held\n", 14);

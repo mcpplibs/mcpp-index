@@ -66,14 +66,14 @@ description: Use when adding a new third-party library/package to the mcpp-index
 6. **编写测试工程(workspace 成员)**：mwrap 使用 `tests/mwrap/<member>/`，传统包使用 `tests/examples/<short>/`(`short` 为包名去除 `compat.`/`mcpplibs.`
    前缀后的结果;公开模块包用 `<name>-module`),并把它加进仓根 `mcpp.toml` 的 `[workspace].members`。
    - 包含 `mcpp.toml` 与 `tests/*.cpp`,后者须包含**可失败的有效断言**(`return ok ? 0 : 1`)。
-   - 普通成员用一条 `[indices] <ns> = { path = "../../.." }` 将所消费命名空间重定向到 checkout。
-     不把同一个完整索引路径注册成多个 namespace：当前 xlings 会将同一实体报为歧义。
-     mwrap workspace 成员保留显式空 `[indices]` 表，由 `tests/run_members.sh` 将完整且字节不变的
+   - 普通成员用一条 `[indices] <ns> = { path = "../../.." }` 将所消费命名空间重定向到 checkout（消费 compat 的成员写
+     `compat`）；仓根不写 `[indices]`。不把同一个完整索引路径注册成多个 namespace：mcpp 以 `index-location-named-twice` 拒绝。
+     mwrap workspace 成员不写 `[indices]`，由 `tests/run_members.sh` 将完整且字节不变的
      checkout 索引放入测试 home 的唯一内置索引。未设置 MCPP_HOME 时使用 target/mwrap-test-home。
      namespace 视图仅供隔离的单项目消费者；不能以独立项目通过证明混合 workspace 顺序可用。
      正常发布布局另由 `tests/mwrap/check_installed_template.py` 在独立 MCPP_HOME 中使用单一完整索引验收。
      运行库/插件/host-module 多 namespace 耦合时，优先用 `tests/prepare_builtin_index.py --home <独立测试 home>`
-     安装唯一完整内置索引，成员以空 `[indices]` 覆盖旧 workspace 路由。自动更新候选 CI 同样采用此方式，
+     安装唯一完整内置索引，成员不写 `[indices]`。自动更新候选 CI 同样采用此方式，
      避免项目别名缓存相互污染；这是测试准备，不是发布 staging 或目录转换。
    - 非全平台包按 `[target.'cfg(...)'.dependencies]` 门控依赖,测试源码在被门控掉的平台上
      编译为 no-op `main`(`#ifdef __linux__ … #else int main(){return 0;} #endif` 模式)。

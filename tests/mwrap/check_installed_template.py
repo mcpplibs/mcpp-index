@@ -12,15 +12,43 @@ import tempfile
 import tomllib
 
 
+# Identity: (root module source, retained upstream license under licenses/<name>,
+# a phrase of that license, a phrase of the wrapper's NOTICE naming the authors).
+STATIC_NOTICES = {
+    "mcpplibs.mwrap.zlib": ("zlib.cppm", "upstream/zlib/LICENSE", b"Jean-loup Gailly", b"Mark Adler"),
+    "mcpplibs.mwrap.zstd": ("zstd.cppm", "upstream/zstd/LICENSE", b"BSD License", b"Meta Platforms"),
+    "mcpplibs.mwrap.xz": ("xz.cppm", "upstream/xz/COPYING.0BSD", b"Permission to use, copy, modify", b"XZ Utils authors"),
+    "mcpplibs.mwrap.xxhash": ("xxhash.cppm", "upstream/xxhash/LICENSE", b"BSD 2-Clause", b"Yann Collet"),
+    "mcpplibs.mwrap.libarchive": ("libarchive.cppm", "upstream/libarchive/COPYING", b"Tim Kientzle", b"Tim Kientzle"),
+    "mcpplibs.mwrap.meshoptimizer": ("meshoptimizer.cppm", "upstream/meshoptimizer/LICENSE.md", b"MIT License", b"Arseny Kapoulkine"),
+    "mcpplibs.mwrap.cgltf": ("cgltf.cppm", "upstream/cgltf/LICENSE", b"Permission is hereby granted", b"Kuhlmann"),
+    "mcpplibs.mwrap.manifold": ("manifold.cppm", "upstream/manifold/LICENSE", b"Apache License", b"The Manifold Authors"),
+    "mcpplibs.mwrap.recastnavigation": ("recastnavigation.cppm", "upstream/recastnavigation/License.txt", b"This software is provided 'as-is'", b"Recast & Detour is Copyright (c) 2009 Mikko"),
+    "mcpplibs.mwrap.acl": ("acl.cppm", "upstream/acl/LICENSE", b"Permission is hereby granted", b"Copyright (c) 2017 Nicholas Frechette & Animation Compression Library"),
+    "mcpplibs.mwrap.jolt": ("jolt.cppm", "upstream/jolt/LICENSE", b"Permission is hereby granted", b"Jolt Physics is Copyright (c) 2021 Jorrit"),
+    "mcpplibs.mwrap.libjpeg_turbo": ("libjpeg_turbo.cppm", "upstream/libjpeg-turbo/README.ijg", b"Independent JPEG Group", b"libjpeg-turbo Project"),
+    "mcpplibs.mwrap.basis_universal": ("basis_universal.cppm", "upstream/basis_universal/NOTICE", b"Binomial LLC", b"Basis Universal"),
+    "mcpplibs.mwrap.libc": ("libc.cppm", None, b"", b"ISO/IEC 9899:2018"),
+    "mcpplibs.mwrap.abseil": ("abseil.cppm", "upstream/abseil-cpp/LICENSE", b"Apache License", b"The Abseil Authors"),
+    "mcpplibs.mwrap.openssl": ("openssl.cppm", "upstream/openssl/LICENSE.txt", b"Apache License", b"The OpenSSL Project Authors"),
+    "mcpplibs.mwrap.slint": ("slint.cppm", "upstream/slint/LICENSE.md", b"Slint License", b"SixtyFPS"),
+    "mcpplibs.mwrap.wuffs": ("wuffs.cppm", "upstream/wuffs/LICENSE", b"Apache License", b"The Wuffs Authors"),
+    "mcpplibs.mwrap.protobuf": ("protobuf.cppm", "upstream/protobuf/LICENSE", b"Redistribution and use in source and binary forms", b"Google"),
+}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--mcpp", default="mcpp")
     parser.add_argument("--toolchain", default="llvm@23.1.3")
-    parser.add_argument("--package", default="mcpplibs.mwrap.onnxruntime@1.25.1")
+    parser.add_argument("--package", default="mcpplibs.mwrap.onnxruntime@1.25.1.1")
     parser.add_argument("--deploy", action="store_true", help="pack, relocate and run the consumer; verify declared notices")
     parser.add_argument("--published-index", action="store_true", help="refresh the real public index instead of staging this checkout")
+    parser.add_argument("--mirror", choices=("GLOBAL", "CN"), default="GLOBAL",
+                        help="the download mirror of the run's home (mcpp self config --mirror)")
     parser.add_argument("--home", type=Path, help="reuse a dedicated test home across independent installed consumers")
     parser.add_argument("--run-arg", action="append", default=[])
+    parser.add_argument("--template", help="a named template of the package; omit for its default")
     parser.add_argument("--legacy-exact-key", action="store_true",
                         help="allow only mcpp's nonnumeric exact-version diagnostic; fail other build warnings")
     args = parser.parse_args()
@@ -36,43 +64,58 @@ def main():
             # index. No namespace views, source pre-seeding or dependency rewriting.
             shutil.copytree(root / "pkgs", index / "pkgs")
             shutil.copyfile(root / "index.toml", index / "index.toml")
-        env = dict(os.environ, MCPP_HOME=str(home))
-        commands = [[args.mcpp, "self", "config", "--mirror", "GLOBAL"]]
+        # The checks below read the project's compile database at its root, which
+        # mcpp 2026.10.26.1+ publishes only on request (mcpp docs/04, compile_commands);
+        # the request is the run's, so the template's manifest stays as rendered.
+        env = dict(os.environ, MCPP_HOME=str(home), MCPP_COMPILE_COMMANDS="compile_commands.json")
+        commands = [[args.mcpp, "self", "config", "--mirror", args.mirror]]
         if args.published_index:
             commands.append([args.mcpp, "index", "update"])
         commands += [[args.mcpp, "new", "--list-templates", args.package],
-                     [args.mcpp, "new", "installed-quickstart", "--template", args.package]]
+                     [args.mcpp, "new", "installed-quickstart", "--template",
+                      args.package + (":" + args.template if args.template else "")]]
         for command in commands:
             print("+", " ".join(command), flush=True)
             subprocess.run(command, cwd=temporary, env=env, check=True)
         project = temporary / "installed-quickstart"
         manifest = tomllib.loads((project / "mcpp.toml").read_text(encoding="utf-8"))
-        dependency = manifest["dependencies"][identity]
+        # The key as written is the dotted selector (nested tables), the form mcpp 2026.11.8.1 asks
+        # for; a quoted key (one key) is deprecated and is removed in 2027.2.
+        assert identity not in manifest["dependencies"], f"the template writes {identity} quoted"
+        dependency = manifest["dependencies"]
+        for part in identity.split("."):
+            dependency = dependency[part]
         actual_version = dependency if isinstance(dependency, str) else dependency["version"]
-        assert actual_version == version, dependency
+        # The command line's `@` selects by the written prefix (mcpp 2026.11.21.1+, SPEC-001 §4.5): the
+        # template is rendered for the newest key under it (`@1.3` renders 1.3.1), and the checks
+        # below read that key's install. An earlier mcpp renders the written key itself.
+        assert actual_version == version or actual_version.startswith(version + "."), dependency
+        version = actual_version
         if isinstance(dependency, dict):
             assert "path" not in dependency and "git" not in dependency, dependency
-        build = [args.mcpp, "build", "--toolchain", args.toolchain]
-        if not args.legacy_exact_key:
-            build.append("--strict")
-        else:
+        # The build is strict unless the published template states a reading mcpp
+        # still accepts with a warning: then that warning, and no other, is allowed.
+        # A template's archive is immutable; its next release writes the current form.
+        #   - legacy exact key: an upstream nonnumeric release key, not a version range.
+        allowed = []
+        if args.legacy_exact_key:
             assert not version[0].isdigit(), "This exception is only for upstream nonnumeric release keys"
+            allowed.append(f"[dependencies] {identity} = '{version}' is not a version RANGE ")
+        build = [args.mcpp, "build", "--toolchain", args.toolchain]
+        if not allowed:
+            build.append("--strict")
         for command in (build, [args.mcpp, "run", "--toolchain", args.toolchain] +
                         (["--", *args.run_arg] if args.run_arg else [])):
             print("+", " ".join(command), flush=True)
-            if args.legacy_exact_key and command is build:
-                # This is a supported exact index key, not a numeric range.
-                # --strict promotes its planner warning to an error. Preserve
-                # that upstream identity, but reject every other warning,
-                # including module/ABI compatibility degradations.
+            if allowed and command is build:
                 result = subprocess.run(command, cwd=project, env=env, text=True,
                                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                 print(result.stdout, end="", flush=True)
                 result.check_returncode()
-                allowed = f"[dependencies] {identity} = '{version}' is not a version RANGE "
                 for line in result.stdout.splitlines():
                     if "warning:" in line:
-                        assert line.split("warning:", 1)[1].strip().startswith(allowed), line
+                        said = line.split("warning:", 1)[1].strip()
+                        assert any(a in said for a in allowed), line
             else:
                 subprocess.run(command, cwd=project, env=env, check=True)
         print("Verified real indexed archive installation and unmodified template consumer", flush=True)
@@ -91,15 +134,34 @@ def main():
         if args.deploy:
             mode = "self-contained" if sys.platform.startswith("linux") else "vendored"
             command = [args.mcpp, "pack", "--toolchain", args.toolchain, "--mode", mode,
-                       "--format", "dir", "--output", "deployment-audit"]
+                       "--pkg-format", "dir", "--output", "deployment-audit"]
             print("+", " ".join(command), flush=True)
-            subprocess.run(command, cwd=project, env=env, check=True)
+            packed = subprocess.run(command, cwd=project, env=env, text=True,
+                                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            print(packed.stdout, end="", flush=True)
+            # A program whose packages state what the host provides (`[runtime] capabilities`,
+            # a display and a GL driver for compat.slint) cannot carry everything: the refusal
+            # names them, and the vendored form is the one that holds.
+            if packed.returncode != 0 and mode == "self-contained" \
+                    and "cannot be used by a program that needs the host to provide" in packed.stdout:
+                mode = "vendored"
+                command[command.index("--mode") + 1] = mode
+                print("+", " ".join(command), flush=True)
+                subprocess.run(command, cwd=project, env=env, check=True)
+            elif packed.returncode != 0:
+                raise subprocess.CalledProcessError(packed.returncode, command, packed.stdout)
             bundle = project / "target/dist/deployment-audit"
             relocated = temporary / "relocated/bundle"
             shutil.copytree(bundle, relocated, symlinks=True)
             if identity == "mcpplibs.mwrap.onnxruntime":
-                notices = list(relocated.rglob("licenses/onnxruntime/ThirdPartyNotices.txt"))
-                assert len(notices) == 1 and notices[0].stat().st_size, notices
+                # The SDK's LICENSE and ThirdPartyNotices.txt are compat.onnxruntime's
+                # license_files, staged under share/licenses/<package>/ (mcpp
+                # 2026.11.17.1); the wrapper's own LICENSE and NOTICE are its deploy
+                # entries, beside the program under licenses/onnxruntime/wrapper.
+                listing = sorted(q.relative_to(relocated).as_posix() for q in relocated.rglob("*")
+                                 if q.is_file() and "licenses" in q.parts)
+                notices = list(relocated.rglob("share/licenses/*compat.onnxruntime/ThirdPartyNotices.txt"))
+                assert len(notices) == 1 and notices[0].stat().st_size, listing
                 installed = []
                 for entry in json.loads((project / "compile_commands.json").read_text(encoding="utf-8")):
                     arguments = entry["arguments"]
@@ -121,12 +183,15 @@ def main():
                 wrapper = next(Path(item["file"]).parent.parent for item in commands
                                if Path(item["file"]).name == "onnxruntime.cppm")
                 declared = tomllib.loads((wrapper / "mcpp.toml").read_text(encoding="utf-8"))["runtime"]["deploy"]
+                deployed = [q for q in relocated.rglob("licenses/onnxruntime")
+                            if q.is_dir() and "share" not in q.relative_to(relocated).parts]
+                assert len(deployed) == 1, listing
                 for entry in declared:
                     source = wrapper / entry["from"]
-                    destination = notices[0].parent / Path(entry["to"]).relative_to("licenses/onnxruntime") / source.name
-                    assert destination.is_file() and destination.read_bytes() == source.read_bytes(), destination
-                assert b"Apache License" in (notices[0].parent / "wrapper/LICENSE").read_bytes()
-                assert b"mcpp-community" in (notices[0].parent / "wrapper/NOTICE").read_bytes()
+                    destination = deployed[0] / Path(entry["to"]).relative_to("licenses/onnxruntime") / source.name
+                    assert destination.is_file() and destination.read_bytes() == source.read_bytes(), (destination, listing)
+                assert b"Apache License" in (deployed[0] / "wrapper/LICENSE").read_bytes()
+                assert b"mcpp-community" in (deployed[0] / "wrapper/NOTICE").read_bytes()
                 print("Verified separate SDK MIT and wrapper Apache-2.0 licenses, NOTICE and retained upstream bytes", flush=True)
             elif identity == "mcpplibs.mwrap.opencv":
                 commands = json.loads((project / "compile_commands.json").read_text(encoding="utf-8"))
@@ -417,6 +482,28 @@ def main():
                 assert b"Apache License" in (roots[0] / "LICENSE").read_bytes()
                 assert b"mcpp-community" in (roots[0] / "NOTICE").read_bytes()
                 print(f"Verified {len(declared)} byte-identical wrapper/SDL license files", flush=True)
+            elif identity in STATIC_NOTICES:
+                # A statically linked library whose notices the package
+                # deploys beside the wrapper's (libc-m: the wrapper's only).
+                module, upstream, marker, author = STATIC_NOTICES[identity]
+                short = identity.rsplit(".", 1)[1]
+                sources = [path for store in (home / "xpkgs", home / "registry/data/xpkgs")
+                           for path in store.glob(f"mcpplibs.mwrap-x-{short}/{version}/*/src/{module}")]
+                assert len(sources) == 1, sources
+                source = sources[0].parent.parent
+                declared = tomllib.loads((source / "mcpp.toml").read_text(encoding="utf-8"))["runtime"]["deploy"]
+                roots = list(relocated.rglob(f"licenses/{short}"))
+                assert len(roots) == 1, f"Missing {short} runtime license tree: {roots}"
+                for entry in declared:
+                    notice = source / entry["from"]
+                    copied = roots[0].parent.parent / entry["to"] / notice.name
+                    assert copied.is_file() and copied.read_bytes() == notice.read_bytes(), copied
+                if upstream:
+                    assert marker in (roots[0] / upstream).read_bytes(), upstream
+                assert b"Apache License" in (roots[0] / "LICENSE").read_bytes()
+                notice = (roots[0] / "NOTICE").read_bytes()
+                assert b"mcpp-community" in notice and author in notice
+                print(f"Verified {len(declared)} byte-identical wrapper/{short} license files", flush=True)
             else:
                 raise ValueError(f"No deployment acceptance contract for {identity}")
             runtime_env = {key: value for key, value in os.environ.items()
@@ -427,6 +514,7 @@ def main():
             runtime_env.update(HOME=str(empty_home), USERPROFILE=str(empty_home))
             if sys.platform.startswith("linux"):
                 runtime_env["PATH"] = "/usr/bin:/bin"
+            if mode == "self-contained":
                 launcher = relocated / "run.sh"
             else:
                 filename = "installed-quickstart" + (".exe" if os.name == "nt" else "")
@@ -437,7 +525,8 @@ def main():
                     system_root = os.environ.get("SystemRoot", r"C:\Windows")
                     runtime_env["PATH"] = os.pathsep.join([system_root, str(Path(system_root) / "System32")])
             subprocess.run([str(launcher)], cwd=empty_home, env=runtime_env, check=True)
-            if sys.platform.startswith("linux"):
+            # The loader travels only with a self-contained bundle.
+            if mode == "self-contained":
                 loader = relocated / "lib/ld-linux-x86-64.so.2"
                 listing = subprocess.run([str(loader), "--library-path", str(relocated / "lib"),
                                           "--list", str(relocated / "bin/installed-quickstart")],

@@ -30,9 +30,10 @@
 -- of these statically linked objects fails with `__declspec(dllimport)`
 -- undefined symbols; on ELF it is only the difference between
 -- visibility("default") and nothing, so Linux never notices. A descriptor's
--- `defines` reach only this package's own TUs, so the define is delivered to
--- consumers by a same-named shim that every public header already funnels
--- through, and tests/examples/yaml-cpp asserts it arrived.
+-- `defines` reach only this package's own TUs; a feature's `defines` reach
+-- every TU that receives its include directories, so the macro is a
+-- `staticlib` feature that `default` implies (as CURL_STATICLIB in
+-- compat.curl), and tests/examples/yaml-cpp asserts it arrived.
 --
 -- openkal: nothing here is conditional on it. yaml-cpp needs only the C++
 -- standard library, and its one compiler-specific branch (dragonbox.h's
@@ -102,29 +103,8 @@ package = {
         language     = "c++23",
         import_std   = false,
 
-        -- Consumers write `#include <yaml-cpp/yaml.h>`. ORDER MATTERS:
-        -- mcpp_generated FIRST, so the dll.h shim below is found before
-        -- upstream's, which it then reaches with #include_next.
-        include_dirs = { "mcpp_generated", "*/include" },
-
-        generated_files = {
-            -- Delivers YAML_CPP_STATIC_DEFINE to every TU that opens a
-            -- yaml-cpp header, which no descriptor key can do. See the header
-            -- note.
-            ["mcpp_generated/yaml-cpp/dll.h"] = [==[
-// mcpp-index shim: yaml-cpp is built as objects here, not as a shared library,
-// so every declaration must be plain rather than dllimport/visibility-default.
-// Upstream reads YAML_CPP_STATIC_DEFINE in this header and nowhere else, and
-// every public yaml-cpp header reaches this one.
-#ifndef MCPP_COMPAT_YAML_CPP_STATIC_SHIM
-#define MCPP_COMPAT_YAML_CPP_STATIC_SHIM
-#ifndef YAML_CPP_STATIC_DEFINE
-#  define YAML_CPP_STATIC_DEFINE
-#endif
-#include_next <yaml-cpp/dll.h>
-#endif
-]==],
-        },
+        -- Consumers write `#include <yaml-cpp/yaml.h>`.
+        include_dirs = { "*/include" },
 
         sources = {
             "*/src/*.cpp",
@@ -134,9 +114,10 @@ package = {
         targets = { ["yaml-cpp"] = { kind = "lib" } },
         deps    = { },
 
-        -- Belt and braces for this package's OWN TUs; the shim above is what
-        -- reaches everyone else's.
-        defines = { "YAML_CPP_STATIC_DEFINE" },
+        features = {
+            ["default"]   = { implies = { "staticlib" } },
+            ["staticlib"] = { defines = { "YAML_CPP_STATIC_DEFINE" } },
+        },
 
         -- 0.8.0's src/emitterutils.cpp names uint16_t/uint32_t unqualified
         -- and includes neither <cstdint> nor <stdint.h> (0.9.0 added it). It

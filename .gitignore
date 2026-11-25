@@ -1,4 +1,6 @@
 .xlings-index-cache.json
+# Local xlings runtime data and generated shim views, including member projects.
+.xlings/
 # The workspace's build directory, project data, compile database and lock:
 # mcpp 2026.9.29.1+ writes them at the workspace root for every member.
 /target/

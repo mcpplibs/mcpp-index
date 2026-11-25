@@ -22,13 +22,13 @@
 
 // The package builds objects, not a shared library, so every yaml-cpp
 // declaration this TU sees must be plain -- not dllimport. The package
-// delivers that with a shim in front of yaml-cpp/dll.h, because no descriptor
-// key carries a define to a consumer's TUs. On Linux the difference is only a
-// visibility attribute and everything links anyway; on the MSVC ABI it is a
-// link failure. Asserting it at compile time fails everywhere the moment the
-// shim stops being reached.
+// states YAML_CPP_STATIC_DEFINE as a `staticlib` feature that `default`
+// implies; a feature's defines reach the consumer's TUs. On Linux the
+// difference is only a visibility attribute and everything links anyway; on
+// the MSVC ABI it is a link failure. Asserting it at compile time fails
+// everywhere the moment the define stops being delivered.
 #ifndef YAML_CPP_STATIC_DEFINE
-#  error "YAML_CPP_STATIC_DEFINE did not reach the consumer: the yaml-cpp/dll.h shim was not found first"
+#  error "YAML_CPP_STATIC_DEFINE did not reach the consumer: compat.yaml-cpp's staticlib feature is not active"
 #endif
 
 // Proves this member resolved 0.8.0 and not the newest version: the header

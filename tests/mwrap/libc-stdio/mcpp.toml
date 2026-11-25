@@ -1,0 +1,7 @@
+[package]
+name = "libc-stdio"
+version = "17.0.0"
+description = "Consume the immutable C standard library wrapper: stdout() and stderr(), errno() as strtol sets it, the stdio constants on a temporary file, and the side header's va_* and offsetof"
+
+[dependencies]
+mcpplibs.mwrap.libc = "17.0.0"

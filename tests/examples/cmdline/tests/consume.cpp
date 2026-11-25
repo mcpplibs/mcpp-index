@@ -41,6 +41,19 @@ int main() {
     check(!missing.has_value() || missing.error().is_error(),
           "a missing required argument is refused");
 
+    // 0.0.3: a numeric option is checked by the parse and read back typed.
+    auto numbers = cmdline::App("tool").option(cmdline::Option("rate").value_type<double>()).option(cmdline::Option("count").value_type<int>());
+    auto typed = numbers.parse_from("tool --rate 2.5 --count=3");
+    check(typed && typed->value_as<double>("rate") == 2.5 && typed->value_as<int>("count") == 3, "numbers read back as their types");
+    auto wrong = numbers.parse_from("tool --count 3px");
+    check(!wrong && wrong.error().is_error(), "a value that is not a number of the type is refused");
+
+    // 0.0.5: the command tree is exported; a program lists its own commands and options from it.
+    auto tree = cmdline::snapshot(cmdline::App("tool").subcommand(cmdline::App("add").option(cmdline::Option("force"))));
+    check(tree.subcommands.size() == 1 && tree.subcommands[0].name == "add"
+          && !tree.subcommands[0].options.empty() && tree.subcommands[0].options[0].long_name == "force",
+          "snapshot names each subcommand and its options");
+
     if (failures == 0) std::println("cmdline: ok");
     return failures == 0 ? 0 : 1;
 }

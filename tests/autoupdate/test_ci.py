@@ -25,6 +25,48 @@ def descriptor(name):
 
 
 class BaselineTests(unittest.TestCase):
+    def test_several_added_releases_are_proven_at_the_newest(self):
+        self.assertEqual(ci.newest({"0.2.0", "0.3.0"}), "0.3.0")
+        self.assertEqual(ci.newest({"0.9.0", "0.10.0"}), "0.10.0")
+        self.assertEqual(ci.newest({"2026.11.7.2", "2026.11.10.1"}), "2026.11.10.1")
+
+    def test_one_consumer_uses_all_and_only_its_planned_candidates(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "tests/examples/kernel"
+            source.mkdir(parents=True)
+            (source / "mcpp.toml").write_text(
+                '[package]\nname="kernel"\nversion="0.1.0"\n'
+                '[dependencies.mcpplibs]\nabi="0.23.0"\n'
+                '[target.linux.dependencies.mcpplibs]\nbackend="0.24.2"\n'
+                '[build-dependencies.compat]\nhelper="1.0.0"\n')
+            other = root / "tests/examples/other"
+            other.mkdir()
+            (other / "mcpp.toml").write_text(
+                '[package]\nname="other"\nversion="0.1.0"\n'
+                '[dependencies.compat]\nunrelated="1.0.0"\n')
+            plan = root / "plan.json"
+            candidates = [{"id": "mcpplibs:abi", "candidate": "0.24.0"},
+                          {"id": "mcpplibs:backend", "candidate": "0.25.0"},
+                          {"id": "compat:unrelated", "candidate": "2.0.0"}]
+            with patch.object(ci, "ROOT", root):
+                for identity in ("mcpplibs:abi", "mcpplibs:backend"):
+                    plan.write_text(json.dumps({"packages": candidates}))
+                    dest = root / identity.split(":")[1]
+                    ci.prepare(plan, identity, dest)
+                    manifest = tomllib.loads((dest / "mcpp.toml").read_text())
+                    self.assertEqual(manifest["dependencies"]["mcpplibs"]["abi"], "0.24.0")
+                    self.assertEqual(manifest["target"]["linux"]["dependencies"]["mcpplibs"]["backend"], "0.25.0")
+                    self.assertEqual(manifest["build-dependencies"]["compat"]["helper"], "1.0.0")
+                    self.assertNotIn("unrelated", manifest.get("dependencies", {}).get("compat", {}))
+                # No implicit companion upgrade when it is absent from the plan.
+                plan.write_text(json.dumps({"packages": candidates[:1]}))
+                dest = root / "single"
+                ci.prepare(plan, "mcpplibs:abi", dest)
+                manifest = tomllib.loads((dest / "mcpp.toml").read_text())
+                self.assertEqual(manifest["dependencies"]["mcpplibs"]["abi"], "0.24.0")
+                self.assertEqual(manifest["target"]["linux"]["dependencies"]["mcpplibs"]["backend"], "0.24.2")
+
     def test_commit_snapshot_is_manual_but_historical_bytes_are_still_guarded(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -75,6 +117,24 @@ sha256="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
                 result = tomllib.loads((dest / "mcpp.toml").read_text())
                 self.assertEqual(result["dependencies"]["mcpplibs.mwrap.example"], "1.0.1")
                 self.assertEqual((dest / "tests/probe.cpp").read_text(), 'int main() { return 0; }\n')
+
+    def test_an_unquoted_identity_key_is_replaced(self):
+        # The key mcpp recommends (2026.11.8.1): the identity, dotted and unquoted, which TOML
+        # reads as nested tables.
+        text = '[dev-dependencies]\nmcpplibs.mtest.capi = "0.2.0"\nmcpplibs.mtest = "0.2.0"\n'
+        replaced = ci.replace_candidate(text, "mcpplibs.mtest:capi", "0.3.0")
+        self.assertIn('mcpplibs.mtest.capi = "0.3.0"', replaced)
+        self.assertIn('mcpplibs.mtest = "0.2.0"', replaced)
+        replaced = ci.replace_candidate(text, "mcpplibs:mtest", "0.3.0")
+        self.assertIn('mcpplibs.mtest = "0.3.0"', replaced)
+        self.assertIn('mcpplibs.mtest.capi = "0.2.0"', replaced)
+
+    def test_a_package_below_a_namespace_does_not_name_the_namespace_package(self):
+        # `mcpplibs.mtest.capi = ...` reads as the table mcpplibs.mtest = {capi = ...}, which names
+        # mcpplibs.mtest:capi and not mcpplibs:mtest.
+        deps = tomllib.loads('[dependencies]\nmcpplibs.mtest.capi = "0.2.0"\n')["dependencies"]
+        self.assertTrue(ci.names_dependency(deps, "mcpplibs.mtest", "capi"))
+        self.assertFalse(ci.names_dependency(deps, "mcpplibs", "mtest"))
 
     def test_candidate_discovers_target_and_build_dependencies(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -178,6 +238,30 @@ sha256="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
                 old.unlink()
                 with self.assertRaisesRegex(RuntimeError, "existing descriptors removed"):
                     ci.audit("HEAD", root / "coverage.json")
+
+    def test_a_moved_descriptor_is_audited_against_the_file_it_came_from(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            pkgs = root / "pkgs/f"
+            pkgs.mkdir(parents=True)
+            (pkgs / "compat.old.lua").write_text(descriptor("old"))
+            git = lambda *args: subprocess.run(
+                ["git", "-c", "user.name=Test", "-c", "user.email=test@example.com", *args],
+                cwd=root, check=True, capture_output=True)
+            for args in (("init",), ("add", "."), ("commit", "-m", "baseline")):
+                git(*args)
+            with patch.object(ci, "ROOT", root):
+                # Moved with every row kept: fine.
+                (root / "pkgs/mcpp").mkdir()
+                git("mv", "pkgs/f/compat.old.lua", "pkgs/mcpp/compat.old.lua")
+                git("commit", "-m", "move")
+                ci.audit("HEAD~1", root / "coverage.json")
+                # Moved and a published version dropped: still refused.
+                moved = root / "pkgs/mcpp/compat.old.lua"
+                moved.write_text(moved.read_text().replace('["1.0.0"]', '["9.9.9"]'))
+                git("commit", "-am", "drop a version")
+                with self.assertRaisesRegex(RuntimeError, "existing version removed"):
+                    ci.audit("HEAD~2", root / "coverage.json")
 
     def test_revision_allows_packaging_fix_but_not_resource_drift(self):
         with tempfile.TemporaryDirectory() as directory:

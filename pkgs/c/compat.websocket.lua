@@ -181,7 +181,7 @@ package = {
                 -- SocketOpenSSL and this is its one optional source.
                 defines = { "IXWEBSOCKET_USE_TLS=1", "IXWEBSOCKET_USE_OPEN_SSL=1" },
                 sources = { "*/ixwebsocket/IXSocketOpenSSL.cpp" },
-                deps    = { ["compat.openssl"] = "3.5.1" },
+                deps    = { ["compat.openssl"] = "3.5.9" },
             },
             ["server"] = {
                 implies = { "zlib" },

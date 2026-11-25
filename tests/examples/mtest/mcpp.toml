@@ -1,0 +1,9 @@
+# mcpplibs.mtest test project: objects that are cases, the cases they declare, attributes, an
+# expected failure and parameters through the published index, reported by the library's own
+# `report()`.
+[package]
+name    = "mtest-tests"
+version = "0.1.0"
+
+[dev-dependencies]
+mcpplibs.mtest = "0.5.2"

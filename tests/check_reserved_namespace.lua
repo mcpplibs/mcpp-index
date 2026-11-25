@@ -27,6 +27,20 @@ local ns = p.namespace
 if type(ns) ~= "string" then os.exit(0) end
 
 local reserved = { core = true, plugins = true, deps = true, rules = true, dist = true, tools = true }
+-- A build plugin `<owner>.mplugin.<name>` (docs/build-plugins.md) has its owner as the
+-- first segment of its namespace. The owner is not `mcpp`, a name of the mcpp project's
+-- (the reserved second segments, and its own packages: `platforms`) or a kind segment.
+local owner = ns:match("^([^.]+)%.mplugin$")
+if owner then
+    local barred = { mcpp = true, platforms = true, mwrap = true, mplugin = true }
+    if reserved[owner] or barred[owner] then
+        io.stderr:write(string.format(
+            "::error file=%s::owner '%s' of a build plugin is reserved (the mcpp project's names, or a kind segment); " ..
+            "an owner is who maintains the package (docs/build-plugins.md)\n", path, owner))
+        os.exit(1)
+    end
+end
+
 local first = ns:match("^([^.]+)")
 if first and reserved[first] then
     io.stderr:write(string.format(

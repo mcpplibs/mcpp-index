@@ -2,6 +2,6 @@
 import std;
 
 int main() {
-    std::println("openkal-tools-tests: okld and okrun were built for this machine");
+    std::println("openkal-tools-tests: okld, okrun and okprof were built for this machine");
     return 0;
 }

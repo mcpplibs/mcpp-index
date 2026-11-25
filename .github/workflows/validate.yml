@@ -447,7 +447,44 @@ env:
   # 2026.11.2.1 (mcpp-community/mcpp#882): a dependency's patches and a
   # dependency embedded in its consumer -- the floor openkal-musl 0.26.0
   # states, since it embeds compat.mimalloc.
-  MCPP_VERSION: "2026.11.2.1"
+  #
+  # 2026.11.7.2: the built-in platform as one release, and the floor
+  # mcpplibs.mtest 0.1.0 states.
+  #
+  # 2026.11.16.1: the newest release; the index validates with the engine its
+  # consumers install (the engine's built-in platform is openkal-platform
+  # 0.28.0, and it bundles xlings 2026.11.16.1).
+  #
+  # 2026.11.17.1: the newest release; it reads `license_files` and a
+  # platform entry's `platform_rows` (the platform column), which this index
+  # states.
+  #
+  # 2026.11.17.2: the newest release; its default platform is
+  # openkal-platform 0.29.1, it installs ninja 1.12.1-mcpp.1 and bundles
+  # xlings 2026.11.17.2.
+  #
+  # 2026.11.18.1: the newest release; its default platform is
+  # openkal-platform 0.29.2, and a row's object format and file names are
+  # read from data (the row, its system, the format's convention).
+  #
+  # 2026.11.21.1: the newest release; its default platform is
+  # openkal-platform 0.31.2, a first run installs gcc 16.2.0, ninja
+  # 1.13.2-mcpp.1 and patchelf 0.19.3, it bundles xlings 2026.11.21.1, and a
+  # cached dependency is served only against the module interfaces it was
+  # compiled with.
+  #
+  # 2026.11.22.1: the newest release; its default platform is
+  # openkal-platform 0.31.2 and it bundles xlings 2026.11.21.1. An installed
+  # toolchain's companions are the first declaration its store holds, and two
+  # [indices] entries naming one location are refused, which is why the
+  # workspace states no index and each member states its own.
+  #
+  # 2026.11.23.1: the newest release; its default platform is
+  # openkal-platform 0.32.1 and it bundles xlings 2026.11.23.1, whose
+  # collection keeps the store roots builds register. The runtime closure
+  # check expands $ORIGIN at the directory a library was opened in
+  # (mcpp-community/mcpp#1009), so cuda-curand on the LLVM leg passes.
+  MCPP_VERSION: "2026.11.23.1"
 
 jobs:
   lint:
@@ -456,6 +493,14 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install lua
         run: sudo apt-get install -y --no-install-recommends lua5.4
+      - name: Build-plugin lints (tests of tests/check_mplugin_layout.lua and check_reserved_namespace.lua)
+        run: python3 tests/test_check_mplugin.py
+
+      - name: Capability providers (a declared capability has a provider the package depends on; warnings)
+        run: |
+          python3 tests/test_check_capability_providers.py
+          lua5.4 tests/check_capability_providers.lua pkgs/*/*.lua
+
       - name: Lint package descriptors
         run: |
           fail=0
@@ -506,6 +551,14 @@ jobs:
             if ! lua5.4 tests/check_reserved_namespace.lua "$f"; then
               fail=1
             fi
+            # 5c. The build-plugin layout (docs/build-plugins.md): a namespace
+            #    `<owner>.mplugin` is a descriptor of pkgs/mcpp/, whose files are
+            #    packages of namespace `mcpp` or build plugins; owner and name are
+            #    lower-case identifiers. The module being the package id is checked
+            #    in the plugin's own repository: the index cannot read the archive.
+            if ! lua5.4 tests/check_mplugin_layout.lua "$f"; then
+              fail=1
+            fi
             # 6. c++fly admission policy (mcpp design 2026-07-14 §11-Q2, v1):
             #    c++fly means "toolchain's latest level + every experimental
             #    gate" — deliberately toolchain-dependent, so a published
@@ -551,6 +604,10 @@ jobs:
       # release that republished an old tag would leave no other trace.
       - name: Lint duplicate versions
         run: lua5.4 tests/check_duplicate_versions.lua pkgs/*/*.lua
+      # A platform entry's `platform_rows` is derived from the manifest of its newest
+      # version (mcpp SPEC-013 §14): the list matches it, and a row has one platform.
+      - name: Platform rows match their manifests, one platform a row
+        run: python3 tools/platform_rows.py check
       - name: Check Quill install hook boundaries
         run: lua5.4 tests/check_quill_install.lua
       # The compatibility measurement's classifier decides a PUBLISHED figure
@@ -574,7 +631,7 @@ jobs:
       # needing a newer grammar cannot pass a lint pinned to an older mcpp.
       - name: Download pinned mcpp
         run: |
-          curl -L -fsS -o mcpp.tar.gz \
+          curl -L -fsS --retry 5 --retry-all-errors --retry-delay 10 -o mcpp.tar.gz \
             "https://github.com/mcpp-community/mcpp/releases/download/v${MCPP_VERSION}/mcpp-${MCPP_VERSION}-linux-x86_64.tar.gz"
           tar -xzf mcpp.tar.gz
           echo "MCPP=$PWD/mcpp-${MCPP_VERSION}-linux-x86_64/bin/mcpp" >> "$GITHUB_ENV"
@@ -1084,9 +1141,38 @@ jobs:
           # macos stays at 2. It has never been cancelled, so raising it would
           # be a prediction rather than a measurement; the formula's 4 is there
           # the day it is.
+          #
+          # ── 2026-11-20: macos 2 -> 3 ────────────────────────────────────
+          #
+          # Observed: on mcpp-index#845 `workspace (macos default 1/2)` was
+          # cancelled at the 90-minute cap. It carried grpc-cpu (1783s, untimed
+          # for macos and so priced at the default) and grpc-protobuf-stack,
+          # whose graph builds gRPC again (cancelled at unit 1800 of 1989).
+          # Both now have macos rows; three shards put them apart.
+          #
+          # ── 2026-11-23: macos 3 -> 4, windows 5 -> 6 ────────────────────
+          #
+          # Observed on a sweep of nearly every member (mcpp-index#873, run
+          # 45072153807) and on main's scheduled sweep (run 45031389806):
+          # `macos default 0/3` and `2/3` cancelled at the 90-minute cap on
+          # both, `1/3` finished in 83 minutes; `windows default 0/5` cancelled
+          # at 90 minutes, its siblings finished in 77 to 84. One more shard
+          # each puts the slowest under the cap with the margin a cold cache
+          # needs; the formula's estimate (9 each) still prices both high.
+          #
+          # ── 2026-11-23: macos 4 -> 6, with its timing rows measured ─────
+          #
+          # Observed on the re-run of that sweep (run 45082422612): `macos
+          # default 0/4` and `3/4` cancelled at the cap with every member they
+          # reached passing, `2/4` finished in 86 minutes. The macOS rows of
+          # tests/member-timings.tsv were stale (grpc-codegen 1156s against 2103s
+          # measured; godot-cpp, grpc-tools and godot-math untimed at 90s against
+          # 875s, 778s and 541s), so LPT packed blind. With the rows measured
+          # from that run, four shards still put the slowest at about 86 minutes
+          # of members; six put it at about 58.
           ln=$(shards_for linux 6)
-          mn=$(shards_for macos 2)
-          wn=$(shards_for windows 5)
+          mn=$(shards_for macos 6)
+          wn=$(shards_for windows 6)
           # THE TWO LINUX LEGS ARE NOT THE SAME COST, AND THE PLANNER CANNOT
           # SEE THAT. `plan_shards.lua` takes a PLATFORM and reads one timing
           # table; it has no toolchain dimension, so `linux default` and
@@ -1207,7 +1293,7 @@ jobs:
           MCPP_ARCHIVE: mcpp-${{ env.MCPP_VERSION }}-linux-x86_64.tar.gz
           MCPP_ROOT: mcpp-${{ env.MCPP_VERSION }}-linux-x86_64
         run: |
-          curl -L -fsS -o "$MCPP_ARCHIVE" \
+          curl -L -fsS --retry 5 --retry-all-errors --retry-delay 10 -o "$MCPP_ARCHIVE" \
             "https://github.com/mcpp-community/mcpp/releases/download/v${MCPP_VERSION}/${MCPP_ARCHIVE}"
           tar -xzf "$MCPP_ARCHIVE"
           root="$PWD/$MCPP_ROOT"
@@ -1254,11 +1340,11 @@ jobs:
         shell: bash
         run: |
           archive="mcpp-${MCPP_VERSION}-${{ matrix.suffix }}.tar.gz"
-          curl -L -fsS -o "$archive" "https://github.com/mcpp-community/mcpp/releases/download/v${MCPP_VERSION}/$archive"
+          curl -L -fsS --retry 5 --retry-all-errors --retry-delay 10 -o "$archive" "https://github.com/mcpp-community/mcpp/releases/download/v${MCPP_VERSION}/$archive"
           tar -xzf "$archive"
           echo "MCPP=$PWD/mcpp-${MCPP_VERSION}-${{ matrix.suffix }}/bin/mcpp" >> "$GITHUB_ENV"
       - name: Immutable archive, default scaffold, strict build and loopback RPC
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.grpc@1.83.0 --toolchain "${{ matrix.toolchain }}"
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.grpc@1.83.0.1 --toolchain "${{ matrix.toolchain }}"
 
   workspace:
     # The shard suffix appears only when the platform is actually split, and
@@ -1377,7 +1463,7 @@ jobs:
           MCPP_ARCHIVE: mcpp-${{ env.MCPP_VERSION }}-${{ matrix.suffix }}.${{ matrix.ext }}
           MCPP_ROOT: mcpp-${{ env.MCPP_VERSION }}-${{ matrix.suffix }}
         run: |
-          curl -L -fsS -o "$MCPP_ARCHIVE" \
+          curl -L -fsS --retry 5 --retry-all-errors --retry-delay 10 -o "$MCPP_ARCHIVE" \
             "https://github.com/mcpp-community/mcpp/releases/download/v${MCPP_VERSION}/${MCPP_ARCHIVE}"
           case "$MCPP_ARCHIVE" in
             *.zip) powershell -NoProfile -Command "Expand-Archive -Force -Path '${MCPP_ARCHIVE}' -DestinationPath '.'" ;;
@@ -1421,40 +1507,60 @@ jobs:
       # A bare GitHub runner has no libav* under /usr/include, so a
       # descriptor that loses its vendored headers to the host's would still
       # be green here. That is precisely how compat.ffmpeg's -idirafter hole
-      # survived: nothing in CI had a system ffmpeg to lose to. Installing
-      # the dev headers is what turns this leg into a real test of include
-      # ORDER rather than of include EXISTENCE.
+      # survived: nothing in CI had a system ffmpeg to lose to. Headers of
+      # FFmpeg's own names under /usr/include are what turn this leg into a
+      # test of include ORDER rather than of include EXISTENCE.
+      #
+      # They are planted, not installed: each public header of the release
+      # compat.ffmpeg names, as a file that stops the compile, naming itself.
+      # A reach of the host's header is then an error at the line that made
+      # it, where an installed header of another FFmpeg compiled silently or
+      # failed somewhere else. And nothing is downloaded from Ubuntu's mirror,
+      # whose ffmpeg closure (~100 MiB at the 2026-11-06 rates) outlasted
+      # every timeout on ubuntu-26.04 runners.
       #
       # Deliberately only on the llvm leg. The default leg reaches its
       # compiler through --sysroot, so it is immune by construction and
-      # installing there would change an existing job's environment for no
+      # planting there would change an existing job's environment for no
       # coverage. Keeping the blast radius to the new leg means a red here
       # is always about the thing this leg was added to watch.
-      - name: Install host ffmpeg dev headers (llvm leg only)
+      - name: Plant host ffmpeg headers that stop the compile (llvm leg only)
         if: matrix.platform == 'linux' && matrix.toolchain == 'llvm'
         shell: bash
-        # Only Ubuntu's own archive is refreshed: a bare `apt-get update` also
-        # walks every third-party source the runner image carries (PPAs,
-        # vendor repos), and one slow mirror among them held this step for
-        # minutes. Bounded timeouts and retries, and no recommended packages.
         run: |
-          apt_opts=(-o Acquire::Retries=3 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20)
-          if [[ -f /etc/apt/sources.list.d/ubuntu.sources ]]; then
-            mkdir -p "$RUNNER_TEMP/apt-ubuntu"
-            cp /etc/apt/sources.list.d/ubuntu.sources "$RUNNER_TEMP/apt-ubuntu/"
-            apt_opts+=(-o Dir::Etc::SourceList=/dev/null -o "Dir::Etc::SourceParts=$RUNNER_TEMP/apt-ubuntu")
-          fi
-          time sudo timeout 180 apt-get update -qq "${apt_opts[@]}"
-          for attempt in 1 2; do
-            if time sudo timeout 300 apt-get install -y -qq --no-install-recommends "${apt_opts[@]}" \
-                 libavutil-dev libavcodec-dev libavformat-dev \
-                 libavfilter-dev libavdevice-dev libswscale-dev libswresample-dev; then
-              break
-            fi
-            [[ $attempt == 2 ]] && { echo "::error::the ffmpeg dev headers did not install"; exit 1; }
-            echo "::warning::apt-get install failed (attempt $attempt); retrying"
-          done
-          dpkg -l | grep -E 'libav(util|codec)-dev|libswscale-dev'
+          python3 - <<'PY'
+          import hashlib, io, re, subprocess, tarfile, urllib.request
+          from pathlib import Path
+          lua = Path("pkgs/c/compat.ffmpeg.lua").read_text()
+          entry = re.search(r'linux\s*=\s*\{\s*\["([^"]+)"\]\s*=\s*\{.*?GLOBAL\s*=\s*"([^"]+)".*?CN\s*=\s*"([^"]+)".*?sha256\s*=\s*"([0-9a-f]{64})"', lua, re.S)
+          version, urls, sha = entry.group(1), (entry.group(2), entry.group(3)), entry.group(4)
+          data = None
+          for url in urls:
+              try:
+                  data = urllib.request.urlopen(url, timeout=120).read()
+              except OSError as e:
+                  print(f"::warning::{url}: {e}")
+                  continue
+              if hashlib.sha256(data).hexdigest() == sha:
+                  break
+              data = None
+          if data is None:
+              raise SystemExit(f"::error::the FFmpeg {version} source matching the descriptor could not be read")
+          libs = ("libavutil", "libavcodec", "libavformat", "libavfilter", "libavdevice", "libswscale", "libswresample")
+          planted = 0
+          with tarfile.open(fileobj=io.BytesIO(data)) as tar:
+              for name in tar.getnames():
+                  parts = name.split("/")
+                  if len(parts) == 3 and parts[1] in libs and parts[2].endswith(".h"):
+                      target = Path("/usr/include") / parts[1] / parts[2]
+                      text = f'#error "host <{parts[1]}/{parts[2]}> reached: a vendored FFmpeg header was not found first"\n'
+                      subprocess.run(["sudo", "mkdir", "-p", str(target.parent)], check=True)
+                      subprocess.run(["sudo", "tee", str(target)], input=text.encode(), check=True, stdout=subprocess.DEVNULL)
+                      planted += 1
+          if planted < 100:
+              raise SystemExit(f"::error::only {planted} FFmpeg headers were planted")
+          print(f"planted {planted} FFmpeg {version} headers under /usr/include")
+          PY
 
       # ── Select the toolchain for this leg ─────────────────────────────
       # No version pin: `llvm` resolves to whatever the toolchain family's
@@ -1549,6 +1655,22 @@ jobs:
             mine="${kept# }"
           fi
 
+          # `tensorvia`: the package declares linux and windows only. Its CPU
+          # backend is AVX2 (`<immintrin.h>`), and the macOS runners are arm64,
+          # so the 0.3.1 tarball has no macOS table at all. Resolution refuses
+          # it naming the platform; the leg would only re-measure that.
+          if [ "${{ matrix.platform }}" = "macos" ]; then
+            kept=""
+            for m in $mine; do
+              case "$m" in
+                tensorvia)
+                  echo "skipping '$m' on the macOS leg: the package has no macOS artifact" ;;
+                *) kept="$kept $m" ;;
+              esac
+            done
+            mine="${kept# }"
+          fi
+
           echo "MEMBERS=$mine" >> "$GITHUB_ENV"
           echo "shard ${{ matrix.shard }}/${{ matrix.shards }}: ${mine:-<none>}"
 
@@ -1593,7 +1715,7 @@ jobs:
       - name: Installed OpenCV archive, image template and relocated deployment
         if: contains(format(' {0} ', env.MEMBERS), ' opencv-cpu ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.opencv@5.0.0 --deploy
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.opencv@5.0.0.1 --deploy
 
       - name: Installed mwrap archive, project template and relocated deployment
         if: contains(format(' {0} ', env.MEMBERS), ' onnxruntime-cpu ') && matrix.toolchain == 'default'
@@ -1603,117 +1725,224 @@ jobs:
       - name: Installed llama.cpp-m archive and actual CPU project template
         if: contains(format(' {0} ', env.MEMBERS), ' llamacpp-cpu ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.llamacpp@b10069 --legacy-exact-key
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.llamacpp@b10069.2 --legacy-exact-key
 
       - name: Installed FFmpeg wrapper archive and actual default project template
         if: contains(format(' {0} ', env.MEMBERS), ' ffmpeg-cpu ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.ffmpeg@8.1.2
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.ffmpeg@8.1.2.1
 
       - name: Installed ImGui wrapper archive and actual headless default template
         if: contains(format(' {0} ', env.MEMBERS), ' imgui-headless ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.imgui@1.92.8
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.imgui@1.92.8.1
 
       - name: Installed md4c wrapper archive and actual default render template
         if: contains(format(' {0} ', env.MEMBERS), ' md4c-render ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.md4c@0.5.3
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.md4c@0.5.3.1
 
       - name: Installed accesskit wrapper archive and actual default tree template
         if: contains(format(' {0} ', env.MEMBERS), ' accesskit-tree ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.accesskit@0.23.1
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.accesskit@0.23.1.1
 
       - name: Installed Lua wrapper archive and actual default script template
         if: contains(format(' {0} ', env.MEMBERS), ' lua-embed ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.lua@5.4.7
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.lua@5.4.7.1
 
       - name: Installed QuickJS-ng wrapper archive and actual default script template
         if: contains(format(' {0} ', env.MEMBERS), ' quickjs-embed ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.quickjs_ng@0.17.0
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.quickjs_ng@0.17.0.1
 
       - name: Installed libpng wrapper archive and actual default image template
         if: contains(format(' {0} ', env.MEMBERS), ' libpng-image ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.libpng@1.6.43
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.libpng@1.6.43.1
 
       - name: Installed concurrentqueue wrapper archive and actual default pipeline template
         if: contains(format(' {0} ', env.MEMBERS), ' concurrentqueue-mpmc ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.concurrentqueue@1.0.5
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.concurrentqueue@1.0.5.1
 
       - name: Installed FriBidi wrapper archive, actual default bidi template and its relocated LGPL notices
         if: contains(format(' {0} ', env.MEMBERS), ' fribidi-bidi ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.fribidi@1.0.16 --deploy
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.fribidi@1.0.16.1 --deploy
 
       - name: Installed SheenBidi wrapper archive, actual default bidi template and its relocated notices
         if: contains(format(' {0} ', env.MEMBERS), ' sheenbidi-bidi ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.sheenbidi@3.0.0 --deploy
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.sheenbidi@3.0.0.1 --deploy
+
+      - name: Installed Slint wrapper archive, actual default hello template (headless) and its relocated notices
+        if: contains(format(' {0} ', env.MEMBERS), ' slint-ui ') && matrix.toolchain == 'default'
+        shell: bash
+        env:
+          SLINT_HEADLESS: "1"
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.slint@1.19.0.3 --deploy
+
+      - name: Installed Wuffs wrapper archive, actual default decode template and its relocated notices
+        if: contains(format(' {0} ', env.MEMBERS), ' wuffs-decode ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.wuffs@0.3.6 --deploy
 
       - name: Installed dr_libs wrapper archive, actual default tone template and its relocated notices
         if: contains(format(' {0} ', env.MEMBERS), ' dr_libs-audio ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.dr_libs@2026.03.03 --deploy
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.dr_libs@2026.03.03.1 --deploy
 
       - name: Installed Opus wrapper archive, actual default tone template and its relocated BSD notices
         if: contains(format(' {0} ', env.MEMBERS), ' opus-ogg ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.opus@1.6.1 --deploy
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.opus@1.6.1.1 --deploy
 
       - name: Installed Box2D wrapper archive, actual default physics template and its relocated notices
         if: contains(format(' {0} ', env.MEMBERS), ' box2d-physics ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.box2d@3.2.0 --deploy
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.box2d@3.2.0.1 --deploy
 
       - name: Installed mimalloc wrapper archive, actual default allocation template and its relocated notices
         if: contains(format(' {0} ', env.MEMBERS), ' mimalloc-heap ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.mimalloc@3.6.1 --deploy
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.mimalloc@3.6.1.1 --deploy
+
+      - name: Installed zlib wrapper archive, actual default compression template and its relocated notices
+        if: contains(format(' {0} ', env.MEMBERS), ' zlib-compress ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.zlib@1.3.2.1 --deploy
+
+      - name: Installed zstd wrapper archive, actual default compression template and its relocated notices
+        if: contains(format(' {0} ', env.MEMBERS), ' zstd-squeeze ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.zstd@1.5.7.1 --deploy
+
+      - name: Installed xz wrapper archive, actual default compression template and its relocated notices
+        if: contains(format(' {0} ', env.MEMBERS), ' xz-pack ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.xz@5.8.3.2 --deploy
+
+      - name: Installed xxhash wrapper archive, actual default hashing template and its relocated notices
+        if: contains(format(' {0} ', env.MEMBERS), ' xxhash-digest ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.xxhash@0.8.3.1 --deploy
+
+      - name: Installed meshoptimizer wrapper archive, actual default simplification template and its relocated notices
+        if: contains(format(' {0} ', env.MEMBERS), ' meshoptimizer-simplify ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.meshoptimizer@1.3 --deploy
+
+      - name: Installed cgltf wrapper archive, actual default inspection template and its relocated notices
+        if: contains(format(' {0} ', env.MEMBERS), ' cgltf-inspect ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.cgltf@1.15 --deploy
+
+      - name: Installed manifold wrapper archive, actual default boolean template and its relocated notices
+        if: contains(format(' {0} ', env.MEMBERS), ' manifold-boolean ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.manifold@3.5.5.1 --deploy
+
+      - name: Installed jolt wrapper archive, actual default world template and its relocated notices
+        if: contains(format(' {0} ', env.MEMBERS), ' jolt-world ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.jolt@5.6.0 --deploy
+
+      - name: Installed recastnavigation wrapper archive, actual default path template and its relocated notices
+        if: contains(format(' {0} ', env.MEMBERS), ' recastnavigation-path ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.recastnavigation@1.6.0 --deploy
+
+      - name: Installed abseil wrapper archive, actual default basics template and its relocated notices
+        if: contains(format(' {0} ', env.MEMBERS), ' abseil-basics ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.abseil@20250512.1 --deploy
+
+      - name: Installed protobuf wrapper archive, actual default message template and its relocated notices
+        if: contains(format(' {0} ', env.MEMBERS), ' protobuf-message ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.protobuf@35.1 --deploy
+
+      - name: Installed protobuf wrapper archive, codegen template (protoc through the protogen rule)
+        if: contains(format(' {0} ', env.MEMBERS), ' protobuf-codegen ') && matrix.toolchain == 'default' && runner.os != 'Windows'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.protobuf@35.1 --template codegen
+
+      - name: Installed OpenSSL wrapper archive, actual default digest template and its relocated notices
+        if: contains(format(' {0} ', env.MEMBERS), ' openssl-tls ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.openssl@3.5.9 --deploy
+
+      - name: Installed OpenSSL wrapper archive, tls-loopback template (TLS 1.3 over memory BIOs)
+        if: contains(format(' {0} ', env.MEMBERS), ' openssl-tls ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.openssl@3.5.9 --template tls-loopback
+
+      - name: Installed ACL wrapper archive, actual default clip template and its relocated notices
+        if: contains(format(' {0} ', env.MEMBERS), ' acl-clip ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.acl@2.1.0 --deploy
+
+      - name: Installed libjpeg-turbo wrapper archive, actual default decoding template and its relocated notices
+        if: contains(format(' {0} ', env.MEMBERS), ' libjpeg-turbo-decode ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.libjpeg_turbo@3.2.1 --deploy
+
+      - name: Installed Basis Universal wrapper archive, actual default KTX2 template and its relocated notices
+        if: contains(format(' {0} ', env.MEMBERS), ' basis-universal-transcode ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.basis_universal@2.50.1 --deploy
+
+      - name: Installed libarchive wrapper archive, actual default archive template and its relocated notices
+        if: contains(format(' {0} ', env.MEMBERS), ' libarchive-bundle ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.libarchive@3.8.7.1 --deploy
+
+      - name: Installed libc wrapper archive, actual default C stdio template and its relocated notices
+        if: contains(format(' {0} ', env.MEMBERS), ' libc-stdio ') && matrix.toolchain == 'default'
+        shell: bash
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.libc@17.0.0.1 --deploy
 
       - name: Installed libwebp wrapper archive, actual default image template and its relocated notices
         if: contains(format(' {0} ', env.MEMBERS), ' libwebp-image ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.libwebp@1.5.0 --deploy
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.libwebp@1.5.0.1 --deploy
 
       - name: Installed libvpx wrapper archive, actual default webm template and its relocated notices
         if: contains(format(' {0} ', env.MEMBERS), ' libvpx-webm ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.libvpx@1.17.0 --deploy
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.libvpx@1.17.0.1 --deploy
 
       - name: Installed PocketPy wrapper archive, actual default script template and its relocated notices
         if: contains(format(' {0} ', env.MEMBERS), ' pocketpy-embed ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.pocketpy@2.2.0 --deploy
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.pocketpy@2.2.0.1 --deploy
 
       - name: Installed miniaudio wrapper archive, actual default tone template and its relocated notices
         if: contains(format(' {0} ', env.MEMBERS), ' miniaudio-engine ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.miniaudio@0.11.25 --deploy
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.miniaudio@0.11.25.1 --deploy
 
       - name: Installed FreeType wrapper archive, actual default banner template and its relocated FTL notices
         if: contains(format(' {0} ', env.MEMBERS), ' freetype-render ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.freetype@2.13.3 --deploy
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.freetype@2.13.3.1 --deploy
 
       - name: Installed HarfBuzz wrapper archive, actual default shape template and its relocated notices
         if: contains(format(' {0} ', env.MEMBERS), ' harfbuzz-shape ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.harfbuzz@14.3.0 --deploy
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.harfbuzz@14.3.0.1 --deploy
 
       - name: Installed SDL3 wrapper archive, actual default info template and its relocated notices
         if: contains(format(' {0} ', env.MEMBERS), ' sdl3-headless ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.sdl3@3.4.18 --deploy
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.sdl3@3.4.18.1 --deploy
 
       - name: Installed Godot wrapper archive and actual standalone math template
         if: contains(format(' {0} ', env.MEMBERS), ' godot-math ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.godot_cpp@10.0.0
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.godot_cpp@10.0.0.1
 
       - name: Report temporarily untestable consumers of the unavailable MySQL source
         shell: bash

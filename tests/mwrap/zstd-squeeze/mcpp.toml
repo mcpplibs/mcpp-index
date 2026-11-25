@@ -1,0 +1,7 @@
+[package]
+name = "zstd-squeeze"
+version = "1.5.7"
+description = "Consume the immutable Zstandard wrapper: a one-shot round trip with the frame's content size, a stream, a damaged checksum refused, and the side header's ZSTD_COMPRESSBOUND"
+
+[dependencies]
+mcpplibs.mwrap.zstd = "1.5.7"
