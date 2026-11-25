@@ -67,6 +67,61 @@ class BaselineTests(unittest.TestCase):
                 self.assertEqual(manifest["dependencies"]["mcpplibs"]["abi"], "0.24.0")
                 self.assertEqual(manifest["target"]["linux"]["dependencies"]["mcpplibs"]["backend"], "0.24.2")
 
+    def test_candidate_is_tested_against_its_own_version(self):
+        # A member's test expects one release as a literal; the candidate defines the macros first.
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for name, source, manifest in (
+                    ("sdl3", "tests/init.cpp", '[dependencies.compat]\nsdl3 = "3.4.18"\n'),
+                    ("quickjs-ng", "tests/engine.cpp", '[dependencies.compat]\nquickjs-ng = "0.17.0"\n')):
+                member = root / "tests/examples" / name
+                (member / "tests").mkdir(parents=True)
+                (member / "mcpp.toml").write_text('[package]\nname="t"\nversion="0.1.0"\n' + manifest)
+                (member / source).write_text("// the test\n")
+            plan = root / "plan.json"
+            with patch.object(ci, "ROOT", root):
+                for identity, version, expected in (
+                        ("compat:sdl3", "3.4.20", ["#define SDL3_EXPECT_MAJOR 3", "#define SDL3_EXPECT_MINOR 4",
+                                                    "#define SDL3_EXPECT_PATCH 20"]),
+                        ("compat:quickjs-ng", "0.18.0", ['#define QUICKJS_NG_EXPECT_VERSION "0.18.0"'])):
+                    plan.write_text(json.dumps({"packages": [{"id": identity, "candidate": version}]}))
+                    dest = root / identity.split(":")[1]
+                    ci.prepare(plan, identity, dest)
+                    source = "tests/init.cpp" if "sdl3" in identity else "tests/engine.cpp"
+                    text = (dest / source).read_text()
+                    self.assertEqual(text.splitlines()[:len(expected)], expected)
+                    self.assertTrue(text.endswith("// the test\n"))
+                # A version the macros cannot express is refused rather than guessed.
+                plan.write_text(json.dumps({"packages": [{"id": "compat:sdl3", "candidate": "3.4"}]}))
+                with self.assertRaisesRegex(RuntimeError, "three-part numeric"):
+                    ci.prepare(plan, "compat:sdl3", root / "bad")
+
+    def test_candidate_carries_the_root_override_it_needs(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "mcpp.toml").write_text(
+                '[workspace]\nmembers = ["tests/examples/mcr"]\n'
+                '[workspace.dependencies]\ncompat.openssl = { version = "3.5.9", override = true }\n')
+            member = root / "tests/examples/mcr"
+            (member / "tests").mkdir(parents=True)
+            (member / "tests/api.cpp").write_text("// api\n")
+            (member / "mcpp.toml").write_text(
+                '[package]\nname="mcr-tests"\nversion="0.1.0"\n'
+                '[dependencies.yizhinailong]\nmcr = "0.1.5"\n')
+            plan = root / "plan.json"
+            plan.write_text(json.dumps({"packages": [{"id": "yizhinailong:mcr", "candidate": "0.3.0"}]}))
+            with patch.object(ci, "ROOT", root):
+                dest = root / "mcr"
+                ci.prepare(plan, "yizhinailong:mcr", dest)
+                manifest = tomllib.loads((dest / "mcpp.toml").read_text())
+                self.assertEqual(manifest["dependencies"]["yizhinailong"]["mcr"], "0.3.0")
+                self.assertEqual(manifest["dependencies"]["compat"]["openssl"],
+                                 {"version": "3.5.9", "override": True})
+                # The root states no such override: refuse, rather than build a graph that cannot resolve.
+                (root / "mcpp.toml").write_text('[workspace]\nmembers = []\n')
+                with self.assertRaisesRegex(RuntimeError, "no override of compat.openssl"):
+                    ci.prepare(plan, "yizhinailong:mcr", root / "mcr2")
+
     def test_commit_snapshot_is_manual_but_historical_bytes_are_still_guarded(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
