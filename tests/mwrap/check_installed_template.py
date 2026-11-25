@@ -5,6 +5,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import sys
@@ -37,11 +38,30 @@ STATIC_NOTICES = {
 }
 
 
+def newest_declared_version(root, identity):
+    """The newest numeric version this checkout's descriptor of `identity` declares.
+
+    A step that names no version tests what the checkout currently publishes, so a
+    release of the wrapper does not also have to edit the workflow that tests it.
+    A step that must stay on one release (an upstream nonnumeric key, a deliberate
+    older line) still names it: `<identity>@<version>`.
+    """
+    prefix = "mcpplibs.mwrap."
+    assert identity.startswith(prefix), f"{identity} is not a mcpplibs.mwrap package"
+    descriptor = root / "pkgs" / "mwrap" / (identity[len(prefix):] + ".lua")
+    assert descriptor.is_file(), f"no descriptor {descriptor.relative_to(root)} for {identity}"
+    versions = set(re.findall(r'\["(\d+(?:\.\d+)*)"\]\s*=', descriptor.read_text(encoding="utf-8")))
+    assert versions, f"{descriptor.relative_to(root)} declares no numeric version"
+    return max(versions, key=lambda v: tuple(int(part) for part in v.split(".")))
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--mcpp", default="mcpp")
     parser.add_argument("--toolchain", default="llvm@23.1.3")
-    parser.add_argument("--package", default="mcpplibs.mwrap.onnxruntime@1.25.1.1")
+    parser.add_argument("--package", default="mcpplibs.mwrap.onnxruntime",
+                        help="<identity>@<version or prefix>, or <identity> alone for the newest version "
+                             "the checkout's descriptor declares")
     parser.add_argument("--deploy", action="store_true", help="pack, relocate and run the consumer; verify declared notices")
     parser.add_argument("--published-index", action="store_true", help="refresh the real public index instead of staging this checkout")
     parser.add_argument("--mirror", choices=("GLOBAL", "CN"), default="GLOBAL",
@@ -53,6 +73,10 @@ def main():
                         help="allow only mcpp's nonnumeric exact-version diagnostic; fail other build warnings")
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[2]
+    if "@" not in args.package:
+        assert not args.published_index, "a version-less package reads this checkout; name the version for --published-index"
+        args.package += "@" + newest_declared_version(root, args.package)
+        print("newest declared version:", args.package, flush=True)
     identity, version = args.package.rsplit("@", 1)
     with tempfile.TemporaryDirectory(prefix="mwrap-installed-template-") as directory:
         temporary = Path(directory)

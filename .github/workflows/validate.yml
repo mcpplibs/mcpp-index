@@ -496,6 +496,9 @@ jobs:
       - name: Build-plugin lints (tests of tests/check_mplugin_layout.lua and check_reserved_namespace.lua)
         run: python3 tests/test_check_mplugin.py
 
+      - name: Installed-template check resolves the newest declared wrapper version
+        run: python3 tests/test_check_installed_template.py
+
       - name: Capability providers (a declared capability has a provider the package depends on; warnings)
         run: |
           python3 tests/test_check_capability_providers.py
@@ -1344,7 +1347,7 @@ jobs:
           tar -xzf "$archive"
           echo "MCPP=$PWD/mcpp-${MCPP_VERSION}-${{ matrix.suffix }}/bin/mcpp" >> "$GITHUB_ENV"
       - name: Immutable archive, default scaffold, strict build and loopback RPC
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.grpc@1.83.0.1 --toolchain "${{ matrix.toolchain }}"
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.grpc --toolchain "${{ matrix.toolchain }}"
 
   workspace:
     # The shard suffix appears only when the platform is actually split, and
@@ -1715,7 +1718,7 @@ jobs:
       - name: Installed OpenCV archive, image template and relocated deployment
         if: contains(format(' {0} ', env.MEMBERS), ' opencv-cpu ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.opencv@5.0.0.1 --deploy
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.opencv --deploy
 
       - name: Installed mwrap archive, project template and relocated deployment
         if: contains(format(' {0} ', env.MEMBERS), ' onnxruntime-cpu ') && matrix.toolchain == 'default'
@@ -1730,219 +1733,219 @@ jobs:
       - name: Installed FFmpeg wrapper archive and actual default project template
         if: contains(format(' {0} ', env.MEMBERS), ' ffmpeg-cpu ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.ffmpeg@8.1.2.1
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.ffmpeg
 
       - name: Installed ImGui wrapper archive and actual headless default template
         if: contains(format(' {0} ', env.MEMBERS), ' imgui-headless ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.imgui@1.92.8.1
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.imgui
 
       - name: Installed md4c wrapper archive and actual default render template
         if: contains(format(' {0} ', env.MEMBERS), ' md4c-render ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.md4c@0.5.3.1
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.md4c
 
       - name: Installed accesskit wrapper archive and actual default tree template
         if: contains(format(' {0} ', env.MEMBERS), ' accesskit-tree ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.accesskit@0.23.1.1
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.accesskit
 
       - name: Installed Lua wrapper archive and actual default script template
         if: contains(format(' {0} ', env.MEMBERS), ' lua-embed ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.lua@5.4.7.1
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.lua
 
       - name: Installed QuickJS-ng wrapper archive and actual default script template
         if: contains(format(' {0} ', env.MEMBERS), ' quickjs-embed ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.quickjs_ng@0.17.0.1
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.quickjs_ng
 
       - name: Installed libpng wrapper archive and actual default image template
         if: contains(format(' {0} ', env.MEMBERS), ' libpng-image ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.libpng@1.6.43.1
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.libpng
 
       - name: Installed concurrentqueue wrapper archive and actual default pipeline template
         if: contains(format(' {0} ', env.MEMBERS), ' concurrentqueue-mpmc ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.concurrentqueue@1.0.5.1
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.concurrentqueue
 
       - name: Installed FriBidi wrapper archive, actual default bidi template and its relocated LGPL notices
         if: contains(format(' {0} ', env.MEMBERS), ' fribidi-bidi ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.fribidi@1.0.16.1 --deploy
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.fribidi --deploy
 
       - name: Installed SheenBidi wrapper archive, actual default bidi template and its relocated notices
         if: contains(format(' {0} ', env.MEMBERS), ' sheenbidi-bidi ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.sheenbidi@3.0.0.1 --deploy
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.sheenbidi --deploy
 
       - name: Installed Slint wrapper archive, actual default hello template (headless) and its relocated notices
         if: contains(format(' {0} ', env.MEMBERS), ' slint-ui ') && matrix.toolchain == 'default'
         shell: bash
         env:
           SLINT_HEADLESS: "1"
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.slint@1.19.0.3 --deploy
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.slint --deploy
 
       - name: Installed Wuffs wrapper archive, actual default decode template and its relocated notices
         if: contains(format(' {0} ', env.MEMBERS), ' wuffs-decode ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.wuffs@0.3.6 --deploy
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.wuffs --deploy
 
       - name: Installed dr_libs wrapper archive, actual default tone template and its relocated notices
         if: contains(format(' {0} ', env.MEMBERS), ' dr_libs-audio ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.dr_libs@2026.03.03.1 --deploy
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.dr_libs --deploy
 
       - name: Installed Opus wrapper archive, actual default tone template and its relocated BSD notices
         if: contains(format(' {0} ', env.MEMBERS), ' opus-ogg ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.opus@1.6.1.1 --deploy
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.opus --deploy
 
       - name: Installed Box2D wrapper archive, actual default physics template and its relocated notices
         if: contains(format(' {0} ', env.MEMBERS), ' box2d-physics ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.box2d@3.2.0.1 --deploy
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.box2d --deploy
 
       - name: Installed mimalloc wrapper archive, actual default allocation template and its relocated notices
         if: contains(format(' {0} ', env.MEMBERS), ' mimalloc-heap ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.mimalloc@3.6.1.1 --deploy
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.mimalloc --deploy
 
       - name: Installed zlib wrapper archive, actual default compression template and its relocated notices
         if: contains(format(' {0} ', env.MEMBERS), ' zlib-compress ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.zlib@1.3.2.1 --deploy
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.zlib --deploy
 
       - name: Installed zstd wrapper archive, actual default compression template and its relocated notices
         if: contains(format(' {0} ', env.MEMBERS), ' zstd-squeeze ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.zstd@1.5.7.1 --deploy
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.zstd --deploy
 
       - name: Installed xz wrapper archive, actual default compression template and its relocated notices
         if: contains(format(' {0} ', env.MEMBERS), ' xz-pack ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.xz@5.8.3.2 --deploy
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.xz --deploy
 
       - name: Installed xxhash wrapper archive, actual default hashing template and its relocated notices
         if: contains(format(' {0} ', env.MEMBERS), ' xxhash-digest ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.xxhash@0.8.3.1 --deploy
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.xxhash --deploy
 
       - name: Installed meshoptimizer wrapper archive, actual default simplification template and its relocated notices
         if: contains(format(' {0} ', env.MEMBERS), ' meshoptimizer-simplify ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.meshoptimizer@1.3 --deploy
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.meshoptimizer --deploy
 
       - name: Installed cgltf wrapper archive, actual default inspection template and its relocated notices
         if: contains(format(' {0} ', env.MEMBERS), ' cgltf-inspect ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.cgltf@1.15 --deploy
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.cgltf --deploy
 
       - name: Installed manifold wrapper archive, actual default boolean template and its relocated notices
         if: contains(format(' {0} ', env.MEMBERS), ' manifold-boolean ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.manifold@3.5.5.1 --deploy
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.manifold --deploy
 
       - name: Installed jolt wrapper archive, actual default world template and its relocated notices
         if: contains(format(' {0} ', env.MEMBERS), ' jolt-world ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.jolt@5.6.0 --deploy
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.jolt --deploy
 
       - name: Installed recastnavigation wrapper archive, actual default path template and its relocated notices
         if: contains(format(' {0} ', env.MEMBERS), ' recastnavigation-path ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.recastnavigation@1.6.0 --deploy
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.recastnavigation --deploy
 
       - name: Installed abseil wrapper archive, actual default basics template and its relocated notices
         if: contains(format(' {0} ', env.MEMBERS), ' abseil-basics ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.abseil@20250512.1 --deploy
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.abseil --deploy
 
       - name: Installed protobuf wrapper archive, actual default message template and its relocated notices
         if: contains(format(' {0} ', env.MEMBERS), ' protobuf-message ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.protobuf@35.1 --deploy
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.protobuf --deploy
 
       - name: Installed protobuf wrapper archive, codegen template (protoc through the protogen rule)
         if: contains(format(' {0} ', env.MEMBERS), ' protobuf-codegen ') && matrix.toolchain == 'default' && runner.os != 'Windows'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.protobuf@35.1 --template codegen
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.protobuf --template codegen
 
       - name: Installed OpenSSL wrapper archive, actual default digest template and its relocated notices
         if: contains(format(' {0} ', env.MEMBERS), ' openssl-tls ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.openssl@3.5.9 --deploy
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.openssl --deploy
 
       - name: Installed OpenSSL wrapper archive, tls-loopback template (TLS 1.3 over memory BIOs)
         if: contains(format(' {0} ', env.MEMBERS), ' openssl-tls ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.openssl@3.5.9 --template tls-loopback
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.openssl --template tls-loopback
 
       - name: Installed ACL wrapper archive, actual default clip template and its relocated notices
         if: contains(format(' {0} ', env.MEMBERS), ' acl-clip ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.acl@2.1.0 --deploy
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.acl --deploy
 
       - name: Installed libjpeg-turbo wrapper archive, actual default decoding template and its relocated notices
         if: contains(format(' {0} ', env.MEMBERS), ' libjpeg-turbo-decode ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.libjpeg_turbo@3.2.1 --deploy
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.libjpeg_turbo --deploy
 
       - name: Installed Basis Universal wrapper archive, actual default KTX2 template and its relocated notices
         if: contains(format(' {0} ', env.MEMBERS), ' basis-universal-transcode ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.basis_universal@2.50.1 --deploy
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.basis_universal --deploy
 
       - name: Installed libarchive wrapper archive, actual default archive template and its relocated notices
         if: contains(format(' {0} ', env.MEMBERS), ' libarchive-bundle ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.libarchive@3.8.7.1 --deploy
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.libarchive --deploy
 
       - name: Installed libc wrapper archive, actual default C stdio template and its relocated notices
         if: contains(format(' {0} ', env.MEMBERS), ' libc-stdio ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.libc@17.0.0.1 --deploy
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.libc --deploy
 
       - name: Installed libwebp wrapper archive, actual default image template and its relocated notices
         if: contains(format(' {0} ', env.MEMBERS), ' libwebp-image ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.libwebp@1.5.0.1 --deploy
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.libwebp --deploy
 
       - name: Installed libvpx wrapper archive, actual default webm template and its relocated notices
         if: contains(format(' {0} ', env.MEMBERS), ' libvpx-webm ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.libvpx@1.17.0.1 --deploy
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.libvpx --deploy
 
       - name: Installed PocketPy wrapper archive, actual default script template and its relocated notices
         if: contains(format(' {0} ', env.MEMBERS), ' pocketpy-embed ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.pocketpy@2.2.0.1 --deploy
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.pocketpy --deploy
 
       - name: Installed miniaudio wrapper archive, actual default tone template and its relocated notices
         if: contains(format(' {0} ', env.MEMBERS), ' miniaudio-engine ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.miniaudio@0.11.25.1 --deploy
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.miniaudio --deploy
 
       - name: Installed FreeType wrapper archive, actual default banner template and its relocated FTL notices
         if: contains(format(' {0} ', env.MEMBERS), ' freetype-render ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.freetype@2.13.3.1 --deploy
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.freetype --deploy
 
       - name: Installed HarfBuzz wrapper archive, actual default shape template and its relocated notices
         if: contains(format(' {0} ', env.MEMBERS), ' harfbuzz-shape ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.harfbuzz@14.3.0.1 --deploy
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.harfbuzz --deploy
 
       - name: Installed SDL3 wrapper archive, actual default info template and its relocated notices
         if: contains(format(' {0} ', env.MEMBERS), ' sdl3-headless ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.sdl3@3.4.18.1 --deploy
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.sdl3 --deploy
 
       - name: Installed Godot wrapper archive and actual standalone math template
         if: contains(format(' {0} ', env.MEMBERS), ' godot-math ') && matrix.toolchain == 'default'
         shell: bash
-        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.godot_cpp@10.0.0.1
+        run: python3 tests/mwrap/check_installed_template.py --mcpp "$MCPP" --package mcpplibs.mwrap.godot_cpp
 
       - name: Report temporarily untestable consumers of the unavailable MySQL source
         shell: bash
