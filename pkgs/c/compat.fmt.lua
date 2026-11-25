@@ -1,3 +1,10 @@
+local versions = {
+    ["12.2.1"] = {
+        url = "https://github.com/fmtlib/fmt/archive/refs/tags/12.2.1.tar.gz",
+        sha256 = "449374d74f31b67796dece454d59b93e6f1538efcce0e9ac78000c98142c139e",
+    },
+}
+
 -- Form B inline descriptor for {fmt} in its header form: consumers write
 -- `#include <fmt/format.h>` and link, exactly as upstream's README shows.
 --
@@ -76,18 +83,21 @@ package = {
                 url    = "https://github.com/fmtlib/fmt/archive/refs/tags/12.2.0.tar.gz",
                 sha256 = "8b852bb5aa6e7d8564f9e81394055395dd1d1936d38dfd3a17792a02bebd7af0",
             },
+            ["12.2.1"] = versions["12.2.1"],
         },
         macosx = {
             ["12.2.0"] = {
                 url    = "https://github.com/fmtlib/fmt/archive/refs/tags/12.2.0.tar.gz",
                 sha256 = "8b852bb5aa6e7d8564f9e81394055395dd1d1936d38dfd3a17792a02bebd7af0",
             },
+            ["12.2.1"] = versions["12.2.1"],
         },
         windows = {
             ["12.2.0"] = {
                 url    = "https://github.com/fmtlib/fmt/archive/refs/tags/12.2.0.tar.gz",
                 sha256 = "8b852bb5aa6e7d8564f9e81394055395dd1d1936d38dfd3a17792a02bebd7af0",
             },
+            ["12.2.1"] = versions["12.2.1"],
         },
     },
 
