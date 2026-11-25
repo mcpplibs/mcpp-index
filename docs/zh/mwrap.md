@@ -165,6 +165,10 @@ tests/prepare_mwrap_indices.py 的 namespace 视图仅供隔离的单项目消�
 下载真实且带校验的源码归档，执行 mcpp new，再原样构建/运行生成清单，不替换为 path 依赖。该 home 默认从 GLOBAL 镜像下载，`--mirror CN` 改用 CN（发布时的 CN 验收）。
 Git 与发布的 pkgs/mwrap 目录始终一致。
 
+`--package mcpplibs.mwrap.<lib>` 不写版本：检查取本 checkout 中 `pkgs/mwrap/<lib>.lua` 声明的最新数字版本，
+因此发布 wrapper 只需改描述符和消费者，不必改 `validate.yml`。必须固定某个发布的步骤才写版本
+（`--package <identity>@<version>`），如 llama.cpp 因上游非数字键而显式指定。
+
 运行库、插件、构建模块耦合的测试可能同时依赖多个候选 namespace。使用 `python3 tests/prepare_builtin_index.py --home <独立测试目录>`，将完整且字节不变的候选布局放入该测试 home 的唯一内置索引；成员用空 `[indices]` 覆盖旧 workspace 路由。自动更新候选 CI 同样使用此模式。不要将同一个完整 checkout 注册为多个项目别名。这只是测试 home 准备，不需要发布 staging、路径转换或修改 mcpp 引擎。
 
 Linux 消费方即使通过 C API 加载 C++ SDK，也要验证 C++ 运行时契约及异常路径。OpenCV/ORT 组合实测中，静态运行时与共享 SDK 运行时混用会使 typed catch 终止；选择 `cxx_runtime = "toolchain-coupled"` 后同一测试通过。模板必须声明已验证的契约，并执行一次类型化错误路径。
