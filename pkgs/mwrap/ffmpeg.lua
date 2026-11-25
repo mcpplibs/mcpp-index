@@ -15,6 +15,13 @@ package = {
     },
     xpm = {
         linux = {
+            ["8.1.2.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/ffmpeg-m/releases/download/mwrap-8.1.2.1/ffmpeg-m-8.1.2.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mwrap-ffmpeg/releases/download/8.1.2.1/ffmpeg-m-8.1.2.1.tar.gz",
+                },
+                sha256 = "a341824724fd4a1dc39ea623464f76eb964ebd77525f47e857af133ff8b594b7",
+            },
             ["8.1.2"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/ffmpeg-m/releases/download/mwrap-8.1.2/ffmpeg-m-8.1.2.tar.gz",
@@ -24,6 +31,13 @@ package = {
             },
         },
         macosx = {
+            ["8.1.2.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/ffmpeg-m/releases/download/mwrap-8.1.2.1/ffmpeg-m-8.1.2.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mwrap-ffmpeg/releases/download/8.1.2.1/ffmpeg-m-8.1.2.1.tar.gz",
+                },
+                sha256 = "a341824724fd4a1dc39ea623464f76eb964ebd77525f47e857af133ff8b594b7",
+            },
             ["8.1.2"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/ffmpeg-m/releases/download/mwrap-8.1.2/ffmpeg-m-8.1.2.tar.gz",
@@ -33,6 +47,13 @@ package = {
             },
         },
         windows = {
+            ["8.1.2.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/ffmpeg-m/releases/download/mwrap-8.1.2.1/ffmpeg-m-8.1.2.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mwrap-ffmpeg/releases/download/8.1.2.1/ffmpeg-m-8.1.2.1.tar.gz",
+                },
+                sha256 = "a341824724fd4a1dc39ea623464f76eb964ebd77525f47e857af133ff8b594b7",
+            },
             ["8.1.2"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/ffmpeg-m/releases/download/mwrap-8.1.2/ffmpeg-m-8.1.2.tar.gz",

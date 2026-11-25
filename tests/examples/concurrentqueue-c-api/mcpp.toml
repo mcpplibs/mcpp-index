@@ -13,3 +13,7 @@ version = "0.1.0"
 
 [dependencies.compat]
 concurrentqueue = { version = "1.0.5", features = ["c-api"] }
+
+# The candidate index: this checkout (compat.*), not the published one.
+[indices]
+compat = { path = "../../.." }

@@ -24,6 +24,23 @@ def base_descriptors(base: str) -> set[str]:
     return {name for name in files.splitlines() if name.endswith(".lua")}
 
 
+def moved_descriptors(base: str) -> dict[str, str]:
+    """New path -> old path of the descriptors git sees as renamed since `base`.
+
+    A descriptor's identity is what it declares, not where its file is: a move
+    (the official packages into pkgs/mcpp/, docs/build-plugins.md) keeps every
+    published version, and is audited against the file it came from."""
+    out = subprocess.check_output(
+        ["git", "diff", "--name-status", "-M", "--diff-filter=R", base, "HEAD", "--", "pkgs"],
+        cwd=ROOT, text=True)
+    moved = {}
+    for line in out.splitlines():
+        _status, old, new = line.split("\t")
+        if old.endswith(".lua") and new.endswith(".lua"):
+            moved[new] = old
+    return moved
+
+
 def immutable_commit_snapshot(info: dict) -> bool:
     """Commit archives have no release-version substitution to automate."""
     urls = []
@@ -52,12 +69,14 @@ def audit(base: str, output: Path):
     manual = []
     previous = base_descriptors(base)
     infos = inventory(ROOT)
-    removed = previous - {info["path"] for info in infos}
+    moved = moved_descriptors(base)
+    removed = previous - {info["path"] for info in infos} - set(moved.values())
     if removed:
         raise RuntimeError(f"existing descriptors removed: {sorted(removed)}")
     for info in infos:
-        if info["path"] in previous:
-            before = subprocess.check_output(["git", "show", f"{base}:{info['path']}"], cwd=ROOT).decode()
+        origin = moved.get(info["path"], info["path"])
+        if origin in previous:
+            before = subprocess.check_output(["git", "show", f"{base}:{origin}"], cwd=ROOT).decode()
             # `revision` exists to replace a payload under an unchanged
             # version, so it must be allowed to change that version block.
             # Applying the updater's byte-for-byte append-only guard here would

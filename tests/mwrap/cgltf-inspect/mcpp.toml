@@ -1,0 +1,7 @@
+[package]
+name = "cgltf-inspect"
+version = "1.15"
+description = "Consume the immutable cgltf wrapper: parse a glTF document, load and validate its buffer, read its accessors, write it and parse it again"
+
+[dependencies]
+mcpplibs.mwrap.cgltf = "1.15"

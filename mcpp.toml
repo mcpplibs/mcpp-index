@@ -23,6 +23,9 @@ members = [
     "tests/mwrap/pocketpy-embed",
     "tests/mwrap/libpng-image",
     "tests/mwrap/libwebp-image",
+    "tests/mwrap/slint-ui",
+    "tests/mwrap/slint-rule",
+    "tests/mwrap/wuffs-decode",
     "tests/mwrap/concurrentqueue-mpmc",
     "tests/mwrap/fribidi-bidi",
     "tests/mwrap/sheenbidi-bidi",
@@ -35,13 +38,26 @@ members = [
     "tests/mwrap/zstd-squeeze",
     "tests/mwrap/xz-pack",
     "tests/mwrap/xxhash-digest",
+    "tests/mwrap/meshoptimizer-simplify",
+    "tests/mwrap/cgltf-inspect",
+    "tests/mwrap/manifold-boolean",
+    "tests/mwrap/jolt-world",
+    "tests/mwrap/recastnavigation-path",
+    "tests/mwrap/acl-clip",
+    "tests/mwrap/basis-universal-transcode",
+    "tests/mwrap/libjpeg-turbo-decode",
     "tests/mwrap/libarchive-bundle",
     "tests/mwrap/libc-stdio",
+    "tests/mwrap/abseil-basics",
+    "tests/mwrap/protobuf-message",
+    "tests/mwrap/protobuf-codegen",
+    "tests/mwrap/openssl-tls",
     "tests/mwrap/miniaudio-engine",
     "tests/mwrap/freetype-render",
     "tests/mwrap/harfbuzz-shape",
     "tests/mwrap/sdl3-headless",
     "tests/mwrap/grpc-cpu",
+    "tests/mwrap/grpc-protobuf-stack",
     "tests/mwrap/grpc-tools",
     "tests/mwrap/godot-math",
     "tests/mwrap/godot-sdk",
@@ -49,9 +65,12 @@ members = [
     "tests/examples/abseil",
     "tests/examples/archive",
     "tests/examples/argparse",
+    "tests/examples/arrow-adbc",
+    "tests/examples/arrow-adbc-sqlite",
     "tests/examples/accesskit",
     "tests/examples/asio-module",
     "tests/examples/asio-ssl",
+    "tests/examples/binary_tree-module",
     "tests/examples/boost-asio",
     "tests/examples/boost-any",
     "tests/examples/boost-circular-buffer",
@@ -85,6 +104,8 @@ members = [
     "tests/examples/cuda-curand",
     "tests/examples/cuda-driver",
     "tests/examples/curl",
+    "tests/examples/djgpp-platform",
+    "tests/examples/mcpp-platforms",
     "tests/examples/doctest",
     "tests/examples/dr_libs",
     "tests/examples/eigen",
@@ -92,6 +113,7 @@ members = [
     "tests/examples/eui-neo-app-main",
     "tests/examples/eui-neo-markdown",
     "tests/examples/eui-neo-sdl2",
+    "tests/examples/eui-neo-serial",
     "tests/examples/eui-neo-tray",
     "tests/examples/eui-neo-vulkan",
     "tests/examples/eui-neo-window",
@@ -104,6 +126,7 @@ members = [
     "tests/examples/gmp",
     "tests/examples/gzip-hpp",
     "tests/examples/huxerui-module",
+    "tests/examples/huxerui-interaction",
     "tests/examples/gmp-gmpxx",
     "tests/examples/gsl",
     "tests/examples/godot-cpp",
@@ -118,6 +141,7 @@ members = [
     "tests/examples/imgui-module",
     "tests/examples/imgui-window",
     "tests/examples/jwt-cpp",
+    "tests/examples/julixian.tomlkitpp",
     "tests/examples/libstdcxx-llvm",
     "tests/examples/marzer.tomlplusplus",
     "tests/examples/marzer.tomlplusplus-build-mcpp",
@@ -125,6 +149,7 @@ members = [
     "tests/examples/mio",
     "tests/examples/mtest",
     "tests/examples/mtest-capi",
+    "tests/examples/mtest-doctest",
     "tests/examples/mtest-gtest",
     "tests/examples/mtest-manifest",
     "tests/examples/muduo",
@@ -157,6 +182,7 @@ members = [
     "tests/examples/box2d",
     "tests/examples/pocketpy",
     "tests/examples/sheenbidi",
+    "tests/examples/slint",
     "tests/examples/spdlog",
     "tests/examples/fontconfig",
     "tests/examples/freetype",
@@ -212,7 +238,9 @@ members = [
     "tests/examples/taskflow-module",
     "tests/examples/quill-module",
     "tests/examples/mp-units-module",
+    "tests/examples/thorvg",
     "tests/examples/tinyhttps",
+    "tests/examples/tensorvia",
     "tests/examples/usockets",
     "tests/examples/opencl",
     "tests/examples/sycl-runtime",
@@ -225,8 +253,12 @@ members = [
     "tests/examples/websocket-tls",
     "tests/examples/wolfssl",
     "tests/examples/tl-optional",
+    "tests/examples/tinygltf",
+    "tests/examples/tinygltf-v301",
+    "tests/examples/tinygltf-nofs",
     "tests/examples/tray",
     "tests/examples/xsimd",
+    "tests/examples/wuffs",
     "tests/examples/xxhash",
     "tests/examples/yaml-cpp",
     "tests/examples/yaml-cpp-v080",
@@ -270,35 +302,32 @@ members = [
     "tests/examples/openlifa.openas",
     "tests/examples/openlifa.openmui",
     "tests/examples/os",
+    "tests/examples/pdfium",
+    "tests/examples/zxing-cpp",
 ]
 
-# ── The index redirect, hoisted to the workspace root ───────────────────
-# Members inherit this, and the relative `path` resolves against the
-# WORKSPACE ROOT rather than the member directory (mcpp#224, fixed in
-# 0.0.97) — so the 13 members that consume `compat` no longer each repeat
-# `path = "../../.."`, and member depth stops mattering.
+# ── The index each member tests through ─────────────────────────────────
+# Every member states its own `[indices]`: `compat = { path = "<to the
+# root>" }` for the members that resolve compat.* from this checkout, another
+# namespace's name for the members that test one, none for the mwrap members,
+# which take the complete candidate index tests/prepare_builtin_index.py puts
+# in their test home. The root states none. Its `[indices]` reached members by
+# position, a reading mcpp removes in 2027.1, and `[workspace.indices]` merges
+# with a member's entries by name: a member naming this checkout as
+# `mcpplibs` would hold it twice, which mcpp refuses
+# (`index-location-named-twice`; before, every lookup was ambiguous), and an
+# mwrap member would hold the checkout beside the candidate index.
 #
-# Why exactly ONE entry, and why `compat` specifically:
-#
-#   * The key is looked up by NAMESPACE. An index declared under a name that
-#     is not a namespace any dependency asks for is never registered, and
-#     resolution silently falls through to the published remote index — the
-#     checkout under test is then not what is being tested at all.
-#   * Declaring the same path under several namespaces does register them,
-#     as N separate project repos, and every lookup afterwards fails with an
-#     N-way ambiguity between what is physically one descriptor
-#     (mcpp#238 / xlings#374 — now a loud error rather than a silent exit 1).
-#
-# So the root can carry exactly one namespace, and `compat` is the one that
-# pays: 13 members against 10 for everything else combined. A member that
-# needs a different namespace declares its own `[indices]`, which REPLACES
-# this table rather than merging with it — which is precisely what keeps it
-# at one repo per member.
-#
-# A member inheriting this still resolves OTHER namespaces from the
+# A member that states `compat` still resolves OTHER namespaces from the
 # published remote index. tests/examples/asio-ssl leans on that deliberately:
 # asio itself comes from the published index while its `ssl` feature dep,
 # compat.openssl, resolves from this checkout — which is what lets an
 # unmerged compat descriptor be tested through a feature that activates it.
-[indices]
-compat = { path = "." }
+
+# The index's OpenSSL dependents build on compat.openssl 3.5.9 (3.5 LTS).
+# yizhinailong.mcr's own manifest still pins 3.5.1 beside compat.curl (3.5.9),
+# and an override is read only from the root's tables, so the workspace
+# chooses 3.5.9 for every member graph that holds compat.openssl — what a
+# project depending on mcr writes in its own mcpp.toml.
+[workspace.dependencies]
+compat.openssl = { version = "3.5.9", override = true }

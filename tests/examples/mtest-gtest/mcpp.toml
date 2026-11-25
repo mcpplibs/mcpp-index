@@ -5,9 +5,6 @@
 name    = "mtest-gtest-tests"
 version = "0.1.0"
 
-[indices]
-# Use the complete candidate built-in index prepared by tests/run_members.sh.
-
 [dev-dependencies]
 compat.gtest         = "1.18.0"
 mcpplibs.mtest.gtest = "0.5.2"

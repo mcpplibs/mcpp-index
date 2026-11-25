@@ -11,3 +11,7 @@ version = "0.1.0"
 
 [dependencies.compat]
 c-ares = "1.34.5"
+
+# The candidate index: this checkout (compat.*), not the published one.
+[indices]
+compat = { path = "../../.." }

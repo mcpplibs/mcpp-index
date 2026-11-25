@@ -1,0 +1,9 @@
+[package]
+name = "tinygltf-nofs-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+tinygltf = { version = "3.1.0", default-features = false }
+
+[indices]
+compat = { path = "../../.." }

@@ -1,0 +1,11 @@
+[package]
+name = "acl-clip"
+version = "2.1.0"
+description = "Consume the immutable ACL wrapper: a five-joint chain compressed within its error twice to the same bytes and played back at five times; the compressed bytes and the poses pinned"
+
+[dependencies]
+mcpplibs.mwrap.acl = "2.1.0"
+
+# RTM's inline math compiled here too, as the library is built.
+[build]
+cxxflags = ["-ffp-contract=off"]

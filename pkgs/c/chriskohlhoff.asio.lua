@@ -344,7 +344,7 @@ using ::asio::ssl::error::make_error_code;
             },
             ["ssl"] = {
                 defines = { "MCPP_FEATURE_SSL" },
-                deps    = { ["compat.openssl"] = "3.5.1" },
+                deps    = { ["compat.openssl"] = "3.5.9" },
                 sources = { "*/src/asio_ssl.cpp" },
             },
         },

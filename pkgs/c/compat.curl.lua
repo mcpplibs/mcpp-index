@@ -331,13 +331,13 @@ package = {
 
         linux = {
             cflags  = { "-DHAVE_CONFIG_H", "-D_GNU_SOURCE" },
-            deps    = { ["compat.openssl"] = "3.5.1" },
+            deps    = { ["compat.openssl"] = "3.5.9" },
             ldflags = { "-lpthread" },
         },
 
         macosx = {
             cflags  = { "-DHAVE_CONFIG_H", "-D_GNU_SOURCE" },
-            deps    = { ["compat.openssl"] = "3.5.1" },
+            deps    = { ["compat.openssl"] = "3.5.9" },
             -- curl reaches into the system for proxy configuration on Apple:
             -- SystemConfiguration for SCDynamicStoreCopyProxies, and
             -- CoreFoundation for the CF objects that hands back.
