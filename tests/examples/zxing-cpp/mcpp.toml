@@ -1,0 +1,9 @@
+[package]
+name = "zxing-cpp-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+zxing-cpp = "3.1.1"
+
+[indices]
+compat = { path = "../../.." }

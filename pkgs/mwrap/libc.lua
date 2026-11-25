@@ -3,6 +3,10 @@
 --
 -- The wrapper is Apache-2.0 and links nothing: the implementation is the
 -- target's C library. The version names the standard, ISO/IEC 9899:2018 (C17).
+--
+-- 17.0.0.1 is a wrapper revision: its templates write the dependency selector
+-- unquoted (`mcpplibs.mwrap.libc = ...`); the quoted form is deprecated
+-- since mcpp 2026.11.8.1 and removed in 2027.2.
 package = {
     spec = "1",
     namespace = "mcpplibs.mwrap",
@@ -19,6 +23,13 @@ package = {
     },
     xpm = {
         linux = {
+            ["17.0.0.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/libc-m/releases/download/mwrap-17.0.0.1/libc-m-17.0.0.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mwrap-libc/releases/download/17.0.0.1/libc-m-17.0.0.1.tar.gz",
+                },
+                sha256 = "b1837a18a9c78e6c0e252b7bfdf036093ccb849e9c2232b2f439c299ee12d61f",
+            },
             ["17.0.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/libc-m/releases/download/mwrap-17.0.0/libc-m-17.0.0.tar.gz",
@@ -28,6 +39,13 @@ package = {
             },
         },
         macosx = {
+            ["17.0.0.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/libc-m/releases/download/mwrap-17.0.0.1/libc-m-17.0.0.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mwrap-libc/releases/download/17.0.0.1/libc-m-17.0.0.1.tar.gz",
+                },
+                sha256 = "b1837a18a9c78e6c0e252b7bfdf036093ccb849e9c2232b2f439c299ee12d61f",
+            },
             ["17.0.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/libc-m/releases/download/mwrap-17.0.0/libc-m-17.0.0.tar.gz",
@@ -37,6 +55,13 @@ package = {
             },
         },
         windows = {
+            ["17.0.0.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/libc-m/releases/download/mwrap-17.0.0.1/libc-m-17.0.0.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mwrap-libc/releases/download/17.0.0.1/libc-m-17.0.0.1.tar.gz",
+                },
+                sha256 = "b1837a18a9c78e6c0e252b7bfdf036093ccb849e9c2232b2f439c299ee12d61f",
+            },
             ["17.0.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/libc-m/releases/download/mwrap-17.0.0/libc-m-17.0.0.tar.gz",

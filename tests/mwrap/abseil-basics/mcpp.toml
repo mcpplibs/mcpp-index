@@ -1,0 +1,7 @@
+[package]
+name = "abseil-basics"
+version = "20250512.1"
+description = "Consume the immutable Abseil wrapper: strings, a hash map, StatusOr with its error path, civil time in UTC, a mutex shared by threads, the mapped release constant"
+
+[dependencies]
+mcpplibs.mwrap.abseil = "20250512.1"

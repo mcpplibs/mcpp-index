@@ -1,0 +1,21 @@
+[package]
+name = "slint-ui"
+version = "1.19.0.3"
+description = "Consume the immutable Slint wrapper: the runtime types and the interpreter through the modules, a .slint file compiled by mcpplibs.mplugin.slint into the module app.ui, a component driven headless, the features as constants"
+
+[language]
+standard   = "c++23"
+modules    = true
+import_std = false
+
+[dependencies]
+# The wrapper re-exports the build rule (module mcpplibs.mplugin.slint) and the
+# SDK: this is the whole dependency list.
+mcpplibs.mwrap.slint = "1.19.0.3"
+
+[build]
+sources = ["src/*.cpp"]
+
+[targets.slint-ui]
+kind = "bin"
+main = "src/main.cpp"

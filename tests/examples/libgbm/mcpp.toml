@@ -37,3 +37,7 @@ version = "0.1.0"
 
 [target.'cfg(linux)'.dependencies.compat]
 libgbm = "25.0.7"
+
+# The candidate index: this checkout (compat.*), not the published one.
+[indices]
+compat = { path = "../../.." }

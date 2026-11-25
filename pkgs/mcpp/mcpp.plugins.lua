@@ -2,11 +2,57 @@
 -- each member selected by a feature.
 --
 --   [dependencies.mcpp]
---   plugins = { version = "0.21.0", features = ["rules-spirv"], host-module = true }
+--   plugins = { version = "0.27.0", features = ["rules-spirv"], host-module = true }
 --
 --   // build.mcpp
 --   import mcpp;
 --   import mcpp.rules.spirv;
+--
+-- 0.27.0 (package floor mcpp 2026.10.30.1): rules-qml, QML applications on
+-- rules-qt: each module's moc, qmltyperegistrar, qmlcachegen, rcc and qsb as
+-- actions, the Qt QML modules the program imports placed beside it, and a
+-- qt.conf. rules-qt adds moc_json, moc_includes, i18n.extensions and
+-- compile_ex, off by default. A pack that carries the QML plugins' libraries
+-- needs mcpp 2026.11.23.1 (mcpp#1011).
+--
+-- 0.26.1 (package floor mcpp 2026.10.30.1): the members reach the system
+-- through mcpplibs.os 0.4.5, which accepts openkal 0.24 to 0.26, so a graph
+-- whose openkal is 0.26 (openkal-platform 0.31) holds the plugins.
+--
+-- 0.26.0 (package floor mcpp 2026.10.30.1): a step program's glob takes
+-- exclusion patterns, in which `*` crosses a `/`; dist-apk empties its class
+-- directories before javac and kotlinc, so a source that left the package
+-- no longer leaves its class in the next one.
+--
+-- 0.25.0 (package floor mcpp 2026.10.30.1): tools-steps. A step of more than
+-- one command is a program of portable operations a member describes and a
+-- backend runs (cmake -P until mcpp runs step programs itself, mcpp#955);
+-- dist-apk and dist-apple use it, and no action is a shell script.
+--
+-- 0.24.0 (package floor mcpp 2026.10.30.1): dist-apk packs on Windows and
+-- macOS hosts as on Linux. d8, apksigner, bundletool, the Kotlin compiler and
+-- coursier run from their jars on the JDK's java, and the pipeline's /bin/sh
+-- helpers are one Java source file that java runs, so no step needs a shell.
+--
+-- 0.23.1 (package floor mcpp 2026.10.30.1): dist-apk takes a Java or
+-- Kotlin root a build program generated inside its output directory as an
+-- input of the javac action, and declares no re-run glob there, which never
+-- matched and warned on every build.
+--
+-- 0.23.0 (package floor mcpp 2026.10.30.1): dist-deb and dist-rpm --
+-- `mcpp pack --pkg-format deb|rpm` installs the staged tree under
+-- /opt/<name> with a launcher, a desktop entry and an icon, written by nfpm
+-- from `xim:nfpm` asked for only when a pack needs it, so no host needs
+-- dpkg-deb or rpmbuild; repacking an unchanged tree gives the same bytes.
+--
+-- 0.22.1 (package floor mcpp 2026.10.30.1): the members reach the system
+-- through mcpplibs.os 0.4.4, so a graph whose openkal is 0.25 (openkal-platform
+-- 0.29) holds the plugins; 0.4.0 pinned openkal 0.24.0.
+--
+-- 0.22.0 (package floor mcpp 2026.10.30.1): dist-web's page is the format's
+-- one distributable and a long-lived runner named `web` serves it (emrun); a
+-- declined request is a warning; with mcpp 2026.11.16.1 dist-web states the
+-- program it wraps (`mcpp::pack_program`, protocol 19).
 --
 -- 0.21.0 (package floor mcpp 2026.10.30.1): a CMake cross build consumes the
 -- engine's compiler, flags, archiver and target contract when the action
@@ -666,6 +712,69 @@ package = {
 
     xpm = {
         linux = {
+            ["0.27.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.27.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.27.0/mcpp-plugins-0.27.0.tar.gz",
+                },
+                sha256 = "eee3cd233e7aa455ab1324552b2c3a304e68e4b307f118e3a3448b539fdf3131",
+            },
+            ["0.26.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.26.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.26.1/mcpp-plugins-0.26.1.tar.gz",
+                },
+                sha256 = "bb7a7db80a36adb6ab544852ab7c062c5bbb08156dcbb231ce7084b79861902b",
+            },
+            ["0.26.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.26.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.26.0/mcpp-plugins-0.26.0.tar.gz",
+                },
+                sha256 = "d59836507bbb31ef8ded10a245aa39a201e4e955119cfe87b158b00bb459c143",
+            },
+            ["0.25.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.25.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.25.0/mcpp-plugins-0.25.0.tar.gz",
+                },
+                sha256 = "808f653cf0bcd80cef65b71d56f36ef1ee122ad8aa2335edc75f048ab0773474",
+            },
+            ["0.24.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.24.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.24.0/mcpp-plugins-0.24.0.tar.gz",
+                },
+                sha256 = "9f152c3a7e6a0b19d1b2c73c8271e90577c3387eba239acef28e24c47490a4c9",
+            },
+            ["0.23.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.23.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.23.1/mcpp-plugins-0.23.1.tar.gz",
+                },
+                sha256 = "3f8e0e9838ed3ad4fb5edb8ccbe3abfbfa42b236f409be2f64bf7f66f8006e50",
+            },
+            ["0.23.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.23.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.23.0/mcpp-plugins-0.23.0.tar.gz",
+                },
+                sha256 = "1a5ba80d6ef3dc279385e119ba5ab4659ef65c28b8cbbe3ecc77b1697f08a8ec",
+            },
+            ["0.22.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.22.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.22.1/mcpp-plugins-0.22.1.tar.gz",
+                },
+                sha256 = "ac43e6eb4fb2135bd91b3f8dcd08ceb3c77c24ed116811cd5adbe443458a8650",
+            },
+            ["0.22.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.22.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.22.0/mcpp-plugins-0.22.0.tar.gz",
+                },
+                sha256 = "8be3110297733869081d85fc5d0da54b30a3fbc01daf3a6e4c2dcca658c424b0",
+            },
             ["0.21.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.21.0.tar.gz",
@@ -953,9 +1062,72 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.21.0" },
+            ["latest"] = { ref = "0.27.0" },
         },
         macosx = {
+            ["0.27.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.27.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.27.0/mcpp-plugins-0.27.0.tar.gz",
+                },
+                sha256 = "eee3cd233e7aa455ab1324552b2c3a304e68e4b307f118e3a3448b539fdf3131",
+            },
+            ["0.26.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.26.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.26.1/mcpp-plugins-0.26.1.tar.gz",
+                },
+                sha256 = "bb7a7db80a36adb6ab544852ab7c062c5bbb08156dcbb231ce7084b79861902b",
+            },
+            ["0.26.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.26.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.26.0/mcpp-plugins-0.26.0.tar.gz",
+                },
+                sha256 = "d59836507bbb31ef8ded10a245aa39a201e4e955119cfe87b158b00bb459c143",
+            },
+            ["0.25.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.25.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.25.0/mcpp-plugins-0.25.0.tar.gz",
+                },
+                sha256 = "808f653cf0bcd80cef65b71d56f36ef1ee122ad8aa2335edc75f048ab0773474",
+            },
+            ["0.24.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.24.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.24.0/mcpp-plugins-0.24.0.tar.gz",
+                },
+                sha256 = "9f152c3a7e6a0b19d1b2c73c8271e90577c3387eba239acef28e24c47490a4c9",
+            },
+            ["0.23.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.23.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.23.1/mcpp-plugins-0.23.1.tar.gz",
+                },
+                sha256 = "3f8e0e9838ed3ad4fb5edb8ccbe3abfbfa42b236f409be2f64bf7f66f8006e50",
+            },
+            ["0.23.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.23.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.23.0/mcpp-plugins-0.23.0.tar.gz",
+                },
+                sha256 = "1a5ba80d6ef3dc279385e119ba5ab4659ef65c28b8cbbe3ecc77b1697f08a8ec",
+            },
+            ["0.22.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.22.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.22.1/mcpp-plugins-0.22.1.tar.gz",
+                },
+                sha256 = "ac43e6eb4fb2135bd91b3f8dcd08ceb3c77c24ed116811cd5adbe443458a8650",
+            },
+            ["0.22.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.22.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.22.0/mcpp-plugins-0.22.0.tar.gz",
+                },
+                sha256 = "8be3110297733869081d85fc5d0da54b30a3fbc01daf3a6e4c2dcca658c424b0",
+            },
             ["0.21.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.21.0.tar.gz",
@@ -1243,9 +1415,72 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.21.0" },
+            ["latest"] = { ref = "0.27.0" },
         },
         windows = {
+            ["0.27.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.27.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.27.0/mcpp-plugins-0.27.0.tar.gz",
+                },
+                sha256 = "eee3cd233e7aa455ab1324552b2c3a304e68e4b307f118e3a3448b539fdf3131",
+            },
+            ["0.26.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.26.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.26.1/mcpp-plugins-0.26.1.tar.gz",
+                },
+                sha256 = "bb7a7db80a36adb6ab544852ab7c062c5bbb08156dcbb231ce7084b79861902b",
+            },
+            ["0.26.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.26.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.26.0/mcpp-plugins-0.26.0.tar.gz",
+                },
+                sha256 = "d59836507bbb31ef8ded10a245aa39a201e4e955119cfe87b158b00bb459c143",
+            },
+            ["0.25.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.25.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.25.0/mcpp-plugins-0.25.0.tar.gz",
+                },
+                sha256 = "808f653cf0bcd80cef65b71d56f36ef1ee122ad8aa2335edc75f048ab0773474",
+            },
+            ["0.24.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.24.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.24.0/mcpp-plugins-0.24.0.tar.gz",
+                },
+                sha256 = "9f152c3a7e6a0b19d1b2c73c8271e90577c3387eba239acef28e24c47490a4c9",
+            },
+            ["0.23.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.23.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.23.1/mcpp-plugins-0.23.1.tar.gz",
+                },
+                sha256 = "3f8e0e9838ed3ad4fb5edb8ccbe3abfbfa42b236f409be2f64bf7f66f8006e50",
+            },
+            ["0.23.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.23.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.23.0/mcpp-plugins-0.23.0.tar.gz",
+                },
+                sha256 = "1a5ba80d6ef3dc279385e119ba5ab4659ef65c28b8cbbe3ecc77b1697f08a8ec",
+            },
+            ["0.22.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.22.1.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.22.1/mcpp-plugins-0.22.1.tar.gz",
+                },
+                sha256 = "ac43e6eb4fb2135bd91b3f8dcd08ceb3c77c24ed116811cd5adbe443458a8650",
+            },
+            ["0.22.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.22.0.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/mcpp-plugins/releases/download/0.22.0/mcpp-plugins-0.22.0.tar.gz",
+                },
+                sha256 = "8be3110297733869081d85fc5d0da54b30a3fbc01daf3a6e4c2dcca658c424b0",
+            },
             ["0.21.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mcpp-plugins/archive/refs/tags/v0.21.0.tar.gz",
@@ -1533,7 +1768,7 @@ package = {
                 },
                 sha256 = "adf1f9d6691a5d05a8a4a94e83c733ea39caee1510ce2c9af4cb23bebabea9f5",
             },
-            ["latest"] = { ref = "0.21.0" },
+            ["latest"] = { ref = "0.27.0" },
         },
     },
 

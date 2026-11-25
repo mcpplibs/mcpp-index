@@ -1,4 +1,4 @@
--- compat.openssl — OpenSSL 3.5.1 built from source as a portable, static
+-- compat.openssl — OpenSSL 3.5 LTS (3.5.9; 3.5.1 kept) built from source as a portable, static
 -- library that provides TLS/crypto for consumers (e.g. chriskohlhoff.asio's
 -- `ssl` feature, which wraps asio::ssl::context / asio::ssl::stream).
 --
@@ -76,6 +76,13 @@ package = {
                 "xim:make@latest", "xim:perl@latest",
                 "xim:glibc@>=2.39", "xim:linux-headers@5.11.1",
             },
+            ["3.5.9"] = {
+                url = {
+                    GLOBAL = "https://github.com/openssl/openssl/releases/download/openssl-3.5.9/openssl-3.5.9.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openssl/releases/download/3.5.9/openssl-3.5.9.tar.gz",
+                },
+                sha256 = "603f5602e2eef00d77fbd429d34dcd5822bb301757a1bc9cdb24c670f1eb859a",
+            },
             ["3.5.1"] = {
                 url = {
                     GLOBAL = "https://github.com/openssl/openssl/releases/download/openssl-3.5.1/openssl-3.5.1.tar.gz",
@@ -98,6 +105,13 @@ package = {
             -- it resolves here and the platform gets the same
             -- known-complete interpreter linux does.
             deps = { "xim:perl@latest" },
+            ["3.5.9"] = {
+                url = {
+                    GLOBAL = "https://github.com/openssl/openssl/releases/download/openssl-3.5.9/openssl-3.5.9.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openssl/releases/download/3.5.9/openssl-3.5.9.tar.gz",
+                },
+                sha256 = "603f5602e2eef00d77fbd429d34dcd5822bb301757a1bc9cdb24c670f1eb859a",
+            },
             ["3.5.1"] = {
                 url = {
                     GLOBAL = "https://github.com/openssl/openssl/releases/download/openssl-3.5.1/openssl-3.5.1.tar.gz",
@@ -109,6 +123,13 @@ package = {
         windows = {
             -- Same source tarball as the other platforms; the build differs
             -- (VC-WIN64A + nmake), not the source. See _install_windows().
+            ["3.5.9"] = {
+                url = {
+                    GLOBAL = "https://github.com/openssl/openssl/releases/download/openssl-3.5.9/openssl-3.5.9.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/openssl/releases/download/3.5.9/openssl-3.5.9.tar.gz",
+                },
+                sha256 = "603f5602e2eef00d77fbd429d34dcd5822bb301757a1bc9cdb24c670f1eb859a",
+            },
             ["3.5.1"] = {
                 url = {
                     GLOBAL = "https://github.com/openssl/openssl/releases/download/openssl-3.5.1/openssl-3.5.1.tar.gz",

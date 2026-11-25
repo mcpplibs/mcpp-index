@@ -4,3 +4,7 @@ version = "0.1.0"
 
 [dependencies.compat]
 httplib = { version = "0.62.0", features = ["no-exceptions"] }
+
+# The candidate index: this checkout (compat.*), not the published one.
+[indices]
+compat = { path = "../../.." }

@@ -4,8 +4,5 @@
 name    = "mtest-capi-tests"
 version = "0.1.0"
 
-[indices]
-# Use the complete candidate built-in index prepared by tests/run_members.sh.
-
 [dependencies]
-mcpplibs.mtest.capi = "0.1.0"
+mcpplibs.mtest.capi = "0.5.2"

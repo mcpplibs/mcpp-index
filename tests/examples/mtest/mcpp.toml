@@ -1,11 +1,9 @@
-# mcpplibs.mtest test project: cases, expectations, an expected failure and parameters through the
-# published index, reported by the library's own `report()`.
+# mcpplibs.mtest test project: objects that are cases, the cases they declare, attributes, an
+# expected failure and parameters through the published index, reported by the library's own
+# `report()`.
 [package]
 name    = "mtest-tests"
 version = "0.1.0"
 
-[indices]
-# Use the complete candidate built-in index prepared by tests/run_members.sh.
-
 [dev-dependencies]
-mcpplibs.mtest = "0.1.0"
+mcpplibs.mtest = "0.5.2"
