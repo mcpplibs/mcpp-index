@@ -1,0 +1,15 @@
+# djgpp-platform test project. The package serves one row, i586-dos-djgpp, which
+# no runner of this repository builds (DJGPP's GCC and DOSBox): the member names
+# the release for that row, and the row is built and run by the package's own CI
+# (mcpplibs/djgpp-platform: a go32 executable, a run's file, status 42). On a
+# runner the member's host build checks that a project naming the platform for
+# another row resolves, builds and tests unaffected.
+[package]
+name    = "djgpp-platform-tests"
+version = "0.1.0"
+
+[target.i586-dos-djgpp]
+platform = "djgpp-platform@0.2.0"
+
+[indices]
+mcpplibs = { path = "../../.." }

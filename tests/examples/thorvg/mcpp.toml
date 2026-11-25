@@ -1,0 +1,9 @@
+[package]
+name    = "thorvg-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+thorvg = "1.1.3"
+
+[indices]
+compat = { path = "../../.." }

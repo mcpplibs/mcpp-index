@@ -79,7 +79,7 @@ package = {
         features = {
             ["tls"] = {
                 defines = { "CPPHTTPLIB_OPENSSL_SUPPORT" },
-                deps    = { ["compat.openssl"] = "3.5.1" },
+                deps    = { ["compat.openssl"] = "3.5.9" },
             },
             ["zlib"] = {
                 defines = { "CPPHTTPLIB_ZLIB_SUPPORT" },

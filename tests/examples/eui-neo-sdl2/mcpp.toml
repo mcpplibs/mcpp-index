@@ -7,4 +7,8 @@ version = "0.1.0"
 # into a real libcurl-backed implementation. The render backend stays OpenGL,
 # unnamed — naming a feature no longer costs you the defaults.
 [dependencies.compat]
-eui-neo = { version = "0.6.2", features = ["sdl2", "network"] }
+eui-neo = { version = "0.6.3", features = ["sdl2", "network"] }
+
+# The candidate index: this checkout (compat.*), not the published one.
+[indices]
+compat = { path = "../../.." }

@@ -37,6 +37,15 @@
 --
 -- All `mcpp` paths are GLOBS relative to the verdir; the leading `*/` absorbs
 -- the tarball's `SDL-release-2.32.10/` wrap layer.
+--
+-- ONE HEADER LINE IS BACKPORTED in install(). Under an MSVC-ABI clang,
+-- `SDL_endian.h` defines `_m_prefetch` as a stand-in for clang's
+-- `prfchwintrin.h`; clang 23 makes `_m_prefetch` a builtin, and every consumer
+-- TU that includes SDL.h stops at "definition of builtin function
+-- '_m_prefetch'" (measured on windows-x86_64 with llvm@23.1.3). Upstream's SDL2
+-- branch guards the definition with `!_SDL_HAS_BUILTIN(_m_prefetch)` (commits
+-- 9343246616 and 07c3b3fb7c), which no 2.32.x release carries yet. A shim cannot
+-- reach it: SDL.h includes SDL_endian.h by a quoted include, found beside it.
 package = {
     spec        = "1",
     namespace   = "compat",
@@ -54,6 +63,8 @@ package = {
                     CN     = "https://gitcode.com/mcpp-res/sdl2/releases/download/2.32.10-nosymlinks/sdl2-2.32.10-nosymlinks.tar.gz",
                 },
                 sha256 = "8823b81a7ecec5c1785dfd3c1fdb6260899d4eaa07574365dd4b8da9e2830385",
+                -- 1: SDL_endian.h defines `_m_prefetch` only where the compiler has no builtin of it (install()).
+                revision = 1,
             },
         },
         macosx = {
@@ -63,6 +74,8 @@ package = {
                     CN     = "https://gitcode.com/mcpp-res/sdl2/releases/download/2.32.10-nosymlinks/sdl2-2.32.10-nosymlinks.tar.gz",
                 },
                 sha256 = "8823b81a7ecec5c1785dfd3c1fdb6260899d4eaa07574365dd4b8da9e2830385",
+                -- 1: SDL_endian.h defines `_m_prefetch` only where the compiler has no builtin of it (install()).
+                revision = 1,
             },
         },
         windows = {
@@ -72,6 +85,8 @@ package = {
                     CN     = "https://gitcode.com/mcpp-res/sdl2/releases/download/2.32.10-nosymlinks/sdl2-2.32.10-nosymlinks.tar.gz",
                 },
                 sha256 = "8823b81a7ecec5c1785dfd3c1fdb6260899d4eaa07574365dd4b8da9e2830385",
+                -- 1: SDL_endian.h defines `_m_prefetch` only where the compiler has no builtin of it (install()).
+                revision = 1,
             },
         },
     },
@@ -921,3 +936,38 @@ typedef unsigned int uintptr_t;
         },
     },
 }
+
+import("xim.libxpkg.pkginfo")
+import("xim.libxpkg.log")
+
+-- The upstream SDL2-branch guard of `_m_prefetch` (see the header notes), then
+-- the unpacked tree moved into the install dir as its single wrap level so the
+-- `*/` globs keep matching (compat.libserial does the same).
+function install()
+    local wrap = "SDL-release-" .. pkginfo.version()
+    local source = path.join(wrap, "include", "SDL_endian.h")
+    local content = io.readfile(source)
+    if not content then
+        log.error("compat.sdl2: cannot read %s", source)
+        return false
+    end
+    local before = "/* As of Clang 11, '_m_prefetchw' is conflicting with the winnt.h's version,\n"
+                .. "   so we define the needed '_m_prefetch' here as a pseudo-header, until the issue is fixed. */\n"
+                .. "#ifdef __clang__\n"
+    local after = "/* As of Clang 11, '_m_prefetchw' is conflicting with the winnt.h's version,\n"
+               .. "   so we define the needed '_m_prefetch' here as a pseudo-header, until the issue is fixed. */\n"
+               .. "#if defined(__clang__) && !_SDL_HAS_BUILTIN(_m_prefetch)\n"
+    local pattern = before:gsub("(%W)", "%%%1")
+    local patched, count = content:gsub(pattern, function() return after end)
+    if count ~= 1 then
+        log.error("compat.sdl2: expected 1 match of the _m_prefetch guard in %s, found %d", source, count)
+        return false
+    end
+    io.writefile(source, patched)
+
+    local prefix = pkginfo.install_dir()
+    os.tryrm(prefix)
+    os.mkdir(prefix)
+    os.mv(wrap, path.join(prefix, wrap))
+    return true
+end

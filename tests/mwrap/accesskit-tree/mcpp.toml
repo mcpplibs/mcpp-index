@@ -1,0 +1,7 @@
+[package]
+name = "accesskit-tree"
+version = "0.23.1"
+description = "Consume the immutable accesskit wrapper: build a tree update through the module and read it back"
+
+[dependencies]
+mcpplibs.mwrap.accesskit = "0.23.1"

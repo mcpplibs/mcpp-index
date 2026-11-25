@@ -25,18 +25,30 @@ package = {
 
     xpm = {
         linux = {
+            ["0.4.1"] = {
+                url    = "https://github.com/openlifa/openmui/archive/refs/tags/0.4.1.tar.gz",
+                sha256 = "f24f615626fe29bf3ef429c3c886bc1431ff5ab7eb7b5e9528875fb21479c6b3",
+            },
             ["0.3.0"] = {
                 url    = "https://github.com/openlifa/openmui/archive/refs/tags/0.3.0.tar.gz",
                 sha256 = "6986ca5d04e170fc8f8be279c30ffffd248b0e62df2f52e64d570f351d122588",
             },
         },
         macosx = {
+            ["0.4.1"] = {
+                url    = "https://github.com/openlifa/openmui/archive/refs/tags/0.4.1.tar.gz",
+                sha256 = "f24f615626fe29bf3ef429c3c886bc1431ff5ab7eb7b5e9528875fb21479c6b3",
+            },
             ["0.3.0"] = {
                 url    = "https://github.com/openlifa/openmui/archive/refs/tags/0.3.0.tar.gz",
                 sha256 = "6986ca5d04e170fc8f8be279c30ffffd248b0e62df2f52e64d570f351d122588",
             },
         },
         windows = {
+            ["0.4.1"] = {
+                url    = "https://github.com/openlifa/openmui/archive/refs/tags/0.4.1.tar.gz",
+                sha256 = "f24f615626fe29bf3ef429c3c886bc1431ff5ab7eb7b5e9528875fb21479c6b3",
+            },
             ["0.3.0"] = {
                 url    = "https://github.com/openlifa/openmui/archive/refs/tags/0.3.0.tar.gz",
                 sha256 = "6986ca5d04e170fc8f8be279c30ffffd248b0e62df2f52e64d570f351d122588",

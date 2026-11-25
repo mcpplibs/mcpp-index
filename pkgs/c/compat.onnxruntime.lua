@@ -34,6 +34,10 @@ package = {
         language = "c++23",
         import_std = false,
         include_dirs = { "*/include" },
+        -- The SDK's license and third-party notices, staged into every package
+        -- that carries this library (share/licenses/<package>/, mcpp
+        -- 2026.11.17.1); an earlier mcpp reports the key and stages none.
+        license_files = { "onnxruntime-*/{LICENSE,ThirdPartyNotices.txt}" },
         sources = { "mcpp_generated/sdk.cpp" },
         generated_files = { ["mcpp_generated/sdk.cpp"] = [=[
 #include <onnxruntime_c_api.h>
@@ -53,34 +57,22 @@ static_assert(ORT_API_VERSION == 25, "ONNX Runtime SDK headers must match 1.25.1
 #endif
 ]=] },
         linux = { runtime = {
-            deploy = {
-                { from = "onnxruntime-linux-x64-1.25.1/LICENSE", to = "licenses/onnxruntime" },
-                { from = "onnxruntime-linux-x64-1.25.1/ThirdPartyNotices.txt", to = "licenses/onnxruntime" },
-            },
             libraries = { "onnxruntime", "stdc++" },
             link_library_dirs = { "onnxruntime-linux-x64-1.25.1/lib" },
-            library_dirs = { "onnxruntime-linux-x64-1.25.1/lib" },
+            runtime_search_dirs = { "onnxruntime-linux-x64-1.25.1/lib" },
         } },
         -- The SDK install name is @rpath/libonnxruntime.1.25.1.dylib.
         -- Consumers must also search beside their executable so pack can
         -- place the dylib there and the relocated program can load it.
         macosx = { ldflags = { "-Wl,-rpath,@loader_path" }, runtime = {
-            deploy = {
-                { from = "onnxruntime-osx-arm64-1.25.1/LICENSE", to = "licenses/onnxruntime" },
-                { from = "onnxruntime-osx-arm64-1.25.1/ThirdPartyNotices.txt", to = "licenses/onnxruntime" },
-            },
             libraries = { "onnxruntime" },
             link_library_dirs = { "onnxruntime-osx-arm64-1.25.1/lib" },
-            library_dirs = { "onnxruntime-osx-arm64-1.25.1/lib" },
+            runtime_search_dirs = { "onnxruntime-osx-arm64-1.25.1/lib" },
         } },
         windows = { runtime = {
-            deploy = {
-                { from = "onnxruntime-win-x64-1.25.1/LICENSE", to = "licenses/onnxruntime" },
-                { from = "onnxruntime-win-x64-1.25.1/ThirdPartyNotices.txt", to = "licenses/onnxruntime" },
-            },
             libraries = { "onnxruntime" },
             link_library_dirs = { "onnxruntime-win-x64-1.25.1/lib" },
-            library_dirs = { "onnxruntime-win-x64-1.25.1/lib" },
+            runtime_search_dirs = { "onnxruntime-win-x64-1.25.1/lib" },
         } },
     },
 }

@@ -1,0 +1,24 @@
+import { Button, VerticalBox } from "std-widgets.slint";
+import { Palette } from "palette.slint";
+
+export enum Mode { light, dark }
+export struct Point { x: int, y: int }
+export global Settings { in-out property <string> title: "hello"; }
+
+// Not a window: slint-compiler generates nothing for it, and the module does not export it.
+export component Badge inherits Rectangle { in property <string> label; }
+
+component Base inherits Window { in-out property <Mode> mode: Mode.light; }
+
+export component AppWindow inherits Base {
+    in-out property <int> counter: 42;
+    in-out property <Point> origin;
+    callback request-increase-value();
+    background: Palette.background;
+    VerticalBox {
+        Text { text: "Counter: \{root.counter}"; }
+        Button { text: "Increase value"; clicked => { root.request-increase-value(); } }
+    }
+}
+
+export { Palette as Colors }

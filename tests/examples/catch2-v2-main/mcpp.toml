@@ -11,3 +11,7 @@ version = "0.1.0"
 
 [dependencies.compat]
 catch2 = { version = "2.13.10", features = ["main"] }
+
+# The candidate index: this checkout (compat.*), not the published one.
+[indices]
+compat = { path = "../../.." }
