@@ -157,6 +157,32 @@ sha256="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
         self.assertIn('mcpplibs.mtest.gtest = "0.6.1"', replaced)
         self.assertIn('compat.gtest = "1.18.0"', replaced)
 
+    def test_dev_dependency_is_proven_by_the_build_log(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            consumer = root / "consumer"
+            consumer.mkdir()
+            (consumer / "mcpp.toml").write_text(
+                '[package]\nname="t"\nversion="0.1.0"\n[dev-dependencies]\ncompat.gtest="1.18.0"\nmcpplibs.mtest.gtest="0.6.1"\n',
+                encoding="utf-8")
+            plan = root / "plan.json"
+            plan.write_text(json.dumps({"packages": [{"id": "mcpplibs.mtest:gtest", "candidate": "0.6.1"}]}))
+            log = consumer / "candidate.log"
+            # No lockfile at all, as `mcpp test` leaves a project of dev-dependencies only.
+            log.write_text("   Compiling compat.gtest v1.18.0\n   Compiling mcpplibs.mtest.gtest v0.6.1\n", encoding="utf-8")
+            ci.verify(plan, "mcpplibs.mtest:gtest", consumer)
+            log.write_text("   Compiling mcpplibs.mtest.gtest v0.5.2\n", encoding="utf-8")
+            with self.assertRaisesRegex(RuntimeError, "does not prove"):
+                ci.verify(plan, "mcpplibs.mtest:gtest", consumer)
+            log.write_text("   Compiling compat.gtest v1.18.0\n", encoding="utf-8")
+            with self.assertRaisesRegex(RuntimeError, "does not prove"):
+                ci.verify(plan, "mcpplibs.mtest:gtest", consumer)
+            # A regular dependency still needs its lock row.
+            (consumer / "mcpp.toml").write_text(
+                '[package]\nname="t"\nversion="0.1.0"\n[dependencies]\nmcpplibs.mtest.gtest="0.6.1"\n', encoding="utf-8")
+            with self.assertRaises(OSError):
+                ci.verify(plan, "mcpplibs.mtest:gtest", consumer)
+
     def test_candidate_discovers_target_and_build_dependencies(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
