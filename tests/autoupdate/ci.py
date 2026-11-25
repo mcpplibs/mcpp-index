@@ -420,15 +420,35 @@ def prepare(plan: Path, identity: str, output: Path, home: Path | None = None):
     print(f"Prepared {identity}@{version} in {output}")
 
 
+def only_dev_dependency(manifest: dict, namespace: str, name: str) -> bool:
+    """Whether a manifest names the package under `[dev-dependencies]` and nowhere else."""
+    def named(keys):
+        return any(names_dependency(manifest.get(key, {}), namespace, name) for key in keys)
+    return named(("dev-dependencies",)) and not named(("dependencies", "build-dependencies"))
+
+
 def verify(plan: Path, identity: str, consumer: Path):
     record = next(r for r in json.loads(plan.read_text(encoding="utf-8"))["packages"] if r["id"] == identity)
     namespace, name = identity.split(":", 1)
+    candidate = record["candidate"]
+    manifest = tomllib.loads((consumer / "mcpp.toml").read_text(encoding="utf-8"))
+    if only_dev_dependency(manifest, namespace, name):
+        # mcpp locks a project's [dependencies]; a test-only dependency has no lock row, and `mcpp test`
+        # of a project that has nothing else writes no mcpp.lock at all. The build log is then the
+        # evidence: the version it compiled is the candidate, and no other version of the package was.
+        log = (consumer / "candidate.log").read_text(encoding="utf-8", errors="replace")
+        spelled = re.escape(f"{namespace}.{name}")
+        built = set(re.findall(rf"(?m)^\s*Compiling {spelled} v(\S+)", log))
+        if built != {candidate}:
+            raise RuntimeError(f"the build log does not prove {identity}@{candidate} (dev-dependency): compiled {sorted(built)}")
+        print(f"PROVEN: build compiled {identity}@{candidate} (a dev-dependency has no lockfile row)")
+        return
     lock = tomllib.loads((consumer / "mcpp.lock").read_text(encoding="utf-8"))
     matches = [value for key, value in lock.get("package", {}).items()
                if value.get("namespace") == namespace and key in (name, identity, f"{namespace}.{name}")]
-    if not matches or any(v["version"] != record["candidate"] for v in matches):
-        raise RuntimeError(f"lockfile does not prove {identity}@{record['candidate']}: {matches}")
-    print(f"PROVEN: build resolved {identity}@{record['candidate']}")
+    if not matches or any(v["version"] != candidate for v in matches):
+        raise RuntimeError(f"lockfile does not prove {identity}@{candidate}: {matches}")
+    print(f"PROVEN: build resolved {identity}@{candidate}")
 
 
 def diagnostics(consumer: Path, output: Path):
