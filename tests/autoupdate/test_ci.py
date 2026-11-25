@@ -136,6 +136,27 @@ sha256="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
         self.assertTrue(ci.names_dependency(deps, "mcpplibs.mtest", "capi"))
         self.assertFalse(ci.names_dependency(deps, "mcpplibs", "mtest"))
 
+    def test_candidate_discovers_dev_dependencies(self):
+        # mtest-gtest states the adapter under [dev-dependencies] beside compat.gtest.
+        manifest = (
+            '[package]\nname="mtest-gtest-tests"\nversion="0.1.0"\n'
+            '[dev-dependencies]\ncompat.gtest = "1.18.0"\nmcpplibs.mtest.gtest = "0.5.2"\n'
+            '[test]\nmain = { from = "mcpplibs.mtest.gtest/main" }\n')
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            member = root / "tests/examples/mtest-gtest"
+            member.mkdir(parents=True)
+            (member / "mcpp.toml").write_text(manifest, encoding="utf-8")
+            with patch.object(ci, "ROOT", root):
+                self.assertEqual(ci.direct_member("mcpplibs.mtest:gtest"), "mtest-gtest")
+                self.assertEqual(ci.direct_member("compat:gtest"), "mtest-gtest")
+                self.assertEqual(ci.member_platforms("mtest-gtest", "mcpplibs.mtest:gtest"),
+                                 {"linux", "macosx", "windows"})
+        # The candidate replaces its own pin and leaves the sibling dev-dependency alone.
+        replaced = ci.replace_candidate(manifest, "mcpplibs.mtest:gtest", "0.6.1")
+        self.assertIn('mcpplibs.mtest.gtest = "0.6.1"', replaced)
+        self.assertIn('compat.gtest = "1.18.0"', replaced)
+
     def test_candidate_discovers_target_and_build_dependencies(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

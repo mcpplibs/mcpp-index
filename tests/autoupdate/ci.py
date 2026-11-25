@@ -152,6 +152,12 @@ def platform_conditions(manifest: dict, namespace: str, name: str):
         yield None
 
 
+# The tables of a manifest that name the packages it consumes. A test-only
+# dependency (`[dev-dependencies]`, as the mtest adapters' projects state theirs) is
+# a consumer as much as the others: without it a candidate has no job.
+DEPENDENCY_TABLES = ("dependencies", "build-dependencies", "dev-dependencies")
+
+
 def direct_member(identity: str) -> str | None:
     namespace, name = identity.split(":", 1)
     candidates = []
@@ -159,7 +165,7 @@ def direct_member(identity: str) -> str | None:
         for key, value in table.items():
             if not isinstance(value, dict):
                 continue
-            if key in {"dependencies", "build-dependencies"}:
+            if key in DEPENDENCY_TABLES:
                 yield value
             else:
                 yield from dependency_tables(value)
@@ -229,11 +235,11 @@ def member_platforms(member: str, identity: str) -> set[str]:
     manifest = tomllib.loads(member_manifest(member).read_text(encoding="utf-8"))
     platforms: set[str] = set()
     if any(names_dependency(manifest.get(key, {}), namespace, name)
-           for key in ("dependencies", "build-dependencies")):
+           for key in DEPENDENCY_TABLES):
         platforms |= set(_CFG_PLATFORMS.values())
     for condition, table in manifest.get("target", {}).items():
         if not any(names_dependency(table.get(key, {}), namespace, name)
-                   for key in ("dependencies", "build-dependencies")):
+                   for key in DEPENDENCY_TABLES):
             continue
         platforms |= condition_platforms(condition)
     # A platform the member selects (mcpp SPEC-013): under `[host]` on every
