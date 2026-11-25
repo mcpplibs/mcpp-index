@@ -88,7 +88,7 @@ okld = { name = "openkal-tools", version = "0.1.3" }
         ids = {("mcpplibs", "os"), ("compat", "openssl"), ("mcpplibs.mwrap", "ffmpeg"), ("compat", "os")}
         self.assertEqual(s.resolve("os", ids), {("mcpplibs", "os")})
         self.assertEqual(s.resolve("compat.openssl", ids), {("compat", "openssl")})
-        self.assertEqual(s.resolve("compat:openssl@3.5.1", ids), {("compat", "openssl")})
+        self.assertEqual(s.resolve("compat:openssl@3.5.9", ids), {("compat", "openssl")})
         self.assertEqual(s.resolve("mcpplibs.mwrap.ffmpeg", ids), {("mcpplibs.mwrap", "ffmpeg")})
         self.assertEqual(s.resolve("xim:gcc@16.1.0", ids), set())
         self.assertEqual(s.resolve("macos", ids), set())

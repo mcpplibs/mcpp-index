@@ -7,4 +7,8 @@ version = "0.1.0"
 # what switches components/markdown.h from its fallback to the real parser.
 
 [dependencies.compat]
-eui-neo = { version = "0.6.2", features = ["markdown"] }
+eui-neo = { version = "0.6.3", features = ["markdown"] }
+
+# The candidate index: this checkout (compat.*), not the published one.
+[indices]
+compat = { path = "../../.." }

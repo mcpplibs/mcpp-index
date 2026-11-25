@@ -12,3 +12,7 @@ usockets = "0.8.8"
 # SAME pair the library was — an index descriptor's cflags reach only the
 # package's own TUs. Getting this wrong does not fail to build; it corrupts.
 defines = ["LIBUS_USE_LIBUV", "LIBUS_NO_SSL"]
+
+# The candidate index: this checkout (compat.*), not the published one.
+[indices]
+compat = { path = "../../.." }

@@ -8,8 +8,8 @@ name    = "openkal-posix-tests"
 version = "0.1.0"
 
 [target.'cfg(any(os = "linux", os = "macos"))'.dependencies.mcpplibs]
-openkal       = "0.25.0"
-openkal-posix = "0.1.0"
+openkal       = "0.26.0"
+openkal-posix = "0.2.0"
 
 # This member names mcpplibs packages, which the workspace root's single
 # redirect does not carry, so it states its own.

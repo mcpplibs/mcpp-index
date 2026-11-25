@@ -9,3 +9,7 @@ standard = "c++23"
 
 [target.'cfg(linux)'.dependencies.compat]
 pixman = "0.46.4"
+
+# The candidate index: this checkout (compat.*), not the published one.
+[indices]
+compat = { path = "../../.." }

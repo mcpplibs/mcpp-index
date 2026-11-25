@@ -11,7 +11,7 @@
 -- OpenSSL is an UNCONDITIONAL compile-time dependency: jwt.h includes
 -- <openssl/*.h> outside any feature guard (including ssl.h, even though only
 -- libcrypto APIs are called — upstream's CMake target links OpenSSL::SSL +
--- OpenSSL::Crypto both). compat.openssl 3.5.1 provides headers AND carries the
+-- OpenSSL::Crypto both). compat.openssl 3.5.9 provides headers AND carries the
 -- per-platform link flags itself; they propagate to consumers, so this
 -- descriptor adds no ldflags of its own. Windows support in compat.openssl is
 -- evidenced by merged #211 + the asio-ssl member's real-TLS test.
@@ -78,6 +78,6 @@ int mcpp_compat_jwt_cpp_anchor(void) { return 0; }
         },
         sources      = { "mcpp_generated/jwt_cpp_anchor.cpp" },
         targets      = { ["jwt_cpp"] = { kind = "lib" } },
-        deps         = { ["compat.openssl"] = "3.5.1" },
+        deps         = { ["compat.openssl"] = "3.5.9" },
     },
 }

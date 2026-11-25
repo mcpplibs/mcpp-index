@@ -1,0 +1,16 @@
+[package]
+name = "slint-rule"
+version = "1.19.0"
+description = "Resolve the indexed build plugin mcpplibs.mplugin.slint (pkgs/mcpp/) and run it from build.mcpp on one .slint file"
+
+[language]
+standard   = "c++23"
+modules    = true
+import_std = false
+
+[dependencies]
+# The SDK the rule drives: slint-compiler comes with it.
+compat.slint = "1.19.0"
+
+[build-dependencies]
+mcpplibs.mplugin.slint = { version = "1.19.0", host-module = true }

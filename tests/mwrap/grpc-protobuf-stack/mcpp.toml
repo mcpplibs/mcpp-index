@@ -1,0 +1,14 @@
+[package]
+name = "grpc-protobuf-stack"
+version = "1.83.0.1"
+description = "Consume the gRPC, Protocol Buffers, Abseil and OpenSSL wrappers in one program: one Abseil, one protobuf, one OpenSSL"
+
+# gRPC is linux/macOS (its wrapper does not claim Windows), so the stack is too.
+[target.'cfg(unix)'.dependencies]
+mcpplibs.mwrap.grpc     = "1.83.0.1"
+mcpplibs.mwrap.protobuf = "35.1"
+mcpplibs.mwrap.abseil   = "20250512.1"
+mcpplibs.mwrap.openssl  = "3.5.9"
+
+[target.'cfg(unix)'.build]
+defines = ["MCPP_TEST_STACK"]

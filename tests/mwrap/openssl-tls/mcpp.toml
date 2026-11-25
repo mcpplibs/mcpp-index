@@ -1,0 +1,7 @@
+[package]
+name = "openssl-tls"
+version = "3.5.9"
+description = "Consume the immutable OpenSSL wrapper: SHA-256 and AES-256-GCM vectors, the error queue, a self-signed certificate and a TLS 1.3 handshake over memory BIOs"
+
+[dependencies]
+mcpplibs.mwrap.openssl = "3.5.9"

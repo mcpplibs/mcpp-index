@@ -4,3 +4,7 @@ version = "0.1.0"
 
 [dependencies.compat]
 glad = "0.0.0-651a425"
+
+# The candidate index: this checkout (compat.*), not the published one.
+[indices]
+compat = { path = "../../.." }

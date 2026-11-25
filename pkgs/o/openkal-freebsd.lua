@@ -22,6 +22,20 @@ package = {
 
     xpm = {
         linux = {
+            ["0.2.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-freebsd/archive/refs/tags/0.2.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-freebsd/releases/download/0.2.0/openkal-freebsd-0.2.0.tar.gz",
+                },
+                sha256 = "1bdb647c1c10caf5d4cdedd94d8937131f4b4f8a92f7a2e18cf6b11be2da7157",
+            },
+            ["0.1.2"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-freebsd/archive/refs/tags/0.1.2.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-freebsd/releases/download/0.1.2/openkal-freebsd-0.1.2.tar.gz",
+                },
+                sha256 = "4ea0ff9450a8d3935db9b24e8701f1f5a0ad00a1d42ca05214e8c3f9b896170e",
+            },
             ["0.1.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-freebsd/archive/refs/tags/0.1.0.tar.gz",
@@ -31,6 +45,20 @@ package = {
             },
         },
         macosx = {
+            ["0.2.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-freebsd/archive/refs/tags/0.2.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-freebsd/releases/download/0.2.0/openkal-freebsd-0.2.0.tar.gz",
+                },
+                sha256 = "1bdb647c1c10caf5d4cdedd94d8937131f4b4f8a92f7a2e18cf6b11be2da7157",
+            },
+            ["0.1.2"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-freebsd/archive/refs/tags/0.1.2.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-freebsd/releases/download/0.1.2/openkal-freebsd-0.1.2.tar.gz",
+                },
+                sha256 = "4ea0ff9450a8d3935db9b24e8701f1f5a0ad00a1d42ca05214e8c3f9b896170e",
+            },
             ["0.1.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-freebsd/archive/refs/tags/0.1.0.tar.gz",
@@ -40,6 +68,20 @@ package = {
             },
         },
         windows = {
+            ["0.2.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-freebsd/archive/refs/tags/0.2.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-freebsd/releases/download/0.2.0/openkal-freebsd-0.2.0.tar.gz",
+                },
+                sha256 = "1bdb647c1c10caf5d4cdedd94d8937131f4b4f8a92f7a2e18cf6b11be2da7157",
+            },
+            ["0.1.2"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-freebsd/archive/refs/tags/0.1.2.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-freebsd/releases/download/0.1.2/openkal-freebsd-0.1.2.tar.gz",
+                },
+                sha256 = "4ea0ff9450a8d3935db9b24e8701f1f5a0ad00a1d42ca05214e8c3f9b896170e",
+            },
             ["0.1.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-freebsd/archive/refs/tags/0.1.0.tar.gz",

@@ -2,6 +2,8 @@
 
 Module wrappers preserve upstream APIs under `mcpplibs.mwrap.<lib>`. Use `pkgs/mwrap/<lib>.lua`; see [the wrapper specification](mwrap.md). Every -m repository has English and Chinese READMEs.
 
+Build plugins (modules a `build.mcpp` imports) are `<owner>.mplugin.<name>`, descriptors in `pkgs/mcpp/`; see [build plugins](build-plugins.md).
+
 
 **English** | [简体中文](zh/package-types.md)
 
@@ -22,7 +24,7 @@ combined as needed.
 | **F. Shared-library compat** | has to be the **only** copy of that `.so` in the process — either because third parties `dlopen` it, or because the ecosystem payload links the same soname | the X11 family such as `pkgs/c/compat.x11.lua`, `compat.vulkan.lua`, `compat.libdrm.lua`, `compat.libffi.lua`, `compat.expat.lua` | `targets = { kind = "shared", soname = … }` |
 | **G. Host runtime adaptation** | things that cannot be vendored, such as drivers — only a symlink farm plus metadata | `pkgs/c/compat.glx-runtime.lua`, `compat.vulkan-runtime.lua` | `runtime.library_dirs` / `capabilities` |
 | **H. Host tool provider** | the upstream tarball also holds a **code generator** consumers run at build time | `pkgs/c/compat.protobuf.lua` (`protoc`) | a `targets` entry with `kind = "bin"` + `main`, plus `required_features` |
-| **I. Ecosystem-stack binding** | the library is an internal build target of a project the **ecosystem already owns** and upstream ships no separable unit, so vendoring it would fork that project. NOT for libraries that merely coexist with a payload — see below | `pkgs/c/compat.libgbm.lua` (Mesa's GBM, via `xim:mesa`) | `xpm.<plat>.deps.runtime = { "xim:<pkg>" }` + a farm from `system.subos_sysrootdir()`, with `runtime.library_dirs` **and** `link_library_dirs` |
+| **I. Ecosystem-stack binding** | the library is an internal build target of a project the **ecosystem already owns** and upstream ships no separable unit, so vendoring it would fork that project. NOT for libraries that merely coexist with a payload — see below | `pkgs/c/compat.libgbm.lua` (Mesa's GBM, via `xim:mesa`) | `xpm.<plat>.deps.runtime = { "xim:<pkg>" }` + a farm from `system.subos_sysrootdir()`, with `runtime.runtime_search_dirs` **and** `link_library_dirs` |
 
 ### Source build or binding: the criterion is separability, and only that
 
@@ -241,7 +243,7 @@ Two details that keep biting:
 
   | key | renders as |
   |---|---|
-  | `runtime.library_dirs` | `-Wl,-rpath` |
+  | `runtime.runtime_search_dirs` (earlier spelling `library_dirs`, still read) | `-Wl,-rpath` |
   | `runtime.link_library_dirs` | `-L` |
   | `runtime.transitive_needed_dirs` | `-Wl,-rpath-link` |
 

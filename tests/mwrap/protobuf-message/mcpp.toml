@@ -1,0 +1,7 @@
+[package]
+name = "protobuf-message"
+version = "35.1"
+description = "Consume the immutable Protocol Buffers wrapper: a message type built at run time, its wire bytes, JSON and text formats, the well-known types"
+
+[dependencies]
+mcpplibs.mwrap.protobuf = "35.1"
