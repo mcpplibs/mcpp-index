@@ -1,0 +1,9 @@
+[package]
+name = "tinygltf-v301-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+tinygltf = "3.0.1"
+
+[indices]
+compat = { path = "../../.." }

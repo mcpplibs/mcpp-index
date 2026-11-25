@@ -7,3 +7,7 @@ version = "0.1.0"
 
 [dependencies.compat]
 nanosvg = "2026.07.09"
+
+# The candidate index: this checkout (compat.*), not the published one.
+[indices]
+compat = { path = "../../.." }

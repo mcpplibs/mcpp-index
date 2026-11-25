@@ -1,0 +1,17 @@
+[package]
+name = "protobuf-codegen"
+version = "35.1"
+description = "Consume the immutable Protocol Buffers wrapper's codegen: protoc during the build through the protogen rule, generated messages beside the module"
+
+# compat.protobuf has no protoc on Windows yet (its host-tool build fails
+# there), so codegen is linux/macOS. On Windows the member still builds the
+# indexed protogen rule on its own (mcpplibs.protogen), and its build program
+# skips generation.
+[target.'cfg(unix)'.dependencies]
+mcpplibs.mwrap.protobuf = { version = "35.1", features = ["codegen"] }
+
+[target.'cfg(unix)'.build]
+cxxflags = ["-DHAVE_PROTOC=1"]
+
+[target.'cfg(windows)'.build-dependencies]
+mcpplibs.protogen = { version = "35.1", host-module = true }

@@ -191,6 +191,13 @@ package = {
             ["3.4.18"] = {
                 url    = "https://github.com/libsdl-org/SDL/archive/refs/tags/release-3.4.18.tar.gz",
                 sha256 = "c4b08b950bd29d83caae0ab8d884298d27046a9d30700fb42841c50992665c90",
+                -- 1: the switches no-render and no-hidapi, read at the top of
+                -- the generated SDL_build_config.h (installed copies take them).
+                -- 2: the switch no-render-accelerated, beside them.
+                -- 3: posix_spawn_file_actions_addchdir by its _np name alone,
+                --    so a system C library older than glibc 2.40 builds it.
+                revision = 3,
+                floor    = 3,
             },
             ["3.4.20"] = versions["3.4.20"],
         },
@@ -206,6 +213,13 @@ package = {
             ["3.4.18"] = {
                 url    = "https://github.com/libsdl-org/SDL/archive/refs/tags/release-3.4.18.tar.gz",
                 sha256 = "c4b08b950bd29d83caae0ab8d884298d27046a9d30700fb42841c50992665c90",
+                -- 1: the switches no-render and no-hidapi, read at the top of
+                -- the generated SDL_build_config.h (installed copies take them).
+                -- 2: the switch no-render-accelerated, beside them.
+                -- 3: posix_spawn_file_actions_addchdir by its _np name alone,
+                --    so a system C library older than glibc 2.40 builds it.
+                revision = 3,
+                floor    = 3,
             },
             ["3.4.20"] = versions["3.4.20"],
         },
@@ -221,6 +235,13 @@ package = {
             ["3.4.18"] = {
                 url    = "https://github.com/libsdl-org/SDL/archive/refs/tags/release-3.4.18.tar.gz",
                 sha256 = "c4b08b950bd29d83caae0ab8d884298d27046a9d30700fb42841c50992665c90",
+                -- 1: the switches no-render and no-hidapi, read at the top of
+                -- the generated SDL_build_config.h (installed copies take them).
+                -- 2: the switch no-render-accelerated, beside them.
+                -- 3: posix_spawn_file_actions_addchdir by its _np name alone,
+                --    so a system C library older than glibc 2.40 builds it.
+                revision = 3,
+                floor    = 3,
             },
             ["3.4.20"] = versions["3.4.20"],
         },
@@ -481,7 +502,11 @@ package = {
 /* #undef HAVE_SHELLSCALINGAPI_H */
 
 /* #undef USE_POSIX_SPAWN */
-#define HAVE_POSIX_SPAWN_FILE_ACTIONS_ADDCHDIR 1
+/* Only the _np name, which glibc has had since 2.29 (and musl since 1.1.24):
+   SDL_posixprocess.c then calls posix_spawn_file_actions_addchdir_np. The
+   plain name is glibc 2.40's; defined, a build against an older system C
+   library (a sysroot of glibc 2.39, Ubuntu 24.04) does not compile. */
+/* #undef HAVE_POSIX_SPAWN_FILE_ACTIONS_ADDCHDIR */
 #define HAVE_POSIX_SPAWN_FILE_ACTIONS_ADDCHDIR_NP 1
 
 /* #undef SDL_DISABLE_DLOPEN_NOTES */
@@ -866,6 +891,28 @@ typedef unsigned int uintptr_t;
 
 #endif /* platform config */
 
+/* The package's switches (features `no-render`, `no-hidapi`,
+   `no-render-accelerated`), after every
+   platform's config so they win over its defines: mcpp defines
+   MCPP_FEATURE_<NAME> for this package's own units when one is on. */
+#ifdef MCPP_FEATURE_NO_RENDER
+#define SDL_RENDER_DISABLED 1
+#endif
+#ifdef MCPP_FEATURE_NO_HIDAPI
+#define SDL_HIDAPI_DISABLED 1
+#undef SDL_JOYSTICK_HIDAPI
+#endif
+#ifdef MCPP_FEATURE_NO_RENDER_ACCELERATED
+#undef SDL_VIDEO_RENDER_D3D
+#undef SDL_VIDEO_RENDER_D3D11
+#undef SDL_VIDEO_RENDER_D3D12
+#undef SDL_VIDEO_RENDER_GPU
+#undef SDL_VIDEO_RENDER_METAL
+#undef SDL_VIDEO_RENDER_VULKAN
+#undef SDL_VIDEO_RENDER_OGL
+#undef SDL_VIDEO_RENDER_OGL_ES2
+#endif
+
 #endif /* SDL_build_config_h_ */
 ]==],
         },
@@ -938,6 +985,27 @@ typedef unsigned int uintptr_t;
 
         targets = { ["sdl3"] = { kind = "lib" } },
         deps    = {},
+
+        -- Subsystems an application may leave out, each a switch: mcpp's
+        -- MCPP_FEATURE_<NAME> turns on the `*_DISABLED` define at the top of
+        -- SDL_build_config.h above. Off by default: the default build is the
+        -- one it always was.
+        --   no-render  the 2D renderer (SDL_Renderer: its software, GPU and
+        --              Vulkan back ends, and the blitters and pixel
+        --              conversions only it reaches); SDL_GPU, windows,
+        --              surfaces and events stay
+        --   no-hidapi  HIDAPI's game-controller drivers (the evdev joystick
+        --              path stays)
+        --   no-render-accelerated  the 2D renderer's accelerated back ends
+        --              (Direct3D, Metal, Vulkan, OpenGL, OpenGL ES 2 and the
+        --              one over SDL_GPU): SDL_Renderer keeps its software
+        --              back end, presenting through the window's surface;
+        --              SDL_GPU itself stays for a program that uses it
+        features = {
+            ["no-render"] = {},
+            ["no-hidapi"] = {},
+            ["no-render-accelerated"] = {},
+        },
 
         linux = {
             sources = {

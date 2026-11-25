@@ -16,3 +16,7 @@ linux = "gcc@16.1.0"
 
 [target.'cfg(linux)'.dependencies.compat]
 sycl-runtime = "2026.09.10"
+
+# The candidate index: this checkout (compat.*), not the published one.
+[indices]
+compat = { path = "../../.." }

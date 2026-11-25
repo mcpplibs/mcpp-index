@@ -1,0 +1,7 @@
+[package]
+name = "xxhash-digest"
+version = "0.8.3"
+description = "Consume the immutable xxHash wrapper: the published hashes of the empty input, streaming equal to one call, and the canonical form"
+
+[dependencies]
+mcpplibs.mwrap.xxhash = "0.8.3"

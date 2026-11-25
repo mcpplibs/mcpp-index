@@ -44,3 +44,7 @@ cxxflags = ["-DHAVE_GRPC=1"]
 # is why it is available here while grpc is not.
 [target.'cfg(windows)'.dependencies.mcpplibs]
 grpcgen = { version = "1.83.0", host-module = true }
+
+# The candidate index: this checkout (compat.*), not the published one.
+[indices]
+compat = { path = "../../.." }
