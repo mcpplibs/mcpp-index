@@ -15,6 +15,13 @@ package = {
     repo        = "https://github.com/Mbed-TLS/mbedtls",
     type        = "package",
 
+    extensions = {
+        autoupdate = {
+            tag = "mbedtls-${version}",
+            url = "https://github.com/Mbed-TLS/mbedtls/archive/refs/tags/${tag}.tar.gz",
+        },
+    },
+
     xpm = {
         linux = {
             ["3.6.1"] = {
@@ -23,6 +30,10 @@ package = {
                     CN     = "https://gitcode.com/mcpp-res/mbedtls/releases/download/3.6.1/mbedtls-3.6.1.tar.gz",
                 },
                 sha256 = "db75d2f7f35e29cf09f7bd6734d8ee3325f29c298ef071350c5e70a40dd4f0f9",
+            },
+            ["3.6.8"] = {
+                url    = "https://github.com/Mbed-TLS/mbedtls/archive/refs/tags/mbedtls-3.6.8.tar.gz",
+                sha256 = "245c192db137c25224b02f72c06f77144d1f2f29823648a022e20fc159b45260",
             },
         },
         macosx = {
@@ -33,6 +44,10 @@ package = {
                 },
                 sha256 = "db75d2f7f35e29cf09f7bd6734d8ee3325f29c298ef071350c5e70a40dd4f0f9",
             },
+            ["3.6.8"] = {
+                url    = "https://github.com/Mbed-TLS/mbedtls/archive/refs/tags/mbedtls-3.6.8.tar.gz",
+                sha256 = "245c192db137c25224b02f72c06f77144d1f2f29823648a022e20fc159b45260",
+            },
         },
         windows = {
             ["3.6.1"] = {
@@ -41,6 +56,10 @@ package = {
                     CN     = "https://gitcode.com/mcpp-res/mbedtls/releases/download/3.6.1/mbedtls-3.6.1.tar.gz",
                 },
                 sha256 = "db75d2f7f35e29cf09f7bd6734d8ee3325f29c298ef071350c5e70a40dd4f0f9",
+            },
+            ["3.6.8"] = {
+                url    = "https://github.com/Mbed-TLS/mbedtls/archive/refs/tags/mbedtls-3.6.8.tar.gz",
+                sha256 = "245c192db137c25224b02f72c06f77144d1f2f29823648a022e20fc159b45260",
             },
         },
     },
