@@ -16,6 +16,13 @@
 // JS_FreeRuntime asserts that no object is still alive (quickjs.c:2699) and an
 // object this test forgot to free aborts it.
 
+// The expected release. The member pins one version; the candidate check of a bot update
+// (tests/autoupdate/ci.py prepare) defines this first, so an update is tested against its own
+// version rather than against the literal below.
+#ifndef QUICKJS_NG_EXPECT_VERSION
+#define QUICKJS_NG_EXPECT_VERSION "0.17.0"
+#endif
+
 #include <quickjs.h>
 
 #include <cstdio>
@@ -70,7 +77,7 @@ int main() {
     std::snprintf(header_version, sizeof header_version, "%d.%d.%d%s",
                   QJS_VERSION_MAJOR, QJS_VERSION_MINOR, QJS_VERSION_PATCH, QJS_VERSION_SUFFIX);
     std::printf("QuickJS-ng %s\n", JS_GetVersion());
-    if (std::strcmp(JS_GetVersion(), "0.17.0") != 0 ||
+    if (std::strcmp(JS_GetVersion(), QUICKJS_NG_EXPECT_VERSION) != 0 ||
         std::strcmp(JS_GetVersion(), header_version) != 0) {
         std::fprintf(stderr, "FAIL version: library %s, header %s\n", JS_GetVersion(), header_version);
         ++failures;

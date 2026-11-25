@@ -23,6 +23,15 @@
 #include <cstdio>
 #include <cstring>
 
+// The expected release. The member pins one version; the candidate check of a bot update
+// (tests/autoupdate/ci.py prepare) defines these first, so an update is tested against its own
+// version rather than against the literal below.
+#ifndef SDL3_EXPECT_MAJOR
+#define SDL3_EXPECT_MAJOR 3
+#define SDL3_EXPECT_MINOR 4
+#define SDL3_EXPECT_PATCH 18
+#endif
+
 int main() {
     // Header/runtime agreement. SDL_VERSION is the compile-time constant from
     // the headers; SDL_GetVersion() is what the linked objects report.
@@ -32,8 +41,9 @@ int main() {
         std::printf("header says %d, library says %d — two different SDLs\n", compiled, linked);
         return 1;
     }
-    if (linked != SDL_VERSIONNUM(3, 4, 18)) {
-        std::printf("SDL version is %d, expected 3.4.18\n", linked);
+    if (linked != SDL_VERSIONNUM(SDL3_EXPECT_MAJOR, SDL3_EXPECT_MINOR, SDL3_EXPECT_PATCH)) {
+        std::printf("SDL version is %d, expected %d.%d.%d\n", linked,
+                    SDL3_EXPECT_MAJOR, SDL3_EXPECT_MINOR, SDL3_EXPECT_PATCH);
         return 2;
     }
 
@@ -119,7 +129,7 @@ int main() {
     SDL_DestroyWindow(window);
     SDL_Quit();
 
-    std::printf("compat.sdl3: ok (version 3.4.18, %d video drivers, dummy window 320x240, timer advances)\n",
-                drivers);
+    std::printf("compat.sdl3: ok (version %d.%d.%d, %d video drivers, dummy window 320x240, timer advances)\n",
+                SDL3_EXPECT_MAJOR, SDL3_EXPECT_MINOR, SDL3_EXPECT_PATCH, drivers);
     return 0;
 }

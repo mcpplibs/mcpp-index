@@ -152,6 +152,12 @@ def platform_conditions(manifest: dict, namespace: str, name: str):
         yield None
 
 
+# The tables of a manifest that name the packages it consumes. A test-only
+# dependency (`[dev-dependencies]`, as the mtest adapters' projects state theirs) is
+# a consumer as much as the others: without it a candidate has no job.
+DEPENDENCY_TABLES = ("dependencies", "build-dependencies", "dev-dependencies")
+
+
 def direct_member(identity: str) -> str | None:
     namespace, name = identity.split(":", 1)
     candidates = []
@@ -159,7 +165,7 @@ def direct_member(identity: str) -> str | None:
         for key, value in table.items():
             if not isinstance(value, dict):
                 continue
-            if key in {"dependencies", "build-dependencies"}:
+            if key in DEPENDENCY_TABLES:
                 yield value
             else:
                 yield from dependency_tables(value)
@@ -229,11 +235,11 @@ def member_platforms(member: str, identity: str) -> set[str]:
     manifest = tomllib.loads(member_manifest(member).read_text(encoding="utf-8"))
     platforms: set[str] = set()
     if any(names_dependency(manifest.get(key, {}), namespace, name)
-           for key in ("dependencies", "build-dependencies")):
+           for key in DEPENDENCY_TABLES):
         platforms |= set(_CFG_PLATFORMS.values())
     for condition, table in manifest.get("target", {}).items():
         if not any(names_dependency(table.get(key, {}), namespace, name)
-                   for key in ("dependencies", "build-dependencies")):
+                   for key in DEPENDENCY_TABLES):
             continue
         platforms |= condition_platforms(condition)
     # A platform the member selects (mcpp SPEC-013): under `[host]` on every
@@ -357,6 +363,50 @@ def replace_candidate(text: str, identity: str, version: str) -> str:
     return text
 
 
+# A member's test that states the release it expects as a literal cannot test a candidate of
+# another release. The test reads the expectation from a macro with that literal as its default,
+# and a candidate's consumer defines the macro first (as mcr's does below).
+EXPECT_VERSION_DEFINES = {
+    # identity: (test source in the member, how the candidate version becomes defines)
+    "compat:sdl3": ("tests/init.cpp", "parts", "SDL3_EXPECT"),
+    "compat:quickjs-ng": ("tests/engine.cpp", "string", "QUICKJS_NG_EXPECT_VERSION"),
+}
+
+# The workspace root's `[workspace.dependencies]` overrides are read from the root only, and a
+# candidate consumer is a standalone project with no workspace. A member that needs one of them to
+# resolve at all (mcr pins compat.openssl 3.5.1 beside compat.curl, which links 3.5.9) has it
+# written into the candidate's own manifest.
+CANDIDATE_ROOT_OVERRIDES = {
+    "yizhinailong:mcr": ("compat.openssl",),
+}
+
+
+def expect_version_defines(version: str, kind: str, name: str) -> str:
+    if kind == "string":
+        return f'#define {name} "{version}"\n'
+    parts = version.split(".")
+    if len(parts) != 3 or not all(part.isdecimal() for part in parts):
+        raise RuntimeError(f"{name} needs a three-part numeric version, not {version}")
+    return "".join(f"#define {name}_{key} {int(value)}\n"
+                   for key, value in zip(("MAJOR", "MINOR", "PATCH"), parts))
+
+
+def carried_overrides(names: tuple[str, ...], manifest: str) -> str:
+    """The root `[workspace.dependencies]` entries `names`, as tables of a standalone manifest."""
+    workspace = tomllib.loads((ROOT / "mcpp.toml").read_text(encoding="utf-8")).get("workspace", {})
+    declared = workspace.get("dependencies", {})
+    out = ""
+    for dotted in names:
+        namespace, name = dotted.rsplit(".", 1)
+        spec = declared.get(dotted) or declared.get(namespace, {}).get(name)
+        if not (isinstance(spec, dict) and spec.get("override") and spec.get("version")):
+            raise RuntimeError(f"the workspace root has no override of {dotted} to carry")
+        if f"[dependencies.{namespace}]" in manifest or f"[dependencies.{namespace}]" in out:
+            raise RuntimeError(f"the candidate manifest already holds the [dependencies.{namespace}] table an override is written into")
+        out += f'\n[dependencies.{namespace}]\n{name} = {{ version = "{spec["version"]}", override = true }}\n'
+    return out
+
+
 def prepare(plan: Path, identity: str, output: Path, home: Path | None = None):
     candidates = json.loads(plan.read_text(encoding="utf-8"))["packages"]
     record = next(r for r in candidates if r["id"] == identity)
@@ -402,6 +452,13 @@ def prepare(plan: Path, identity: str, output: Path, home: Path | None = None):
         defines += ''.join(f'#define MCR_EXPECT_{key} {int(value)}\n'
                            for key, value in zip(("MAJOR", "MINOR", "PATCH"), parts))
         api.write_text(defines + api.read_text(encoding="utf-8"), encoding="utf-8")
+    if identity in EXPECT_VERSION_DEFINES and member:
+        relative, kind, name = EXPECT_VERSION_DEFINES[identity]
+        source = output / relative
+        source.write_text(expect_version_defines(version, kind, name) + source.read_text(encoding="utf-8"),
+                          encoding="utf-8")
+    if identity in CANDIDATE_ROOT_OVERRIDES:
+        text += carried_overrides(CANDIDATE_ROOT_OVERRIDES[identity], text)
     if home is None:
         text += f'\n[indices]\n"{namespace}" = {{ path = {json.dumps(str(ROOT).replace(chr(92), "/"))} }}\n'
     else:
@@ -414,15 +471,35 @@ def prepare(plan: Path, identity: str, output: Path, home: Path | None = None):
     print(f"Prepared {identity}@{version} in {output}")
 
 
+def only_dev_dependency(manifest: dict, namespace: str, name: str) -> bool:
+    """Whether a manifest names the package under `[dev-dependencies]` and nowhere else."""
+    def named(keys):
+        return any(names_dependency(manifest.get(key, {}), namespace, name) for key in keys)
+    return named(("dev-dependencies",)) and not named(("dependencies", "build-dependencies"))
+
+
 def verify(plan: Path, identity: str, consumer: Path):
     record = next(r for r in json.loads(plan.read_text(encoding="utf-8"))["packages"] if r["id"] == identity)
     namespace, name = identity.split(":", 1)
+    candidate = record["candidate"]
+    manifest = tomllib.loads((consumer / "mcpp.toml").read_text(encoding="utf-8"))
+    if only_dev_dependency(manifest, namespace, name):
+        # mcpp locks a project's [dependencies]; a test-only dependency has no lock row, and `mcpp test`
+        # of a project that has nothing else writes no mcpp.lock at all. The build log is then the
+        # evidence: the version it compiled is the candidate, and no other version of the package was.
+        log = (consumer / "candidate.log").read_text(encoding="utf-8", errors="replace")
+        spelled = re.escape(f"{namespace}.{name}")
+        built = set(re.findall(rf"(?m)^\s*Compiling {spelled} v(\S+)", log))
+        if built != {candidate}:
+            raise RuntimeError(f"the build log does not prove {identity}@{candidate} (dev-dependency): compiled {sorted(built)}")
+        print(f"PROVEN: build compiled {identity}@{candidate} (a dev-dependency has no lockfile row)")
+        return
     lock = tomllib.loads((consumer / "mcpp.lock").read_text(encoding="utf-8"))
     matches = [value for key, value in lock.get("package", {}).items()
                if value.get("namespace") == namespace and key in (name, identity, f"{namespace}.{name}")]
-    if not matches or any(v["version"] != record["candidate"] for v in matches):
-        raise RuntimeError(f"lockfile does not prove {identity}@{record['candidate']}: {matches}")
-    print(f"PROVEN: build resolved {identity}@{record['candidate']}")
+    if not matches or any(v["version"] != candidate for v in matches):
+        raise RuntimeError(f"lockfile does not prove {identity}@{candidate}: {matches}")
+    print(f"PROVEN: build resolved {identity}@{candidate}")
 
 
 def diagnostics(consumer: Path, output: Path):

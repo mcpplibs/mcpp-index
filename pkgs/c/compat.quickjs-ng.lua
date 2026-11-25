@@ -14,6 +14,13 @@
 -- out. The other .c files at the root are the qjs/qjsc programs, tests and
 -- generators.
 --
+-- LAYOUT. install() (below) moves the release directory `quickjs-<version>/` to be the
+-- install dir itself, so no path of this descriptor holds a version and a new release is an
+-- appended xpm entry only (extensions.autoupdate). 0.17.0 was published before install()
+-- existed and stays installed with its release directory kept; the entries that name
+-- `quickjs-0.17.0/` and the `#else` of the forwarder serve exactly that install, and are
+-- never extended: a later release is always flat.
+--
 -- ONE PUBLIC HEADER. Without quickjs-libc, upstream installs quickjs.h alone
 -- (CMakeLists.txt:557, meson.build:144-146 and 263), but the tarball keeps it
 -- at the root beside the engine's private headers, among them list.h, cutils.h
@@ -100,22 +107,32 @@ package = {
         language     = "c++23",
         import_std   = false,
         c_standard   = "c11",
-        include_dirs = { "quickjs-0.17.0/mcpp/include" },
+        include_dirs = { "mcpp/include" },
         cflags       = { "-std=gnu11", "-funsigned-char", "-D_GNU_SOURCE", "-DQUICKJS_NG_BUILD" },
         sources      = {
-            "*/dtoa.c",
-            "*/libregexp.c",
-            "*/libunicode.c",
-            "*/quickjs.c",
+            "dtoa.c",
+            "quickjs-0.17.0/dtoa.c",
+            "libregexp.c",
+            "quickjs-0.17.0/libregexp.c",
+            "libunicode.c",
+            "quickjs-0.17.0/libunicode.c",
+            "quickjs.c",
+            "quickjs-0.17.0/quickjs.c",
         },
         generated_files = {
-            ["quickjs-0.17.0/mcpp/include/quickjs.h"] =
+            ["mcpp/include/quickjs.h"] =
 [[
 #pragma once
 /* compat.quickjs-ng: upstream installs quickjs.h alone, but the release
    tarball keeps it beside the engine's private headers (list.h, cutils.h,
    dtoa.h, ...). This forwarder is the only thing on the include path. */
+#if __has_include("../../quickjs.h")
 #include "../../quickjs.h"
+#else
+/* 0.17.0 was installed with its release directory kept (quickjs-0.17.0/);
+   later releases are moved to the install root by install(). */
+#include "../../quickjs-0.17.0/quickjs.h"
+#endif
 ]],
         },
         -- Upstream links `m`, the dl library and the thread library PUBLIC
@@ -132,3 +149,33 @@ package = {
         deps         = { },
     },
 }
+
+import("xim.libxpkg.pkginfo")
+import("xim.libxpkg.log")
+
+-- Once a descriptor defines install(), the archive is extracted to a sibling of
+-- the install dir rather than into it; moving it is the descriptor's job.
+-- The release unpacks to `quickjs-<version>/`. Moving that directory to be the
+-- install dir itself leaves no version in any path of the descriptor, so a new
+-- release needs no edit here (the wrap name is derived, not listed).
+function install()
+    local v = pkginfo.version()
+    local srcroot
+    for _, name in ipairs({ "quickjs-" .. v, "quickjs-ng-" .. v, "quickjs-v" .. v }) do
+        if os.isfile(path.join(name, "quickjs.h")) then
+            srcroot = name
+            break
+        end
+    end
+    if not srcroot then
+        log.error("[quickjs-ng] extracted tree not found (looked for quickjs-%s)", v)
+        return false
+    end
+    os.tryrm(pkginfo.install_dir())
+    os.mv(srcroot, pkginfo.install_dir())
+    if not os.isfile(path.join(pkginfo.install_dir(), "quickjs.h")) then
+        log.error("[quickjs-ng] quickjs.h missing from the release tarball")
+        return false
+    end
+    return true
+end
