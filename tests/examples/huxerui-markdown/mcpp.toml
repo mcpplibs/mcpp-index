@@ -1,0 +1,10 @@
+[indices]
+huxerui = { path = "../../.." }
+
+[package]
+name     = "huxerui-markdown-tests"
+version  = "0.1.0"
+standard = "c++23"
+
+[dependencies.huxerui]
+markdown = "0.3.1"
