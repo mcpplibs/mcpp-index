@@ -52,6 +52,22 @@ package = {
             "*/src/liblzma/simple",
             "*/src/common",
         },
+
+        -- <lzma.h> declares every function __declspec(dllimport) on Windows
+        -- unless LZMA_API_STATIC is defined, and this package is a static
+        -- library. A consumer that includes it without the macro calls through
+        -- `__imp_lzma_*` slots that lld-link makes for the locally defined
+        -- functions; a link that collects unreferenced sections (the release
+        -- profile, a test's link) drops the functions behind the slots, and
+        -- the first call jumps to the image's first byte. The macro reaches
+        -- every TU that includes the header the same way CURL_STATICLIB does
+        -- in compat.curl: a feature's `defines` reach the consumer, and
+        -- `default` implies it unconditionally.
+        features = {
+            ["default"]   = { implies = { "staticlib" } },
+            ["staticlib"] = { defines = { "LZMA_API_STATIC" } },
+        },
+
         cflags = {
             "-D_GNU_SOURCE",
             "-DSIZEOF_SIZE_T=8",

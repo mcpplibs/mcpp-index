@@ -16,3 +16,7 @@ ffmpeg = "8.1.2"
 
 [target.'cfg(windows)'.dependencies.compat]
 ffmpeg = "8.1.2"
+
+# The candidate index: this checkout (compat.*), not the published one.
+[indices]
+compat = { path = "../../.." }

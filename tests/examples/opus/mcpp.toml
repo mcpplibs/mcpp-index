@@ -9,3 +9,7 @@ standard = "c++23"
 compat.ogg      = "1.3.6"
 compat.opus     = "1.6.1"
 compat.opusfile = "0.12"
+
+# The candidate index: this checkout (compat.*), not the published one.
+[indices]
+compat = { path = "../../.." }

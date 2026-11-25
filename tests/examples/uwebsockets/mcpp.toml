@@ -12,3 +12,7 @@ uwebsockets = "20.79.0"
 # was built (us_loop_t layout, SSL declarations); UWS_NO_ZLIB matches the
 # package's zlib-free build.
 defines = ["LIBUS_USE_LIBUV", "LIBUS_NO_SSL", "UWS_NO_ZLIB"]
+
+# The candidate index: this checkout (compat.*), not the published one.
+[indices]
+compat = { path = "../../.." }

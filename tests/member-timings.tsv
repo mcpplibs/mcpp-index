@@ -8,6 +8,8 @@
 # times and completed installed-check step durations are both included.
 # Windows wrapper measurements: run 40121911805; job 120955178624
 # exhausted 90m during legacy opencv-module, while completed checks passed.
+# macOS member rows: run 45082422612 (2026-11-23), the per-member times of its
+# four shards; the wrapper rows, and the members it did not reach, keep theirs.
 linux	grpc-codegen	3463
 linux	grpc-module	1771
 linux	protobuf-protoc	885
@@ -18,16 +20,25 @@ linux	opencv-module	649
 linux	godot-cpp-module	627
 linux	eui-neo-sdl2	591
 linux	godot-cpp-module-v10	568
-macos	grpc-codegen	1156
+macos	grpc-codegen	2103
 macos	grpc-module	719
+macos	grpc-cpu	1800
+macos	grpc-protobuf-stack	1767
 macos	opencv-module-dnn	325
-macos	protobuf-protoc	314
+macos	protobuf-protoc	623
 macos	godot-cpp-module	276
 macos	opencv-module	223
-macos	godot-cpp-v10	206
+macos	godot-cpp-v10	588
 macos	godot-cpp-module-v10	195
 macos	opencv-module-unifont	164
-macos	eui-neo-sdl2	138
+macos	eui-neo-sdl2	58
+macos	godot-cpp	875
+macos	grpc-tools	778
+macos	godot-math	541
+macos	opencv-cpu	388
+macos	ffmpeg	330
+macos	opencv-webp	281
+macos	openkal-platform	154
 windows	opencv-module	868
 windows	opencv-module-dnn	828
 windows	godot-cpp-module	707
@@ -41,6 +52,7 @@ windows	protobuf-upb	151
 linux	ffmpeg-cpu	208
 linux	godot-math	758
 linux	grpc-cpu	1416
+linux	grpc-protobuf-stack	1800
 linux	grpc-tools	480
 linux	imgui-headless	168
 linux	llamacpp-cpu	264
@@ -55,3 +67,17 @@ windows	opencv-webp	1104
 linux	godot-sdk	300
 macos	godot-sdk	300
 windows	godot-sdk	700
+
+# Abseil wrapper: the member, then its installed archive, default template and notices.
+linux	abseil-basics	420
+linux	protobuf-message	900
+linux	openssl-tls	600
+linux	protobuf-codegen	1200
+macos	abseil-basics	300
+macos	protobuf-message	600
+macos	openssl-tls	400
+macos	protobuf-codegen	800
+windows	abseil-basics	420
+windows	protobuf-message	900
+windows	openssl-tls	900
+windows	protobuf-codegen	300

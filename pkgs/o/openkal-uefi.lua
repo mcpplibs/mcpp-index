@@ -1,14 +1,12 @@
 -- openkal-uefi — openkal on UEFI Boot Services.
 --
--- ⚠️ The consuming project targets `x86_64-windows-gnu` with three link flags
--- (`-nostdlib`, `--subsystem,10`, `-e,efi_main`), which is not a workaround: a
--- UEFI application IS PE/COFF with subsystem 10, entered through the Microsoft
--- x64 calling convention, and that target already has both properties.
---
--- An earlier analysis held that a new "PE freestanding" target would be needed
--- first. Measured otherwise — the flags above produce
--- IMAGE_SUBSYSTEM_EFI_APPLICATION with no DLL imports, verified booting under
--- OVMF.
+-- From 0.9.0 a project names the target `x86_64-uefi` and nothing else: the
+-- row (clang's `x86_64-unknown-uefi`, PE32+ with the EFI application subsystem),
+-- its compile and link conventions and its runner (QEMU's q35 with the edk2
+-- firmware, through dirun) are the platform package openkal-uefi-platform's,
+-- which selects this implementation. Before 0.9.0 a consuming project targeted
+-- `x86_64-windows-gnu` with three link flags (`-nostdlib`, `--subsystem,10`,
+-- `-e,efi_main`); the platform states the same facts once.
 package = {
     spec        = "1",
     namespace   = "mcpplibs",
@@ -20,6 +18,55 @@ package = {
 
     xpm = {
         linux = {
+            ["0.13.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-uefi/archive/refs/tags/0.13.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-uefi/releases/download/0.13.0/openkal-uefi-0.13.0.tar.gz",
+                },
+                sha256 = "c3850cc6998c9055b48b5cd7b81fb74bc8dc08b37e9991462f52a966c2ebe902",
+            },
+            ["0.12.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-uefi/archive/refs/tags/0.12.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-uefi/releases/download/0.12.0/openkal-uefi-0.12.0.tar.gz",
+                },
+                sha256 = "844278883d7b848767da87192c92534fa8563b7ac9a1651ce9fe71ec1bf85385",
+            },
+            ["0.11.2"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-uefi/archive/refs/tags/0.11.2.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-uefi/releases/download/0.11.2/openkal-uefi-0.11.2.tar.gz",
+                },
+                sha256 = "0f259e48164c1584f89935de7000f1679bbbab0d5f8261b628bf4538c066459e",
+            },
+            ["0.11.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-uefi/archive/refs/tags/0.11.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-uefi/releases/download/0.11.1/openkal-uefi-0.11.1.tar.gz",
+                },
+                sha256 = "012c121996b00bd9dbea15b180a21fafcf6e97af35221ef981891267e4e8a807",
+            },
+            ["0.11.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-uefi/archive/refs/tags/0.11.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-uefi/releases/download/0.11.0/openkal-uefi-0.11.0.tar.gz",
+                },
+                sha256 = "14d5be54520a502f13738160f0b3344a4429df6fa1440b25c8a97430a892ba70",
+            },
+            ["0.10.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-uefi/archive/refs/tags/0.10.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-uefi/releases/download/0.10.0/openkal-uefi-0.10.0.tar.gz",
+                },
+                sha256 = "1d7cb0902ac135fc3a0ca2e7617bda5d74ce3185bad0ca31d336185b1a5b688a",
+            },
+            ["0.9.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-uefi/archive/refs/tags/0.9.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-uefi/releases/download/0.9.0/openkal-uefi-0.9.0.tar.gz",
+                },
+                sha256 = "1581fffd2bc4e44502ad02c68c3ee19fa94241a70de8a0b61df0952acca952d7",
+            },
             ["0.8.1"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-uefi/archive/refs/tags/0.8.1.tar.gz",
@@ -106,6 +153,55 @@ package = {
             },
         },
         macosx = {
+            ["0.13.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-uefi/archive/refs/tags/0.13.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-uefi/releases/download/0.13.0/openkal-uefi-0.13.0.tar.gz",
+                },
+                sha256 = "c3850cc6998c9055b48b5cd7b81fb74bc8dc08b37e9991462f52a966c2ebe902",
+            },
+            ["0.12.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-uefi/archive/refs/tags/0.12.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-uefi/releases/download/0.12.0/openkal-uefi-0.12.0.tar.gz",
+                },
+                sha256 = "844278883d7b848767da87192c92534fa8563b7ac9a1651ce9fe71ec1bf85385",
+            },
+            ["0.11.2"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-uefi/archive/refs/tags/0.11.2.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-uefi/releases/download/0.11.2/openkal-uefi-0.11.2.tar.gz",
+                },
+                sha256 = "0f259e48164c1584f89935de7000f1679bbbab0d5f8261b628bf4538c066459e",
+            },
+            ["0.11.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-uefi/archive/refs/tags/0.11.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-uefi/releases/download/0.11.1/openkal-uefi-0.11.1.tar.gz",
+                },
+                sha256 = "012c121996b00bd9dbea15b180a21fafcf6e97af35221ef981891267e4e8a807",
+            },
+            ["0.11.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-uefi/archive/refs/tags/0.11.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-uefi/releases/download/0.11.0/openkal-uefi-0.11.0.tar.gz",
+                },
+                sha256 = "14d5be54520a502f13738160f0b3344a4429df6fa1440b25c8a97430a892ba70",
+            },
+            ["0.10.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-uefi/archive/refs/tags/0.10.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-uefi/releases/download/0.10.0/openkal-uefi-0.10.0.tar.gz",
+                },
+                sha256 = "1d7cb0902ac135fc3a0ca2e7617bda5d74ce3185bad0ca31d336185b1a5b688a",
+            },
+            ["0.9.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-uefi/archive/refs/tags/0.9.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-uefi/releases/download/0.9.0/openkal-uefi-0.9.0.tar.gz",
+                },
+                sha256 = "1581fffd2bc4e44502ad02c68c3ee19fa94241a70de8a0b61df0952acca952d7",
+            },
             ["0.8.1"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-uefi/archive/refs/tags/0.8.1.tar.gz",
@@ -192,6 +288,55 @@ package = {
             },
         },
         windows = {
+            ["0.13.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-uefi/archive/refs/tags/0.13.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-uefi/releases/download/0.13.0/openkal-uefi-0.13.0.tar.gz",
+                },
+                sha256 = "c3850cc6998c9055b48b5cd7b81fb74bc8dc08b37e9991462f52a966c2ebe902",
+            },
+            ["0.12.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-uefi/archive/refs/tags/0.12.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-uefi/releases/download/0.12.0/openkal-uefi-0.12.0.tar.gz",
+                },
+                sha256 = "844278883d7b848767da87192c92534fa8563b7ac9a1651ce9fe71ec1bf85385",
+            },
+            ["0.11.2"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-uefi/archive/refs/tags/0.11.2.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-uefi/releases/download/0.11.2/openkal-uefi-0.11.2.tar.gz",
+                },
+                sha256 = "0f259e48164c1584f89935de7000f1679bbbab0d5f8261b628bf4538c066459e",
+            },
+            ["0.11.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-uefi/archive/refs/tags/0.11.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-uefi/releases/download/0.11.1/openkal-uefi-0.11.1.tar.gz",
+                },
+                sha256 = "012c121996b00bd9dbea15b180a21fafcf6e97af35221ef981891267e4e8a807",
+            },
+            ["0.11.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-uefi/archive/refs/tags/0.11.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-uefi/releases/download/0.11.0/openkal-uefi-0.11.0.tar.gz",
+                },
+                sha256 = "14d5be54520a502f13738160f0b3344a4429df6fa1440b25c8a97430a892ba70",
+            },
+            ["0.10.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-uefi/archive/refs/tags/0.10.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-uefi/releases/download/0.10.0/openkal-uefi-0.10.0.tar.gz",
+                },
+                sha256 = "1d7cb0902ac135fc3a0ca2e7617bda5d74ce3185bad0ca31d336185b1a5b688a",
+            },
+            ["0.9.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-uefi/archive/refs/tags/0.9.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-uefi/releases/download/0.9.0/openkal-uefi-0.9.0.tar.gz",
+                },
+                sha256 = "1581fffd2bc4e44502ad02c68c3ee19fa94241a70de8a0b61df0952acca952d7",
+            },
             ["0.8.1"] = {
                 url    = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-uefi/archive/refs/tags/0.8.1.tar.gz",

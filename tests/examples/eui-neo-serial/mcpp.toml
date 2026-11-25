@@ -1,0 +1,22 @@
+[package]
+name = "eui-neo-serial-tests"
+version = "0.1.0"
+
+# compat.eui-neo's `serial` feature: modules/serial/serial.cpp is upstream's
+# first optional module with a TU of its own (CMake builds it as
+# eui::module_serial, outside CORE_SOURCES), so the descriptor exposes it as a
+# source-gated feature rather than compiling termios/Win32 code into every
+# consumer.
+#
+# The assertion is link-time first: without the feature, SerialPort's
+# constructor/destructor/open() are undefined symbols. The runtime half opens a
+# device path that cannot exist on any platform, so it needs no hardware and is
+# deterministic — open() must report !ok and leave the port closed.
+#
+# The `compat` index redirect is inherited from the workspace root.
+[dependencies.compat]
+eui-neo = { version = "0.6.3", features = ["serial"] }
+
+# The candidate index: this checkout (compat.*), not the published one.
+[indices]
+compat = { path = "../../.." }

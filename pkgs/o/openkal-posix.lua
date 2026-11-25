@@ -22,6 +22,20 @@ package = {
 
     xpm = {
         linux = {
+            ["0.2.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-posix/archive/refs/tags/0.2.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-posix/releases/download/0.2.0/openkal-posix-0.2.0.tar.gz",
+                },
+                sha256 = "23eb05805a5ef7a10468e6da4e4897bb30b96a3a8718ec42e56601a8f7d0eecc",
+            },
+            ["0.1.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-posix/archive/refs/tags/0.1.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-posix/releases/download/0.1.1/openkal-posix-0.1.1.tar.gz",
+                },
+                sha256 = "070963e1682859cbeafab3425bfc9637bf106564918fbd0c5e04539ea63e7081",
+            },
             ["0.1.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-posix/archive/refs/tags/0.1.0.tar.gz",
@@ -31,6 +45,20 @@ package = {
             },
         },
         macosx = {
+            ["0.2.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-posix/archive/refs/tags/0.2.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-posix/releases/download/0.2.0/openkal-posix-0.2.0.tar.gz",
+                },
+                sha256 = "23eb05805a5ef7a10468e6da4e4897bb30b96a3a8718ec42e56601a8f7d0eecc",
+            },
+            ["0.1.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-posix/archive/refs/tags/0.1.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-posix/releases/download/0.1.1/openkal-posix-0.1.1.tar.gz",
+                },
+                sha256 = "070963e1682859cbeafab3425bfc9637bf106564918fbd0c5e04539ea63e7081",
+            },
             ["0.1.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-posix/archive/refs/tags/0.1.0.tar.gz",
@@ -40,6 +68,20 @@ package = {
             },
         },
         windows = {
+            ["0.2.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-posix/archive/refs/tags/0.2.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-posix/releases/download/0.2.0/openkal-posix-0.2.0.tar.gz",
+                },
+                sha256 = "23eb05805a5ef7a10468e6da4e4897bb30b96a3a8718ec42e56601a8f7d0eecc",
+            },
+            ["0.1.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/openkal-posix/archive/refs/tags/0.1.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/openkal-posix/releases/download/0.1.1/openkal-posix-0.1.1.tar.gz",
+                },
+                sha256 = "070963e1682859cbeafab3425bfc9637bf106564918fbd0c5e04539ea63e7081",
+            },
             ["0.1.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/openkal-posix/archive/refs/tags/0.1.0.tar.gz",

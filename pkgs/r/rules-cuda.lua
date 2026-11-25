@@ -1,5 +1,5 @@
 -- SUPERSEDED (2026-09-05). The CUDA rule now lives in the official plugin
--- collection `mcpp:plugins` (pkgs/m/mcpp.plugins.lua) as `mcpp.rules.cuda`,
+-- collection `mcpp:plugins` (pkgs/mcpp/mcpp.plugins.lua) as `mcpp.rules.cuda`,
 -- selected by the feature `rules-cuda`. This descriptor stays so a project
 -- pinned to mcpplibs:rules-cuda@0.1.0 keeps resolving; nothing new depends
 -- on it, and it receives no further versions.

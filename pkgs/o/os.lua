@@ -31,6 +31,34 @@ package = {
 
     xpm = {
         linux = {
+            ["0.4.8"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/os/archive/refs/tags/0.4.8.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/os/releases/download/0.4.8/os-0.4.8.tar.gz",
+                },
+                sha256 = "267fe1ac72e4506358995413d2e485863c60dc5cff52867fd8c057bc1c72b593",
+            },
+            ["0.4.7"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/os/archive/refs/tags/0.4.7.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/os/releases/download/0.4.7/os-0.4.7.tar.gz",
+                },
+                sha256 = "3facaf405dd84d78d8344cf40e51f54ca37f44c12ea8083fe9a71e727974e7bd",
+            },
+            ["0.4.6"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/os/archive/refs/tags/0.4.6.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/os/releases/download/0.4.6/os-0.4.6.tar.gz",
+                },
+                sha256 = "e14dd08cd5d7947daee3f8c1e01b6243781148555374d48f41a7086b43bf0fb3",
+            },
+            ["0.4.5"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/os/archive/refs/tags/0.4.5.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/os/releases/download/0.4.5/os-0.4.5.tar.gz",
+                },
+                sha256 = "6f8345fd0a9668e767edee9bab3fab9fe66a334d8569bc5879088c6ef59324b4",
+            },
             ["0.4.4"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/os/archive/refs/tags/0.4.4.tar.gz",
@@ -164,6 +192,34 @@ package = {
             },
         },
         macosx = {
+            ["0.4.8"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/os/archive/refs/tags/0.4.8.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/os/releases/download/0.4.8/os-0.4.8.tar.gz",
+                },
+                sha256 = "267fe1ac72e4506358995413d2e485863c60dc5cff52867fd8c057bc1c72b593",
+            },
+            ["0.4.7"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/os/archive/refs/tags/0.4.7.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/os/releases/download/0.4.7/os-0.4.7.tar.gz",
+                },
+                sha256 = "3facaf405dd84d78d8344cf40e51f54ca37f44c12ea8083fe9a71e727974e7bd",
+            },
+            ["0.4.6"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/os/archive/refs/tags/0.4.6.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/os/releases/download/0.4.6/os-0.4.6.tar.gz",
+                },
+                sha256 = "e14dd08cd5d7947daee3f8c1e01b6243781148555374d48f41a7086b43bf0fb3",
+            },
+            ["0.4.5"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/os/archive/refs/tags/0.4.5.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/os/releases/download/0.4.5/os-0.4.5.tar.gz",
+                },
+                sha256 = "6f8345fd0a9668e767edee9bab3fab9fe66a334d8569bc5879088c6ef59324b4",
+            },
             ["0.4.4"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/os/archive/refs/tags/0.4.4.tar.gz",
@@ -297,6 +353,34 @@ package = {
             },
         },
         windows = {
+            ["0.4.8"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/os/archive/refs/tags/0.4.8.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/os/releases/download/0.4.8/os-0.4.8.tar.gz",
+                },
+                sha256 = "267fe1ac72e4506358995413d2e485863c60dc5cff52867fd8c057bc1c72b593",
+            },
+            ["0.4.7"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/os/archive/refs/tags/0.4.7.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/os/releases/download/0.4.7/os-0.4.7.tar.gz",
+                },
+                sha256 = "3facaf405dd84d78d8344cf40e51f54ca37f44c12ea8083fe9a71e727974e7bd",
+            },
+            ["0.4.6"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/os/archive/refs/tags/0.4.6.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/os/releases/download/0.4.6/os-0.4.6.tar.gz",
+                },
+                sha256 = "e14dd08cd5d7947daee3f8c1e01b6243781148555374d48f41a7086b43bf0fb3",
+            },
+            ["0.4.5"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/os/archive/refs/tags/0.4.5.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/os/releases/download/0.4.5/os-0.4.5.tar.gz",
+                },
+                sha256 = "6f8345fd0a9668e767edee9bab3fab9fe66a334d8569bc5879088c6ef59324b4",
+            },
             ["0.4.4"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/os/archive/refs/tags/0.4.4.tar.gz",
