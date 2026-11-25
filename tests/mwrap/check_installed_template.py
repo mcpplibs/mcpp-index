@@ -29,6 +29,11 @@ STATIC_NOTICES = {
     "mcpplibs.mwrap.libjpeg_turbo": ("libjpeg_turbo.cppm", "upstream/libjpeg-turbo/README.ijg", b"Independent JPEG Group", b"libjpeg-turbo Project"),
     "mcpplibs.mwrap.basis_universal": ("basis_universal.cppm", "upstream/basis_universal/NOTICE", b"Binomial LLC", b"Basis Universal"),
     "mcpplibs.mwrap.libc": ("libc.cppm", None, b"", b"ISO/IEC 9899:2018"),
+    "mcpplibs.mwrap.abseil": ("abseil.cppm", "upstream/abseil-cpp/LICENSE", b"Apache License", b"The Abseil Authors"),
+    "mcpplibs.mwrap.openssl": ("openssl.cppm", "upstream/openssl/LICENSE.txt", b"Apache License", b"The OpenSSL Project Authors"),
+    "mcpplibs.mwrap.slint": ("slint.cppm", "upstream/slint/LICENSE.md", b"Slint License", b"SixtyFPS"),
+    "mcpplibs.mwrap.wuffs": ("wuffs.cppm", "upstream/wuffs/LICENSE", b"Apache License", b"The Wuffs Authors"),
+    "mcpplibs.mwrap.protobuf": ("protobuf.cppm", "upstream/protobuf/LICENSE", b"Redistribution and use in source and binary forms", b"Google"),
 }
 
 
@@ -39,8 +44,11 @@ def main():
     parser.add_argument("--package", default="mcpplibs.mwrap.onnxruntime@1.25.1.1")
     parser.add_argument("--deploy", action="store_true", help="pack, relocate and run the consumer; verify declared notices")
     parser.add_argument("--published-index", action="store_true", help="refresh the real public index instead of staging this checkout")
+    parser.add_argument("--mirror", choices=("GLOBAL", "CN"), default="GLOBAL",
+                        help="the download mirror of the run's home (mcpp self config --mirror)")
     parser.add_argument("--home", type=Path, help="reuse a dedicated test home across independent installed consumers")
     parser.add_argument("--run-arg", action="append", default=[])
+    parser.add_argument("--template", help="a named template of the package; omit for its default")
     parser.add_argument("--legacy-exact-key", action="store_true",
                         help="allow only mcpp's nonnumeric exact-version diagnostic; fail other build warnings")
     args = parser.parse_args()
@@ -60,41 +68,39 @@ def main():
         # mcpp 2026.10.26.1+ publishes only on request (mcpp docs/04, compile_commands);
         # the request is the run's, so the template's manifest stays as rendered.
         env = dict(os.environ, MCPP_HOME=str(home), MCPP_COMPILE_COMMANDS="compile_commands.json")
-        commands = [[args.mcpp, "self", "config", "--mirror", "GLOBAL"]]
+        commands = [[args.mcpp, "self", "config", "--mirror", args.mirror]]
         if args.published_index:
             commands.append([args.mcpp, "index", "update"])
         commands += [[args.mcpp, "new", "--list-templates", args.package],
-                     [args.mcpp, "new", "installed-quickstart", "--template", args.package]]
+                     [args.mcpp, "new", "installed-quickstart", "--template",
+                      args.package + (":" + args.template if args.template else "")]]
         for command in commands:
             print("+", " ".join(command), flush=True)
             subprocess.run(command, cwd=temporary, env=env, check=True)
         project = temporary / "installed-quickstart"
         manifest = tomllib.loads((project / "mcpp.toml").read_text(encoding="utf-8"))
-        # The key as written: quoted (one key) or dotted (nested tables), the form mcpp 2026.11.8.1 asks for.
-        quoted_key = identity in manifest["dependencies"]
-        dependency = manifest["dependencies"].get(identity)
-        if dependency is None:
-            dependency = manifest["dependencies"]
-            for part in identity.split("."):
-                dependency = dependency[part]
+        # The key as written is the dotted selector (nested tables), the form mcpp 2026.11.8.1 asks
+        # for; a quoted key (one key) is deprecated and is removed in 2027.2.
+        assert identity not in manifest["dependencies"], f"the template writes {identity} quoted"
+        dependency = manifest["dependencies"]
+        for part in identity.split("."):
+            dependency = dependency[part]
         actual_version = dependency if isinstance(dependency, str) else dependency["version"]
-        assert actual_version == version, dependency
+        # The command line's `@` selects by the written prefix (mcpp 2026.11.21.1+, SPEC-001 §4.5): the
+        # template is rendered for the newest key under it (`@1.3` renders 1.3.1), and the checks
+        # below read that key's install. An earlier mcpp renders the written key itself.
+        assert actual_version == version or actual_version.startswith(version + "."), dependency
+        version = actual_version
         if isinstance(dependency, dict):
             assert "path" not in dependency and "git" not in dependency, dependency
         # The build is strict unless the published template states a reading mcpp
         # still accepts with a warning: then that warning, and no other, is allowed.
         # A template's archive is immutable; its next release writes the current form.
-        #   - legacy exact key: an upstream nonnumeric release key, not a version range;
-        #   - quoted key: a template from before mcpp 2026.11.8.1 renders `"{{self.name}}"`,
-        #     one quoted key, where the selector is now written unquoted (mcpp#904).
+        #   - legacy exact key: an upstream nonnumeric release key, not a version range.
         allowed = []
         if args.legacy_exact_key:
             assert not version[0].isdigit(), "This exception is only for upstream nonnumeric release keys"
             allowed.append(f"[dependencies] {identity} = '{version}' is not a version RANGE ")
-        if quoted_key:
-            allowed.append(f'[dependencies] "{identity}" is deprecated since mcpp 2026.11.8.1')
-            print(f"note: the template of {identity}@{version} writes its dependency key quoted; "
-                  "its next release writes it unquoted", flush=True)
         build = [args.mcpp, "build", "--toolchain", args.toolchain]
         if not allowed:
             build.append("--strict")
@@ -130,7 +136,20 @@ def main():
             command = [args.mcpp, "pack", "--toolchain", args.toolchain, "--mode", mode,
                        "--pkg-format", "dir", "--output", "deployment-audit"]
             print("+", " ".join(command), flush=True)
-            subprocess.run(command, cwd=project, env=env, check=True)
+            packed = subprocess.run(command, cwd=project, env=env, text=True,
+                                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            print(packed.stdout, end="", flush=True)
+            # A program whose packages state what the host provides (`[runtime] capabilities`,
+            # a display and a GL driver for compat.slint) cannot carry everything: the refusal
+            # names them, and the vendored form is the one that holds.
+            if packed.returncode != 0 and mode == "self-contained" \
+                    and "cannot be used by a program that needs the host to provide" in packed.stdout:
+                mode = "vendored"
+                command[command.index("--mode") + 1] = mode
+                print("+", " ".join(command), flush=True)
+                subprocess.run(command, cwd=project, env=env, check=True)
+            elif packed.returncode != 0:
+                raise subprocess.CalledProcessError(packed.returncode, command, packed.stdout)
             bundle = project / "target/dist/deployment-audit"
             relocated = temporary / "relocated/bundle"
             shutil.copytree(bundle, relocated, symlinks=True)
@@ -495,6 +514,7 @@ def main():
             runtime_env.update(HOME=str(empty_home), USERPROFILE=str(empty_home))
             if sys.platform.startswith("linux"):
                 runtime_env["PATH"] = "/usr/bin:/bin"
+            if mode == "self-contained":
                 launcher = relocated / "run.sh"
             else:
                 filename = "installed-quickstart" + (".exe" if os.name == "nt" else "")
@@ -505,7 +525,8 @@ def main():
                     system_root = os.environ.get("SystemRoot", r"C:\Windows")
                     runtime_env["PATH"] = os.pathsep.join([system_root, str(Path(system_root) / "System32")])
             subprocess.run([str(launcher)], cwd=empty_home, env=runtime_env, check=True)
-            if sys.platform.startswith("linux"):
+            # The loader travels only with a self-contained bundle.
+            if mode == "self-contained":
                 loader = relocated / "lib/ld-linux-x86-64.so.2"
                 listing = subprocess.run([str(loader), "--library-path", str(relocated / "lib"),
                                           "--list", str(relocated / "bin/installed-quickstart")],

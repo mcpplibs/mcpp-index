@@ -4,6 +4,10 @@
 -- The wrapper is Apache-2.0; the library it links, compat.zstd (Zstandard
 -- 1.5.7), is under the BSD license or the GPLv2, linked statically: the package
 -- deploys its README and both licenses beside programs (runtime.deploy).
+--
+-- 1.5.7.1 is a wrapper revision: its templates write the dependency selector
+-- unquoted (`mcpplibs.mwrap.zstd = ...`); the quoted form is deprecated
+-- since mcpp 2026.11.8.1 and removed in 2027.2.
 package = {
     spec = "1",
     namespace = "mcpplibs.mwrap",
@@ -20,6 +24,13 @@ package = {
     },
     xpm = {
         linux = {
+            ["1.5.7.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/zstd-m/releases/download/mwrap-1.5.7.1/zstd-m-1.5.7.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mwrap-zstd/releases/download/1.5.7.1/zstd-m-1.5.7.1.tar.gz",
+                },
+                sha256 = "654e7be287b02467cfa1c8d303204005bf0695ffa4fe3c2c9b436794a359c5e9",
+            },
             ["1.5.7"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/zstd-m/releases/download/mwrap-1.5.7/zstd-m-1.5.7.tar.gz",
@@ -29,6 +40,13 @@ package = {
             },
         },
         macosx = {
+            ["1.5.7.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/zstd-m/releases/download/mwrap-1.5.7.1/zstd-m-1.5.7.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mwrap-zstd/releases/download/1.5.7.1/zstd-m-1.5.7.1.tar.gz",
+                },
+                sha256 = "654e7be287b02467cfa1c8d303204005bf0695ffa4fe3c2c9b436794a359c5e9",
+            },
             ["1.5.7"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/zstd-m/releases/download/mwrap-1.5.7/zstd-m-1.5.7.tar.gz",
@@ -38,6 +56,13 @@ package = {
             },
         },
         windows = {
+            ["1.5.7.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/zstd-m/releases/download/mwrap-1.5.7.1/zstd-m-1.5.7.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mwrap-zstd/releases/download/1.5.7.1/zstd-m-1.5.7.1.tar.gz",
+                },
+                sha256 = "654e7be287b02467cfa1c8d303204005bf0695ffa4fe3c2c9b436794a359c5e9",
+            },
             ["1.5.7"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/zstd-m/releases/download/mwrap-1.5.7/zstd-m-1.5.7.tar.gz",

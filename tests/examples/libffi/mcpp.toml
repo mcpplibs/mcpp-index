@@ -10,3 +10,7 @@ version = "0.1.0"
 
 [target.'cfg(linux)'.dependencies.compat]
 libffi = "3.4.8"
+
+# The candidate index: this checkout (compat.*), not the published one.
+[indices]
+compat = { path = "../../.." }

@@ -47,10 +47,11 @@
 --     include/coro/semaphore.hpp:5:10: fatal error: coro/export.hpp: No such file or directory
 --
 -- The snapshot below is CMake's own output shape for `BASE_NAME CORO`, and
--- `CORO_STATIC_DEFINE` goes in `defines` rather than `cxxflags` because the
--- macro decorates DECLARATIONS a consumer includes — package-private flags
--- would leave every consumer importing symbols from a shared library that is
--- not being built.
+-- `CORO_STATIC_DEFINE` is a feature's define that `default` implies, because
+-- the macro decorates DECLARATIONS a consumer includes: package-private flags
+-- and `defines` would leave every consumer importing symbols from a shared
+-- library that is not being built. A feature's `defines` reach the consumer
+-- (CURL_STATICLIB in compat.curl, LZMA_API_STATIC in compat.xz).
 --
 -- Requires a C++20 coroutine-capable compiler, which every toolchain this
 -- index ships is; there is no flag to add on gcc/clang at C++23.
@@ -162,7 +163,10 @@ package = {
         targets = { ["libcoro"] = { kind = "lib" } },
         deps    = { },
 
-        defines = { "CORO_STATIC_DEFINE" },
+        features = {
+            ["default"]   = { implies = { "staticlib" } },
+            ["staticlib"] = { defines = { "CORO_STATIC_DEFINE" } },
+        },
 
         linux = {
             -- The thread pool and the awaitable primitives are threads.

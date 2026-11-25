@@ -10,8 +10,8 @@ import tomllib
 
 
 PACKAGES = {
-    "opencv": "5.0.0.1", "onnxruntime": "1.25.1.1", "llamacpp": "b10069",
-    "ffmpeg": "8.1.2.1", "grpc": "1.83.0", "imgui": "1.92.8", "godot_cpp": "10.0.0",
+    "opencv": "5.0.0.1", "onnxruntime": "1.25.1.1", "llamacpp": "b10069.2",
+    "ffmpeg": "8.1.2.1", "grpc": "1.83.0", "imgui": "1.92.8.1", "godot_cpp": "10.0.0.1",
 }
 
 
@@ -62,7 +62,12 @@ def main():
             project_name = "git-" + name.replace("_", "-")
             run("new", project_name, "--template", selector)
             manifest = tomllib.loads((root / project_name / "mcpp.toml").read_text())
-            dependency = manifest["dependencies"][identity]
+            # The key as written: quoted (one key) or dotted (nested tables).
+            dependency = manifest["dependencies"].get(identity)
+            if dependency is None:
+                dependency = manifest["dependencies"]
+                for part in identity.split("."):
+                    dependency = dependency[part]
             actual = dependency if isinstance(dependency, str) else dependency["version"]
             assert actual == version, (identity, dependency)
             print("Verified Git-index identity and unmodified scaffold", selector, flush=True)

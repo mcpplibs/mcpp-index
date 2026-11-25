@@ -239,6 +239,30 @@ sha256="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
                 with self.assertRaisesRegex(RuntimeError, "existing descriptors removed"):
                     ci.audit("HEAD", root / "coverage.json")
 
+    def test_a_moved_descriptor_is_audited_against_the_file_it_came_from(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            pkgs = root / "pkgs/f"
+            pkgs.mkdir(parents=True)
+            (pkgs / "compat.old.lua").write_text(descriptor("old"))
+            git = lambda *args: subprocess.run(
+                ["git", "-c", "user.name=Test", "-c", "user.email=test@example.com", *args],
+                cwd=root, check=True, capture_output=True)
+            for args in (("init",), ("add", "."), ("commit", "-m", "baseline")):
+                git(*args)
+            with patch.object(ci, "ROOT", root):
+                # Moved with every row kept: fine.
+                (root / "pkgs/mcpp").mkdir()
+                git("mv", "pkgs/f/compat.old.lua", "pkgs/mcpp/compat.old.lua")
+                git("commit", "-m", "move")
+                ci.audit("HEAD~1", root / "coverage.json")
+                # Moved and a published version dropped: still refused.
+                moved = root / "pkgs/mcpp/compat.old.lua"
+                moved.write_text(moved.read_text().replace('["1.0.0"]', '["9.9.9"]'))
+                git("commit", "-am", "drop a version")
+                with self.assertRaisesRegex(RuntimeError, "existing version removed"):
+                    ci.audit("HEAD~2", root / "coverage.json")
+
     def test_revision_allows_packaging_fix_but_not_resource_drift(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

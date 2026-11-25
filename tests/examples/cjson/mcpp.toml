@@ -7,3 +7,7 @@ version = "0.1.0"
 
 [dependencies.compat]
 cjson = "1.7.19"
+
+# The candidate index: this checkout (compat.*), not the published one.
+[indices]
+compat = { path = "../../.." }

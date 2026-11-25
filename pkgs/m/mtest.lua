@@ -49,6 +49,23 @@
 -- 0.9.0 reads a selection's `!<id>` (the case and the cases it declares are left out)
 -- and `?<id>` (selected where declared, not missing otherwise), so a runner divides a
 -- long case by the cases it declares (SPEC-017 P4.3).
+--
+-- 0.10.0 records a timed-out program's processes, asks it to end, and ends what still
+-- runs after its grace (`grace`, `timeout_record`).
+--
+-- 0.11.0 writes a case's steps and the surface it used (P5.6), checks a case's processes
+-- and diagnostic lines at its end, holds one budget for the machine (O11), waits at
+-- contention points under jitter (O12), records the machine's class, judges [budget] and
+-- [ledger.*] in the gate, and costs a file's first case and expectation 265 ms under GCC.
+--
+-- 0.11.1 holds a command an end-to-end case runs to what its case has left of its time
+-- (`time_left()`).
+--
+-- 0.11.2: what a case that runs only as the scope of a selected case does (a step, an
+-- exercise, an artifact, a metric, a fixture) names no case.
+--
+-- 0.11.3: a ledger is judged by a set that runs every case; another set's gate notes that it
+-- did not judge them.
 package = {
     spec        = "1",
     namespace   = "mcpplibs",
@@ -67,6 +84,41 @@ package = {
 
     xpm = {
         linux = {
+            ["0.11.3"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.11.3.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mtest/releases/download/v0.11.3/mtest-v0.11.3.tar.gz",
+                },
+                sha256 = "da46a7361a5c7dbdcad3aab3d7e2de324bd5b8248967dd787eedf1ae6b5f529f",
+            },
+            ["0.11.2"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.11.2.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mtest/releases/download/v0.11.2/mtest-v0.11.2.tar.gz",
+                },
+                sha256 = "1236da4c4529faaf1c4524611e653f89c7fa43868d279357ade85cf7e3fcbc4c",
+            },
+            ["0.11.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.11.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mtest/releases/download/v0.11.1/mtest-v0.11.1.tar.gz",
+                },
+                sha256 = "69c45ff361a99fc578de9450628d86cb64996dfd9c01ff4e9fd71710ec1b3509",
+            },
+            ["0.11.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.11.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mtest/releases/download/v0.11.0/mtest-v0.11.0.tar.gz",
+                },
+                sha256 = "457635770e34e1915b0ed87032c12f435f45a1477caaa60a4ffe9da56da7d398",
+            },
+            ["0.10.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.10.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mtest/releases/download/v0.10.0/mtest-v0.10.0.tar.gz",
+                },
+                sha256 = "70c81ff6c6ef6a4b29918e0fa8105e87a5f5b373db584d37cb217772a733f818",
+            },
             ["0.9.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.9.0.tar.gz",
@@ -195,6 +247,41 @@ package = {
             },
         },
         macosx = {
+            ["0.11.3"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.11.3.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mtest/releases/download/v0.11.3/mtest-v0.11.3.tar.gz",
+                },
+                sha256 = "da46a7361a5c7dbdcad3aab3d7e2de324bd5b8248967dd787eedf1ae6b5f529f",
+            },
+            ["0.11.2"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.11.2.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mtest/releases/download/v0.11.2/mtest-v0.11.2.tar.gz",
+                },
+                sha256 = "1236da4c4529faaf1c4524611e653f89c7fa43868d279357ade85cf7e3fcbc4c",
+            },
+            ["0.11.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.11.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mtest/releases/download/v0.11.1/mtest-v0.11.1.tar.gz",
+                },
+                sha256 = "69c45ff361a99fc578de9450628d86cb64996dfd9c01ff4e9fd71710ec1b3509",
+            },
+            ["0.11.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.11.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mtest/releases/download/v0.11.0/mtest-v0.11.0.tar.gz",
+                },
+                sha256 = "457635770e34e1915b0ed87032c12f435f45a1477caaa60a4ffe9da56da7d398",
+            },
+            ["0.10.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.10.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mtest/releases/download/v0.10.0/mtest-v0.10.0.tar.gz",
+                },
+                sha256 = "70c81ff6c6ef6a4b29918e0fa8105e87a5f5b373db584d37cb217772a733f818",
+            },
             ["0.9.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.9.0.tar.gz",
@@ -323,6 +410,41 @@ package = {
             },
         },
         windows = {
+            ["0.11.3"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.11.3.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mtest/releases/download/v0.11.3/mtest-v0.11.3.tar.gz",
+                },
+                sha256 = "da46a7361a5c7dbdcad3aab3d7e2de324bd5b8248967dd787eedf1ae6b5f529f",
+            },
+            ["0.11.2"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.11.2.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mtest/releases/download/v0.11.2/mtest-v0.11.2.tar.gz",
+                },
+                sha256 = "1236da4c4529faaf1c4524611e653f89c7fa43868d279357ade85cf7e3fcbc4c",
+            },
+            ["0.11.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.11.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mtest/releases/download/v0.11.1/mtest-v0.11.1.tar.gz",
+                },
+                sha256 = "69c45ff361a99fc578de9450628d86cb64996dfd9c01ff4e9fd71710ec1b3509",
+            },
+            ["0.11.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.11.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mtest/releases/download/v0.11.0/mtest-v0.11.0.tar.gz",
+                },
+                sha256 = "457635770e34e1915b0ed87032c12f435f45a1477caaa60a4ffe9da56da7d398",
+            },
+            ["0.10.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.10.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mtest/releases/download/v0.10.0/mtest-v0.10.0.tar.gz",
+                },
+                sha256 = "70c81ff6c6ef6a4b29918e0fa8105e87a5f5b373db584d37cb217772a733f818",
+            },
             ["0.9.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpp-community/mtest/archive/refs/tags/v0.9.0.tar.gz",

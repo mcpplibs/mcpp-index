@@ -14,3 +14,7 @@ version = "0.1.0"
 
 [dependencies.compat]
 spdlog = { version = "1.17.0", features = ["compiled"] }
+
+# The candidate index: this checkout (compat.*), not the published one.
+[indices]
+compat = { path = "../../.." }

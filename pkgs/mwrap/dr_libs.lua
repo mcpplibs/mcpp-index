@@ -6,6 +6,10 @@
 -- is a choice of Unlicense or MIT-0, linked statically: the package deploys
 -- dr_libs' README and LICENSE beside programs (runtime.deploy) with its own
 -- LICENSE and NOTICE.
+--
+-- 2026.03.03.1 is a wrapper revision: its templates write the dependency selector
+-- unquoted (`mcpplibs.mwrap.dr_libs = ...`); the quoted form is deprecated
+-- since mcpp 2026.11.8.1 and removed in 2027.2.
 package = {
     spec = "1",
     namespace = "mcpplibs.mwrap",
@@ -22,6 +26,13 @@ package = {
     },
     xpm = {
         linux = {
+            ["2026.03.03.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/dr_libs-m/releases/download/mwrap-2026.03.03.1/dr_libs-m-2026.03.03.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mwrap-dr_libs/releases/download/2026.03.03.1/dr_libs-m-2026.03.03.1.tar.gz",
+                },
+                sha256 = "03e13284513064882e86868fb9085657bd16e6ecd28ccc14160a780aa0a85b97",
+            },
             ["2026.03.03"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/dr_libs-m/releases/download/mwrap-2026.03.03/dr_libs-m-2026.03.03.tar.gz",
@@ -31,6 +42,13 @@ package = {
             },
         },
         macosx = {
+            ["2026.03.03.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/dr_libs-m/releases/download/mwrap-2026.03.03.1/dr_libs-m-2026.03.03.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mwrap-dr_libs/releases/download/2026.03.03.1/dr_libs-m-2026.03.03.1.tar.gz",
+                },
+                sha256 = "03e13284513064882e86868fb9085657bd16e6ecd28ccc14160a780aa0a85b97",
+            },
             ["2026.03.03"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/dr_libs-m/releases/download/mwrap-2026.03.03/dr_libs-m-2026.03.03.tar.gz",
@@ -40,6 +58,13 @@ package = {
             },
         },
         windows = {
+            ["2026.03.03.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/dr_libs-m/releases/download/mwrap-2026.03.03.1/dr_libs-m-2026.03.03.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mwrap-dr_libs/releases/download/2026.03.03.1/dr_libs-m-2026.03.03.1.tar.gz",
+                },
+                sha256 = "03e13284513064882e86868fb9085657bd16e6ecd28ccc14160a780aa0a85b97",
+            },
             ["2026.03.03"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/dr_libs-m/releases/download/mwrap-2026.03.03/dr_libs-m-2026.03.03.tar.gz",

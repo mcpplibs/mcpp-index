@@ -2,6 +2,8 @@
 
 模块封装统一使用 `mcpplibs.mwrap.<lib>`，描述符位于 `pkgs/mwrap/<lib>.lua`；见 [mwrap 规范](mwrap.md)。每个 -m 仓库必须提供默认英文与中文 README。
 
+构建插件（`build.mcpp` 导入的模块）是 `<owner>.mplugin.<name>`，描述符位于 `pkgs/mcpp/`；见[构建插件](build-plugins.md)。
+
 
 [English](../package-types.md) | **简体中文**
 

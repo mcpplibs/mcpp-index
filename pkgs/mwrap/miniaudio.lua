@@ -7,6 +7,10 @@
 -- statically: the package deploys miniaudio's README and LICENSE beside
 -- programs (runtime.deploy). The wrapper's own CI covers Linux, macOS, Windows
 -- and the Web (wasm32-emscripten, tests under node).
+--
+-- 0.11.25.1 is a wrapper revision: its templates write the dependency selector
+-- unquoted (`mcpplibs.mwrap.miniaudio = ...`); the quoted form is deprecated
+-- since mcpp 2026.11.8.1 and removed in 2027.2.
 package = {
     spec = "1",
     namespace = "mcpplibs.mwrap",
@@ -23,6 +27,13 @@ package = {
     },
     xpm = {
         linux = {
+            ["0.11.25.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/miniaudio-m/releases/download/mwrap-0.11.25.1/miniaudio-m-0.11.25.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mwrap-miniaudio/releases/download/0.11.25.1/miniaudio-m-0.11.25.1.tar.gz",
+                },
+                sha256 = "33eb231cf18728cf64d9a901ccbd0148f184fbc57c71edea8908b505537a9215",
+            },
             ["0.11.25"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/miniaudio-m/releases/download/mwrap-0.11.25/miniaudio-m-0.11.25.tar.gz",
@@ -32,6 +43,13 @@ package = {
             },
         },
         macosx = {
+            ["0.11.25.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/miniaudio-m/releases/download/mwrap-0.11.25.1/miniaudio-m-0.11.25.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mwrap-miniaudio/releases/download/0.11.25.1/miniaudio-m-0.11.25.1.tar.gz",
+                },
+                sha256 = "33eb231cf18728cf64d9a901ccbd0148f184fbc57c71edea8908b505537a9215",
+            },
             ["0.11.25"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/miniaudio-m/releases/download/mwrap-0.11.25/miniaudio-m-0.11.25.tar.gz",
@@ -41,6 +59,13 @@ package = {
             },
         },
         windows = {
+            ["0.11.25.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/miniaudio-m/releases/download/mwrap-0.11.25.1/miniaudio-m-0.11.25.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mwrap-miniaudio/releases/download/0.11.25.1/miniaudio-m-0.11.25.1.tar.gz",
+                },
+                sha256 = "33eb231cf18728cf64d9a901ccbd0148f184fbc57c71edea8908b505537a9215",
+            },
             ["0.11.25"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/miniaudio-m/releases/download/mwrap-0.11.25/miniaudio-m-0.11.25.tar.gz",

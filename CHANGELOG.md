@@ -9,6 +9,132 @@
 
 ### Added
 
+- **mcpp.plugins 0.27.0：新成员 rules-qml（QML 应用），rules-qt 增加 `moc_json`、`moc_includes`、`i18n.extensions`、`compile_ex`（默认关闭，既有工程的指令不变）。** rules-qml 为每个 QML 模块声明 `qt_add_qml_module` 的动作链（moc --output-json、qmltyperegistrar、qmlcachegen、rcc、qsb、qmllint），把程序 import 的 Qt QML 模块放到程序旁并写 `qt.conf`；带上插件库的 `mcpp pack` 需要 mcpp 2026.11.23.1（mcpp#1011），包的下限仍是 2026.10.30.1。CN 镜像是 mcpp-res/mcpp-plugins 的 0.27.0 release 资产（与 GitHub 归档同一字节，sha256 一致）。
+- **compat.slint 依赖 compat.glx-runtime（Linux），声明 GLX 的能力：修复 NVIDIA 桌面上真窗口 abort。** compat.slint 依赖 libglvnd（GL 分发器），却没有依赖任何 GL 厂商的提供者；`compat.glfw`（经 compat.glx-runtime）、compat.libgbm、godot 等都依赖 `xim:graphics`（mesa、nvidia-gl-host-link、glvnd 的 glx-vendor 布线），Slint 没有。NVIDIA 的 X 服务器要求 GLX 厂商是 NVIDIA，glvnd 找不到 `libGLX_nvidia.so.0`，`glXChooseFBConfig` 返回 0 个配置，glutin 报 “argument does not name a valid config”，femtovg 没有回退，程序 abort；无头与软件渲染不受影响。现在 Linux 上 compat.slint 依赖 `compat.glx-runtime` 2026.09.11（与 compat.glfw 同写法），`runtime.capabilities` 补 `x11.display`、`opengl.glx.driver`，`dlopen_libs` 补 `libGLX.so.0`。在 NVIDIA 580.178.04、X11 的真机上，项目只加这一个依赖时 `mcpp run` 即可运行。原有的 `display`、`opengl.egl.driver` 暂时保留（没有任何包提供它们，Wayland 上的 EGL 路径没有提供者，也未验证）。
+- **新 lint：声明的能力必须有它依赖的包提供（`tests/check_capability_providers.lua`，警告，`--strict` 才失败）。** 索引里 14 个能力名中，当时只有 compat.slint 的 `display` 与 `opengl.egl.driver` 没有任何包提供；lint 同时报告 compat.sdl2 声明了 `x11.display` 却不依赖提供它的 compat.glx-runtime（未处理，需要在真机上确认 SDL2 的路径）。接入 `validate.yml`，测试在 `tests/test_check_capability_providers.py`。方案与证据见 `.agents/docs/2026-11-22-host-driver-link-and-display-path-plan.md`。
+- **官方的 mcpp.plugins 与 mcpp.platforms 搬进 `pkgs/mcpp/`**（纯重命名，文件名不变，已发布的行字节不变；构建插件规范 docs/build-plugins.md 的布局）。成员选择按身份匹配，搬迁前后选出的成员集合一致（`tests/select_members.py`）；客户端按描述符声明的身份扫描 `pkgs` 的子目录，与 `pkgs/mwrap/` 相同。
+- **构建插件的命名与布局规范（docs/build-plugins.md）与第一个新形态的包 mcpplibs.mplugin.slint 1.19.0。** 构建插件的 id 是 `<owner>.mplugin.<name>`，模块名与 C++ 命名空间就是这个 id（`mcpplibs.mplugin.slint`、`mcpplibs::mplugin::slint`），`mcpp.*` 保留给官方；`mplugin` 是种类段，如同封装包的 `mwrap`，所以引擎不被遮蔽，规则代码直接写 `mcpp::…`，在 CI 固定的 mcpp（2026.11.18.1）上实测零警告。描述符放在新目录 `pkgs/mcpp/`（完整 id 作文件名；目录是 mcpp 自己加载的包，身份仍以描述符声明为准）。新增 lint：`tests/check_mplugin_layout.lua`（`<owner>.mplugin` ↔ `pkgs/mcpp/`，owner 与 name 是标识符）；`check_reserved_namespace.lua` 另拒绝 owner 为 `mcpp`、保留名、`platforms` 与种类段（`tests/test_check_mplugin.py`）。`mcpplibs.mplugin.slint@1.19.0` 的归档是 slint-m 的 `mwrap-1.19.0.3`（同一字节、GLOBAL 与 CN），规则版本与封装包修订脱钩；`mcpplibs.mwrap.slint@1.19.0.3` 把规则 reexport，使用方仍只依赖封装包。成员 tests/mwrap/slint-rule 只测 build.mcpp 对该描述符的解析与规则运行（构建包与库包分开测）。设计与实施计划见 `.agents/docs/2026-11-21-mcpp-build-plugin-naming-plan.md`。
+- **mcpplibs.slintgen 冻结：** 被 mcpplibs.mplugin.slint 取代；1.19.0.1 与 1.19.0.2 的行与归档保持原样、仍可使用，不再有新版本，描述写明 FROZEN。写了老 id 的工程改依赖名即可迁移；只依赖封装包的工程不受影响。
+- **compat.slint 声明它以 `dlopen` 加载的库。** libslint_cpp 的 winit 与 femtovg 后端加载的 X11、xcb、Xcursor、Xi、Xrender、
+  xkbcommon、Wayland、EGL 与 GL 的 soname 记为运行期的必需（`runtime.dlopen_libs`），能力为 `display` 与 `opengl.egl.driver`；
+  mcpp 按发起加载的对象判定它们可达。声明宿主能力的程序不能以 `--mode self-contained` 打包；已安装模板的部署检查在 mcpp
+  按此拒绝时改用 `--mode vendored`（tests/mwrap/check_installed_template.py）。
+- **第四段的两种含义写入封装说明**（docs/mwrap.md）：上游的四段版本与封装修订；命令行的 `@<版本>` 按书写的前缀选择，`@=` 指名一个键。
+- **mtest 0.11.3（mcpplibs.mtest、.manifest、.gtest、.capi、.doctest）。** `mtest gate` 只在运行全部用例的集合（`full`、`release`、
+  声明了 `all` 的集合）中判定账本；其他集合的门禁判定失败与预算，并注明没有判定账本。库只改变它陈述的版本。成员
+  tests/examples/mtest-doctest 移到 0.11.3。
+- **mtest 0.11.2（mcpplibs.mtest、.manifest、.gtest、.capi、.doctest）。** 只作为选中用例的作用域运行的用例，其函数体中的
+  `step`、`exercise`、`artifact`、`metric` 与 `fixture` 事件不指名用例；运行器不再把它记为没有结束的用例。成员
+  tests/examples/mtest-doctest 移到 0.11.2。
+- **mtest 0.11.1（mcpplibs.mtest、.manifest、.gtest、.capi、.doctest）。** `time_left()` 给出用例余下的时间（其自身与外层作用域的
+  `timeout` 中最早结束者）；`e2e::run` 让一条命令在此之内结束，扣除结束命令所需与留给用例报告的时间。成员 tests/examples/mtest-doctest
+  移到 0.11.1。
+- **mcpplibs.cmdline 0.0.5.** `snapshot(const App&)` 是导出的函数，与 docs/api.md 所述一致：程序由解析它所用的定义列出自身的
+  命令与选项（mcpp 的 `mcpp emit surface`）。测试成员移到 0.0.5，并检验这一项。
+- **mtest 0.11.0（mcpplibs.mtest、.manifest、.gtest、.capi）与新包 mcpplibs.mtest.doctest。** 协议的 `step` 与 `exercise` 事件（P5.6）；
+  用例结束时检查它启动的进程与诊断行；机器的一份预算（O11）与抖动（O12）；运行记录机器的类别；`[budget]` 与 `[ledger.*]`
+  由门禁判定；GCC 上一个文件的首个用例与期望由 689 ms 降为 265 ms。`mcpplibs.mtest.doctest` 是 doctest 的协议适配器（1 级），
+  doctest 的实现与入口在包中编译一次，测试文件只包含头文件（mcpp-community/mtest#26）。成员 tests/examples/mtest-doctest。
+- **mcpplibs.mwrap.slint 1.19.0.2 与 mcpplibs.slintgen 1.19.0.2：规则的三个名字合为一个名字的三种拼写，使用方只依赖封装包。** 包 `mcpplibs.slintgen`、模块 `mcpp.mcpplibs.slintgen`、命名空间 `mcpp::mcpplibs::slintgen`（与 mcpplibs.openkal-bind 同形，SPEC-007 R9.6）；规则不再带 feature，`.slint` 文件是 `options::sources`，封装包 reexport 规则与 SDK，工程的 `mcpp.toml` 只需 `mcpplibs.mwrap.slint`，不需要 `[build-dependencies]`，`[build] sources` 里也不再列 `.slint`。1.19.0.1（模块 `slint.mcpp.plugins` 加 `features = ["slint"]`）保持已发布的字节。
+- **mcpplibs.mwrap.slint 1.19.0.1：slint-m，Slint 作为 C++23 模块；mcpplibs.slintgen 1.19.0.1：构建规则，模块 `slint.mcpp.plugins`。** 模块 `mcpplibs.mwrap.slint`（slint、slint::language）、`.interpreter`、`.platform`（仅 Clang；GCC 16 在包着 `slint-platform.h` 的模块上 ICE，故以文本 `#include` 提供）与 `.macros`（13 个 `SLINT_FEATURE_*` 常量），导出面由 SDK 头文件的 AST 生成并审计；链接 compat.slint 1.19.0。规则包 slintgen（同一归档的 `rules/`，与 grpcgen 同形）为每个 `.slint` 文件运行 `slint-compiler`（上游 `slint_target_sources` 的选项、每个输入一条带 depfile 的 action），设置 `module` 后每个文件还生成一个模块单元（`import app.ui;`）；工程在 `[build-dependencies]` 写 `features = ["slint"]` 以认领 `.slint`。模块以库名命名而不用 `mcpp.plugins.*`（R9.6 把它留给 mcpp 命名空间，索引不收录此类包）；1.19.0 已打标签与镜像但未收录，改名以修订号 1.19.0.1 发布。成员 tests/mwrap/slint-ui；默认模板 `hello`（无头时用软件渲染器）。Linux x86_64、macOS arm64、Windows x86_64（compat.slint 的载荷暂无 Linux aarch64）。
+- **compat.slint 1.19.0：Slint 的 C++ SDK（`libslint_cpp`、头文件 `slint/`、`slint-compiler`），上游 CMake 的桌面默认功能集（GPL-3.0-only / Royalty-free-2.0 / Software-3.0 三选一）。** 载荷是生态里的 `xim:slint`（xlings-res/slint，GitHub 与 GitCode 逐字节相同；Linux x86_64、macOS arm64、Windows x86_64），由发布 tag 经 cargo 按默认功能集构建：Linux 上 `libslint_cpp` 只 NEEDED fontconfig 与 C 运行时（X11、Wayland、GL 均 dlopen）。描述符把载荷的 include、lib（Windows 为 bin 的 DLL）与 `slint-compiler` 放进包的目录，`SLINT_FEATURE_*` 由 `<slint.h>` 的默认功能集定义。成员 tests/examples/slint：SharedString、VectorModel、Color，解释器编译一段源码并在无头平台上驱动组件。Linux aarch64 暂缺：`xim:fontconfig` 尚无 aarch64 载荷。
+- **mcpplibs.mwrap.wuffs 0.3.6：wuffs-m（Wuffs 的 C++23 模块），基于 compat.wuffs 0.3.6。** 每个上游包一个模块（`.base`、`.png`、`.gif`、`.json`、`.gzip` 等 16 个）、`.aux`（`wuffs_aux`）与 `.macros`；由 clang AST 生成并审计：429 个全局名导出，315 个 `static inline` 函数在 `mcpplibs::mwrap::wuffs` 中同名同签名适配，296 个宏常量与 34 个函数名宏映射，11 个附原因列出。上游 `convert-to-nia` 的模块移植版与上游程序在 `test/data` 的 246 个文件上逐字节一致，82/82 个 NIA 校验和一致。成员 tests/mwrap/wuffs-decode；validate.yml 以真实归档做已安装模板与部署通知检查。CN：mcpp-res/mwrap-wuffs。
+- **compat.wuffs 0.3.6：Google 的 Wuffs，面向不可信文件格式的内存安全解码器（Apache-2.0）。** 上游只发布单文件 `release/c/wuffs-v0.3.c`：本包取 tag 归档，以一个生成的翻译单元在 `WUFFS_IMPLEMENTATION` 下按 C++ 编译，C API（`extern "C"`）与只在 C++ 下定义的 `wuffs_aux`（DecodeImage、DecodeJson、DecodeCbor）都在同一个库里；使用者按上游写法 `#include <wuffs-v0.3.c>`。成员 tests/examples/wuffs：版本串、gzip 经 C API、CRC-32 与 Adler-32 的标准校验值、PNG 经 DecodeImage 逐像素、截断 PNG 被拒绝、JSON 遍历。0.4 线上游仍为 alpha。
+- **openkal-platform 0.31.2：版本组的补丁，一个成员。** openkal-image 0.7.2（载体 openkal-run、工具 okld/okrun/okprof 与构建依赖
+  openkal-tools）：程序的副本按副本自己结束它的方式结束，映像以 fork 加 exec 启动的程序不再停在副本的 `kal_exit` 中
+  （mcpplibs/openkal-image#44、#45）。其余成员不变；平台的引擎下界仍为 mcpp 2026.11.17.1。
+- **openkal-image 0.7.2（openkal-ld、openkal-run、openkal-tools、openkal-bind）。** 程序的副本按副本自己结束它的方式结束：库以在地址空间
+  副本中启动上下文（openkal.space）组成 `fork`，副本持有运行器的内存而不持有运行器等待结束请求的任务；0.7.1 下副本的 `kal_exit`
+  等待该任务返回而不终止，映像以 fork 加 exec 启动的程序不结束。运行器比较它所在的程序与其任务所属的程序（`kal_process_info`、
+  `KAL_PINFO_ID`）：在副本中不等待该任务，结束请求属于副本自己（mcpplibs/openkal-image#44、#45）。依赖与 0.7.1 相同（openkal 0.26 一族）。
+- **openkal-platform 0.31.1：版本组的补丁，两个成员。** openkal-image 0.7.1（载体 openkal-run、工具 okld/okrun/okprof 与构建依赖
+  openkal-tools）：映像启动的映像文件经运行器的加载器进入，映像名为绝对路径；运行器在映像载入后接管结束请求，程序按映像结束它的
+  方式结束（mcpplibs/openkal-image#42、#43）。openkal-macos 0.24.1：由程序首个上下文之外的上下文处理的结束请求仍以请求结束程序
+  （#849）。其余成员不变；平台的引擎下界仍为 mcpp 2026.11.17.1。mcpp 2026.11.19.1 下指名 0.31.0 的工程仍取 openkal-macos 0.24.0
+  （mcpp-community/mcpp#956）。
+- **openkal-image 0.7.1（openkal-ld、openkal-run、openkal-tools、openkal-bind）。** 映像启动的映像文件或 okb 经运行器指名的加载器进入，
+  而非交给系统：受运行器的签名要求约束，观察到启动者给出的参数向量；不能发生的启动按原因拒绝（`kal_err_not_program`、
+  `kal_err_permission`），映像名（`kal_env_image`）为绝对路径（mcpplibs/openkal-image#42）；0.7.0 下映像启动映像文件在 Linux 上
+  以 SIGSEGV 结束。运行器在映像载入后才接管结束请求，等待请求的任务在程序结束前返回，程序按映像结束它的方式结束：GDB 15
+  继续到结束时不再停在 "Couldn't get registers: No such process"（mcpplibs/openkal-image#43）。依赖与 0.7.0 相同（openkal 0.26 一族）。
+- **openkal-macos 0.24.1。** 由程序首个上下文之外的上下文处理的结束请求，仍以请求结束程序：`kal_process_end_as_requested`
+  向程序重发信号后，在以 128 加信号号退出之前等待至多 0.1 s 的投递，与 openkal-linux 相同。内核把发给程序的信号交给第一个
+  未屏蔽它的上下文，而非调用者；0.24.0 从另一上下文调用时退出先到，起动者看到 143 而非 SIGTERM（okrun 0.7.0 的 runner
+  任务即如此）。该包测试由第二个上下文处理请求的二十个副本：0.24.0 的实现上 9 个以 SIGTERM 结束，0.24.1 上 20 个
+  （mcpplibs/openkal-macos#52、#54）。该条目在 mcpp 2026.11.19.1 发布后列出：此后对版本组成员的范围请求取组的版本
+  （mcpp-community/mcpp#956），openkal-platform 0.31.0 的 macOS 行仍取 0.24.0；mcpp 2026.11.18.1 下 mcpplibs.os 的范围
+  取最新版本，平台的版本组拒绝构建，故首次列出后撤下（#847）。
+- **mcpplibs.mwrap.openssl 3.5.9、mcpplibs.mwrap.abseil 20250512.1、mcpplibs.mwrap.protobuf 35.1、mcpplibs.protogen 35.1（新包），
+  mcpplibs.mwrap.grpc 1.83.0.1。** 三个新的 mwrap 封装，都是 compat 之上的薄封装，版本与上游一致：
+  openssl-m（OpenSSL 3.5 LTS：头文件的全部声明以 `using` 导出，334 个 `static ossl_inline` 函数重新声明，11632 个常量与 510 个
+  调用宏映射到 `mcpplibs::mwrap::openssl::macros`，其余宏由 `<mwrap/openssl/macros.hpp>` 提供；导出面记录在 `src/surface.tsv`，
+  由包的 build.mcpp 在构建时生成模块单元；Linux x86_64、Linux aarch64（LLVM）、macOS、Windows），abseil-m（Abseil LTS
+  20250512.1，按上游功能分组的子模块；Linux、macOS、Windows、Web），protobuf-m（Protocol Buffers 35.1：消息、描述符、反射、
+  知名类型、JSON 与文本格式、运行时解析 .proto；特性 `gzip`、`upb`、`codegen`；Linux、macOS、Windows、Web，`codegen` 仅
+  Linux 与 macOS）。protogen 是 protobuf-m 发布包中的 `rules/` 包：可 import 的 protoc 构建规则，每个 .proto 一条构建边，
+  `codegen` 特性转发它。grpc 1.83.0.1 是封装修订：改用 compat.openssl 3.5.9，与 openssl-m 同一 OpenSSL；gRPC 源码、模块与
+  API 不变，grpcgen 与 grpc-plugin 不变。四者共用 compat.abseil 20250512.1、compat.protobuf 35.1 与 compat.openssl 3.5.9，
+  同一程序只链接一份；成员 `grpc-protobuf-stack` 在一个翻译单元中 import 四者并核对 `absl::Status` 同一、OpenSSL 为 3.5.9。
+  GCC 16 下同时 import protobuf 与 Abseil 时，import Abseil 的分组模块而非根模块（根模块带入 `abseil.log`，GCC 随后读取模块失败），
+  且不在命名空间作用域对 protobuf 调用取 decltype（GCC 报告 descriptor.h 成员 "conflicting type for imported declaration"）；
+  Clang 两种写法都接受。GitHub 与 GitCode（mcpp-res/mwrap-openssl、mwrap-abseil、mwrap-protobuf、mwrap-grpc）字节一致。
+- **compat.openssl 3.5.9（3.5 LTS）。** 三个平台新增 3.5.9，3.5.1 保留；compat.curl、compat.httplib、compat.websocket、
+  compat.jwt-cpp、chriskohlhoff.asio 改用 3.5.9，compat.mysql-connector-cpp 26.7.0 以修订 1 改用 3.5.9。仍固定 3.5.1 的已发布
+  清单（如 yizhinailong.mcr 0.1.5）与它们同图时版本不可调和：在工作区根的 `[workspace.dependencies]` 写
+  `compat.openssl = { version = "3.5.9", override = true }` 选定一份（本仓库根 mcpp.toml 即如此）。
+- **mwrap 规范。** 上游库名取库本身的名字，不含仅区分语言的仓库后缀（abseil-cpp → abseil-m）；同一翻译单元中 `#include`
+  在 `import` 之前；以 Clang 审计导出面；手工无法维护的导出面以记录提交、由 build.mcpp 生成（docs/mwrap.md）。
+  `tests/mwrap/check_installed_template.py` 新增 `--template`，以覆盖非默认模板。
+- **mcpplibs.os 0.4.8。** `fs::stamp_of(node, false)` 不跟随链接，给出链接自身的大小与修改时间（openkal 的 `KAL_FS_NO_RESOLVE`），悬空的链接也有它自己的时间戳；缺省不变。mcpp 以它读取 xlings 存储的根的最后使用时间。GitHub 与 GitCode（mcpp-res/os）字节一致。
+- **mcpplibs.os 0.4.7。** `machine::processor_model()` 给出系统所称的处理器型号（Linux 的 `/proc/cpuinfo`，内核不给出型号时为实现者与部件号；macOS 的 `machdep.cpu.brand_string`；Windows 注册表的 `ProcessorNameString`；映像与 wasm 模块无回答）：同一标签的托管 runner 是处理器速度相差至多 1.6 倍的几种机器，跨机器比较的测量按它区分。`stdio::capture::take()` 分段取出被捕获的输出而不结束捕获；捕获不再刷新 openkal 的流（对文件即 `fsync`），在保留每个用例输出的运行器下 510 个用例的程序由 1.05 s 降为 0.03 s。GitHub 与 GitCode（mcpp-res/os）字节一致。
+- **mcpplibs.os 0.4.6。** 新增 `mcpplibs.os.text`：把被启动程序写出的文本按其编码解码为 UTF-8。编码为 `utf8`，或 `console`（Windows 控制台程序的约定：写入管道或文件时用所附着控制台的输出代码页，没有控制台时用系统的 ANSI 代码页；以 cl.exe 与 link.exe 测得，mcpp-community/mcpp#970）。`valid_utf8` 把不是 UTF-8 的序列按最大子部分替换为 U+FFFD。`windows::console_text_code_page` 与 `windows::utf8_from_code_page` 是其下的两项事实。openkal 的范围不变。
+- **openkal-platform 0.31.0：openkal 0.26 一族。** 平台的各层、载体、工具与各行使用 openkal 0.26.0 及其各实现（openkal-linux 0.27.0、openkal-macos 0.24.0、openkal-windows 0.23.0、openkal-freebsd 0.2.0、openkal-uefi 0.12.0、openkal-dos 与 openkal-dos-tools 0.2.0、openkal-svr4 0.3.0）、openkal-musl 0.30.0、openkal-llvm-runtime 0.21.0 与 openkal-image 0.7.0。System V 一行可以启动其他程序：openkal-svr4 0.3.0 声明 `openkal.process` 与 `openkal.space`，运行器为 ibcs-us 4.3-2。构建程序链接 mcpp.plugins 0.26.1（mcpplibs.os 0.4.5 接受 openkal 0.26）；平台的引擎下界仍为 mcpp 2026.11.17.1。
+- **mcpp.platforms 0.2.1。** `aarch64-netbsd` 与 `aarch64-openbsd` 两行获得运行器（此前只构建）：dirun 0.8.0 在
+  qemu-system-aarch64 的 `virt` 机器中、以 xim `ovmf` 的 AArch64 EDK II 固件启动 xim 的 `aarch64-netbsd-disk-image@10.2`
+  （NetBSD 10.2 的 arm64 live 映像，已首次启动一次）与 `aarch64-openbsd-disk-image@8.0`（由发行版 arm64 介质自动安装，
+  Cortex-A72），在 x86_64 主机上由 QEMU 翻译运行。各行不变；该包 CI 在两行上运行检查程序（`import std`、异常、参数、状态 7）。
+
+- **mcpp.plugins 0.26.1。** `plugins-core` 与 `plugins-progress` 经 mcpplibs.os 0.4.5 访问系统，它接受 openkal 0.24 至 0.26，
+  openkal 为 0.26 的图（openkal-platform 0.31）因此可以包含插件；0.4.4 只接受 0.24 与 0.25，openkal-platform 0.31 的构建程序
+  因版本不可调和被拒。成员不变，包的引擎下界仍为 mcpp 2026.10.30.1。
+- **openkal-svr4 0.3.0。** 声明 `openkal.process` 与 `openkal.space`：程序可启动、等待、终止另一程序并为其提供流、空设备或
+  通道（管道），并在其地址空间的副本中启动上下文（`kal_space_start`，基于 `fork`），C 库在其上组合出 `fork`；因此为该行构建的
+  shell 或命令解释器可以启动外部命令。规范测试套件（openkal 0.26.0，特性 `env,time,fs,terminal,process,space`）在 System V 内核
+  （AT&T UNIX System V/386 Release 4.0 Version 3.0，QEMU，xim 的 `svr4-disk-image`，仅技术验证）上 168 项成立、0 项不成立，
+  在 ibcs-us 4.3-2 的三种接口下各 157 项成立、0 项不成立；两者都由该包的 CI 运行。
+- **openkal-image 0.7.0（openkal-ld、openkal-run、openkal-tools、openkal-bind）、openkal-musl 0.30.0、openkal-llvm-runtime 0.21.0：
+  openkal 0.26 一族的级联。** okrun 在程序被请求结束时写出映像中每个任务正在等待的 openkal 调用，再按请求结束程序
+  （mcpplibs/openkal-image#41）。openkal-musl 依赖 openkal ^0.26.0 与各实现、openkal-ld ^0.7.0，并删除启动的 512 项界限：
+  启动只受环境约束，环境因大小拒绝的启动报告 `E2BIG`（此前为 `ENOSPC`，mcpp-community/mcpp#958，mcpplibs/openkal-musl#101）。
+  openkal-llvm-runtime 依赖 openkal-musl ^0.30.0（mcpplibs/openkal-llvm-runtime#76）。
+- **mtest 0.10.0（mcpplibs.mtest、.manifest、.gtest、.capi）。** 程序超时时先记录它的进程（Linux 上为程序、它启动的进程与其进程组，
+  含状态、等待的内核函数、处理器时间与结束请求对它的作用；其他系统为程序本身），再请求它结束，在宽限（`grace`，缺省 2 s）后
+  记录仍在运行的进程并结束其单元；`timeout_record = false` 不记录（mcpp-community/mtest#25）。
+- **openkal 0.26 一族，一次变更：openkal 0.26.0、openkal-kit 0.3.2、openkal-linux 0.27.0、openkal-macos 0.24.0、
+  openkal-windows 0.23.0、openkal-freebsd 0.2.0、openkal-uefi 0.12.0、openkal-dos 与 openkal-dos-tools 0.2.0、
+  openkal-svr4 0.2.0、openkal-posix 0.2.0、openkal-emscripten 0.15.0、openkal-opensbi 0.10.0。** 规范条款 7.6：
+  启动的参数向量与环境只受环境自身的界限约束，环境因大小拒绝的启动报告 `kal_err_no_space`（条款 11 第 64 条）；
+  各实现删除自己的条数界限（此前 512 项、报告内存不足），内核的 `E2BIG` 与 Windows 的长度拒绝转换为该值。
+  条款 7.18：单元引用写明系统的启动与进程空间，较早启动的引用与已由另一出生的程序持有的标识回答 `empty`，
+  另一空间与未保留原生标识的单元由 `kal_process_job_open` 以 `kal_err_not_supported` 拒绝，
+  `KAL_PROCESS_PROP_JOB_OBSERVE` 只在能建立引用处声明（第 65 条）。一致性套件 0.11.0 增加 2,000 个参数、
+  2,000 个变量与 1 MiB 参数的启动观察。测试工程的固定版本随之更新（mcpplibs/openkal#69 等）。
+- **mcpplibs.os 0.4.5。** 启动因参数与环境的大小被拒绝时报告 `kal_err_no_space`（消息 `spawn-too-large`），上下文写明给出的参数与变量的个数和字节数；
+  能否声明一个单元是属性 `units_observable()`；`env::kernel_layer()` 回答程序之下 openkal 层的版本；范围接纳 openkal 0.26 一族
+  （openkal-linux 0.27、openkal-macos 0.24、openkal-windows 0.23、openkal-emscripten 0.15）（mcpplibs/os#25）。
+- **mcpp.platforms 0.2.0。** 新增 GNU/Hurd（`x86_64-hurd`，Debian 基础库，版本与其运行的映像一致）与 Haiku（`x86_64-haiku`，hrev60431）两行，
+  均可 `import std`（GCC 15 的 std 模块），并在系统映像中经 dirun 运行；两行在 Linux 主机上构建，Hurd 亦可在 macOS 上构建；
+  Windows 主机不可（mcpp-community/mcpp#965），Haiku 在不区分大小写的文件系统上不可（mcpp-community/mcpp-platforms#5）。
+- **mcpp.plugins 0.26.0。** `tools-steps` 的 glob 支持排除模式（`*` 可跨越 `/`）；`dist-apk` 在 javac 和 kotlinc 编译前清空
+  class 目录，已移出包的源码不再把旧 class 带进下一次打包；`latest` 指向 0.26.0（mcpp-community/mcpp-plugins#60）。
+- **openkal-platform 0.30.1。** 行 `i686-svr4-musl` 的链接声明程序头（`link/svr4.ld`）：与此前相同的三个段，不写 `PT_PHDR`。
+  AT&T UNIX System V/386 Release 4.0 的内核会杀掉带 `PT_PHDR` 而无 `PT_INTERP` 的静态程序；仿真（ibcs-us）两种都接受。该行的程序
+  首次在这个内核上运行并通过（QEMU 中的 Release 4.0 Version 3.0，本地一次）。成员版本不变（mcpplibs/openkal-platform#38）。
+- **openkal-platform 0.30.0。** 新增行 `i686-svr4-musl`：UNIX System V Release 4 及其后裔的 i386 内核接口上的程序，建立在
+  openkal-svr4 0.1.0 之上，该实现由提供者陈述为该行的 `kernel-abi` 层，系统 `svr4` 由平台自己陈述；运行器为 xim 的 `ibcs-us`
+  （Linux x86_64 上对该接口的模拟，按需启用），未在 System V 内核上运行，档位为 `preview`。版本组取 openkal-musl 0.29.10 与
+  openkal-llvm-runtime 0.20.4。需要 mcpp 2026.11.17.1（平台包陈述系统）。条目的 `platform_rows` 增加该行
+  （mcpplibs/openkal-platform#36）。
 - **openkal-svr4 0.1.0（新包）、openkal-musl 0.29.10、openkal-llvm-runtime 0.20.4。** openkal-svr4 是 openkal 在 UNIX System V
   Release 4 及其后裔（UnixWare、Solaris x86、OpenServer）的 i386 内核接口上的实现：七个接口（`abort`、`stream`、`memory`、`env`、
   `time`、`fs`、`terminal`），程序是经调用门进入内核的静态 ELF32，不链接也不读取系统的任何文件；仅在接口的模拟（xim 的
@@ -70,6 +196,19 @@
 
 ### Changed
 
+- **工作区不再陈述索引，每个成员陈述自己测试所经的索引。** 根 `mcpp.toml` 的 `[indices] compat = { path = "." }` 由位置读取
+  （2026.10.10.1 弃用，2027.1 移除）；149 个成员改为各自写 `compat = { path = "<到检出的相对路径>" }`，与已以其他名字指向检出的
+  79 个成员同形；57 个 mwrap 成员与 5 个 mtest 示例为避开根的重定向而写的空 `[indices]` 删去。改用 `[workspace.indices]` 不可行：
+  它按名字合并，79 个成员会得到同一检出的两个名字，安装以 ambiguous 失败（mcpp 2026.11.22.1 起以 `index-location-named-twice`
+  拒绝）。29 个成员清单的依赖选择器去掉引号（父包与子包并存者除外）。`tests/test_prepare_mwrap_indices.py`、docs/mwrap.md、
+  docs/repository-and-schema.md 随之改写。
+- **28 个封装包发布模板修订，模板写不加引号的选择器。** fribidi 1.0.16.1、imgui 1.92.8.1、libarchive 3.8.7.1、libpng 1.6.43.1、
+  lua 5.4.7.1、miniaudio 0.11.25.1、pocketpy 2.2.0.1、quickjs_ng 0.17.0.1、sdl3 3.4.18.1、xxhash 0.8.3.1、xz 5.8.3.2、zlib 1.3.2.1、
+  zstd 1.5.7.1、accesskit 0.23.1.1、box2d 3.2.0.1、concurrentqueue 1.0.5.1、dr_libs 2026.03.03.1、freetype 2.13.3.1、godot_cpp
+  10.0.0.1、harfbuzz 14.3.0.1、libc 17.0.0.1、libvpx 1.17.0.1、libwebp 1.5.0.1、llamacpp b10069.2、md4c 0.5.3.1、mimalloc 3.6.1.1、
+  opus 1.6.1.1、sheenbidi 3.0.0.1（各包最新标签的 `templates/**/mcpp.toml.in` 测得写 `"{{self.name}}"`）。原有 CN 镜像的包在
+  `mcpp-res/mwrap-<名>` 发布同一字节。llama.cpp-m 的 `mwrap-b10069.1` 打了标签而未发布（其发布门禁所在的 runner 映像换了 clang，
+  API 快照的读法不同），`b10069.2` 带同一改动。
 - **compat.onnxruntime 以 `license_files` 陈述 SDK 的许可文件**（`LICENSE` 与 `ThirdPartyNotices.txt`）。mcpp 2026.11.17.1 在每种打包模式中
   把它们放在 `share/licenses/compat.onnxruntime/`；此前由 `deploy` 放在程序旁的 `licenses/onnxruntime/`。包装的 LICENSE 与 NOTICE
   仍由 mcpplibs.mwrap.onnxruntime 自己的 `deploy` 放在 `licenses/onnxruntime/wrapper/`。
@@ -79,6 +218,26 @@
 
 ### Fixed
 
+- **compat.curand 在 LLVM 构建的程序上可加载。** `libcurand.so.10` 需要 `libgcc_s.so.1`；以 LLVM 构建的产物链接 compiler-rt 与
+  libunwind，不加载它，mcpp 的运行时闭包检查拒绝该程序（`libgcc_s.so.1 not found on the search path`，linux llvm 行的
+  cuda-curand 成员）。compat.curand 依赖 `xim:gcc-runtime`，并把其中的 `libgcc_s.so.1` 与 glibc 的兼容桩一同链接进库目录，
+  与 compat.sycl-runtime 同形。
+- **compat.libarchive 去掉 Linux uapi 功能的条件改为 `cfg(all(linux, kernel-abi = "openkal"))`。** 此前的条件
+  `c-abi = "musl"` 本为 openkal 的图，也命中原生 musl 工具链（`musl-gcc`），而后者自带内核头文件；功能缺席的是内核接口这一层，
+  不是 C 库。macOS 上的 `-U__APPLE__` 同样改按 `kernel-abi` 选择。
+- **Windows 上静态库为每个包含其头文件的单元陈述静态 API 宏（archive 与 libarchive-bundle 启动即崩溃的根因）。** `lzma.h` 与
+  `archive.h` 在未定义 `LZMA_API_STATIC`、`LIBARCHIVE_STATIC` 时声明 dllimport；使用方经 lld-link 为本地定义造的 `__imp_` 槽调用，
+  回收无引用节的链接（mcpp 2026.11.9.1 起测试的链接）丢弃槽后的函数，首次调用跳到映像首字节（退出 133）。MSVC 的 link.exe 保留
+  这些函数，lld-link 不保留（mcpp-community/mcpp#1002）。compat.xz、compat.libarchive、compat.fribidi（此前宏只在 Windows 的私有
+  cflags）与 compat.libcoro（此前为私有 `defines`）改为由 `default` 蕴含的 `staticlib` feature，与 compat.curl、compat.c-ares 同形；
+  compat.cpptrace、compat.libassert、compat.yaml-cpp 原以 `#include_next` 垫片传递宏，改为同一 feature，垫片删去（垫片不能用于
+  cl.exe）。docs/repository-and-schema.md 原称 feature 的 `defines` 只作用于包自身，与 mcpp 不符，已改正。windows-2022 上以修正复测，
+  两个成员通过。
+- **compat.sdl2 与 taskflow.taskflow 在 clang 23 的 MSVC ABI 下编译（修订 1）。** clang 23 把 `_m_prefetch` 作为内建函数，SDL 2.32.10
+  的 `SDL_endian.h` 在该 ABI 下定义它，compat.sdl2 在 install() 中移植上游 SDL2 分支以 `!_SDL_HAS_BUILTIN(_m_prefetch)` 保护的一行；
+  taskflow 4.1.0 的 `tfprof.hpp` 以 `static inline` 定义两个命名空间作用域的函数，两个模块分区的全局模块片段各包含一次而修饰名相同，
+  taskflow.taskflow 在 install() 中改为 `inline`。
+- **compat.c-ares：`CARES_STATICLIB` 传给使用方（Windows 上 gRPC 启动即崩溃的根因）。** 此前只有包自身以该宏编译，使用方看到的 `<ares.h>` 把每个入口声明为 `__declspec(dllimport)`，经 lld-link 本地补全的 `__imp_` 槽调用静态库（LNK4217）。lld-link 在不带 `/DEBUG` 时默认 `/OPT:REF`，该槽不保住它的定义：定义所在目标文件只因随后被丢弃的代码而载入时，定义被丢弃、槽内为映像基址。gRPC 的 `ares_library_init` 正是如此，`grpc_init` 跳到 PE 头（0xC0000005，mcpp 报 exit 133）；四行 C 即可复现（llvm 23.1.3）。上游的 Bazel（`defines`）与 CMake（INTERFACE 定义）都把该宏传给依赖方；此处按 compat.curl 的写法以 `default` 隐含的 feature `defines` 传递。在装有旧 compat.c-ares 的 home 上实测生效，无需 packaging revision；gRPC 的模块测试在 Windows 默认链接参数下通过（grpc-m#10）。
 - **mcpp.plugins 0.23.1。** `dist-apk` 把构建程序在输出目录（`mcpp::out_dir()`、`target/`）中生成的 Java 或 Kotlin 根只作为
   `javac` 动作的输入，不再为其声明永远无法命中的重跑 glob，消除每次构建的警告。`latest` 指向 0.23.1
   （mcpp-community/mcpp-plugins#57）。
@@ -135,15 +294,21 @@
 
 ### Chore
 
-- **已安装模板的检查：模板写引号键时只允许该弃用警告。** mcpp 2026.11.8.1 之前发布的 mwrap 模板以 `"{{self.name}}"` 写依赖键，
-  渲染为一个带引号的键；`--strict` 拒绝这一弃用读法，归档又不可改。检查在渲染出引号键时不加 `--strict` 构建，只允许该包的这条
-  弃用警告，其余警告仍失败；模板的下一版写不带引号的选择器后自动恢复严格构建（onnxruntime-m 1.25.1；opencv-m、ffmpeg-m 的模板同形）。
-  该检查同时按新的位置核对 SDK 的许可文件，并为本次运行请求项目根的编译数据库（`MCPP_COMPILE_COMMANDS`；mcpp 2026.10.26.1 起只在
+- **已安装模板的检查可选镜像。** `tests/mwrap/check_installed_template.py` 新增 `--mirror {GLOBAL,CN}`（默认 GLOBAL）；此前固定为 GLOBAL，发布时的 CN 验收只能手工执行。`--published-index --mirror CN` 下 xxhash-m 0.8.3 的封装归档首次即从 gitcode.com 取得。
+- **已安装模板的检查拒绝写引号键的模板，并以 `--strict` 构建。** 引号键自 mcpp 2026.11.8.1 弃用、2027.2 移除；写它的 28 个封装包
+  各发布一个修订（见 Changed），检查以这些修订为对象，不再为引号键放行弃用警告。该检查同时按新的位置核对 SDK 的许可文件，并为本次运行请求项目根的编译数据库（`MCPP_COMPILE_COMMANDS`；mcpp 2026.10.26.1 起只在
   请求时写出），模板生成的清单保持原样；`mcpp pack` 改用 `--pkg-format`。
 
 - **mcpp.platforms 0.1.0 的条目列出每种宿主。** 条目此前只列 Linux，macOS 与 Windows 宿主无法安装该包
   （`has no build for windows`），它服务的行在这两种宿主上无法经索引构建（mcpp e2e 1116 测得）。包是一份陈述，
   各宿主使用同一个归档。 测试成员 `tests/examples/mcpp-platforms` 为这些行指名此版本；行由包自己的 CI 在三种宿主上构建。
+
+- **CI 的 mcpp 由 2026.11.18.1 改为 2026.11.22.1**（validate、xpkgindex-update、openkal-compat 与 `tests/openkal/pins.toml`）：
+  该版的默认平台为 openkal-platform 0.31.2，首次运行安装 gcc 16.2.0、ninja `1.13.2-mcpp.1` 与 patchelf 0.19.3，随带
+  xlings 2026.11.21.1；缓存的依赖只在其编译时所用的模块接口下取用；已安装工具链的配套载荷取 store 持有的第一个声明；
+  `[indices]` 中两项指向同一位置时拒绝（`index-location-named-twice`）。索引的客户端下界（`min_mcpp`）不变。该版命令行的 `@` 按写出的前缀选择
+  （`--template ...@1.3` 渲染 1.3 下最新的 1.3.1），`tests/mwrap/check_installed_template.py` 据此检查模板写入的版本落在
+  所请求的前缀之下，并读取所选版本的安装。
 
 - **CI 的 mcpp 由 2026.11.17.2 改为 2026.11.18.1**（validate、xpkgindex-update 与 openkal-compat）：该版的默认平台为
   openkal-platform 0.29.2，行的对象格式与文件名读自数据（行、系统、格式的约定），mcpp.platforms 的 FreeBSD 行在 Windows

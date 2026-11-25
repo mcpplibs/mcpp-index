@@ -1,0 +1,12 @@
+// A build plugin is tested by what build.mcpp can do with it: the rule is run on one
+// `.slint` file, which registers the action that writes the header and the include
+// directory the test compiles against. How Slint behaves at run time is the wrapper's
+// member (tests/mwrap/slint-ui), not this one.
+import mcpp;
+import mcpplibs.mplugin.slint;
+
+int main() {
+    mcpplibs::mplugin::slint::options o;
+    o.sources = {"ui/t.slint"};
+    return mcpplibs::mplugin::slint::compile(o) ? 0 : 1;
+}

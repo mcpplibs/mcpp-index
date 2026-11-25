@@ -48,6 +48,12 @@ int main() {
     auto wrong = numbers.parse_from("tool --count 3px");
     check(!wrong && wrong.error().is_error(), "a value that is not a number of the type is refused");
 
+    // 0.0.5: the command tree is exported; a program lists its own commands and options from it.
+    auto tree = cmdline::snapshot(cmdline::App("tool").subcommand(cmdline::App("add").option(cmdline::Option("force"))));
+    check(tree.subcommands.size() == 1 && tree.subcommands[0].name == "add"
+          && !tree.subcommands[0].options.empty() && tree.subcommands[0].options[0].long_name == "force",
+          "snapshot names each subcommand and its options");
+
     if (failures == 0) std::println("cmdline: ok");
     return failures == 0 ? 0 : 1;
 }

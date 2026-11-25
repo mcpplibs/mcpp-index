@@ -22,37 +22,37 @@ version = "0.1.0"
 # clause 8) is consumed by implementations written against an earlier patch of
 # its minor version, which is what a candidate for it measures here.
 [dependencies]
-mcpplibs.openkal = { version = "0.25.0", override = true }
+mcpplibs.openkal = { version = "0.26.0", override = true }
 
 [target.'cfg(os = "linux")'.dependencies.mcpplibs]
-openkal-linux = "0.26.2"
+openkal-linux = "0.27.0"
 
 [target.'cfg(os = "macos")'.dependencies.mcpplibs]
-openkal-macos = "0.23.0"
+openkal-macos = "0.24.0"
 
 [target.'cfg(windows)'.dependencies.mcpplibs]
-openkal-windows = "0.21.0"
+openkal-windows = "0.23.0"
 
 [target.'cfg(all(os = "linux", env = "musl"))'.dependencies.mcpplibs]
 openkal-llvm-runtime = "0.20.0"
 
 [target.'cfg(arch = "wasm32")'.dependencies.mcpplibs]
-openkal-emscripten = "0.14.0"
+openkal-emscripten = "0.15.0"
 
 [target.'cfg(arch = "riscv64")'.dependencies.mcpplibs]
-openkal-opensbi = "0.9.0"
+openkal-opensbi = "0.10.0"
 
 [target.'cfg(os = "freebsd")'.dependencies.mcpplibs]
-openkal-freebsd = "0.1.2"
+openkal-freebsd = "0.2.0"
 
 [target.'cfg(os = "uefi")'.dependencies.mcpplibs]
-openkal-uefi = "0.9.0"
+openkal-uefi = "0.12.0"
 
 [target.'cfg(os = "dos")'.dependencies.mcpplibs]
-openkal-dos = "0.1.0"
+openkal-dos = "0.2.0"
 
 [target.'cfg(os = "svr4")'.dependencies.mcpplibs]
-openkal-svr4 = "0.1.0"
+openkal-svr4 = "0.2.0"
 
 # This member names mcpplibs packages, which the workspace root's single
 # redirect does not carry, so it states its own (mcpp.toml at the root says why
