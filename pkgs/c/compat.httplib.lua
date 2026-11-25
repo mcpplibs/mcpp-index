@@ -7,6 +7,10 @@ local versions = {
         url = "https://github.com/yhirose/cpp-httplib/archive/refs/tags/v0.63.0.tar.gz",
         sha256 = "44ab42e16926e95f7641d286bc90d739ab1c16886114d7cc5bc7a9f905c5edf8",
     },
+    ["0.64.0"] = {
+        url = "https://github.com/yhirose/cpp-httplib/archive/refs/tags/v0.64.0.tar.gz",
+        sha256 = "1ada413782af5e67e80452c39b7c90beb6fa4fc8341e18c0896bf95684b9a620",
+    },
 }
 
 -- Form B header-only descriptor for cpp-httplib. Optional backends stay off
@@ -37,6 +41,7 @@ package = {
             },
             ["0.62.0"] = versions["0.62.0"],
             ["0.63.0"] = versions["0.63.0"],
+            ["0.64.0"] = versions["0.64.0"],
         },
         macosx = {
             ["0.53.1"] = {
@@ -45,6 +50,7 @@ package = {
             },
             ["0.62.0"] = versions["0.62.0"],
             ["0.63.0"] = versions["0.63.0"],
+            ["0.64.0"] = versions["0.64.0"],
         },
         windows = {
             ["0.53.1"] = {
@@ -53,6 +59,7 @@ package = {
             },
             ["0.62.0"] = versions["0.62.0"],
             ["0.63.0"] = versions["0.63.0"],
+            ["0.64.0"] = versions["0.64.0"],
         },
     },
 
