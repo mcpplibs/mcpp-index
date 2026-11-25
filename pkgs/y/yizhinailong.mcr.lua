@@ -1,3 +1,10 @@
+local versions = {
+    ["0.3.0"] = {
+        url = "https://github.com/yizhinailong/mcr/archive/refs/tags/v0.3.0.tar.gz",
+        sha256 = "b78af42daa72c1d12de6677237ddc5a6ee0ab266978109110c3a86b3da83e3f9",
+    },
+}
+
 -- Form A descriptor: mcr is an mcpp-native library — its own mcpp.toml and
 -- build.mcpp sit at the archive root — so the descriptor carries identity and
 -- the download address only, and the build comes from upstream through
@@ -39,18 +46,21 @@ package = {
                 url    = "https://github.com/yizhinailong/mcr/archive/refs/tags/v0.1.5.tar.gz",
                 sha256 = "bd55e9dc19b620d7dfb89d20fd4a6b1ab9cf947fe872dc536dee53b4e869f8f5",
             },
+            ["0.3.0"] = versions["0.3.0"],
         },
         macosx = {
             ["0.1.5"] = {
                 url    = "https://github.com/yizhinailong/mcr/archive/refs/tags/v0.1.5.tar.gz",
                 sha256 = "bd55e9dc19b620d7dfb89d20fd4a6b1ab9cf947fe872dc536dee53b4e869f8f5",
             },
+            ["0.3.0"] = versions["0.3.0"],
         },
         windows = {
             ["0.1.5"] = {
                 url    = "https://github.com/yizhinailong/mcr/archive/refs/tags/v0.1.5.tar.gz",
                 sha256 = "bd55e9dc19b620d7dfb89d20fd4a6b1ab9cf947fe872dc536dee53b4e869f8f5",
             },
+            ["0.3.0"] = versions["0.3.0"],
         },
     },
 
