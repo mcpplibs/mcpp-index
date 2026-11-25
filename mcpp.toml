@@ -126,6 +126,8 @@ members = [
     "tests/examples/gmp",
     "tests/examples/gzip-hpp",
     "tests/examples/huxerui-module",
+    "tests/examples/huxerui-interaction",
+    "tests/examples/huxerui-markdown",
     "tests/examples/huxerui-qrcode",
     "tests/examples/gmp-gmpxx",
     "tests/examples/gsl",
@@ -238,6 +240,7 @@ members = [
     "tests/examples/taskflow-module",
     "tests/examples/quill-module",
     "tests/examples/mp-units-module",
+    "tests/examples/thorvg",
     "tests/examples/tinyhttps",
     "tests/examples/tensorvia",
     "tests/examples/usockets",
@@ -301,6 +304,7 @@ members = [
     "tests/examples/openlifa.openas",
     "tests/examples/openlifa.openmui",
     "tests/examples/os",
+    "tests/examples/pdfium",
     "tests/examples/zxing-cpp",
 ]
 
