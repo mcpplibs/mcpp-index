@@ -9,7 +9,7 @@ version = "0.1.0"
 gtest = { version = "1.15.2", features = ["main"] }
 ftxui = "7.0.3"
 lua = "5.4.7"
-mbedtls = "3.6.1"
+mbedtls = "3.6.8"
 opengl = "2026.05.31"
 khrplatform = "2026.05.31"
 
