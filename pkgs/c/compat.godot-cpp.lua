@@ -72,6 +72,14 @@ package = {
     -- gdextension_interface.h ABI).
     xpm = {
         linux = {
+            -- Upstream 10.0.0-stable; default Godot 4.7 API, 64-bit/single precision.
+            ["10.0.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/xlings-res/godot-cpp/releases/download/10.0.0/godot-cpp-10.0.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/godot-cpp/releases/download/10.0.0/godot-cpp-10.0.0.tar.gz",
+                },
+                sha256 = "66aaafb642e7a390482dc381818640b1d0e583da2ef0cc9709214bcd13b68264",
+            },
             ["10.0.0-rc1"] = {
                 url = {
                     GLOBAL = "https://github.com/xlings-res/godot-cpp/releases/download/10.0.0-rc1/godot-cpp-10.0.0-rc1.tar.gz",
@@ -88,6 +96,14 @@ package = {
             },
         },
         macosx = {
+            -- Upstream 10.0.0-stable; default Godot 4.7 API, 64-bit/single precision.
+            ["10.0.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/xlings-res/godot-cpp/releases/download/10.0.0/godot-cpp-10.0.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/godot-cpp/releases/download/10.0.0/godot-cpp-10.0.0.tar.gz",
+                },
+                sha256 = "66aaafb642e7a390482dc381818640b1d0e583da2ef0cc9709214bcd13b68264",
+            },
             ["10.0.0-rc1"] = {
                 url = {
                     GLOBAL = "https://github.com/xlings-res/godot-cpp/releases/download/10.0.0-rc1/godot-cpp-10.0.0-rc1.tar.gz",
@@ -104,6 +120,14 @@ package = {
             },
         },
         windows = {
+            -- Upstream 10.0.0-stable; default Godot 4.7 API, 64-bit/single precision.
+            ["10.0.0"] = {
+                url = {
+                    GLOBAL = "https://github.com/xlings-res/godot-cpp/releases/download/10.0.0/godot-cpp-10.0.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/godot-cpp/releases/download/10.0.0/godot-cpp-10.0.0.tar.gz",
+                },
+                sha256 = "66aaafb642e7a390482dc381818640b1d0e583da2ef0cc9709214bcd13b68264",
+            },
             ["10.0.0-rc1"] = {
                 url = {
                     GLOBAL = "https://github.com/xlings-res/godot-cpp/releases/download/10.0.0-rc1/godot-cpp-10.0.0-rc1.tar.gz",

@@ -42,6 +42,9 @@ Use `package.repo` as a fallback when the URL does not identify a GitHub repo.
 Commit snapshots, independent source/package version mappings, prereleases,
 non-GitHub providers and upgrades requiring recipe changes need manual handling.
 Do not invent a rule to opt them in; explain the exception in the PR instead.
+The CI audit records descriptors whose resources all use full 40/64-digit commit
+archive URLs as manual snapshots. Their historical version/resource guards still
+apply; an ordinary release/tag descriptor without an update declaration still fails.
 The current xim adapter does not advance `latest.ref`.
 
 ## Verify a declaration

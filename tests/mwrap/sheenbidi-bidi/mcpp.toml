@@ -1,0 +1,7 @@
+[package]
+name = "sheenbidi-bidi"
+version = "3.0.0"
+description = "Consume the immutable SheenBidi wrapper: UAX #9's bracket-pair example in an RTL paragraph, a line's runs in visual order, the mirror and script locators, the mapped macros and enumerators, the side header beside the import"
+
+[dependencies]
+mcpplibs.mwrap.sheenbidi = "3.0.0"

@@ -121,6 +121,7 @@ package = {
             -- A new key because install() output is baked into the installed
             -- payload.
             ["2026.09.11"] = {
+                revision = 1,
                 url    = "https://raw.githubusercontent.com/KhronosGroup/Vulkan-Loader/vulkan-sdk-1.4.357.0/README.md",
                 sha256 = "21ec0987a05bd680ecd11f8be747e27744d7558f7318736f6cb8a5c5ec1b8ba8",
             },
@@ -175,7 +176,9 @@ package = {
         import_std   = false,
         c_standard   = "c11",
         sources      = { "mcpp_generated/vulkan_runtime_empty.c" },
-        targets      = { ["vulkan_runtime"] = { kind = "lib" } },
+        -- Both the loader and its program reach this adapter. One shared
+        -- form avoids placing a static provider in several runtime images.
+        targets      = { ["vulkan_runtime"] = { kind = "lib", linkage = "shared" } },
         deps         = {},
         runtime = {
             library_dirs = { "mcpp_generated/vulkan_runtime/lib" },

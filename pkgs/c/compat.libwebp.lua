@@ -10,9 +10,9 @@
 -- CMake builds it as a separate target only to reuse it elsewhere, and there is
 -- nothing else here to reuse it.
 --
--- WHAT IS NOT. `src/demux` and `src/mux` (animation and metadata containers:
--- WebPDemux* / WebPMux*) are separate upstream libraries with their own public
--- headers; they belong in a feature, and nothing asks for them yet.
+-- OPTIONAL. `demux` and `mux` add upstream animation/metadata containers to
+-- the same implementation owner. OpenCV's WebP codec requires both; ordinary
+-- encode/decode consumers retain the original default source set.
 -- `examples/`, `extras/`, `imageio/` and `swig/` are tools and bindings.
 --
 -- SIMD, and the one thing this package has to decide. Every
@@ -35,8 +35,9 @@
 --     but would be inlined into function 'VP8L32bToPlanar_SSE41' that is
 --     compiled without support for 'ssse3'
 --
--- Upstream's CMake answers this with a PER-FILE `-msse4.1`, which mcpp has no
--- field for. Adding it package-wide instead would let clang emit SSE4.1 in the
+-- Upstream's CMake answers this with a per-file `-msse4.1`. Current mcpp
+-- supports scoped flags; this recipe retains its original baseline profile.
+-- Adding that flag package-wide would let clang emit SSE4.1 in the
 -- BASELINE translation units too, past libwebp's own runtime CPU dispatch — an
 -- artifact that SIGILLs on a pre-2008 CPU rather than falling back. So this
 -- package takes the other half of upstream's mechanism: `HAVE_CONFIG_H` plus a
@@ -143,6 +144,15 @@ package = {
             "*/sharpyuv/*.c",
         },
         targets = { ["webp"] = { kind = "lib" } },
+        features = {
+            ["demux"] = { sources = { "*/src/demux/*.c" } },
+            ["mux"] = { sources = { "*/src/mux/*.c" } },
+        },
+        runtime = { deploy = {
+            { from = "libwebp-1.5.0/COPYING", to = "licenses/libwebp" },
+            { from = "libwebp-1.5.0/PATENTS", to = "licenses/libwebp" },
+            { from = "libwebp-1.5.0/AUTHORS", to = "licenses/libwebp" },
+        } },
         deps    = { },
 
         -- libm for the dsp math, pthread for utils/thread_utils.c's worker pool.

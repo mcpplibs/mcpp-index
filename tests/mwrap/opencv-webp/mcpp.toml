@@ -1,0 +1,7 @@
+[package]
+name = "opencv-webp"
+version = "5.0.0"
+description = "Consume the OpenCV archive with optional WebP image, animation and metadata support"
+
+[dependencies]
+mcpplibs.mwrap.opencv = { version = "5.0.0.1", features = ["imgcodecs-webp"] }

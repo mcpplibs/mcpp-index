@@ -1,0 +1,19 @@
+import std;
+import mcpp;
+import grpcgen;
+
+int main() {
+    const auto plugin = grpcgen::cpp();
+    if (plugin.name != "grpc" || plugin.binary.empty() ||
+        !std::filesystem::is_regular_file(plugin.binary) ||
+        plugin.suffixes != std::vector<std::string>{".grpc.pb.cc", ".grpc.pb.h"}) return 1;
+    const std::filesystem::path out(mcpp::out_dir());
+    std::filesystem::create_directories(out);
+    std::ofstream header(out / "plugin_info.hpp");
+    header << "#pragma once\n#include <string_view>\n"
+           << "inline constexpr std::string_view plugin_binary = "
+           << std::quoted(plugin.binary) << ";\n";
+    if (!header) return 2;
+    mcpp::include_dir(out.string().c_str());
+    return 0;
+}

@@ -1,0 +1,7 @@
+[package]
+name = "llamacpp-cpu"
+version = "b10069"
+description = "Install the immutable llama.cpp-m archive and exercise the CPU API"
+
+[dependencies.mcpplibs.mwrap]
+llamacpp = "b10069"

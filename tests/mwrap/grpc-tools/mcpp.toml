@@ -1,0 +1,10 @@
+[package]
+name = "grpc-tools"
+version = "1.83.0.1"
+description = "Resolve the indexed gRPC plugin and host rule, and verify the built host binary"
+
+[dependencies]
+grpc.grpc-plugin = { version = "1.83.0.1", tools = ["grpc_cpp_plugin"] }
+
+[build-dependencies]
+mcpplibs.grpcgen = { version = "1.83.0.1", host-module = true }

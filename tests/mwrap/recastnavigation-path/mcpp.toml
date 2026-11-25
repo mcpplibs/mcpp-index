@@ -1,0 +1,11 @@
+[package]
+name = "recastnavigation-path"
+version = "1.6.0.2"
+description = "Consume the immutable Recast & Detour wrapper: a navigation mesh built from triangles, a path around a wall, a crowd walked through a doorway; the mesh's bytes and the crowd's places pinned"
+
+[dependencies]
+mcpplibs.mwrap.recastnavigation = "1.6.0.2"
+
+# Detour's inline math compiled here too, as the library is built.
+[build]
+cxxflags = ["-ffp-contract=off"]

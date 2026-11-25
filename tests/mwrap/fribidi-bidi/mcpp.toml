@@ -1,0 +1,7 @@
+[package]
+name = "fribidi-bidi"
+version = "1.0.16"
+description = "Consume the immutable FriBidi wrapper: paragraph levels with bracket pairs, line reordering, log2vis, Arabic shaping, the mapped macros, the side header beside the import"
+
+[dependencies]
+mcpplibs.mwrap.fribidi = "1.0.16"

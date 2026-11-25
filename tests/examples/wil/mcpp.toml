@@ -11,3 +11,7 @@ wil = "1.0.260126.7"
 
 [target.'cfg(windows)'.build]
 ldflags = ["-lole32", "-loleaut32"]
+
+# The candidate index: this checkout (compat.*), not the published one.
+[indices]
+compat = { path = "../../.." }

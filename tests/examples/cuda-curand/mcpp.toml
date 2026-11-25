@@ -30,3 +30,7 @@ version = "0.1.0"
 [target.'cfg(linux)'.dependencies.compat]
 curand      = "10.3.10.19"
 cuda-driver = "2026.09.05"
+
+# The candidate index: this checkout (compat.*), not the published one.
+[indices]
+compat = { path = "../../.." }

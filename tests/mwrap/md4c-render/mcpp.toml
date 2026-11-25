@@ -1,0 +1,7 @@
+[package]
+name = "md4c-render"
+version = "0.5.3"
+description = "Consume the immutable md4c wrapper: parse with callbacks and render GFM to HTML"
+
+[dependencies]
+mcpplibs.mwrap.md4c = "0.5.3"

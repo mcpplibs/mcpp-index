@@ -2,6 +2,8 @@ local versions = {
     ["2.15.0"] = {
         url = "https://github.com/freetype/freetype/archive/refs/tags/VER-2-15-0.tar.gz",
         sha256 = "87c7f1f8699b91e89f773f7dcfa505b044e1dae67f62a55d4e29c3afdcac4fb8",
+        -- 1: the rest of upstream's base extensions and ftbzip2 (#589).
+        revision = 1,
     },
 }
 
@@ -35,6 +37,8 @@ package = {
             ["2.13.3"] = {
                 url    = "https://github.com/freetype/freetype/archive/refs/tags/VER-2-13-3.tar.gz",
                 sha256 = "bc5c898e4756d373e0d991bab053036c5eb2aa7c0d5c67e8662ddc6da40c4103",
+                -- 1: the rest of upstream's base extensions and ftbzip2 (#589).
+                revision = 1,
             },
             ["2.15.0"] = versions["2.15.0"],
         },
@@ -42,6 +46,8 @@ package = {
             ["2.13.3"] = {
                 url    = "https://github.com/freetype/freetype/archive/refs/tags/VER-2-13-3.tar.gz",
                 sha256 = "bc5c898e4756d373e0d991bab053036c5eb2aa7c0d5c67e8662ddc6da40c4103",
+                -- 1: the rest of upstream's base extensions and ftbzip2 (#589).
+                revision = 1,
             },
             ["2.15.0"] = versions["2.15.0"],
         },
@@ -49,6 +55,8 @@ package = {
             ["2.13.3"] = {
                 url    = "https://github.com/freetype/freetype/archive/refs/tags/VER-2-13-3.tar.gz",
                 sha256 = "bc5c898e4756d373e0d991bab053036c5eb2aa7c0d5c67e8662ddc6da40c4103",
+                -- 1: the rest of upstream's base extensions and ftbzip2 (#589).
+                revision = 1,
             },
             ["2.15.0"] = versions["2.15.0"],
         },
@@ -79,9 +87,33 @@ package = {
             -- against this freetype failed to LINK with two undefined
             -- references — measured while adding freedesktop.cairo.
             "*/src/base/ftsynth.c",
+            -- The rest of upstream's base extensions (modules.cfg BASE_EXTENSIONS,
+            -- CMakeLists.txt BASE_SRCS): the public API of ftstroke.h,
+            -- ftgasp.h, ftbdf.h, ftcid.h, ftpfr.h, ftwinfnt.h, t1tables.h
+            -- (FT_Get_PS_Font_Info …), FT_Get_FSType_Flags,
+            -- FT_Face_CheckTrueTypePatents and the validation entry points
+            -- (which report FT_Err_Unimplemented_Feature without the gxvalid /
+            -- otvalid modules, as upstream's default build does). Every
+            -- distribution builds them; without them those declarations link
+            -- to nothing. Measured while wrapping the whole API as modules
+            -- (mcpplibs.mwrap.freetype).
+            "*/src/base/ftbdf.c",
+            "*/src/base/ftcid.c",
+            "*/src/base/ftfstype.c",
+            "*/src/base/ftgasp.c",
+            "*/src/base/ftgxval.c",
+            "*/src/base/ftotval.c",
+            "*/src/base/ftpatent.c",
+            "*/src/base/ftpfr.c",
+            "*/src/base/ftstroke.c",
+            "*/src/base/fttype1.c",
+            "*/src/base/ftwinfnt.c",
             -- Modules (aggregates)
             "*/src/autofit/autofit.c",
             "*/src/bdf/bdf.c",
+            -- FT_Stream_OpenBzip2: FT_Err_Unimplemented_Feature without libbz2
+            -- (FT_CONFIG_OPTION_USE_BZIP2 stays off), as upstream builds it.
+            "*/src/bzip2/ftbzip2.c",
             "*/src/cff/cff.c",
             "*/src/cid/type1cid.c",
             "*/src/cache/ftcache.c",

@@ -8,5 +8,15 @@
 name    = "sycl-runtime-tests"
 version = "0.1.0"
 
+# ONE C++ RUNTIME PER PROCESS: the adapter requires the build's C++ library to
+# be libstdc++ (libsycl.so throws on it), so on Linux the member states gcc,
+# whichever leg runs it. llvm over libstdc++ is the libstdcxx-llvm member's.
+[toolchain]
+linux = "gcc@16.1.0"
+
 [target.'cfg(linux)'.dependencies.compat]
 sycl-runtime = "2026.09.10"
+
+# The candidate index: this checkout (compat.*), not the published one.
+[indices]
+compat = { path = "../../.." }

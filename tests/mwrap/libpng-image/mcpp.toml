@@ -1,0 +1,7 @@
+[package]
+name = "libpng-image"
+version = "1.6.43"
+description = "Consume the immutable libpng wrapper: a simplified-API round trip, a low-level read with transforms, the longjmp error path, the mapped macros"
+
+[dependencies]
+mcpplibs.mwrap.libpng = "1.6.43"

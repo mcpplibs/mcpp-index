@@ -1,0 +1,7 @@
+[package]
+name = "libarchive-bundle"
+version = "3.8.7"
+description = "Consume the immutable libarchive wrapper: tar.gz, zip and 7-Zip written to memory and read back with their formats detected, and entry metadata"
+
+[dependencies]
+mcpplibs.mwrap.libarchive = "3.8.7"

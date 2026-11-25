@@ -1,3 +1,10 @@
+local versions = {
+    ["13.1.0"] = {
+        url = "https://github.com/odygrd/quill/archive/refs/tags/v13.1.0.tar.gz",
+        sha256 = "a08b93bafc7e712b28eb47e4a1ed9b60fc01ac7fad3ce269f1f100560a506a85",
+    },
+}
+
 package = {
     spec        = "1",
     namespace   = "odygrd",
@@ -20,18 +27,21 @@ package = {
                 url = "https://github.com/odygrd/quill/archive/refs/tags/v13.0.0.tar.gz",
                 sha256 = "88b4a1542125577a4d51cf444c51e34d63618c422ba6a4fa9bd23894b49d696b",
             },
+            ["13.1.0"] = versions["13.1.0"],
         },
         macosx = {
             ["13.0.0"] = {
                 url = "https://github.com/odygrd/quill/archive/refs/tags/v13.0.0.tar.gz",
                 sha256 = "88b4a1542125577a4d51cf444c51e34d63618c422ba6a4fa9bd23894b49d696b",
             },
+            ["13.1.0"] = versions["13.1.0"],
         },
         windows = {
             ["13.0.0"] = {
                 url = "https://github.com/odygrd/quill/archive/refs/tags/v13.0.0.tar.gz",
                 sha256 = "88b4a1542125577a4d51cf444c51e34d63618c422ba6a4fa9bd23894b49d696b",
             },
+            ["13.1.0"] = versions["13.1.0"],
         },
     },
 

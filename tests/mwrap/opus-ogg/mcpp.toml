@@ -1,0 +1,7 @@
+[package]
+name = "opus-ogg"
+version = "1.6.1"
+description = "Consume the immutable Opus wrapper: a chord encoded with libopus, paged with libogg and read back with opusfile from memory (headers, tags, exact length, seeking), the typed CTL requests, a 5.1 multistream frame, the side header beside the import"
+
+[dependencies]
+mcpplibs.mwrap.opus = "1.6.1"

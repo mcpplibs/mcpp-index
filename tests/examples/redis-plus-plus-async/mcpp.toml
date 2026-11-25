@@ -14,3 +14,7 @@ version = "0.1.0"
 
 [dependencies.compat]
 redis-plus-plus = { version = "1.3.13", features = ["async"] }
+
+# The candidate index: this checkout (compat.*), not the published one.
+[indices]
+compat = { path = "../../.." }
