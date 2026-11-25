@@ -26,18 +26,30 @@ package = {
 
     xpm = {
         linux = {
+            ["0.2.1"] = {
+                url    = "https://github.com/openlifa/openas/archive/refs/tags/0.2.1.tar.gz",
+                sha256 = "dc32b374123d467b5d7344ef0ed6543bcc6072e06a2194e24317cf0b7291cf20",
+            },
             ["0.2.0"] = {
                 url    = "https://github.com/openlifa/openas/archive/refs/tags/0.2.0.tar.gz",
                 sha256 = "110f135810ec5f0878373e1bda336e04054a3805859b068b76af5e7aebf9b647",
             },
         },
         macosx = {
+            ["0.2.1"] = {
+                url    = "https://github.com/openlifa/openas/archive/refs/tags/0.2.1.tar.gz",
+                sha256 = "dc32b374123d467b5d7344ef0ed6543bcc6072e06a2194e24317cf0b7291cf20",
+            },
             ["0.2.0"] = {
                 url    = "https://github.com/openlifa/openas/archive/refs/tags/0.2.0.tar.gz",
                 sha256 = "110f135810ec5f0878373e1bda336e04054a3805859b068b76af5e7aebf9b647",
             },
         },
         windows = {
+            ["0.2.1"] = {
+                url    = "https://github.com/openlifa/openas/archive/refs/tags/0.2.1.tar.gz",
+                sha256 = "dc32b374123d467b5d7344ef0ed6543bcc6072e06a2194e24317cf0b7291cf20",
+            },
             ["0.2.0"] = {
                 url    = "https://github.com/openlifa/openas/archive/refs/tags/0.2.0.tar.gz",
                 sha256 = "110f135810ec5f0878373e1bda336e04054a3805859b068b76af5e7aebf9b647",

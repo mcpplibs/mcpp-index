@@ -19,3 +19,7 @@ xrandr = "1.5.5"
 xi = "1.8.3"
 xau = "1.0.12"
 xdmcp = "1.1.5"
+
+# The candidate index: this checkout (compat.*), not the published one.
+[indices]
+compat = { path = "../../.." }

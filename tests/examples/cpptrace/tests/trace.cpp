@@ -19,17 +19,17 @@
 
 // The package builds objects, not a shared library, so every cpptrace
 // declaration this TU sees must be plain — not dllimport, not
-// visibility("default"). The package delivers that with a shim in front of
-// cpptrace/basic.hpp, because no descriptor key carries a define to a
+// visibility("default"). The package states CPPTRACE_STATIC_DEFINE as a
+// `staticlib` feature that `default` implies; a feature's defines reach the
 // consumer's TUs.
 //
 // This check exists because the failure it guards is invisible on Linux: there
 // the difference is only a visibility attribute and everything still links. On
 // the MSVC ABI it is `dllimport` versus nothing, and the link fails with
 // "undefined symbol: __declspec(dllimport) ...". Asserting the macro at COMPILE
-// time fails on every platform the moment the shim stops being reached.
+// time fails on every platform the moment the define stops being delivered.
 #if !defined(CPPTRACE_STATIC_DEFINE)
-#  error "CPPTRACE_STATIC_DEFINE is not set for this consumer TU — the compat.cpptrace basic.hpp shim was not reached (include_dirs order?)"
+#  error "CPPTRACE_STATIC_DEFINE is not set for this consumer TU — compat.cpptrace's staticlib feature did not reach it"
 #endif
 
 // noinline so the three frames cannot be collapsed into one by the optimiser;

@@ -17,6 +17,8 @@
 | API | 保留上游 | cv::Mat、Ort::Session |
 | 宏映射模块 | `<根模块>.macros` | mcpplibs.mwrap.opencv.macros |
 
+上游库名取库本身的名字，不含仅用于区分语言的仓库后缀：Abseil 的仓库是 abseil-cpp，
+封装仓库为 `abseil-m`，包为 `mcpplibs.mwrap.abseil`。
 包和模块名不带 -m，不创建另一套普通 API namespace。已发布旧身份、版本和内容保持不可变，
 通过新 mwrap 身份迁移。简单实现优先依赖 compat.xxx；复杂库可以 vendor 到 upstream/。
 同一程序的同一实现只能有一个所有者，不能把 compat 与 vendored 实现重复链接。
@@ -51,6 +53,9 @@ openkal-musl、mingw-w64）。`mcpplibs.mwrap.libc` 不链接任何实现；版�
 metadata 与上游锁文件仍明确记录来源。破坏性模块/API 变化必须附迁移说明。
 非数字或预发布上游版本需要明确映射规则，保持原版本含义。
 
+第四段在本索引中有两种含义：上游本身的四段版本（Vulkan SDK 的 `1.4.321.0`）与封装修订（`1.19.0.2`）。命令行按书写的前缀读二者
+（mcpp 2026.11.21.1 起）：`--template mcpplibs.mwrap.slint@1.19.0` 选最新的 `1.19.0.x`，`@=1.19.0.1` 选这一个键。修订只递增，不为另一份字节复用。
+
 新 mwrap 身份首发直接使用上游版本，不追加封装修订尾号；旧身份与历史发布保持原字节。
 仓库 tag 统一采用独立 `mwrap-${version}` 序列，例如 `mwrap-8.1.2`，包版本仍为 `8.1.2`。
 不移动旧 tag；updater 精确选择新序列，不依赖 GitHub latest。
@@ -65,6 +70,12 @@ metadata 与上游锁文件仍明确记录来源。破坏性模块/API 变化必
 映射置于 mcpplibs::mwrap::<库名>::macros，保留原宏名。字符串化、token 拼接、条件编译、
 控制流宏通过 `<mwrap/<库名>/macros.hpp>` 保留，在 import 前 include。
 限定名仍会被宏展开；原始宏与映射常量的用法必须分别测试，断言函数不能默认代替断言宏。
+
+同一翻译单元既 include 上游头文件又 import 封装模块时，所有 `#include` 放在第一个 `import` 之前
+（GCC 拒绝在已声明同一实体的模块被 import 之后再引入头文件），README 写明。Clang 要求命名空间作用域上
+经实参依赖查找找到的运算符也要导出，因此以 Clang 审计导出面。手工无法维护的大型导出面由工具推导为
+紧凑的记录提交到仓库，由 `build.mcpp` 在构建时生成模块单元，不提交生成物
+（openssl-m：`src/surface.tsv`、`tools/surface.py`）。
 
 ## feature
 
@@ -97,11 +108,13 @@ mcpp new --list-templates mcpplibs.mwrap.opencv@5.0.0
 mcpp new viewer --template mcpplibs.mwrap.opencv@5.0.0:window
 ```
 
-模板是纯数据，不执行 hook。当前 mcpp 的 self.name 为完整包选择器，应作为一个带引号的 key：
+模板是纯数据，不执行 hook。当前 mcpp 的 self.name 为完整包选择器，写成不加引号的点分 key（不需要引号的 key 带引号自
+mcpp 2026.11.8.1 起弃用，`--strict` 下被拒绝，2027.2 移除；`tests/mwrap/check_installed_template.py` 拒绝写成引号键的模板，
+并以 `--strict` 构建渲染出的工程）：
 
 ```toml
 [dependencies]
-"{{self.name}}" = { version = "{{self.version}}", features = ["imgproc", "imgcodecs-png"] }
+{{self.name}} = { version = "{{self.version}}", features = ["imgproc", "imgcodecs-png"] }
 ```
 
 不能再把 self.name 放入另一层 namespace 表。版本与 self.version 绑定，明确所需 feature。
@@ -149,7 +162,7 @@ tests/prepare_mwrap_indices.py 的 namespace 视图仅供隔离的单项目消�
 不能以独立项目通过证明混合 workspace 顺序可用。视图是不提交、不发布的输出，不是新的发布格式。
 
 正常安装由 tests/mwrap/check_installed_template.py 独立验证：把完整 pkgs/index.toml 发布布局放进独立 MCPP_HOME 的单一内置索引，
-下载真实且带校验的源码归档，执行 mcpp new，再原样构建/运行生成清单，不替换为 path 依赖。
+下载真实且带校验的源码归档，执行 mcpp new，再原样构建/运行生成清单，不替换为 path 依赖。该 home 默认从 GLOBAL 镜像下载，`--mirror CN` 改用 CN（发布时的 CN 验收）。
 Git 与发布的 pkgs/mwrap 目录始终一致。
 
 运行库、插件、构建模块耦合的测试可能同时依赖多个候选 namespace。使用 `python3 tests/prepare_builtin_index.py --home <独立测试目录>`，将完整且字节不变的候选布局放入该测试 home 的唯一内置索引；成员用空 `[indices]` 覆盖旧 workspace 路由。自动更新候选 CI 同样使用此模式。不要将同一个完整 checkout 注册为多个项目别名。这只是测试 home 准备，不需要发布 staging、路径转换或修改 mcpp 引擎。

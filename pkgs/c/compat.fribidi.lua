@@ -181,9 +181,14 @@ package = {
         macosx = { cflags = { "-fPIC" } },
         -- This is a static library: under _WIN32 fribidi-common.h would make
         -- every entry point __declspec(dllexport) (dllimport for consumers)
-        -- unless FRIBIDI_LIB_STATIC says otherwise. A consumer that includes
-        -- the headers on windows defines it too.
-        windows = { cflags = { "-DFRIBIDI_LIB_STATIC" } },
+        -- unless FRIBIDI_LIB_STATIC says otherwise. Every TU that includes the
+        -- headers needs it, this package's and its consumers', so it is a
+        -- feature's define that `default` implies (as CURL_STATICLIB in
+        -- compat.curl). The header reads it only under _WIN32.
+        features = {
+            ["default"]   = { implies = { "staticlib" } },
+            ["staticlib"] = { defines = { "FRIBIDI_LIB_STATIC" } },
+        },
 
         targets = { fribidi = { kind = "lib" } },
     },

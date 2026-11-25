@@ -13,3 +13,7 @@ version = "0.1.0"
 
 [target.'cfg(linux)'.dependencies.compat]
 wamr = "2.4.5"
+
+# The candidate index: this checkout (compat.*), not the published one.
+[indices]
+compat = { path = "../../.." }

@@ -6,6 +6,10 @@
 -- FreeType backend over compat.freetype), stays under HarfBuzz's "Old MIT"
 -- license and is linked statically: the package deploys HarfBuzz's COPYING,
 -- AUTHORS and README beside programs (runtime.deploy).
+--
+-- 14.3.0.1 is a wrapper revision: its templates write the dependency selector
+-- unquoted (`mcpplibs.mwrap.harfbuzz = ...`); the quoted form is deprecated
+-- since mcpp 2026.11.8.1 and removed in 2027.2.
 package = {
     spec = "1",
     namespace = "mcpplibs.mwrap",
@@ -22,18 +26,30 @@ package = {
     },
     xpm = {
         linux = {
+            ["14.3.0.1"] = {
+                url = "https://github.com/mcpplibs/harfbuzz-m/releases/download/mwrap-14.3.0.1/harfbuzz-m-14.3.0.1.tar.gz",
+                sha256 = "b3bf249392be5796580d5dab4e25beaac32d7ed236503f4eaaa3f84cdba5b817",
+            },
             ["14.3.0"] = {
                 url = "https://github.com/mcpplibs/harfbuzz-m/releases/download/mwrap-14.3.0/harfbuzz-m-14.3.0.tar.gz",
                 sha256 = "29711d07c3876229e4c0df4bcaa6595a844f92b2f749813cde979edff1c30ee1",
             },
         },
         macosx = {
+            ["14.3.0.1"] = {
+                url = "https://github.com/mcpplibs/harfbuzz-m/releases/download/mwrap-14.3.0.1/harfbuzz-m-14.3.0.1.tar.gz",
+                sha256 = "b3bf249392be5796580d5dab4e25beaac32d7ed236503f4eaaa3f84cdba5b817",
+            },
             ["14.3.0"] = {
                 url = "https://github.com/mcpplibs/harfbuzz-m/releases/download/mwrap-14.3.0/harfbuzz-m-14.3.0.tar.gz",
                 sha256 = "29711d07c3876229e4c0df4bcaa6595a844f92b2f749813cde979edff1c30ee1",
             },
         },
         windows = {
+            ["14.3.0.1"] = {
+                url = "https://github.com/mcpplibs/harfbuzz-m/releases/download/mwrap-14.3.0.1/harfbuzz-m-14.3.0.1.tar.gz",
+                sha256 = "b3bf249392be5796580d5dab4e25beaac32d7ed236503f4eaaa3f84cdba5b817",
+            },
             ["14.3.0"] = {
                 url = "https://github.com/mcpplibs/harfbuzz-m/releases/download/mwrap-14.3.0/harfbuzz-m-14.3.0.tar.gz",
                 sha256 = "29711d07c3876229e4c0df4bcaa6595a844f92b2f749813cde979edff1c30ee1",

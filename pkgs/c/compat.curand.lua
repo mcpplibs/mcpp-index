@@ -31,7 +31,9 @@ package = {
 
     xpm = {
         linux = {
-            deps = { "xim:libcurand@10.3.10.19" },
+            -- `xim:gcc-runtime` for the farm below: libcurand.so.10 needs
+            -- libgcc_s.so.1, which an LLVM artifact does not load.
+            deps = { "xim:libcurand@10.3.10.19", "xim:gcc-runtime" },
             ["10.3.10.19"] = {
                 -- Nothing downloaded matters; the content is the symlink farm
                 -- install() builds. A stable, tiny anchor keeps the xpm entry
@@ -125,15 +127,27 @@ end
 -- program load and run. That is what makes a farm of links sufficient here and
 -- a copy of the payload unnecessary.
 --
--- Only the libraries glibc 2.34 MERGED INTO libc are farmed. They are empty
+-- The libraries glibc 2.34 MERGED INTO libc are farmed. They are empty
 -- compatibility stubs, so which payload version answers does not matter, and
--- nothing else is loading them: `libc.so.6`, `libm.so.6` and `libstdc++.so.6`
--- are already loaded on the executable's own behalf by the time the component
--- asks, and are found by soname without a search. Farming those would risk a
--- second copy of the C library in one address space, which is the one failure
--- worse than this one.
+-- nothing else is loading them: `libc.so.6` and `libm.so.6` are already loaded
+-- on the executable's own behalf by the time the component asks, and are found
+-- by soname without a search. Farming those would risk a second copy of the C
+-- library in one address space, which is the one failure worse than this one.
+--
+-- `libgcc_s.so.1` is farmed as well. `libcurand.so.10` needs it, and an mcpp
+-- artifact built with LLVM links compiler-rt and libunwind, so nothing has
+-- loaded it and the closure check refuses the program:
+--
+--   libgcc_s.so.1 not found on the search path this artifact will actually use
+--
+-- Farming it is safe for the reason compat.sycl-runtime records: the one copy
+-- in this ecosystem is `xim:gcc-runtime`'s, so a GCC-built consumer that loads
+-- it resolves the same file under the same soname.
 local function farm_libc_stubs(dst)
-    local names = { "librt.so.1", "libpthread.so.0", "libdl.so.2" }
+    local wanted = {
+        { pkg = "xim-x-glibc",       names = { "librt.so.1", "libpthread.so.0", "libdl.so.2" } },
+        { pkg = "xim-x-gcc-runtime", names = { "libgcc_s.so.1" } },
+    }
     local roots = {}
     local pfx = pkginfo.install_dir()
     if pfx then roots[#roots + 1] = path.directory(path.directory(pfx)) end
@@ -143,12 +157,14 @@ local function farm_libc_stubs(dst)
     roots[#roots + 1] = path.join((os.getenv and os.getenv("HOME")) or "",
                                  ".mcpp/registry/data/xpkgs")
     local found = 0
-    for _, name in ipairs(names) do
+    for _, group in ipairs(wanted) do
+    for _, name in ipairs(group.names) do
         if not os.isfile(path.join(dst, name)) then
             for _, root in ipairs(roots) do
                 local f = io.popen(string.format(
-                    [[ls -1d "%s"/xim-x-glibc/*/lib64/%s 2>/dev/null | sort -V | tail -1]],
-                    root, name))
+                    [[ls -1d "%s"/%s/*/lib64/%s "%s"/%s/*/lib/%s 2>/dev/null ]]
+                    .. [[| sort -V | tail -1]],
+                    root, group.pkg, name, root, group.pkg, name))
                 local hit = f and (f:read("l") or "") or ""
                 if f then f:close() end
                 if hit ~= "" then
@@ -158,6 +174,7 @@ local function farm_libc_stubs(dst)
                 end
             end
         end
+    end
     end
     return found
 end
@@ -189,7 +206,7 @@ function install()
         error(string.format("compat.curand: the payload at %s carries %d headers and %d "
                             .. "shared libraries; both must be non-zero", src, nh, nl))
     end
-    log.info("compat.curand: %d headers, %d libraries, %d C-library stubs from %s",
+    log.info("compat.curand: %d headers, %d libraries, %d runtime links from %s",
              nh, nl, ns, src)
     return true
 end

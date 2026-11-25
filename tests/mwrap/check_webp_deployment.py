@@ -36,7 +36,9 @@ def main():
         manifest.write_text(text)
         (project / "src").mkdir()
         shutil.copyfile(project / "tests/pipeline.cpp", project / "src/main.cpp")
-        env = dict(os.environ, MCPP_HOME=str(home))
+        # The compile database is read below for the packages' source roots;
+        # mcpp writes it under target/ unless a path is stated.
+        env = dict(os.environ, MCPP_HOME=str(home), MCPP_COMPILE_COMMANDS="compile_commands.json")
         commands = [[args.mcpp, "self", "config", "--mirror", "GLOBAL"]]
         if args.published_index:
             commands.append([args.mcpp, "index", "update"])

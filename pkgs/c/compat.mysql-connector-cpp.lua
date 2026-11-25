@@ -12,7 +12,7 @@ package = {
         linux = {
             deps = {
                 "compat:libmysqlclient@8.4.6",
-                "compat:openssl@3.5.1",
+                "compat:openssl@3.5.9",
                 "xim:cmake@latest",
                 "xim:make@latest",
             },
@@ -22,12 +22,14 @@ package = {
                     CN     = "https://gitcode.com/mcpp-res/mysql-connector-cpp/releases/download/26.7.0/mysql-connector-cpp-26.7.0.tar.gz",
                 },
                 sha256 = "b2299862eefc33fd71c0aac68328305671805fc955e6bd2578ef205c10f98550",
+                -- 1: built against compat.openssl 3.5.9 (was 3.5.1).
+                revision = 1,
             },
         },
         macosx = {
             deps = {
                 "compat:libmysqlclient@8.4.6",
-                "compat:openssl@3.5.1",
+                "compat:openssl@3.5.9",
                 "xim:cmake@latest",
             },
             ["26.7.0"] = {
@@ -36,6 +38,8 @@ package = {
                     CN     = "https://gitcode.com/mcpp-res/mysql-connector-cpp/releases/download/26.7.0/mysql-connector-cpp-26.7.0.tar.gz",
                 },
                 sha256 = "b2299862eefc33fd71c0aac68328305671805fc955e6bd2578ef205c10f98550",
+                -- 1: built against compat.openssl 3.5.9 (was 3.5.1).
+                revision = 1,
             },
         },
     },
@@ -48,7 +52,7 @@ package = {
         targets      = { ["mysql_connector_cpp"] = { kind = "lib" } },
         deps = {
             ["compat.libmysqlclient"] = "8.4.6",
-            ["compat.openssl"]        = "3.5.1",
+            ["compat.openssl"]        = "3.5.9",
         },
 
         -- THE STANDARD LIBRARY THE STATIC LIBRARIES WERE COMPILED AGAINST, per
@@ -214,7 +218,7 @@ function install()
     local ok, result = pcall(function()
     local srcroot = find_source_root()
     local mysql = find_dep_install_dir("compat:libmysqlclient", "8.4.6")
-    local openssl = find_dep_install_dir("compat:openssl", "3.5.1")
+    local openssl = find_dep_install_dir("compat:openssl", "3.5.9")
     hook_log("srcroot=" .. tostring(srcroot) .. " mysql=" .. tostring(mysql)
              .. " openssl=" .. tostring(openssl))
     if not srcroot or not mysql or not openssl then

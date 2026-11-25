@@ -10,3 +10,7 @@ vulkan = "1.4.357.3"
 # switch tests/loader.cpp keys off; it is unconditional again.
 [build]
 cxxflags = ["-DHAVE_VULKAN_LOADER=1"]
+
+# The candidate index: this checkout (compat.*), not the published one.
+[indices]
+compat = { path = "../../.." }
