@@ -1,0 +1,7 @@
+[package]
+name = "opencv-cpu"
+version = "5.0.0"
+description = "Install the OpenCV mwrap archive and run a generated image pipeline"
+
+[dependencies]
+mcpplibs.mwrap.opencv = { version = "5.0.0.1", features = ["imgproc", "imgcodecs-png", "imgcodecs-jpeg"] }

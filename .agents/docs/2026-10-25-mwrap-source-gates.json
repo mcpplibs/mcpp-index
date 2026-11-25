@@ -1,0 +1,467 @@
+{
+  "scope": "Seven source PRs, exact reviewed heads, squash merges and exact merge-commit CI. Final index publication and installed consumers are separate gates.",
+  "mcpp_version": "2026.10.24.1",
+  "libraries": [
+    {
+      "repo": "ffmpeg-m",
+      "pr": 9,
+      "pr_head": "0ec0231fa4276b109134136234ffc67169bca6ec",
+      "merge_sha": "5b6aaef9ab7206ca7e944d5e0ccdd23cca1d7844",
+      "version": "8.1.2",
+      "pr_url": "https://github.com/mcpplibs/ffmpeg-m/pull/9",
+      "main_ci": [
+        {
+          "id": 40144626680,
+          "path": "templates.yml",
+          "name": "Actual project templates",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/mcpplibs/ffmpeg-m/actions/runs/40144626680"
+        },
+        {
+          "id": 40144626705,
+          "path": "ci.yml",
+          "name": "CI",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/mcpplibs/ffmpeg-m/actions/runs/40144626705"
+        }
+      ],
+      "self_review_head": "0ec0231fa4276b109134136234ffc67169bca6ec",
+      "pr_ci": {
+        "checks": [
+          {
+            "name": "mcpp (ubuntu-latest, required)",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/mcpplibs/ffmpeg-m/actions/runs/40143768020/job/121020724592"
+          },
+          {
+            "name": "templates",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/mcpplibs/ffmpeg-m/actions/runs/40143767976/job/121020724275"
+          }
+        ],
+        "runs": [
+          {
+            "id": 40143768020,
+            "name": "CI",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/mcpplibs/ffmpeg-m/actions/runs/40143768020"
+          },
+          {
+            "id": 40143767976,
+            "name": "Actual project templates",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/mcpplibs/ffmpeg-m/actions/runs/40143767976"
+          }
+        ]
+      }
+    },
+    {
+      "repo": "imgui-m",
+      "pr": 14,
+      "pr_head": "eeaa5164ecd801f316c8097ae8e43b03ae457550",
+      "merge_sha": "15e68efe76d5e63d7d0fea0d66971d8528c512af",
+      "version": "1.92.8",
+      "pr_url": "https://github.com/mcpplibs/imgui-m/pull/14",
+      "main_ci": [
+        {
+          "id": 40144637062,
+          "path": "templates.yml",
+          "name": "Actual project templates",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/mcpplibs/imgui-m/actions/runs/40144637062"
+        },
+        {
+          "id": 40144637066,
+          "path": "ci.yml",
+          "name": "CI",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/mcpplibs/imgui-m/actions/runs/40144637066"
+        }
+      ],
+      "self_review_head": "eeaa5164ecd801f316c8097ae8e43b03ae457550",
+      "pr_ci": {
+        "checks": [
+          {
+            "name": "templates",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/mcpplibs/imgui-m/actions/runs/40143776565/job/121020831873"
+          },
+          {
+            "name": "mcpp (windows-latest)",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/mcpplibs/imgui-m/actions/runs/40143776561/job/121020748610"
+          },
+          {
+            "name": "mcpp (macos-latest)",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/mcpplibs/imgui-m/actions/runs/40143776561/job/121020748546"
+          },
+          {
+            "name": "mcpp (ubuntu-latest)",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/mcpplibs/imgui-m/actions/runs/40143776561/job/121020748436"
+          }
+        ],
+        "runs": [
+          {
+            "id": 40143776561,
+            "name": "CI",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/mcpplibs/imgui-m/actions/runs/40143776561"
+          },
+          {
+            "id": 40143776565,
+            "name": "Actual project templates",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/mcpplibs/imgui-m/actions/runs/40143776565"
+          }
+        ]
+      }
+    },
+    {
+      "repo": "llama.cpp-m",
+      "pr": 6,
+      "pr_head": "70f3735b450b16a079c4eb0123184cfe5fd88185",
+      "merge_sha": "c8b41c67cc6a7767797ccb05d637a7936c3d22ea",
+      "version": "b10069",
+      "pr_url": "https://github.com/mcpplibs/llama.cpp-m/pull/6",
+      "main_ci": [
+        {
+          "id": 40146341452,
+          "path": "ci.yml",
+          "name": "ci",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/mcpplibs/llama.cpp-m/actions/runs/40146341452"
+        }
+      ],
+      "self_review_head": "70f3735b450b16a079c4eb0123184cfe5fd88185",
+      "pr_ci": {
+        "checks": [
+          {
+            "name": "release-contract",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/mcpplibs/llama.cpp-m/actions/runs/40143765749/job/121024233561"
+          },
+          {
+            "name": "cpu (macos-15)",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/mcpplibs/llama.cpp-m/actions/runs/40143765749/job/121020716431"
+          },
+          {
+            "name": "linux-arm64",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/mcpplibs/llama.cpp-m/actions/runs/40143765749/job/121020716247"
+          },
+          {
+            "name": "vulkan",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/mcpplibs/llama.cpp-m/actions/runs/40143765749/job/121020716234"
+          },
+          {
+            "name": "cpu (ubuntu-24.04)",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/mcpplibs/llama.cpp-m/actions/runs/40143765749/job/121020716215"
+          },
+          {
+            "name": "cpu (windows-latest)",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/mcpplibs/llama.cpp-m/actions/runs/40143765749/job/121020716206"
+          },
+          {
+            "name": "metal",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/mcpplibs/llama.cpp-m/actions/runs/40143765749/job/121020716197"
+          },
+          {
+            "name": "unit-and-import",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/mcpplibs/llama.cpp-m/actions/runs/40143765749/job/121020716042"
+          }
+        ],
+        "runs": [
+          {
+            "id": 40143765749,
+            "name": "ci",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/mcpplibs/llama.cpp-m/actions/runs/40143765749"
+          }
+        ]
+      }
+    },
+    {
+      "repo": "onnxruntime-m",
+      "pr": 3,
+      "pr_head": "dc900ae129a8dda86067cd5ef85658c7606bac7d",
+      "merge_sha": "baf37fe63375021e937fb6e80ecc0214242a24e2",
+      "version": "1.25.1",
+      "pr_url": "https://github.com/mcpplibs/onnxruntime-m/pull/3",
+      "main_ci": [
+        {
+          "id": 40147251050,
+          "path": "ci.yml",
+          "name": "CI",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/mcpplibs/onnxruntime-m/actions/runs/40147251050"
+        }
+      ],
+      "self_review_head": "dc900ae129a8dda86067cd5ef85658c7606bac7d",
+      "pr_ci": {
+        "checks": [
+          {
+            "name": "linux-gcc",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/mcpplibs/onnxruntime-m/actions/runs/40144792244/job/121023717830"
+          },
+          {
+            "name": "macos-arm64",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/mcpplibs/onnxruntime-m/actions/runs/40144792244/job/121023717828"
+          },
+          {
+            "name": "windows-msvc-abi",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/mcpplibs/onnxruntime-m/actions/runs/40144792244/job/121023717726"
+          },
+          {
+            "name": "linux-llvm",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/mcpplibs/onnxruntime-m/actions/runs/40144792244/job/121023717676"
+          }
+        ],
+        "runs": [
+          {
+            "id": 40144792244,
+            "name": "CI",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/mcpplibs/onnxruntime-m/actions/runs/40144792244"
+          }
+        ]
+      }
+    },
+    {
+      "repo": "godot-cpp-m",
+      "pr": 2,
+      "pr_head": "d06b8d1337b39af4130e0327972348d5eee53d37",
+      "merge_sha": "d7be0cd9dc8224ec8313e540b515a5aacfc1cf83",
+      "version": "10.0.0",
+      "pr_url": "https://github.com/mcpplibs/godot-cpp-m/pull/2",
+      "main_ci": [
+        {
+          "id": 40148707230,
+          "path": "ci.yml",
+          "name": "CI",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/mcpplibs/godot-cpp-m/actions/runs/40148707230"
+        }
+      ],
+      "self_review_head": "d06b8d1337b39af4130e0327972348d5eee53d37",
+      "pr_ci": {
+        "checks": [
+          {
+            "name": "mcpp (macos)",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/mcpplibs/godot-cpp-m/actions/runs/40147052805/job/121030524774"
+          },
+          {
+            "name": "mcpp (windows)",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/mcpplibs/godot-cpp-m/actions/runs/40147052805/job/121030524764"
+          },
+          {
+            "name": "mcpp (linux)",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/mcpplibs/godot-cpp-m/actions/runs/40147052805/job/121030524619"
+          }
+        ],
+        "runs": [
+          {
+            "id": 40147052805,
+            "name": "CI",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/mcpplibs/godot-cpp-m/actions/runs/40147052805"
+          }
+        ]
+      }
+    },
+    {
+      "repo": "grpc-m",
+      "pr": 8,
+      "pr_head": "bda43a641d1c67262ea15fd682466ff3c511796b",
+      "merge_sha": "b7a918ef931c270040d0db8ae36478b2d58f8a8a",
+      "version": "1.83.0",
+      "pr_url": "https://github.com/mcpplibs/grpc-m/pull/8",
+      "main_ci": [
+        {
+          "id": 40151741542,
+          "path": "templates.yml",
+          "name": "Actual project templates",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/mcpplibs/grpc-m/actions/runs/40151741542"
+        },
+        {
+          "id": 40151741673,
+          "path": "ci.yml",
+          "name": "CI",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/mcpplibs/grpc-m/actions/runs/40151741673"
+        }
+      ],
+      "self_review_head": "bda43a641d1c67262ea15fd682466ff3c511796b",
+      "pr_ci": {
+        "checks": [
+          {
+            "name": "templates",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/mcpplibs/grpc-m/actions/runs/40143772542/job/121020909610"
+          },
+          {
+            "name": "runtime and host tools share upstream source",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/mcpplibs/grpc-m/actions/runs/40143772566/job/121020735851"
+          },
+          {
+            "name": "templates/greeter == examples/greeter",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/mcpplibs/grpc-m/actions/runs/40143772566/job/121020735789"
+          },
+          {
+            "name": "linux x86_64",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/mcpplibs/grpc-m/actions/runs/40143772566/job/121020735782"
+          },
+          {
+            "name": "macos arm64",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/mcpplibs/grpc-m/actions/runs/40143772566/job/121020735779"
+          },
+          {
+            "name": "source list == upstream CMakeLists",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/mcpplibs/grpc-m/actions/runs/40143772566/job/121020735604"
+          }
+        ],
+        "runs": [
+          {
+            "id": 40143772542,
+            "name": "Actual project templates",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/mcpplibs/grpc-m/actions/runs/40143772542"
+          },
+          {
+            "id": 40143772566,
+            "name": "CI",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/mcpplibs/grpc-m/actions/runs/40143772566"
+          }
+        ]
+      }
+    },
+    {
+      "repo": "opencv-m",
+      "pr": 1,
+      "pr_head": "867b319cbd3b7417f1472bdf0788d9901e0e4f5c",
+      "merge_sha": "832664939561dfe058b73050c7704e307c811064",
+      "version": "5.0.0",
+      "pr_url": "https://github.com/mcpplibs/opencv-m/pull/1",
+      "main_ci": [
+        {
+          "id": 40155258597,
+          "path": "ci.yml",
+          "name": "CI",
+          "status": "completed",
+          "conclusion": "success",
+          "url": "https://github.com/mcpplibs/opencv-m/actions/runs/40155258597"
+        }
+      ],
+      "self_review_head": "867b319cbd3b7417f1472bdf0788d9901e0e4f5c",
+      "pr_ci": {
+        "checks": [
+          {
+            "name": "macos-llvm",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/mcpplibs/opencv-m/actions/runs/40145824570/job/121027034712"
+          },
+          {
+            "name": "windows-llvm",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/mcpplibs/opencv-m/actions/runs/40145824570/job/121027034631"
+          },
+          {
+            "name": "linux-gcc",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/mcpplibs/opencv-m/actions/runs/40145824570/job/121027034616"
+          },
+          {
+            "name": "linux-musl-static",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/mcpplibs/opencv-m/actions/runs/40145824570/job/121027034601"
+          },
+          {
+            "name": "linux-llvm-22",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/mcpplibs/opencv-m/actions/runs/40145824570/job/121027034470"
+          }
+        ],
+        "runs": [
+          {
+            "id": 40145824570,
+            "name": "CI",
+            "status": "completed",
+            "conclusion": "success",
+            "url": "https://github.com/mcpplibs/opencv-m/actions/runs/40145824570"
+          }
+        ]
+      }
+    }
+  ]
+}

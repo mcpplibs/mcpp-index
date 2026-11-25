@@ -1,0 +1,16 @@
+# llvm.compiler-rt-builtins test project. The package is the builtins of the
+# rows that have no compiler-rt of their own: an ok image (`<arch>-openkal`),
+# where openkal-musl's `image-builtins` feature asks for it, and the bare-metal
+# rows. No runner here builds those targets, so the member names the package
+# under `cfg(os = "openkal")` alone and the candidate gate asks it nothing: the
+# package's own CI builds every row it serves. On the runners the member is an
+# ordinary program, which keeps the descriptor resolvable by name.
+[package]
+name    = "compiler-rt-builtins-tests"
+version = "0.1.0"
+
+[target.'cfg(os = "openkal")'.dependencies.llvm]
+compiler-rt-builtins = "22.1.8.6"
+
+[indices]
+mcpplibs = { path = "../../.." }

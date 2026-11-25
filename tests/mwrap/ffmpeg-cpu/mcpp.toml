@@ -1,0 +1,7 @@
+[package]
+name = "ffmpeg-cpu"
+version = "8.1.2"
+description = "Consume the immutable FFmpeg wrapper revision and decode a real raw frame"
+
+[dependencies]
+mcpplibs.mwrap.ffmpeg = "8.1.2.1"

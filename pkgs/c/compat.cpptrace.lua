@@ -39,7 +39,7 @@
 -- than to CI. A future `libdwarf` feature can add it without changing anything
 -- a consumer writes.
 --
--- ── Two generated pieces ───────────────────────────────────────────────────
+-- ── A generated header and a define ───────────────────────────────────────
 --
 --   * `cpptrace/version.hpp` is a `configure_file` of `cmake/in/version-hpp.in`
 --     whose only inputs are the three version numbers in `project()`. Snapshot,
@@ -62,21 +62,17 @@
 --         lld-link: error: undefined symbol: __declspec(dllimport)
 --             cpptrace::v1::stacktrace_frame::operator!=(...) const
 --
---     ⚠️⚠️ MOVING IT TO `defines` DOES NOT FIX THAT, and this was measured
+--     Moving it to `defines` does not fix that either, and this was measured
 --     rather than assumed: `defines` is package-private too. Read the compile
 --     database of a build that has both packages in it and libassert's eight
 --     TUs carry `-DLIBASSERT_STATIC_DEFINE` (its OWN package define) and zero
 --     `-DCPPTRACE_STATIC_DEFINE`, while cpptrace's 45 carry the reverse.
---     `docs/repository-and-schema.md` says the same thing about a feature's
---     `defines`. THERE IS NO INTERFACE-DEFINE KEY IN THIS GRAMMAR.
 --
---     So the delivery mechanism is a SHIM, the same lever `compat.gzip-hpp` and
---     `compat.catch2` use: `basic.hpp` is the only header that reads the macro,
---     and every public header funnels through it (`cpptrace.hpp`,
---     `exceptions.hpp`, `formatting.hpp`, `from_current.hpp`, `gdb_jit.hpp`,
---     `io.hpp`, `utils.hpp` — all of them include it), so ONE shim in front of
---     it serves this package's TUs, libassert's, and any consumer's alike.
---     `mcpp_generated` therefore sorts FIRST in include_dirs.
+--     A FEATURE'S `defines` reach every TU that receives this package's include
+--     directories, this package's and its consumers' (an interface
+--     contribution), so the macro is a `staticlib` feature that `default`
+--     implies: the same arrangement as CURL_STATICLIB in compat.curl and
+--     LZMA_API_STATIC in compat.xz.
 --
 --     The BACKEND macros below stay in `cxxflags` on purpose: those select
 --     which .cpp compiles to something and are nobody else's business.
@@ -138,26 +134,9 @@ package = {
         -- `*/src` carries private headers the sources include as `utils/…`,
         -- `binary/…`; `mcpp_generated` carries the version header at the path
         -- `<cpptrace/version.hpp>` upstream's public headers open.
-        -- ORDER MATTERS: mcpp_generated FIRST, so the basic.hpp shim below is
-        -- found before upstream's, which it then reaches with #include_next.
         include_dirs = { "mcpp_generated", "*/include", "*/src" },
 
         generated_files = {
-            -- Delivers CPPTRACE_STATIC_DEFINE to every TU that opens a cpptrace
-            -- header, which no descriptor key can do. See the header note.
-            ["mcpp_generated/cpptrace/basic.hpp"] = [==[
-// mcpp-index shim: cpptrace is built as objects here, not as a shared library,
-// so every declaration must be plain rather than dllimport/visibility-default.
-// Upstream reads CPPTRACE_STATIC_DEFINE in this header and nowhere else, and
-// every public cpptrace header includes this one.
-#ifndef MCPP_COMPAT_CPPTRACE_STATIC_SHIM
-#define MCPP_COMPAT_CPPTRACE_STATIC_SHIM
-#ifndef CPPTRACE_STATIC_DEFINE
-#  define CPPTRACE_STATIC_DEFINE
-#endif
-#include_next <cpptrace/basic.hpp>
-#endif
-]==],
             ["mcpp_generated/cpptrace/version.hpp"] = [==[
 /* configure_file() of cmake/in/version-hpp.in for cpptrace 1.0.4. */
 #ifndef CPPTRACE_VERSION_HPP
@@ -178,9 +157,10 @@ package = {
         targets = { ["cpptrace"] = { kind = "lib" } },
         deps    = { },
 
-        -- Belt and braces for this package's OWN TUs; the shim above is what
-        -- reaches everyone else's.
-        defines = { "CPPTRACE_STATIC_DEFINE" },
+        features = {
+            ["default"]   = { implies = { "staticlib" } },
+            ["staticlib"] = { defines = { "CPPTRACE_STATIC_DEFINE" } },
+        },
 
         linux = {
             cxxflags = {

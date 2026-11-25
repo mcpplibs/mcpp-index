@@ -166,6 +166,17 @@ package = {
         -- adapter for is not something a runtime adapter should leave
         -- unreachable.
         deps         = { ["compat.opencl"] = "2026.09.11" },
+        -- ONE C++ RUNTIME PER PROCESS, AND HERE IT IS libstdc++ (mcpp SPEC-002
+        -- §7). `libsycl.so` is built on libstdc++ and throws `sycl::exception`
+        -- on it; a program whose own C++ library is libc++ catches that only
+        -- as `catch (...)` (mcpp-community/mcpp#838), because the two runtimes
+        -- share the ABI names. So the consumer's build takes libstdc++: a gcc
+        -- toolchain, or llvm with `gcc.libstdcxx` in the graph (mcpp
+        -- 2026.10.26.1). Any other build is refused before it compiles, naming
+        -- both C++ libraries.
+        linux = {
+            requires = { "mcpp:c++-abi=libstdc++" },
+        },
         runtime = {
             library_dirs = { "mcpp_generated/sycl_runtime/lib" },
             capabilities = { "sycl.runtime" },

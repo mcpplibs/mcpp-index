@@ -8,3 +8,7 @@ version = "0.1.0"
 # fails — which is the point of not spelling it out on this side.
 [dependencies.compat]
 curl = "8.21.0"
+
+# The candidate index: this checkout (compat.*), not the published one.
+[indices]
+compat = { path = "../../.." }

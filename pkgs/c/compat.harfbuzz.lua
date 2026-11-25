@@ -17,9 +17,11 @@
 -- naming only HAVE_FREETYPE selects precisely the FreeType backend without
 -- editing anything.
 --
--- NO config.h. HarfBuzz reads one only under HAVE_CONFIG_H, which is not
--- defined here; `hb-config.hh` then supplies the defaults. That is what keeps
--- this a source-only package with no configure step.
+-- ONE GENERATED config.h, no configure step. HarfBuzz reads a config.h under
+-- HAVE_CONFIG_H; the one below (mcpp_generated/config.h) only names the
+-- backend's HAVE_* switches, so `hb-config.hh` still supplies every default.
+-- It exists for the switch no-freetype (below), which a command-line define
+-- could not take back.
 --
 -- HB_NO_MT IS DELIBERATELY NOT SET. It drops HarfBuzz's atomics and locks,
 -- which is only sound when the consumer guarantees single-threaded use --
@@ -41,6 +43,10 @@ package = {
                     CN     = "https://gitcode.com/mcpp-res/harfbuzz/releases/download/14.3.0/harfbuzz-14.3.0.tar.gz",
                 },
                 sha256 = "566e996a1b40486954fb7110ffe6eb88a0f7958bb466cdb023b0302618acea4a",
+                -- 1: hb-ft with FreeType's variation and transform entry points
+                -- (the HAVE_FT_* below): installed copies take them.
+                -- 2: the switch no-freetype, read in the generated config.h.
+                revision = 2,
             },
         },
         macosx = {
@@ -50,6 +56,10 @@ package = {
                     CN     = "https://gitcode.com/mcpp-res/harfbuzz/releases/download/14.3.0/harfbuzz-14.3.0.tar.gz",
                 },
                 sha256 = "566e996a1b40486954fb7110ffe6eb88a0f7958bb466cdb023b0302618acea4a",
+                -- 1: hb-ft with FreeType's variation and transform entry points
+                -- (the HAVE_FT_* below): installed copies take them.
+                -- 2: the switch no-freetype, read in the generated config.h.
+                revision = 2,
             },
         },
         windows = {
@@ -59,6 +69,10 @@ package = {
                     CN     = "https://gitcode.com/mcpp-res/harfbuzz/releases/download/14.3.0/harfbuzz-14.3.0.tar.gz",
                 },
                 sha256 = "566e996a1b40486954fb7110ffe6eb88a0f7958bb466cdb023b0302618acea4a",
+                -- 1: hb-ft with FreeType's variation and transform entry points
+                -- (the HAVE_FT_* below): installed copies take them.
+                -- 2: the switch no-freetype, read in the generated config.h.
+                revision = 2,
             },
         },
     },
@@ -66,13 +80,49 @@ package = {
     mcpp = {
         language     = "c++23",
         import_std   = false,
-        include_dirs = { "*/src" },
+        include_dirs = { "mcpp_generated", "*/src" },
         sources      = { "*/src/harfbuzz.cc" },
         -- HAVE_FREETYPE turns on hb-ft.cc inside the amalgamation, which is
         -- what makes <hb-ft.h> more than a set of declarations. The public
         -- header is installed either way, so without this the consumer gets a
         -- link error rather than a compile error -- worth pinning down here.
-        cxxflags     = { "-DHAVE_FREETYPE=1" },
+        --
+        -- The four HAVE_FT_* are what upstream's meson.build sets for every
+        -- FreeType that has these entry points (check_freetype_funcs; all of
+        -- them since FreeType 2.11, so compat.freetype 2.13.3 too). Without
+        -- them hb-ft.cc compiles out its variation and transform support: the
+        -- FreeType font functions ignore hb_font_set_variations() and the
+        -- face's FT_Set_Transform, and upstream's shaping suites fail with
+        -- --font-funcs=ft on every variable font (TestGVAR*, TestHVAR*,
+        -- TestCVARGVAR*, HBTest-VF …).
+        --
+        -- They are in config.h, not cxxflags, for the switch no-freetype:
+        -- with HAVE_FREETYPE, hb_font_create() reaches hb_ft_font_set_funcs
+        -- through hb_font_set_funcs_using()'s table of backends, so every
+        -- program that makes a font links all of FreeType (its core and every
+        -- driver), whether or not it ever names FreeType. A consumer whose
+        -- fonts take HarfBuzz's own `ot` functions (the default first in that
+        -- table) turns it on and carries none of it; <hb-ft.h>'s functions
+        -- are then not defined.
+        cxxflags     = { "-DHAVE_CONFIG_H=1" },
+        generated_files = {
+            ["mcpp_generated/config.h"] = [==[
+/* compat.harfbuzz: the backend HarfBuzz is built with. mcpp defines
+   MCPP_FEATURE_NO_FREETYPE for this package's units when the switch is on. */
+#ifndef MCPP_FEATURE_NO_FREETYPE
+#define HAVE_FREETYPE 1
+#define HAVE_FT_GET_VAR_BLEND_COORDINATES 1
+#define HAVE_FT_SET_VAR_BLEND_COORDINATES 1
+#define HAVE_FT_DONE_MM_VAR 1
+#define HAVE_FT_GET_TRANSFORM 1
+#endif
+]==],
+        },
+        --   no-freetype  HarfBuzz without its FreeType backend (hb-ft): off by
+        --                default, the build it always was.
+        features     = {
+            ["no-freetype"] = {},
+        },
         targets      = { ["harfbuzz"] = { kind = "lib" } },
         deps         = { ["compat.freetype"] = "2.13.3" },
         linux = {

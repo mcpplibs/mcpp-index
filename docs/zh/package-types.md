@@ -1,5 +1,10 @@
 # 库形态与描述符模板
 
+模块封装统一使用 `mcpplibs.mwrap.<lib>`，描述符位于 `pkgs/mwrap/<lib>.lua`；见 [mwrap 规范](mwrap.md)。每个 -m 仓库必须提供默认英文与中文 README。
+
+构建插件（`build.mcpp` 导入的模块）是 `<owner>.mplugin.<name>`，描述符位于 `pkgs/mcpp/`；见[构建插件](build-plugins.md)。
+
+
 [English](../package-types.md) | **简体中文**
 
 编写描述符前,应先判定库所属的形态,再选用对应模板。`mcpp = {}` 内的所有路径均为**相对 verdir 的 GLOB**:
@@ -17,7 +22,7 @@ A–D 是四种**基础**形态,先按它们判定;E–G 是在基础形态之�
 | **F. 共享库 compat** | 必须是进程里**唯一**的那个 `.so` —— 或因为会被第三方 `dlopen`,或因为生态 payload 链的是同一个 soname | `pkgs/c/compat.x11.lua` 等 X11 家族、`compat.vulkan.lua`、`compat.libdrm.lua`、`compat.libffi.lua`、`compat.expat.lua` | `targets = { kind = "shared", soname = … }` |
 | **G. 宿主运行时适配** | 驱动之类无法 vendor 的东西,只做符号链接农场 + 元数据 | `pkgs/c/compat.glx-runtime.lua`、`compat.vulkan-runtime.lua` | `runtime.library_dirs` / `capabilities` |
 | **H. 宿主工具提供方** | 上游 tarball 里除了库,还带着消费者在构建期要跑的**代码生成器** | `pkgs/c/compat.protobuf.lua`(`protoc`) | `targets` 里一条 `kind = "bin"` + `main`,配 `required_features` |
-| **I. 生态栈绑定** | 这个库是某个**生态已经拥有**的项目的内部 build target,且上游不单独发布,vendor 它就等于 fork 那个项目。**不适用**于只是「和 payload 共存」的库 —— 见下 | `pkgs/c/compat.libgbm.lua`(Mesa 的 GBM,经 `xim:mesa`) | `xpm.<plat>.deps.runtime = { "xim:<pkg>" }` + 从 `system.subos_sysrootdir()` 建农场,`runtime.library_dirs` **和** `link_library_dirs` 都要 |
+| **I. 生态栈绑定** | 这个库是某个**生态已经拥有**的项目的内部 build target,且上游不单独发布,vendor 它就等于 fork 那个项目。**不适用**于只是「和 payload 共存」的库 —— 见下 | `pkgs/c/compat.libgbm.lua`(Mesa 的 GBM,经 `xim:mesa`) | `xpm.<plat>.deps.runtime = { "xim:<pkg>" }` + 从 `system.subos_sysrootdir()` 建农场,`runtime.runtime_search_dirs` **和** `link_library_dirs` 都要 |
 
 ### 源码构建还是绑定:判据只有「可否独立分发」
 
@@ -219,7 +224,7 @@ runtime = {
 
   | 键 | 渲染成 |
   |---|---|
-  | `runtime.library_dirs` | `-Wl,-rpath` |
+  | `runtime.runtime_search_dirs`（旧拼写 `library_dirs`，仍被读取） | `-Wl,-rpath` |
   | `runtime.link_library_dirs` | `-L` |
   | `runtime.transitive_needed_dirs` | `-Wl,-rpath-link` |
 

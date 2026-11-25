@@ -1,0 +1,7 @@
+[package]
+name = "godot-math"
+version = "10.0.0"
+description = "Run the immutable godot-cpp module wrapper without an engine"
+
+[dependencies]
+mcpplibs.mwrap.godot_cpp = "10.0.0"

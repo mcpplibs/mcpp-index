@@ -19,18 +19,24 @@ package = {
             ["4.1.0"] = {
                 url = "https://github.com/taskflow/taskflow/archive/refs/tags/v4.1.0.tar.gz",
                 sha256 = "2107f90e315e48a676922010b036357ff2b0c6b9160ce17fa9396e5860b1d715",
+                -- 1: tfprof.hpp's two namespace-scope helpers are inline, not static inline (install()).
+                revision = 1,
             },
         },
         macosx = {
             ["4.1.0"] = {
                 url = "https://github.com/taskflow/taskflow/archive/refs/tags/v4.1.0.tar.gz",
                 sha256 = "2107f90e315e48a676922010b036357ff2b0c6b9160ce17fa9396e5860b1d715",
+                -- 1: tfprof.hpp's two namespace-scope helpers are inline, not static inline (install()).
+                revision = 1,
             },
         },
         windows = {
             ["4.1.0"] = {
                 url = "https://github.com/taskflow/taskflow/archive/refs/tags/v4.1.0.tar.gz",
                 sha256 = "2107f90e315e48a676922010b036357ff2b0c6b9160ce17fa9396e5860b1d715",
+                -- 1: tfprof.hpp's two namespace-scope helpers are inline, not static inline (install()).
+                revision = 1,
             },
         },
     },
@@ -84,6 +90,13 @@ function install()
 
     -- iterator.hpp 使用 std::max，但 libc++ 的间接包含不提供它
     patch("modules/tf.utility.cppm", "module;\n", "module;\n#include <algorithm>\n")
+
+    -- tfprof.hpp 的两个命名空间作用域辅助函数为 `static inline`：:core 与 :algorithm 两个分区的
+    -- 全局模块片段各包含一次，导入 tf 的翻译单元因而见到两个内部链接的定义。MSVC ABI 下二者的
+    -- 修饰名相同，clang 23 报 "definition with same mangled name"（windows-x86_64，llvm@23.1.3）；
+    -- 改为 `inline`（外部链接）后两处是同一实体
+    patch("taskflow/observer/tfprof.hpp", "static inline void _tf_rule(", "inline void _tf_rule(")
+    patch("taskflow/observer/tfprof.hpp", "static inline double _tf_time_scale(", "inline double _tf_time_scale(")
 
     local prefix = pkginfo.install_dir()
     os.tryrm(prefix)

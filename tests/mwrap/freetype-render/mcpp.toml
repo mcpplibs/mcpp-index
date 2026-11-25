@@ -1,0 +1,7 @@
+[package]
+name = "freetype-render"
+version = "2.13.3"
+description = "Consume the immutable FreeType wrapper: a BDF font from memory rendered, an outline built, stroked and rasterised, exact bounding boxes, the mapped macros"
+
+[dependencies]
+mcpplibs.mwrap.freetype = "2.13.3"

@@ -1,0 +1,7 @@
+[package]
+name = "imgui-headless"
+version = "1.92.8"
+description = "Consume the immutable ImGui wrapper and render actual headless draw data"
+
+[dependencies]
+mcpplibs.mwrap.imgui = "1.92.8"

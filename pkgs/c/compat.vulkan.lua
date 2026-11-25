@@ -38,7 +38,7 @@
 -- assumed to come from the machine's GPU driver, which a driverless machine
 -- does not have (0xC0000135 before `main`, measured on `windows-2022`). From
 -- 1.4.357.3 the artifact also carries the DLL, built from the same tag, and
--- `runtime.library_dirs` has mcpp place it beside every consuming executable;
+-- `runtime.runtime_search_dirs` has mcpp place it beside every consuming executable;
 -- see the windows xpm entry. The import library in that artifact — symbol
 -- stubs, no code — is generated from Khronos' own `loader/vulkan-1.def`
 -- (shipped in this very loader tarball) with a single reproducible command:
@@ -448,7 +448,7 @@ package = {
                 link_library_dirs = { "lib" },
                 libraries         = { "vulkan-1" },
                 -- THE LOADER TRAVELS WITH THE PROGRAM (1.4.357.3+). mcpp copies
-                -- every *.dll under a dependency's runtime library_dirs beside the
+                -- every *.dll under a dependency's runtime search directories beside the
                 -- executable it builds -- for transitive dependencies too -- and
                 -- `mcpp pack` always searches the executable's own directory, so
                 -- the same file reaches a packed distribution. Versions before
@@ -458,7 +458,7 @@ package = {
                 -- The ICD is deliberately NOT supplied: on a machine with a GPU
                 -- driver the driver's ICD is the right one, and a software
                 -- fallback would hide a missing driver behind a slow device.
-                library_dirs = { "bin" },
+                runtime_search_dirs = { "bin" },
                 dlopen_libs  = { "vulkan-1.dll" },
                 capabilities = { "vulkan.icd.driver" },
             },

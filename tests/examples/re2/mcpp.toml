@@ -8,3 +8,7 @@ version = "0.1.0"
 
 [dependencies.compat]
 re2 = "2022-04-01"
+
+# The candidate index: this checkout (compat.*), not the published one.
+[indices]
+compat = { path = "../../.." }

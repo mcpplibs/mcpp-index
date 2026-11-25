@@ -1,0 +1,7 @@
+[package]
+name = "lua-embed"
+version = "5.4.7"
+description = "Consume the immutable Lua wrapper: a C function and a closure called from Lua, errors, userdata, the mapped macros"
+
+[dependencies]
+mcpplibs.mwrap.lua = "5.4.7"

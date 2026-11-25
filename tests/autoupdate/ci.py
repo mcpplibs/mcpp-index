@@ -24,16 +24,59 @@ def base_descriptors(base: str) -> set[str]:
     return {name for name in files.splitlines() if name.endswith(".lua")}
 
 
+def moved_descriptors(base: str) -> dict[str, str]:
+    """New path -> old path of the descriptors git sees as renamed since `base`.
+
+    A descriptor's identity is what it declares, not where its file is: a move
+    (the official packages into pkgs/mcpp/, docs/build-plugins.md) keeps every
+    published version, and is audited against the file it came from."""
+    out = subprocess.check_output(
+        ["git", "diff", "--name-status", "-M", "--diff-filter=R", base, "HEAD", "--", "pkgs"],
+        cwd=ROOT, text=True)
+    moved = {}
+    for line in out.splitlines():
+        _status, old, new = line.split("\t")
+        if old.endswith(".lua") and new.endswith(".lua"):
+            moved[new] = old
+    return moved
+
+
+def immutable_commit_snapshot(info: dict) -> bool:
+    """Commit archives have no release-version substitution to automate."""
+    urls = []
+    for platform in info["platforms"].values():
+        for value in platform["entries"].values():
+            if value.kind != "table":
+                return False
+            entry = value.table()
+            if "ref" in entry:
+                continue
+            # Inspect only the URL: revision/floor are valid numeric Lua
+            # fields that the updater's general plain() conversion rejects.
+            url = entry.get("url")
+            if url is not None and url.kind == "table":
+                url = url.table().get("GLOBAL")
+            if url is None or url.kind != "string":
+                return False
+            urls.append(url.string())
+    return bool(urls) and all(re.fullmatch(
+        r"https://github\.com/[^/]+/[^/]+/archive/[0-9a-fA-F]{40}(?:[0-9a-fA-F]{24})?\.(?:tar\.gz|zip)",
+        url) for url in urls)
+
+
 def audit(base: str, output: Path):
     records = []
+    manual = []
     previous = base_descriptors(base)
     infos = inventory(ROOT)
-    removed = previous - {info["path"] for info in infos}
+    moved = moved_descriptors(base)
+    removed = previous - {info["path"] for info in infos} - set(moved.values())
     if removed:
         raise RuntimeError(f"existing descriptors removed: {sorted(removed)}")
     for info in infos:
-        if info["path"] in previous:
-            before = subprocess.check_output(["git", "show", f"{base}:{info['path']}"], cwd=ROOT).decode()
+        origin = moved.get(info["path"], info["path"])
+        if origin in previous:
+            before = subprocess.check_output(["git", "show", f"{base}:{origin}"], cwd=ROOT).decode()
             # `revision` exists to replace a payload under an unchanged
             # version, so it must be allowed to change that version block.
             # Applying the updater's byte-for-byte append-only guard here would
@@ -68,10 +111,15 @@ def audit(base: str, output: Path):
                             f"{info['id']} {plat}/{version}")
         if info["direct"]:
             if info["autoupdate"] is None:
+                if immutable_commit_snapshot(info):
+                    manual.append({"id": info["id"], "path": info["path"],
+                                   "reason": "immutable commit archive; update requires a reviewed source revision"})
+                    continue
                 raise RuntimeError(f"missing autoupdate: {info['id']}")
             records.append({k: info[k] for k in ("id", "path", "direct", "autoupdate")})
-    output.write_text(json.dumps({"covered": len(records), "packages": records}, indent=2))
-    print(f"All {len(records)} GitHub-direct descriptors declared; all existing versions preserved.")
+    output.write_text(json.dumps({"covered": len(records), "packages": records, "manual": manual}, indent=2))
+    print(f"All {len(records)} updateable GitHub-direct descriptors declared; "
+          f"{len(manual)} immutable snapshots require manual updates; all existing versions preserved.")
 
 
 def _literal_field(source: str, name: str) -> int | None:
@@ -86,19 +134,140 @@ def selection(base: str, output: Path):
     output.write_text(selected[0] if len(selected) == 1 else "")
 
 
+def names_platform(value, namespace: str, name: str) -> bool:
+    """Whether a mcpp SPEC-013 platform reference (`"<name>@<version>"` or a
+    table naming `name`) names the package."""
+    spelled = value.split("@", 1)[0] if isinstance(value, str) else (
+        value.get("name") if isinstance(value, dict) else None)
+    return isinstance(spelled, str) and spelled in (name, f"{namespace}.{name}")
+
+
+def platform_conditions(manifest: dict, namespace: str, name: str):
+    """The `[target.<condition>]` tables (and `[host]`, condition None) whose
+    `platform` names the package."""
+    for condition, table in manifest.get("target", {}).items():
+        if isinstance(table, dict) and names_platform(table.get("platform"), namespace, name):
+            yield condition
+    if names_platform(manifest.get("host", {}).get("platform"), namespace, name):
+        yield None
+
+
 def direct_member(identity: str) -> str | None:
     namespace, name = identity.split(":", 1)
     candidates = []
-    for path in (ROOT / "tests/examples").glob("*/mcpp.toml"):
-        text = path.read_text(encoding="utf-8")
-        # Metadata-only selection; prepare() and the lock assertion verify actual resolution.
-        if re.search(rf"(?m)^\s*{re.escape(name)}\s*=", text) and (
-            f"dependencies.{namespace}]" in text or f"dependencies.{namespace}." in text
-        ):
-            candidates.append(path.parent.name)
+    def dependency_tables(table):
+        for key, value in table.items():
+            if not isinstance(value, dict):
+                continue
+            if key in {"dependencies", "build-dependencies"}:
+                yield value
+            else:
+                yield from dependency_tables(value)
+    for category in ("examples", "mwrap"):
+        for path in (ROOT / "tests" / category).glob("*/mcpp.toml"):
+            manifest = tomllib.loads(path.read_text(encoding="utf-8"))
+            if any(True for _ in platform_conditions(manifest, namespace, name)):
+                candidates.append((category, path.parent.name))
+                continue
+            for deps in dependency_tables(manifest):
+                if names_dependency(deps, namespace, name):
+                    candidates.append((category, path.parent.name))
+                    break
     if not candidates:
         return None
-    return min(candidates, key=lambda value: (len(value), value))
+    # A wrapper's dedicated consumer covers its current declared platforms;
+    # old examples may intentionally be gated to just one OS or feature.
+    return min(candidates, key=lambda value: (value[0] != "mwrap", len(value[1]), value[1]))[1]
+
+
+def member_manifest(member: str) -> Path:
+    for category in ("mwrap", "examples"):
+        path = ROOT / "tests" / category / member / "mcpp.toml"
+        if path.is_file():
+            return path
+    raise FileNotFoundError(f"consumer manifest not found: {member}")
+
+
+SPEC_KEYS = {"version", "path", "git", "branch", "tag", "rev", "features", "default-features",
+             "optional", "host-module", "tools", "artifacts", "visibility", "linkage", "embed"}
+
+
+def is_spec(value) -> bool:
+    """A dependency's specification, as opposed to the table of a namespace below it: a version
+    string, or a table of a specification's keys (`mcpplibs.mtest.capi = "0.2.0"` makes
+    `mcpplibs.mtest` the table `{capi = "0.2.0"}`, which names no dependency)."""
+    return isinstance(value, str) or (isinstance(value, dict) and bool(SPEC_KEYS & value.keys()))
+
+
+def names_dependency(deps: dict, namespace: str, name: str) -> bool:
+    nested = deps
+    for part in namespace.split("."):
+        nested = nested.get(part, {}) if isinstance(nested, dict) else {}
+    return (is_spec(deps.get(f"{namespace}.{name}"))
+            or is_spec(deps.get(namespace, {}).get(name) if isinstance(deps.get(namespace), dict) else None)
+            or (isinstance(nested, dict) and is_spec(nested.get(name))))
+
+
+# The runner platforms, by the spelling a member's `cfg(os = ...)` uses.
+_CFG_PLATFORMS = {"linux": "linux", "macos": "macosx", "windows": "windows"}
+
+
+def member_platforms(member: str, identity: str) -> set[str]:
+    """The runner platforms on which `member` builds `identity`.
+
+    A member that names the package unconditionally builds it everywhere. One
+    that names it under `[target.'cfg(...)']` builds it only where the condition
+    holds, and a lockfile proves a candidate only where it was built: mcpp locks
+    what the host resolves, so a platform package asked of another platform's
+    runner is a job that can only fail. A condition naming one operating system
+    (`os = "linux"`, `os = "macos"`, `windows`) selects that runner; any other
+    condition (an environment, an architecture, a family) selects none, because
+    no runner here builds for it and the package is measured by its own
+    repository on that target.
+    """
+    namespace, name = identity.split(":", 1)
+    manifest = tomllib.loads(member_manifest(member).read_text(encoding="utf-8"))
+    platforms: set[str] = set()
+    if any(names_dependency(manifest.get(key, {}), namespace, name)
+           for key in ("dependencies", "build-dependencies")):
+        platforms |= set(_CFG_PLATFORMS.values())
+    for condition, table in manifest.get("target", {}).items():
+        if not any(names_dependency(table.get(key, {}), namespace, name)
+                   for key in ("dependencies", "build-dependencies")):
+            continue
+        platforms |= condition_platforms(condition)
+    # A platform the member selects (mcpp SPEC-013): under `[host]` on every
+    # runner, under `[target.<condition>]` where the condition names a system.
+    for condition in platform_conditions(manifest, namespace, name):
+        platforms |= set(_CFG_PLATFORMS.values()) if condition is None else condition_platforms(condition)
+    platforms.discard("")
+    return platforms
+
+
+def condition_platforms(condition: str) -> set[str]:
+    """The runner platforms a `cfg(...)` naming operating systems selects:
+    `os = "linux"`, `windows`, or `any(...)` of those; any other condition
+    selects none."""
+    text = condition.strip()
+    inner = re.fullmatch(r'cfg\(\s*any\(\s*(.*?)\s*\)\s*\)', text)
+    parts = [p.strip() for p in inner.group(1).split(",")] if inner else [text[4:-1].strip()] if text.startswith("cfg(") and text.endswith(")") else []
+    out: set[str] = set()
+    for part in parts:
+        spelled = re.fullmatch(r'(?:os\s*=\s*"(\w+)"|(windows|linux|macos))', part)
+        if not spelled:
+            return set()
+        out.add(_CFG_PLATFORMS.get(spelled.group(1) or spelled.group(2), ""))
+    return out
+
+
+def version_key(version: str) -> tuple:
+    """A dotted version's order: its numeric parts as numbers, any other part
+    after them as text (`0.10.0` after `0.9.0`)."""
+    return tuple((0, int(p), "") if p.isdigit() else (1, 0, p) for p in re.split(r"[.+-]", version))
+
+
+def newest(versions: set[str]) -> str:
+    return max(versions, key=version_key)
 
 
 def matrix(plan: Path, output: Path, base: str):
@@ -116,9 +285,10 @@ def matrix(plan: Path, output: Path, base: str):
             added = {v for plat, entries in new.items() for v in entries if v not in old.get(plat, {})}
             if not added:
                 continue
-            if len(added) != 1:
-                raise RuntimeError(f"expected one added candidate for {info['id']}: {added}")
-            candidate = added.pop()
+            # A change that adds several releases of one package (two releases cut
+            # while its pull request was open) is proven at the newest: the one
+            # consumers are moved to, and whose archive the older ones precede.
+            candidate = newest(added)
             assets = []
             for plat, platform in info["platforms"].items():
                 if candidate not in platform["entries"]:
@@ -129,14 +299,31 @@ def matrix(plan: Path, output: Path, base: str):
             build_plan["packages"] = [r for r in build_plan["packages"] if r["id"] != info["id"]]
             build_plan["packages"].append({"id": info["id"], "path": info["path"],
                                            "candidate": candidate, "status": "existing-candidate", "assets": assets})
+    # Packages released as one archive (one tag, several manifests reaching
+    # each other by path) are built together: a member of one builds the
+    # others from the same bytes, so the job of a sibling that has a member
+    # proves a package that none names directly.
+    def archive_of(record):
+        return frozenset(r["url"] for asset in record.get("assets", []) for r in asset["resources"].values())
+    candidates = [r for r in build_plan["packages"] if r["status"] in ("update-ready", "existing-candidate")]
     jobs = []
-    for record in build_plan["packages"]:
-        if record["status"] not in ("update-ready", "existing-candidate"):
-            continue
+    for record in candidates:
         member = direct_member(record["id"])
         if member is None and record["id"] not in ("compat:hiredis", "compat:libuv"):
-            raise RuntimeError(f"no candidate consumer: {record['id']}")
+            sibling = next((r["id"] for r in candidates
+                            if r is not record and archive_of(r) and archive_of(r) == archive_of(record)
+                            and direct_member(r["id"])), None)
+            if sibling is None:
+                raise RuntimeError(f"no candidate consumer: {record['id']}")
+            print(f"{record['id']}: built from the same archive by the job of {sibling}")
+            continue
+        applicable = member_platforms(member, record["id"]) if member else None
+        if applicable is not None and not applicable:
+            print(f"{record['id']}: {member} names it only for a target no runner builds; "
+                  "measured by its own repository on that target")
         for platform in [asset["platform"] for asset in record["assets"]]:
+            if applicable is not None and platform not in applicable:
+                continue
             rows = {
                 "linux": ("ubuntu-latest", "linux-x86_64", "tar.gz"),
                 "macosx": ("macos-15", "macosx-arm64", "tar.gz"),
@@ -152,22 +339,43 @@ def matrix(plan: Path, output: Path, base: str):
     print(f"Candidate matrix: {len(jobs)} real build/run jobs.")
 
 
-def prepare(plan: Path, identity: str, output: Path):
-    record = next(r for r in json.loads(plan.read_text(encoding="utf-8"))["packages"] if r["id"] == identity)
+def replace_candidate(text: str, identity: str, version: str) -> str:
+    # The key as a consumer writes it: the bare name under the namespace's
+    # table, or the identity key, quoted or not (`mcpplibs.mtest.capi = ...`,
+    # the form mcpp recommends since 2026.11.8.1).
+    namespace, name = identity.split(":", 1)
+    text, replacements = re.subn(
+        rf'(?m)^(\s*(?:{re.escape(name)}|"?{re.escape(namespace)}\.{re.escape(name)}"?)\s*=\s*(?:\{{\s*version\s*=\s*)?")[^"]+(".*)$',
+        lambda m: m[1] + version + m[2], text)
+    if not replacements:
+        # A platform the member selects (mcpp SPEC-013).
+        text, replacements = re.subn(
+            rf'(?m)^(\s*platform\s*=\s*"(?:{re.escape(namespace)}\.)?{re.escape(name)}@)[^"]+(".*)$',
+            lambda m: m[1] + version + m[2], text)
+    if not replacements:
+        raise RuntimeError("candidate dependency was not replaced: " + identity)
+    return text
+
+
+def prepare(plan: Path, identity: str, output: Path, home: Path | None = None):
+    candidates = json.loads(plan.read_text(encoding="utf-8"))["packages"]
+    record = next(r for r in candidates if r["id"] == identity)
     namespace, name = identity.split(":", 1)
     version = record["candidate"]
     member = direct_member(identity)
     output.mkdir(parents=True, exist_ok=True)
     if member:
-        source = ROOT / "tests/examples" / member
+        source = member_manifest(member).parent
         shutil.copytree(source, output, dirs_exist_ok=True,
                         ignore=shutil.ignore_patterns("target", ".mcpp", "mcpp.lock"))
         text = (output / "mcpp.toml").read_text(encoding="utf-8")
-        text, replacements = re.subn(
-            rf'(?m)^(\s*{re.escape(name)}\s*=\s*(?:\{{\s*version\s*=\s*)?")[^"]+(".*)$',
-            lambda m: m[1] + version + m[2], text)
-        if not replacements:
-            raise RuntimeError("candidate dependency was not replaced")
+        # One change plan may advance an ABI group together. Replacing only
+        # this row creates a mixture the resolver correctly rejects. Apply
+        # exactly the planned candidates mapped to this same real consumer;
+        # unplanned dependencies retain the fixture's constraints.
+        for candidate in candidates:
+            if direct_member(candidate["id"]) == member:
+                text = replace_candidate(text, candidate["id"], candidate["candidate"])
         # Standalone consumer: no inherited workspace or stale relative index redirects.
         text = re.sub(r'(?ms)^\[indices(?:\.[^\]]+)?\]\s*\n.*?(?=^\[|\Z)', '', text)
     else:
@@ -194,7 +402,14 @@ def prepare(plan: Path, identity: str, output: Path):
         defines += ''.join(f'#define MCR_EXPECT_{key} {int(value)}\n'
                            for key, value in zip(("MAJOR", "MINOR", "PATCH"), parts))
         api.write_text(defines + api.read_text(encoding="utf-8"), encoding="utf-8")
-    text += f'\n[indices]\n"{namespace}" = {{ path = {json.dumps(str(ROOT).replace(chr(92), "/"))} }}\n'
+    if home is None:
+        text += f'\n[indices]\n"{namespace}" = {{ path = {json.dumps(str(ROOT).replace(chr(92), "/"))} }}\n'
+    else:
+        # Coupled tool/runtime packages cross namespaces. One complete built-in
+        # index resolves all of them without project-alias cache collisions.
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+        from prepare_builtin_index import prepare as prepare_index
+        prepare_index(ROOT, home)
     (output / "mcpp.toml").write_text(text)
     print(f"Prepared {identity}@{version} in {output}")
 
@@ -231,6 +446,7 @@ def main():
     parser.add_argument("--package")
     parser.add_argument("--output", type=Path)
     parser.add_argument("--consumer", type=Path)
+    parser.add_argument("--home", type=Path)
     args = parser.parse_args()
     if args.command == "audit":
         audit(args.base, args.output)
@@ -239,7 +455,7 @@ def main():
     elif args.command == "matrix":
         matrix(args.plan, args.output, args.base)
     elif args.command == "prepare":
-        prepare(args.plan, args.package, args.output)
+        prepare(args.plan, args.package, args.output, args.home)
     elif args.command == "diagnostics":
         diagnostics(args.consumer, args.output)
     else:

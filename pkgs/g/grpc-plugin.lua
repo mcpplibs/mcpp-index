@@ -27,8 +27,23 @@ package = {
     repo        = "https://github.com/mcpplibs/grpc-m",
     type        = "package",
 
+    extensions = {
+        autoupdate = {
+            tag = "v${version}",
+            url = "https://github.com/mcpplibs/grpc-m/archive/refs/tags/${tag}.tar.gz",
+        },
+    },
+
     xpm = {
         linux = {
+            -- Host packaging revision from the same verified source as mwrap.grpc 1.83.0.
+            ["1.83.0.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/grpc-m/releases/download/mwrap-1.83.0/grpc-m-1.83.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mwrap-grpc/releases/download/1.83.0/grpc-m-1.83.0.tar.gz",
+                },
+                sha256 = "772403e3d2bc64d00998ba262ebb5edd8476603931e70cd2fea1a3257f6d42ca",
+            },
             ["1.83.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/grpc-m/archive/refs/tags/v1.83.0-4.tar.gz",
@@ -38,6 +53,14 @@ package = {
             },
         },
         macosx = {
+            -- Host packaging revision from the same verified source as mwrap.grpc 1.83.0.
+            ["1.83.0.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/grpc-m/releases/download/mwrap-1.83.0/grpc-m-1.83.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mwrap-grpc/releases/download/1.83.0/grpc-m-1.83.0.tar.gz",
+                },
+                sha256 = "772403e3d2bc64d00998ba262ebb5edd8476603931e70cd2fea1a3257f6d42ca",
+            },
             ["1.83.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/grpc-m/archive/refs/tags/v1.83.0-4.tar.gz",
@@ -47,6 +70,14 @@ package = {
             },
         },
         windows = {
+            -- Host packaging revision from the same verified source as mwrap.grpc 1.83.0.
+            ["1.83.0.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/grpc-m/releases/download/mwrap-1.83.0/grpc-m-1.83.0.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mwrap-grpc/releases/download/1.83.0/grpc-m-1.83.0.tar.gz",
+                },
+                sha256 = "772403e3d2bc64d00998ba262ebb5edd8476603931e70cd2fea1a3257f6d42ca",
+            },
             ["1.83.0"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/grpc-m/archive/refs/tags/v1.83.0-4.tar.gz",

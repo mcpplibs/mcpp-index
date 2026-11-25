@@ -101,10 +101,15 @@ package = {
             ["compat.opengl"] = "2026.05.31",
         },
         linux = {
+            -- The C library this package's X11 and GLX code is written for,
+            -- as a requirement on the target side (mcpp SPEC-002 §2.2). It
+            -- was the capability `abi:glibc`, which mcpp 2026.10.26.1 reads
+            -- as this same requirement and reports as a compatibility reading.
+            requires = { "mcpp:c-abi=glibc" },
             cflags = { "-D_DEFAULT_SOURCE", "-D_GLFW_X11" },
             runtime = {
                 dlopen_libs = { "libGLX.so.0", "libGL.so.1", "libGL.so" },
-                capabilities = { "x11.display", "opengl.glx.driver", "abi:glibc" },
+                capabilities = { "x11.display", "opengl.glx.driver" },
             },
             sources = {
                 "src/x11_init.c",
@@ -150,6 +155,17 @@ package = {
             },
         },
         windows = {
+            -- THE WIN32 BACKEND CALLS THE WINDOWS SYSTEM INTERFACE DIRECTLY
+            -- (<windows.h>, user32, gdi32): a requirement on the kernel-abi
+            -- layer of the target side (mcpp SPEC-002 §2.2), as the Linux row
+            -- states glibc. Every route that has the Win32 API answers it --
+            -- the MSVC row, the MinGW-w64 payload and the mingw-w64-sysroot
+            -- base -- under every mcpp the index admits, since the answer is
+            -- the target's system. A Windows identity whose system interface
+            -- is another (openkal-musl over openkal-windows answers `openkal`)
+            -- has no window system, and is refused at resolution, naming this
+            -- requirement.
+            requires = { "mcpp:kernel-abi=windows" },
             cflags = { "-D_GLFW_WIN32", "-DUNICODE", "-D_UNICODE" },
             sources = {
                 "src/win32_time.c",

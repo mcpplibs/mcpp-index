@@ -167,7 +167,8 @@ change can affect:
 
 | The pull request changes | Members measured |
 | --- | --- |
-| an openkal family descriptor, `pins.toml`, `compat.py`, or anything else under `tests/openkal/` except `members.toml` | every listed member: the graph or the harness changed |
+| an openkal family descriptor whose change is more than added versions, `pins.toml`, `compat.py`, or anything else under `tests/openkal/` except `members.toml` | every listed member: the graph or the harness changed |
+| an openkal family descriptor that only gains versions (and comments) | nothing: `pins.toml` names the graph's versions exactly, and a new version is not one of them until the pins move |
 | `members.toml` | the members whose entry was added or changed, compared with the base branch; a `[not-portable]` declaration counts for the member it names, and `[excluded]` selects nothing |
 | `tests/examples/<member>/` | that member, if it is listed |
 | a descriptor under `pkgs/` | the listed members whose test projects depend on it |

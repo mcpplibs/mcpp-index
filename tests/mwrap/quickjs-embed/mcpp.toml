@@ -1,0 +1,7 @@
+[package]
+name = "quickjs-embed"
+version = "0.17.0"
+description = "Consume the immutable QuickJS-ng wrapper: a C function and a property table called from JavaScript, exceptions, promises, a class"
+
+[dependencies]
+mcpplibs.mwrap.quickjs_ng = "0.17.0"

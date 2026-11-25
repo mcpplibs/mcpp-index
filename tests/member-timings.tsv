@@ -1,16 +1,15 @@
-# <platform>\t<member>\t<seconds> — the HEAVY members only, top 10 per
-# platform. Everything else is priced at plan_shards.lua's fixed default;
-# on linux the 57 members not listed here average 86s and are 31% of the
-# total, and listing them changes the slowest shard by 0 minutes.
-#
-# So: adding a test does NOT require touching this file. Refresh it when
-# a member becomes heavy enough to enter the top 10, or when one of these
-# numbers moves materially — download the member-timings artifact from a
-# full run and keep the top 10 per platform.
-#
-# Sources: run 31260545520; libmysqlclient / mysql-connector-cpp measured
-# from run 31266814148's linux default 0/3 step durations, whose shard was
-# cancelled at the 90m cap before its timings artifact could upload.
+# <platform>	<member>	<seconds> (tab-separated)
+# Measured heavy members; untimed members keep the planner's fixed 90s default.
+# Wrapper rows include installed archive/template/deployment checks executed
+# in the owning workspace shard, so those costs count toward its 90m budget.
+# Legacy sources: runs 31260545520 and 31266814148.
+# Linux wrapper measurements: run 40111394389 (2026-10-25); job
+# 120923966425 exhausted 90m after passing the earlier members. Per-member
+# times and completed installed-check step durations are both included.
+# Windows wrapper measurements: run 40121911805; job 120955178624
+# exhausted 90m during legacy opencv-module, while completed checks passed.
+# macOS member rows: run 45082422612 (2026-11-23), the per-member times of its
+# four shards; the wrapper rows, and the members it did not reach, keep theirs.
 linux	grpc-codegen	3463
 linux	grpc-module	1771
 linux	protobuf-protoc	885
@@ -21,16 +20,25 @@ linux	opencv-module	649
 linux	godot-cpp-module	627
 linux	eui-neo-sdl2	591
 linux	godot-cpp-module-v10	568
-macos	grpc-codegen	1156
+macos	grpc-codegen	2103
 macos	grpc-module	719
+macos	grpc-cpu	1800
+macos	grpc-protobuf-stack	1767
 macos	opencv-module-dnn	325
-macos	protobuf-protoc	314
+macos	protobuf-protoc	623
 macos	godot-cpp-module	276
 macos	opencv-module	223
-macos	godot-cpp-v10	206
+macos	godot-cpp-v10	588
 macos	godot-cpp-module-v10	195
 macos	opencv-module-unifont	164
-macos	eui-neo-sdl2	138
+macos	eui-neo-sdl2	58
+macos	godot-cpp	875
+macos	grpc-tools	778
+macos	godot-math	541
+macos	opencv-cpu	388
+macos	ffmpeg	330
+macos	opencv-webp	281
+macos	openkal-platform	154
 windows	opencv-module	868
 windows	opencv-module-dnn	828
 windows	godot-cpp-module	707
@@ -41,3 +49,35 @@ windows	ffmpeg-module	526
 windows	protobuf-gzip	238
 windows	protobuf-protoc	152
 windows	protobuf-upb	151
+linux	ffmpeg-cpu	208
+linux	godot-math	758
+linux	grpc-cpu	1416
+linux	grpc-protobuf-stack	1800
+linux	grpc-tools	480
+linux	imgui-headless	168
+linux	llamacpp-cpu	264
+linux	opencv-cpu	737
+linux	opencv-webp	855
+windows	ffmpeg-cpu	928
+windows	godot-math	1347
+windows	llamacpp-cpu	288
+windows	opencv-cpu	1101
+windows	opencv-webp	1104
+
+linux	godot-sdk	300
+macos	godot-sdk	300
+windows	godot-sdk	700
+
+# Abseil wrapper: the member, then its installed archive, default template and notices.
+linux	abseil-basics	420
+linux	protobuf-message	900
+linux	openssl-tls	600
+linux	protobuf-codegen	1200
+macos	abseil-basics	300
+macos	protobuf-message	600
+macos	openssl-tls	400
+macos	protobuf-codegen	800
+windows	abseil-basics	420
+windows	protobuf-message	900
+windows	openssl-tls	900
+windows	protobuf-codegen	300

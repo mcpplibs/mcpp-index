@@ -1,3 +1,10 @@
+local versions = {
+    ["12.1.0"] = {
+        url = "https://github.com/machinezone/IXWebSocket/archive/refs/tags/v12.1.0.tar.gz",
+        sha256 = "55f3a5d3a1a2c5f19d737c24e6aced28d1200f8f5deb45ecd8e5d46f765b5288",
+    },
+}
+
 -- compat.websocket — IXWebSocket, a pure C++ WebSocket client (RFC 6455).
 --
 -- Header-compat shape (Form B, `import_std = false`): the client TUs are
@@ -62,18 +69,21 @@ package = {
                 url    = "https://github.com/machinezone/IXWebSocket/archive/refs/tags/v12.0.1.tar.gz",
                 sha256 = "d23bdc91dbfe2b9ae13c322d539392d7a6b8b506560f41c90e227fa0f86a2405",
             },
+            ["12.1.0"] = versions["12.1.0"],
         },
         macosx = {
             ["12.0.1"] = {
                 url    = "https://github.com/machinezone/IXWebSocket/archive/refs/tags/v12.0.1.tar.gz",
                 sha256 = "d23bdc91dbfe2b9ae13c322d539392d7a6b8b506560f41c90e227fa0f86a2405",
             },
+            ["12.1.0"] = versions["12.1.0"],
         },
         windows = {
             ["12.0.1"] = {
                 url    = "https://github.com/machinezone/IXWebSocket/archive/refs/tags/v12.0.1.tar.gz",
                 sha256 = "d23bdc91dbfe2b9ae13c322d539392d7a6b8b506560f41c90e227fa0f86a2405",
             },
+            ["12.1.0"] = versions["12.1.0"],
         },
     },
 
@@ -171,7 +181,7 @@ package = {
                 -- SocketOpenSSL and this is its one optional source.
                 defines = { "IXWEBSOCKET_USE_TLS=1", "IXWEBSOCKET_USE_OPEN_SSL=1" },
                 sources = { "*/ixwebsocket/IXSocketOpenSSL.cpp" },
-                deps    = { ["compat.openssl"] = "3.5.1" },
+                deps    = { ["compat.openssl"] = "3.5.9" },
             },
             ["server"] = {
                 implies = { "zlib" },

@@ -88,6 +88,9 @@ package = {
         },
         macosx = {
             ["b10069.2"] = {
+                -- Refresh older installs after the explicit standard-header fix.
+                revision = 1,
+                floor = 1,
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/llama.cpp-m/archive/refs/tags/b10069.2.tar.gz",
                     CN     = "https://gitcode.com/mcpp-res/llamacpp/releases/download/b10069.2/llamacpp-b10069.2.tar.gz",
@@ -135,8 +138,8 @@ import("xim.libxpkg.pkginfo")
 
 function install()
     local wrap = "llama.cpp-m-" .. pkginfo.version()
-    -- libc++ 23 exposes missing standard headers in this Linux checkpoint.
-    -- Scope the explicit includes to ordinary Linux implementation sources;
+    -- Current libc++ exposes missing standard headers in this checkpoint.
+    -- Scope explicit includes to ordinary Linux/macOS implementation sources;
     -- the exported module and the downloaded source files remain untouched.
     if pkginfo.version() == "b10069.2" then
         local manifest = path.join(wrap, "mcpp.toml")
@@ -144,7 +147,10 @@ function install()
         local patched, count = content:gsub("\n%[target%.linux%.build%]\n",
             '\n[target.linux.build]\nflags = [{ glob = "third_party/llama.cpp/**/*.cpp", cxxflags = ["-include", "cstdlib", "-include", "cerrno"] }]\n', 1)
         assert(count == 1, "llamacpp: expected the native Linux build table")
-        io.writefile(manifest, patched)
+        local macos, macos_count = patched:gsub("\n%[target%.macos%.build%]\n",
+            '\n[target.macos.build]\nflags = [{ glob = "third_party/llama.cpp/**/*.cpp", cxxflags = ["-include", "cstdlib", "-include", "cerrno"] }]\n', 1)
+        assert(macos_count == 1, "llamacpp: expected the native macOS build table")
+        io.writefile(manifest, macos)
     end
     local prefix = pkginfo.install_dir()
     os.tryrm(prefix)

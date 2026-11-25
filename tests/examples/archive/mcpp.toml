@@ -11,3 +11,7 @@ bzip2 = "1.0.8"
 lz4 = "1.10.0"
 xz = "5.8.3"
 zstd = "1.5.7"
+
+# The candidate index: this checkout (compat.*), not the published one.
+[indices]
+compat = { path = "../../.." }

@@ -1,0 +1,10 @@
+[package]
+name = "grpc-cpu"
+version = "1.83.0.1"
+description = "Consume the immutable gRPC wrapper revision and check module status semantics"
+
+[target.'cfg(unix)'.dependencies]
+mcpplibs.mwrap.grpc = "1.83.0.1"
+
+[target.'cfg(unix)'.build]
+defines = ["MCPP_TEST_GRPC"]

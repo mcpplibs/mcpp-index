@@ -1,0 +1,7 @@
+[package]
+name = "mimalloc-heap"
+version = "3.6.1"
+description = "Consume the immutable mimalloc wrapper: private heaps visited and destroyed, aligned blocks, an STL container over mimalloc, options and statistics, threads that free each other's blocks, and the side header beside the import"
+
+[dependencies]
+mcpplibs.mwrap.mimalloc = "3.6.1"

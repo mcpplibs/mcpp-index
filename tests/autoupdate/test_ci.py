@@ -2,6 +2,7 @@
 import json
 import subprocess
 import tempfile
+import tomllib
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -24,6 +25,181 @@ def descriptor(name):
 
 
 class BaselineTests(unittest.TestCase):
+    def test_several_added_releases_are_proven_at_the_newest(self):
+        self.assertEqual(ci.newest({"0.2.0", "0.3.0"}), "0.3.0")
+        self.assertEqual(ci.newest({"0.9.0", "0.10.0"}), "0.10.0")
+        self.assertEqual(ci.newest({"2026.11.7.2", "2026.11.10.1"}), "2026.11.10.1")
+
+    def test_one_consumer_uses_all_and_only_its_planned_candidates(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "tests/examples/kernel"
+            source.mkdir(parents=True)
+            (source / "mcpp.toml").write_text(
+                '[package]\nname="kernel"\nversion="0.1.0"\n'
+                '[dependencies.mcpplibs]\nabi="0.23.0"\n'
+                '[target.linux.dependencies.mcpplibs]\nbackend="0.24.2"\n'
+                '[build-dependencies.compat]\nhelper="1.0.0"\n')
+            other = root / "tests/examples/other"
+            other.mkdir()
+            (other / "mcpp.toml").write_text(
+                '[package]\nname="other"\nversion="0.1.0"\n'
+                '[dependencies.compat]\nunrelated="1.0.0"\n')
+            plan = root / "plan.json"
+            candidates = [{"id": "mcpplibs:abi", "candidate": "0.24.0"},
+                          {"id": "mcpplibs:backend", "candidate": "0.25.0"},
+                          {"id": "compat:unrelated", "candidate": "2.0.0"}]
+            with patch.object(ci, "ROOT", root):
+                for identity in ("mcpplibs:abi", "mcpplibs:backend"):
+                    plan.write_text(json.dumps({"packages": candidates}))
+                    dest = root / identity.split(":")[1]
+                    ci.prepare(plan, identity, dest)
+                    manifest = tomllib.loads((dest / "mcpp.toml").read_text())
+                    self.assertEqual(manifest["dependencies"]["mcpplibs"]["abi"], "0.24.0")
+                    self.assertEqual(manifest["target"]["linux"]["dependencies"]["mcpplibs"]["backend"], "0.25.0")
+                    self.assertEqual(manifest["build-dependencies"]["compat"]["helper"], "1.0.0")
+                    self.assertNotIn("unrelated", manifest.get("dependencies", {}).get("compat", {}))
+                # No implicit companion upgrade when it is absent from the plan.
+                plan.write_text(json.dumps({"packages": candidates[:1]}))
+                dest = root / "single"
+                ci.prepare(plan, "mcpplibs:abi", dest)
+                manifest = tomllib.loads((dest / "mcpp.toml").read_text())
+                self.assertEqual(manifest["dependencies"]["mcpplibs"]["abi"], "0.24.0")
+                self.assertEqual(manifest["target"]["linux"]["dependencies"]["mcpplibs"]["backend"], "0.24.2")
+
+    def test_commit_snapshot_is_manual_but_historical_bytes_are_still_guarded(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            path = root / "pkgs/mwrap/mcpplibs.mwrap.example.lua"
+            path.parent.mkdir(parents=True)
+            original = '''package = {
+spec="1", namespace="mcpplibs.mwrap", name="example",
+xpm={linux={["1.0.0"]={
+revision=1, floor=1,
+url="https://github.com/acme/example/archive/1111111111111111111111111111111111111111.tar.gz",
+sha256="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+}}},
+}'''
+            path.write_text(original)
+            for args in (("init",), ("add", "."),
+                         ("-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-m", "baseline")):
+                subprocess.run(["git", *args], cwd=root, check=True, capture_output=True)
+            with patch.object(ci, "ROOT", root):
+                report = root / "coverage.json"
+                ci.audit("HEAD", report)
+                self.assertEqual(len(json.loads(report.read_text())["manual"]), 1)
+                path.write_text(original.replace("a" * 64, "b" * 64))
+                with self.assertRaisesRegex(RuntimeError, "without a revision bump"):
+                    ci.audit("HEAD", report)
+                path.write_text(original)
+                release = path.with_name("mcpplibs.mwrap.release.lua")
+                release.write_text(original.replace('name="example"', 'name="release"').replace(
+                    'archive/1111111111111111111111111111111111111111', 'archive/refs/tags/v1.0.0'))
+                with self.assertRaisesRegex(RuntimeError, "missing autoupdate"):
+                    ci.audit("HEAD", report)
+
+    def test_mwrap_candidate_uses_its_actual_member_and_qualified_dependency(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "tests/mwrap/example"
+            (source / "tests").mkdir(parents=True)
+            (source / "mcpp.toml").write_text(
+                '[package]\nname="consumer"\nversion="0.1.0"\n'
+                '[dependencies]\n"mcpplibs.mwrap.example"="1.0.0"\n')
+            (source / "tests/probe.cpp").write_text('int main() { return 0; }\n')
+            plan = root / "plan.json"
+            plan.write_text(json.dumps({"packages": [
+                {"id": "mcpplibs.mwrap:example", "candidate": "1.0.1"}]}))
+            with patch.object(ci, "ROOT", root):
+                self.assertEqual(ci.direct_member("mcpplibs.mwrap:example"), "example")
+                dest = root / "candidate"
+                ci.prepare(plan, "mcpplibs.mwrap:example", dest)
+                result = tomllib.loads((dest / "mcpp.toml").read_text())
+                self.assertEqual(result["dependencies"]["mcpplibs.mwrap.example"], "1.0.1")
+                self.assertEqual((dest / "tests/probe.cpp").read_text(), 'int main() { return 0; }\n')
+
+    def test_an_unquoted_identity_key_is_replaced(self):
+        # The key mcpp recommends (2026.11.8.1): the identity, dotted and unquoted, which TOML
+        # reads as nested tables.
+        text = '[dev-dependencies]\nmcpplibs.mtest.capi = "0.2.0"\nmcpplibs.mtest = "0.2.0"\n'
+        replaced = ci.replace_candidate(text, "mcpplibs.mtest:capi", "0.3.0")
+        self.assertIn('mcpplibs.mtest.capi = "0.3.0"', replaced)
+        self.assertIn('mcpplibs.mtest = "0.2.0"', replaced)
+        replaced = ci.replace_candidate(text, "mcpplibs:mtest", "0.3.0")
+        self.assertIn('mcpplibs.mtest = "0.3.0"', replaced)
+        self.assertIn('mcpplibs.mtest.capi = "0.2.0"', replaced)
+
+    def test_a_package_below_a_namespace_does_not_name_the_namespace_package(self):
+        # `mcpplibs.mtest.capi = ...` reads as the table mcpplibs.mtest = {capi = ...}, which names
+        # mcpplibs.mtest:capi and not mcpplibs:mtest.
+        deps = tomllib.loads('[dependencies]\nmcpplibs.mtest.capi = "0.2.0"\n')["dependencies"]
+        self.assertTrue(ci.names_dependency(deps, "mcpplibs.mtest", "capi"))
+        self.assertFalse(ci.names_dependency(deps, "mcpplibs", "mtest"))
+
+    def test_candidate_discovers_target_and_build_dependencies(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "tests/mwrap/tools"
+            source.mkdir(parents=True)
+            (source / "mcpp.toml").write_text(
+                '[package]\nname="tools"\nversion="0.1.0"\n'
+                '[target.\'cfg(unix)\'.dependencies.grpc]\ngrpc="1.83.0"\n'
+                '[build-dependencies]\n"mcpplibs.grpcgen"={version="1.83.0",host-module=true}\n')
+            with patch.object(ci, "ROOT", root):
+                self.assertEqual(ci.direct_member("grpc:grpc"), "tools")
+                self.assertEqual(ci.direct_member("mcpplibs:grpcgen"), "tools")
+                self.assertIsNone(ci.direct_member("grpc:grpc-plugin"))
+                plan = root / "plan.json"
+                plan.write_text(json.dumps({"packages": [
+                    {"id": "mcpplibs:grpcgen", "candidate": "1.83.0.1"}]}))
+                dest = root / "candidate"
+                ci.prepare(plan, "mcpplibs:grpcgen", dest)
+                result = tomllib.loads((dest / "mcpp.toml").read_text())
+                self.assertEqual(result["build-dependencies"]["mcpplibs.grpcgen"]["version"], "1.83.0.1")
+
+    def test_dedicated_mwrap_consumer_precedes_shorter_legacy_example(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for category, name in (("examples", "old"), ("mwrap", "headless")):
+                source = root / "tests" / category / name
+                source.mkdir(parents=True)
+                (source / "mcpp.toml").write_text(
+                    '[package]\nname="consumer"\nversion="0.1.0"\n'
+                    '[dependencies]\n"ocornut.imgui"="1.92.8.1"\n')
+            with patch.object(ci, "ROOT", root):
+                self.assertEqual(ci.direct_member("ocornut:imgui"), "headless")
+
+    def test_coupled_consumer_uses_one_complete_builtin_index(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "tests/mwrap/tools"
+            source.mkdir(parents=True)
+            (source / "mcpp.toml").write_text(
+                '[package]\nname="tools"\nversion="0.1.0"\n'
+                '[indices]\ngrpc={path="../../.."}\n'
+                '[dependencies]\n"grpc.grpc-plugin"="1.83.0.1"\n'
+                '[build-dependencies]\n"mcpplibs.grpcgen"={version="1.83.0.1",host-module=true}\n')
+            (root / "index.toml").write_text('[index]\nname="mcpplibs"\n')
+            package = root / "pkgs/mwrap/example.lua"
+            package.parent.mkdir(parents=True)
+            package.write_bytes(b'-- unchanged descriptor bytes\n')
+            home = root / "home"
+            stale = home / "indices/mcpplibs/pkgs/old.lua"
+            stale.parent.mkdir(parents=True)
+            stale.write_text('-- stale')
+            plan = root / "plan.json"
+            plan.write_text(json.dumps({"packages": [
+                {"id": "mcpplibs:grpcgen", "candidate": "1.83.0.1"}]}))
+            with patch.object(ci, "ROOT", root):
+                dest = root / "consumer"
+                ci.prepare(plan, "mcpplibs:grpcgen", dest, home)
+                manifest = tomllib.loads((dest / "mcpp.toml").read_text())
+                self.assertNotIn("indices", manifest)
+                self.assertIn("grpc.grpc-plugin", manifest["dependencies"])
+                self.assertIn("mcpplibs.grpcgen", manifest["build-dependencies"])
+                self.assertEqual((home / "indices/mcpplibs/pkgs/mwrap/example.lua").read_bytes(), package.read_bytes())
+                self.assertFalse(stale.exists())
+
     def test_added_descriptor_and_removed_historical_descriptor(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -63,6 +239,30 @@ class BaselineTests(unittest.TestCase):
                 with self.assertRaisesRegex(RuntimeError, "existing descriptors removed"):
                     ci.audit("HEAD", root / "coverage.json")
 
+    def test_a_moved_descriptor_is_audited_against_the_file_it_came_from(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            pkgs = root / "pkgs/f"
+            pkgs.mkdir(parents=True)
+            (pkgs / "compat.old.lua").write_text(descriptor("old"))
+            git = lambda *args: subprocess.run(
+                ["git", "-c", "user.name=Test", "-c", "user.email=test@example.com", *args],
+                cwd=root, check=True, capture_output=True)
+            for args in (("init",), ("add", "."), ("commit", "-m", "baseline")):
+                git(*args)
+            with patch.object(ci, "ROOT", root):
+                # Moved with every row kept: fine.
+                (root / "pkgs/mcpp").mkdir()
+                git("mv", "pkgs/f/compat.old.lua", "pkgs/mcpp/compat.old.lua")
+                git("commit", "-m", "move")
+                ci.audit("HEAD~1", root / "coverage.json")
+                # Moved and a published version dropped: still refused.
+                moved = root / "pkgs/mcpp/compat.old.lua"
+                moved.write_text(moved.read_text().replace('["1.0.0"]', '["9.9.9"]'))
+                git("commit", "-am", "drop a version")
+                with self.assertRaisesRegex(RuntimeError, "existing version removed"):
+                    ci.audit("HEAD~2", root / "coverage.json")
+
     def test_revision_allows_packaging_fix_but_not_resource_drift(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -100,3 +300,116 @@ class BaselineTests(unittest.TestCase):
                     'sha256 = "' + "a" * 64 + '",\n   revision = 0,'))
                 with self.assertRaisesRegex(RuntimeError, "revision decreased"):
                     ci.audit("HEAD", root / "coverage.json")
+
+
+class MemberPlatformTests(unittest.TestCase):
+    """A candidate is asked of the runners its consumer builds it on, and of no other."""
+
+    def member(self, root, text):
+        member = root / "tests/examples/probe"
+        member.mkdir(parents=True)
+        (member / "mcpp.toml").write_text(text, encoding="utf-8")
+
+    def test_mwrap_host_tools_keep_all_native_candidate_jobs(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            member = root / "tests/mwrap/grpc-tools"
+            member.mkdir(parents=True)
+            (member / "mcpp.toml").write_text(
+                '[package]\nname="grpc-tools"\nversion="1.83.0.1"\n'
+                '[dependencies]\n"grpc.grpc-plugin"={version="1.83.0.1",tools=["grpc_cpp_plugin"]}\n'
+                '[build-dependencies]\n"mcpplibs.grpcgen"={version="1.83.0.1",host-module=true}\n')
+            plan = root / "plan.json"
+            plan.write_text(json.dumps({"packages": [
+                {"id": identity, "candidate": "1.83.0.1", "status": "existing-candidate",
+                 "assets": [{"platform": platform} for platform in ("linux", "macosx", "windows")]}
+                for identity in ("grpc:grpc-plugin", "mcpplibs:grpcgen")]}))
+            output = root / "matrix.json"
+            with patch.object(ci, "ROOT", root):
+                for identity in ("grpc:grpc-plugin", "mcpplibs:grpcgen"):
+                    self.assertEqual(ci.member_platforms("grpc-tools", identity),
+                                     {"linux", "macosx", "windows"})
+                ci.matrix(plan, output, None)
+                jobs = json.loads(output.read_text())["include"]
+                self.assertEqual(len(jobs), 8)
+                self.assertEqual({job["member"] for job in jobs}, {"grpc-tools"})
+                for identity in ("grpc:grpc-plugin", "mcpplibs:grpcgen"):
+                    self.assertEqual(sorted(job["platform"] for job in jobs if job["id"] == identity),
+                                     ["linux", "linux", "macosx", "windows"])
+
+    def test_one_archive_is_built_by_the_job_of_the_package_a_member_names(self):
+        archive = "https://github.com/acme/image/archive/refs/tags/0.1.1.tar.gz"
+        other = "https://github.com/acme/other/archive/refs/tags/1.0.0.tar.gz"
+        def record(identity, url):
+            return {"id": identity, "candidate": "0.1.1", "status": "existing-candidate",
+                    "assets": [{"platform": "macosx", "resources": {"GLOBAL": {"url": url, "sha256": "a" * 64}}}]}
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            member = root / "tests/examples/image-tools"
+            member.mkdir(parents=True)
+            (member / "mcpp.toml").write_text(
+                '[package]\nname="image-tools"\nversion="0.1.0"\n'
+                '[build-dependencies.acme]\ntools={version="0.1.1",tools=["okld"]}\n')
+            plan = root / "plan.json"
+            plan.write_text(json.dumps({"packages": [
+                record("acme:ld", archive), record("acme:run", archive), record("acme:tools", archive)]}))
+            output = root / "matrix.json"
+            with patch.object(ci, "ROOT", root):
+                ci.matrix(plan, output, None)
+                jobs = json.loads(output.read_text())["include"]
+                self.assertEqual([(job["id"], job["member"]) for job in jobs], [("acme:tools", "image-tools")])
+                # A package of another archive that no member names has no job to share.
+                plan.write_text(json.dumps({"packages": [record("acme:ld", other), record("acme:tools", archive)]}))
+                with self.assertRaisesRegex(RuntimeError, "no candidate consumer: acme:ld"):
+                    ci.matrix(plan, output, None)
+
+    def test_conditions_select_runners(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.member(root, """[package]
+name = "probe"
+version = "0.1.0"
+
+[dependencies.acme]
+spec = "1.0.0"
+
+[target.'cfg(os = "linux")'.dependencies.acme]
+on-linux = "1.0.0"
+
+[target.'cfg(os = "macos")'.dependencies.acme]
+on-macos = "1.0.0"
+
+[target.'cfg(windows)'.dependencies.acme]
+on-windows = "1.0.0"
+
+[target.'cfg(all(os = "linux", env = "musl"))'.dependencies.acme]
+on-musl = "1.0.0"
+""")
+            with patch.object(ci, "ROOT", root):
+                self.assertEqual(ci.member_platforms("probe", "acme:spec"), {"linux", "macosx", "windows"})
+                self.assertEqual(ci.member_platforms("probe", "acme:on-linux"), {"linux"})
+                self.assertEqual(ci.member_platforms("probe", "acme:on-macos"), {"macosx"})
+                self.assertEqual(ci.member_platforms("probe", "acme:on-windows"), {"windows"})
+                self.assertEqual(ci.member_platforms("probe", "acme:on-musl"), set())
+                self.assertEqual(ci.member_platforms("probe", "other:spec"), set())
+
+    def test_a_selected_platform_is_a_consumer(self):
+        # mcpp SPEC-013: a member that selects a platform builds it on the
+        # systems its condition names; `[host]` selects it everywhere.
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.member(root, """[package]
+name = "probe"
+version = "0.1.0"
+
+[target.'cfg(any(linux, macos))']
+platform = "plat@1.0.0"
+
+[host]
+platform = { name = "acme.hostplat", version = "1.0.0" }
+""")
+            with patch.object(ci, "ROOT", root):
+                self.assertEqual(ci.direct_member("acme:plat"), "probe")
+                self.assertEqual(ci.member_platforms("probe", "acme:plat"), {"linux", "macosx"})
+                self.assertEqual(ci.member_platforms("probe", "acme:hostplat"), {"linux", "macosx", "windows"})
+                self.assertIsNone(ci.direct_member("acme:other"))

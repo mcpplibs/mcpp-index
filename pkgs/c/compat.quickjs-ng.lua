@@ -46,9 +46,9 @@
 -- keeps its assertions and its debug-dump code (quickjs.c:84-86); upstream's
 -- default build type (Release) would define it.
 --
--- LINUX ONLY. Built and tested with llvm 22.1.8 on x86_64-linux-gnu, and in an
--- openkal graph for x86_64-linux-gnu. Upstream supports macOS and Windows, but
--- nothing here has built the package there, so those sections are not declared.
+-- PLATFORMS. Linux (llvm 22.1.8 on x86_64-linux-gnu, and in an openkal graph),
+-- macOS and Windows: the same four sources and flags, as upstream's own CI
+-- builds them on all three (clang and MSVC-ABI clang on Windows).
 --
 -- NO CN MIRROR. The url is upstream's tag archive as a plain string, the
 -- fallback docs/cn-mirror.md describes for a contributor without mcpp-res write
@@ -77,6 +77,18 @@ package = {
 
     xpm = {
         linux = {
+            ["0.17.0"] = {
+                url    = "https://github.com/quickjs-ng/quickjs/archive/refs/tags/v0.17.0.tar.gz",
+                sha256 = "559bc4c420475e55c7ab4510adbc562f55d7524d75e8e89d79ce4bb02f5687d9",
+            },
+        },
+        macosx = {
+            ["0.17.0"] = {
+                url    = "https://github.com/quickjs-ng/quickjs/archive/refs/tags/v0.17.0.tar.gz",
+                sha256 = "559bc4c420475e55c7ab4510adbc562f55d7524d75e8e89d79ce4bb02f5687d9",
+            },
+        },
+        windows = {
             ["0.17.0"] = {
                 url    = "https://github.com/quickjs-ng/quickjs/archive/refs/tags/v0.17.0.tar.gz",
                 sha256 = "559bc4c420475e55c7ab4510adbc562f55d7524d75e8e89d79ce4bb02f5687d9",
@@ -111,6 +123,11 @@ package = {
         -- the C driver, which adds no libm, and quickjs.c's Math functions then
         -- fail to link. libdl is left out: only quickjs-libc.c calls dlopen.
         linux        = { ldflags = { "-lm", "-lpthread" } },
+        -- libSystem carries libm and pthreads: nothing to add on macOS.
+        -- Windows: upstream's CMake adds _CRT_SECURE_NO_WARNINGS for MSVC-ABI
+        -- builds (CMakeLists.txt, `if(MSVC)`), and quickjs.c's thread-safe
+        -- atomics need nothing beyond the CRT.
+        windows      = { cflags = { "-D_CRT_SECURE_NO_WARNINGS" } },
         targets      = { ["quickjs-ng"] = { kind = "lib" } },
         deps         = { },
     },
