@@ -76,6 +76,23 @@ package = {
         -- fail with implicit-declaration errors.
         cflags = { "-DCARES_STATICLIB", "-DHAVE_CONFIG_H", "-D_GNU_SOURCE", "-D_HAS_EXCEPTIONS=0" },
 
+        -- CARES_STATICLIB IS THE CONSUMER'S TOO. Without it <ares.h> declares
+        -- every entry point __declspec(dllimport) on Windows, and a consumer
+        -- calls this static library through an `__imp_` slot that lld-link
+        -- fills locally (LNK4217). Under /OPT:REF, lld's default without
+        -- /DEBUG, that slot does not keep its definition alive: when the
+        -- object was pulled in only by code that is later discarded, the
+        -- definition goes and the slot holds the image base. gRPC's
+        -- `ares_library_init` was exactly that, and grpc_init jumped to the
+        -- PE header (0xC0000005). Upstream propagates the define to
+        -- dependents (cares.BUILD `defines`, CMake's INTERFACE definition);
+        -- here a feature's `defines` reach the consumer and `default`
+        -- implies it unconditionally, as compat.curl does for CURL_STATICLIB.
+        features = {
+            ["default"]   = { implies = { "staticlib" } },
+            ["staticlib"] = { defines = { "CARES_STATICLIB" } },
+        },
+
         -- ONE SNAPSHOT PER C ENVIRONMENT, AND THE PREPROCESSOR PICKS.
         --
         -- These are gRPC 1.83.0's three frozen `ares_config.h` files, verbatim,

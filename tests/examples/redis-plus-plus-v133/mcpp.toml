@@ -19,3 +19,7 @@ redis-plus-plus = "1.3.3"
 # <sw/redis++/redis++.h> first) needs the same force-include the package uses.
 [build]
 cxxflags = ["-include", "cstdint"]
+
+# The candidate index: this checkout (compat.*), not the published one.
+[indices]
+compat = { path = "../../.." }

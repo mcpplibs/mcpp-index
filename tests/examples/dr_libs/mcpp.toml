@@ -9,3 +9,7 @@ standard = "c++23"
 
 [dependencies]
 compat.dr_libs = "2026.03.03"
+
+# The candidate index: this checkout (compat.*), not the published one.
+[indices]
+compat = { path = "../../.." }

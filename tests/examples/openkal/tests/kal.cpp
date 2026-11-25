@@ -17,7 +17,8 @@
 // (0.22) the null device beside a stream at one position is refused, and is
 // refused as unsupported where the implementation does not state it; (0.23) a
 // region at an address, zero; a read-only attenuation; the machine's memory
-// and the resource preference.
+// and the resource preference; (0.25) where the volume states it, a second name
+// for a file reads as the first, and a name that is taken is refused.
 // The terminal is not observed here,
 // because a test run has none; the implementations observe it on a terminal
 // they make.
@@ -108,6 +109,25 @@ int main() {
               "a rename that does not replace refuses a name that is taken");
         kal_fs_remove(root, "okt.a", 5);
         kal_fs_remove(root, "okt.b", 5);
+    }
+    if (root.h && (kal_fs_props(root) & KAL_FS_PROP_HARD_LINKS) != 0) {
+        kal_file f{};
+        if (kal_fs_open(root, "okt.h", 5, KAL_OPEN_WRITE | KAL_OPEN_CREATE | KAL_OPEN_TRUNCATE, &f) == kal_ok) {
+            kal_stream_write(kal_fs_stream(f), "linked", 6);
+            kal_fs_close_file(f);
+        }
+        check(kal_fs_hard_link(root, "okt.h", 5, root, "okt.l", 5) == kal_ok, "a file is given a second name");
+        char b[8] = {};
+        kal_file g{};
+        if (kal_fs_open(root, "okt.l", 5, KAL_OPEN_READ, &g) == kal_ok) {
+            check(kal_stream_read(kal_fs_stream(g), b, sizeof b) == 6 && b[0] == 'l' && b[5] == 'd',
+                  "and the second name reads as the first");
+            kal_fs_close_file(g);
+        }
+        check(kal_fs_hard_link(root, "okt.h", 5, root, "okt.l", 5) == kal_err_exists,
+              "a second name that is taken is refused");
+        kal_fs_remove(root, "okt.l", 5);
+        kal_fs_remove(root, "okt.h", 5);
     }
 
     if ((kal_process_props() & KAL_PROCESS_PROP_ONE_STRING) == 0 && root.h) {

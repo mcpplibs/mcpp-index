@@ -1,0 +1,7 @@
+[package]
+name = "meshoptimizer-simplify"
+version = "1.3"
+description = "Consume the immutable meshoptimizer wrapper: index a grid, order it for the vertex cache, simplify it, cut meshlets, and round-trip both codecs"
+
+[dependencies]
+mcpplibs.mwrap.meshoptimizer = "1.3.1"

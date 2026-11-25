@@ -15,6 +15,13 @@ package = {
     },
     xpm = {
         linux = {
+            ["1.25.1.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/onnxruntime-m/releases/download/mwrap-1.25.1.1/onnxruntime-m-1.25.1.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mwrap-onnxruntime/releases/download/1.25.1.1/onnxruntime-m-1.25.1.1.tar.gz",
+                },
+                sha256 = "a2d3c7fa22901b34b3f16ef3521dd1502b5aca26d711e1b62fb4609a1b12ea16",
+            },
             ["1.25.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/onnxruntime-m/releases/download/mwrap-1.25.1/onnxruntime-m-1.25.1.tar.gz",
@@ -26,6 +33,13 @@ package = {
             },
         },
         macosx = {
+            ["1.25.1.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/onnxruntime-m/releases/download/mwrap-1.25.1.1/onnxruntime-m-1.25.1.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mwrap-onnxruntime/releases/download/1.25.1.1/onnxruntime-m-1.25.1.1.tar.gz",
+                },
+                sha256 = "a2d3c7fa22901b34b3f16ef3521dd1502b5aca26d711e1b62fb4609a1b12ea16",
+            },
             ["1.25.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/onnxruntime-m/releases/download/mwrap-1.25.1/onnxruntime-m-1.25.1.tar.gz",
@@ -37,6 +51,13 @@ package = {
             },
         },
         windows = {
+            ["1.25.1.1"] = {
+                url = {
+                    GLOBAL = "https://github.com/mcpplibs/onnxruntime-m/releases/download/mwrap-1.25.1.1/onnxruntime-m-1.25.1.1.tar.gz",
+                    CN = "https://gitcode.com/mcpp-res/mwrap-onnxruntime/releases/download/1.25.1.1/onnxruntime-m-1.25.1.1.tar.gz",
+                },
+                sha256 = "a2d3c7fa22901b34b3f16ef3521dd1502b5aca26d711e1b62fb4609a1b12ea16",
+            },
             ["1.25.1"] = {
                 url = {
                     GLOBAL = "https://github.com/mcpplibs/onnxruntime-m/releases/download/mwrap-1.25.1/onnxruntime-m-1.25.1.tar.gz",

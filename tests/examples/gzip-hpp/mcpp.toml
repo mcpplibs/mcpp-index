@@ -8,3 +8,7 @@ version = "0.1.0"
 
 [dependencies.compat]
 gzip-hpp = "0.1.0"
+
+# The candidate index: this checkout (compat.*), not the published one.
+[indices]
+compat = { path = "../../.." }

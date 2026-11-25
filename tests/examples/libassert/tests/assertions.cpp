@@ -30,17 +30,18 @@
 #endif
 
 // Both packages build objects rather than shared libraries, so the
-// declarations this TU sees must be plain. Each delivers that with a shim in
-// front of the one header that reads its macro — no descriptor key carries a
-// define into a consumer's TUs. On Linux the difference is only a visibility
+// declarations this TU sees must be plain. Each states its macro as a
+// `staticlib` feature that `default` implies; a feature's defines reach every
+// TU that receives the package's include directories, a transitive consumer's
+// included. On Linux the difference is only a visibility
 // attribute, so a regression is invisible; on the MSVC ABI it is `dllimport`
 // against a locally defined symbol, which is exactly how this member first
 // failed on the windows CI leg.
 #if !defined(LIBASSERT_STATIC_DEFINE)
-#  error "LIBASSERT_STATIC_DEFINE is not set — the compat.libassert platform.hpp shim was not reached"
+#  error "LIBASSERT_STATIC_DEFINE is not set — compat.libassert's staticlib feature did not reach this consumer"
 #endif
 #if !defined(CPPTRACE_STATIC_DEFINE)
-#  error "CPPTRACE_STATIC_DEFINE is not set — compat.cpptrace's basic.hpp shim did not reach a transitive consumer"
+#  error "CPPTRACE_STATIC_DEFINE is not set — compat.cpptrace's staticlib feature did not reach a transitive consumer"
 #endif
 
 static std::string captured;

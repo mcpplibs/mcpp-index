@@ -20,3 +20,7 @@ standard = "c++23"
 
 [target.'cfg(linux)'.dependencies.compat]
 libinput = "1.31.3"
+
+# The candidate index: this checkout (compat.*), not the published one.
+[indices]
+compat = { path = "../../.." }

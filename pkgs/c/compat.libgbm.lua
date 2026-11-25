@@ -183,21 +183,21 @@ package = {
 
         runtime = {
             -- TWO DIRECTORY KEYS, TWO DIFFERENT FLAGS, and they are not
-            -- interchangeable. Measured on mcpp 2026.8.27.2 by reading the
-            -- emitted build.ninja:
+            -- interchangeable (mcpp docs/04, the runtime table):
             --
-            --     library_dirs      -> -Wl,-rpath   (RUNPATH only)
-            --     link_library_dirs -> -L
+            --     runtime_search_dirs -> -Wl,-rpath   (RUNPATH only)
+            --     link_library_dirs   -> -L
             --
-            -- `library_dirs` ALONE is what compat.glx-runtime and
+            -- A runtime search directory ALONE is what compat.glx-runtime and
             -- compat.vulkan-runtime declare, and it is right for them: nothing
             -- links against their farms, they exist so a bare-soname `dlopen`
             -- resolves at RUN time. This package does link against its farm,
-            -- so it needs the `-L` too — with only `library_dirs` the farm is
+            -- so it needs the `-L` too — with the RUNPATH alone the farm is
             -- complete, the rpath correct, and the build still dies at
-            -- `ld: cannot find -lgbm`.
-            library_dirs      = { "mcpp_generated/libgbm/lib" },
-            link_library_dirs = { "mcpp_generated/libgbm/lib" },
+            -- `ld: cannot find -lgbm`. (`library_dirs`, the earlier spelling of
+            -- the runtime search directory, is a compatibility mapping.)
+            runtime_search_dirs = { "mcpp_generated/libgbm/lib" },
+            link_library_dirs   = { "mcpp_generated/libgbm/lib" },
             provides          = { "drm.gbm" },
             -- No `capabilities` entry. compat.glx-runtime declares
             -- "x11.display" because it needs the sandbox to expose a socket it

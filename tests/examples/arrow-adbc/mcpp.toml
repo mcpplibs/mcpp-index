@@ -1,0 +1,9 @@
+[package]
+name = "arrow-adbc-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+arrow-adbc = "25"
+
+[indices]
+compat = { path = "../../.." }
