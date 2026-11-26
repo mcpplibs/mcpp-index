@@ -1,21 +1,21 @@
-# Add `huxerui.localnetwork` (`0.1.0`)
+# Add `huxerui.localnetwork` (`0.1.1`)
 
 ## Summary
 
-Add `huxerui.localnetwork` (`pkgs/h/huxerui.localnetwork.lua`) at upstream release `v0.1.0` (`https://github.com/HuxerUI/Lib-LocalNetwork`).
+Add `huxerui.localnetwork` (`pkgs/h/huxerui.localnetwork.lua`) at upstream release `v0.1.1` (`https://github.com/HuxerUI/Lib-LocalNetwork`). (`0.1.1` fixes macOS Xcode 16.4 compilation in `platform/macos/src/wifi.mm` where `kCLAuthorizationStatusAuthorizedWhenInUse` is `API_UNAVAILABLE(macos)`.)
 
 ## Package Architecture
 
 - **Form A (External Native C++23 Module Package)**:
-  - Upstream tag archive carries its own `mcpp.toml` (`Lib-LocalNetwork-0.1.0/mcpp.toml`), `build.mcpp` (`huxerui.rules`), and `modules/localnetwork.cppm` (`export module huxerui.localnetwork;`), with `standard = "c++23"`.
-  - Upstream `Lib-LocalNetwork-0.1.0/mcpp.toml` declares two mcpp package dependencies:
+  - Upstream tag archive carries its own `mcpp.toml` (`Lib-LocalNetwork-0.1.1/mcpp.toml`), `build.mcpp` (`huxerui.rules`), and `modules/localnetwork.cppm` (`export module huxerui.localnetwork;`), with `standard = "c++23"`.
+  - Upstream `Lib-LocalNetwork-0.1.1/mcpp.toml` declares two mcpp package dependencies:
     - `huxerui.huxerui = "0.5.5"` (provides transitive SDK modules and Linux GTK4/xim dependency closure via `pkgs/h/huxerui.huxerui.lua`)
     - `compat.mbedtls = "3.6.8"` (provides TLS 1.3 and PSA Cryptography support for `HUXERUI_LOCALNETWORK_TLS`)
-  - Platform-specific source sets and system libraries/frameworks are read directly by mcpp from upstream `Lib-LocalNetwork-0.1.0/mcpp.toml` (Linux `platform/linux/src/{discovery,tls_trust,wifi}.cpp`, macOS `CoreWLAN`/`CoreLocation`/`Security`/`CoreFoundation`, Windows `ws2_32`/`dnsapi`/`iphlpapi`/`wlanapi`/`crypt32`).
+  - Platform-specific source sets and system libraries/frameworks are read directly by mcpp from upstream `Lib-LocalNetwork-0.1.1/mcpp.toml` (Linux `platform/linux/src/{discovery,tls_trust,wifi}.cpp`, macOS `CoreWLAN`/`CoreLocation`/`Security`/`CoreFoundation`, Windows `ws2_32`/`dnsapi`/`iphlpapi`/`wlanapi`/`crypt32`).
   - No inline `mcpp` build segment or redundant `xpm.<platform>.deps` table is added in `pkgs/h/huxerui.localnetwork.lua`.
-- **License**: `MIT` (verified against `Lib-LocalNetwork-0.1.0/LICENSE` and `Lib-LocalNetwork-0.1.0/mcpp.toml`).
+- **License**: `MIT` (verified against `Lib-LocalNetwork-0.1.1/LICENSE` and `Lib-LocalNetwork-0.1.1/mcpp.toml`).
 - **Archive & CN Mirror Status**:
-  - `https://github.com/HuxerUI/Lib-LocalNetwork/archive/refs/tags/v0.1.0.tar.gz` (`407,986` bytes), SHA256 verified twice: `c8b271e1c48a19dbee914fe43f03ec88ba6a6a9cc2acdd4a2dd7f339268223ad`.
+  - `https://github.com/HuxerUI/Lib-LocalNetwork/archive/refs/tags/v0.1.1.tar.gz` (`407,972` bytes), SHA256 verified twice: `1258ed16fdc8a2807a7bb8027e918e9df034387c15fd76fcc27d5fdc88d3a213`.
   - Plain upstream GitHub URLs are used across `linux`, `macosx`, and `windows` (no CN `mcpp-res` mirror yet; maintainers can add CN mirrors later).
 - **Features**: None declared upstream.
 - **Automatic Updates**: `extensions.autoupdate` tracks `HuxerUI/Lib-LocalNetwork` with `tag = "v${version}"`.
@@ -23,7 +23,7 @@ Add `huxerui.localnetwork` (`pkgs/h/huxerui.localnetwork.lua`) at upstream relea
 ## Workspace Test Member
 
 - Registered `"tests/examples/huxerui-localnetwork"` in root `mcpp.toml` right after `"tests/examples/huxerui-interaction"`.
-- `tests/examples/huxerui-localnetwork/mcpp.toml` sets `[indices] huxerui = { path = "../../.." }`, `standard = "c++23"`, and `localnetwork = "0.1.0"` under `[dependencies.huxerui]`.
+- `tests/examples/huxerui-localnetwork/mcpp.toml` sets `[indices] huxerui = { path = "../../.." }`, `standard = "c++23"`, and `localnetwork = "0.1.1"` under `[dependencies.huxerui]`.
 - `tests/examples/huxerui-localnetwork/tests/localnetwork.cpp` imports `std`, `huxerui`, and `huxerui.localnetwork`, and exercises:
   - Capability queries (`GetCapabilities()`, `IsTcpSupported()`, `IsTlsClientSupported()`, `IsPairingSupported()`) and negative `PeerId::Parse` / `PairingCode::Parse` / `PairingCode::Decode` checks.
   - **Cross-platform DNS-SD platform gate**: `IsDiscoverySupported()` is guarded by `#if defined(__APPLE__) || defined(_WIN32)` — asserting `true` on macOS (Bonjour `<dns_sd.h>`) and Windows (`<windns.h>`), and `false` on Linux where `platform/linux/src/discovery.cpp` gates Avahi behind `#ifdef HUXERUI_LOCALNETWORK_AVAHI` (not defined in upstream `mcpp.toml`).

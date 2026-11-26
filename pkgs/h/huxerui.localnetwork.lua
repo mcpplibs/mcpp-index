@@ -1,18 +1,18 @@
 local versions = {
-    ["0.1.0"] = {
-        url = "https://github.com/HuxerUI/Lib-LocalNetwork/archive/refs/tags/v0.1.0.tar.gz",
-        sha256 = "c8b271e1c48a19dbee914fe43f03ec88ba6a6a9cc2acdd4a2dd7f339268223ad",
+    ["0.1.1"] = {
+        url = "https://github.com/HuxerUI/Lib-LocalNetwork/archive/refs/tags/v0.1.1.tar.gz",
+        sha256 = "1258ed16fdc8a2807a7bb8027e918e9df034387c15fd76fcc27d5fdc88d3a213",
     },
 }
 
 -- huxerui.localnetwork — HuxerUI local network discovery, pairing, transport, and Wi-Fi package.
 --
--- Form A: upstream carries its own `mcpp.toml` (`Lib-LocalNetwork-0.1.0/mcpp.toml`)
+-- Form A: upstream carries its own `mcpp.toml` (`Lib-LocalNetwork-0.1.1/mcpp.toml`)
 -- and `build.mcpp` (`huxerui.rules`) and exports `import huxerui.localnetwork;`
 -- (`modules/localnetwork.cppm`), depending on `huxerui.huxerui = "0.5.5"` and
 -- `compat.mbedtls = "3.6.8"`.
 --
--- 0.1.0 uses plain upstream GitHub URLs across all platforms (no CN mcpp-res mirror yet).
+-- 0.1.1 uses plain upstream GitHub URLs across all platforms (no CN mcpp-res mirror yet).
 package = {
     spec        = "1",
     namespace   = "huxerui",
@@ -31,13 +31,13 @@ package = {
 
     xpm = {
         linux = {
-            ["0.1.0"] = versions["0.1.0"],
+            ["0.1.1"] = versions["0.1.1"],
         },
         macosx = {
-            ["0.1.0"] = versions["0.1.0"],
+            ["0.1.1"] = versions["0.1.1"],
         },
         windows = {
-            ["0.1.0"] = versions["0.1.0"],
+            ["0.1.1"] = versions["0.1.1"],
         },
     },
 }
