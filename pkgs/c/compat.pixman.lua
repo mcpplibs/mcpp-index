@@ -21,22 +21,27 @@
 -- in `pixman-x86.c` — an illegal-instruction crash on an older CPU, from a
 -- library whose whole design is to dispatch at runtime.
 --
--- `[build] flags` with a `glob` is what expresses it, and this is not a new
--- mechanism: `compat.sdl2` already scopes `-msse3` to one file the same way.
--- So no fork, no `build.mcpp`. Contrast `freedesktop.gldispatch`, where the
--- per-architecture choice is WHICH FILES to compile rather than which flags to
--- give them — that one does need `build.mcpp`.
+-- `[build] flags` with a `glob` is what expresses the per-file instruction
+-- sets, and this is not a new mechanism: `compat.sdl2` already scopes `-msse3`
+-- to one file the same way. What those globs cannot express is an
+-- ARCHITECTURE: they are unconditional, and `-mssse3` on an aarch64 compiler is
+-- not ignored — clang reports `unsupported option '-mssse3' for target`. So the
+-- two SIMD translation units and their globs live in
+-- `target_cfg['cfg(arch = "x86_64")']`, which the engine evaluates against the
+-- RESOLVED target (root and dependency alike); on every other architecture the
+-- generic C paths (and pixman-x86.c's stub, which is always compiled) are what
+-- the runtime dispatch chooses from. Still no fork, no `build.mcpp`.
 --
 -- ─────────────────────────────────────────────────────────────────────────
 -- WHAT IS COMPILED AND WHAT IS NOT
 --
--- The x86 SIMD (`pixman-sse2.c`, `pixman-ssse3.c`) is in; MMX is not. MMX is
+-- The x86 SIMD (`pixman-sse2.c`, `pixman-ssse3.c`, reached through
+-- `pixman-x86.c`'s CPUID dispatch) is in on x86_64 only; MMX is not. MMX is
 -- 32-bit-x86 era and upstream itself gates it behind `have_mmx`, which is
 -- false on x86_64 toolchains. The ARM/MIPS/PPC/RISC-V variants come with
 -- assembly files and their own probes; they are absent here for the same
--- reason `freedesktop.egl` leaves X11 out — nothing in this index builds for
--- those targets yet, and the runtime dispatch degrades to the generic path
--- rather than failing.
+-- reason `freedesktop.egl` leaves X11 out — those targets build the generic C
+-- paths, and the runtime dispatch degrades to them rather than failing.
 --
 -- `pixman-config.h` and `pixman-version.h` are meson's `configure_file`
 -- outputs. They are generated here rather than probed: every value in them is
@@ -74,10 +79,17 @@ package = {
             ["mcpp_generated/pixman-config.h"] = [[
 #ifndef PIXMAN_CONFIG_H
 #define PIXMAN_CONFIG_H
-/* meson's configure_file output, written out for the one target this
-   package builds: Linux, x86_64, a GCC-compatible toolchain. */
+/* meson's configure_file output, written out for the targets this package
+   builds: Linux, x86_64 and aarch64, with a GCC-compatible or clang toolchain.
+   The SSE2/SSSE3 units are compiled only under the descriptor's
+   target_cfg['cfg(arch = "x86_64")'], so the two macros are defined only when
+   the compiler is one: defined elsewhere they would make pixman-x86.c call
+   _pixman_implementation_create_sse2/ssse3 with no translation unit behind
+   them (pixman-private.h reads them the same way meson's config does). */
+#if defined(__i386__) || defined(__x86_64__)
 #define USE_SSE2 1
 #define USE_SSSE3 1
+#endif
 #define USE_GCC_INLINE_ASM 1
 #define HAVE_PTHREADS 1
 #define HAVE_POSIX_MEMALIGN 1
@@ -159,21 +171,34 @@ package = {
             "*/pixman/pixman-timer.c",
             "*/pixman/pixman-trap.c",
             "*/pixman/pixman-utils.c",
+            -- Always compiled: with USE_SSE2/USE_SSSE3 undefined (every
+            -- architecture but x86_64) it is upstream's stub that returns the
+            -- implementation chain unchanged, and pixman-implementation.c calls
+            -- _pixman_x86_get_implementations unconditionally.
             "*/pixman/pixman-x86.c",
-            -- the runtime-dispatched implementations
-            "*/pixman/pixman-sse2.c",
-            "*/pixman/pixman-ssse3.c",
         },
 
         cflags = { "-D_GNU_SOURCE", "-DHAVE_CONFIG_H", "-fPIC" },
 
-        -- The whole reason this package needs no fork. Each entry gives ONE
-        -- file the instruction set it implements, so the compiler may emit
-        -- those instructions there and nowhere else — which is what makes
-        -- pixman's CPUID dispatch in pixman-x86.c safe.
-        flags = {
-            { glob = "*/pixman/pixman-sse2.c",  cflags = { "-msse2" } },
-            { glob = "*/pixman/pixman-ssse3.c", cflags = { "-mssse3" } },
+        -- The x86 SIMD implementations, and the whole reason this package
+        -- needs no fork. Each glob entry gives ONE file the instruction set it
+        -- implements, so the compiler may emit those instructions there and
+        -- nowhere else — which is what makes pixman's CPUID dispatch in
+        -- pixman-x86.c safe. Both halves are conditional: on other
+        -- architectures there is no -msse2/-mssse3 to accept (clang rejects
+        -- them for the target), and upstream's meson would not build these
+        -- two units either.
+        target_cfg = {
+            ["cfg(arch = \"x86_64\")"] = {
+                sources = {
+                    "*/pixman/pixman-sse2.c",
+                    "*/pixman/pixman-ssse3.c",
+                },
+                flags = {
+                    { glob = "*/pixman/pixman-sse2.c",  cflags = { "-msse2" } },
+                    { glob = "*/pixman/pixman-ssse3.c", cflags = { "-mssse3" } },
+                },
+            },
         },
 
         targets = { ["pixman-1"] = { kind = "lib" } },
