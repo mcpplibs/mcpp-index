@@ -151,7 +151,6 @@ package = {
             "*/src/libgit2/transports/*.c",
             "*/src/util/*.c",
             "*/src/util/allocators/*.c",
-            "!*/src/util/allocators/win32_leakcheck.c",
             "*/src/util/hash.c",
             "*/src/util/hash/collisiondetect.c",
             "*/src/util/hash/sha1dc/*.c",
@@ -217,7 +216,6 @@ package = {
             sources = {
                 "*/src/util/win32/*.c",
                 "!*/src/util/win32/precompiled.c",
-                "!*/src/util/win32/w32_leakcheck.c",
             },
             include_dirs = {
                 "mcpp_generated/gen_headers",
