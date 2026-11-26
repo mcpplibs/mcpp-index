@@ -25,7 +25,7 @@ name = "eui-neo-tray-tests"
 version = "0.1.0"
 
 [dependencies.compat]
-eui-neo = "0.6.3"
+eui-neo = "0.6.5"
 
 # The candidate index: this checkout (compat.*), not the published one.
 [indices]

@@ -1,0 +1,9 @@
+[package]
+name    = "libgit2-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+libgit2 = "1.9.7"
+
+[indices]
+compat = { path = "../../.." }
