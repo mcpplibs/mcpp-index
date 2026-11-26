@@ -1,0 +1,10 @@
+[indices]
+huxerui = { path = "../../.." }
+
+[package]
+name     = "huxerui-lottie-tests"
+version  = "0.1.0"
+standard = "c++23"
+
+[dependencies.huxerui]
+lottie = "0.1.0"
