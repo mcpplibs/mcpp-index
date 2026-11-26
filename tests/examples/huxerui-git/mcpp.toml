@@ -7,4 +7,4 @@ version  = "0.1.0"
 standard = "c++23"
 
 [dependencies]
-huxerui.git = { version = "0.1.0" }
+huxerui.git = { version = "0.1.1" }
