@@ -272,11 +272,24 @@ int main() {
     try {
         // 1. Synchronous capability & parsing checks.
         const ln::Capabilities caps = ln::GetCapabilities();
-        Require(caps.tcp_dial == ln::CapabilityStatus::Available, "expected tcp_dial Available");
+#ifdef __APPLE__
+        const bool mac_local_network_permission = [] {
+            if (__builtin_available(macOS 15.0, *)) {
+                return true;
+            }
+            return false;
+        }();
+        const auto expected_outbound = mac_local_network_permission
+            ? ln::CapabilityStatus::RequiresPermission
+            : ln::CapabilityStatus::Available;
+#else
+        const auto expected_outbound = ln::CapabilityStatus::Available;
+#endif
+        Require(caps.tcp_dial == expected_outbound, "expected tcp_dial outbound capability status");
         Require(caps.tcp_listen == ln::CapabilityStatus::Available, "expected tcp_listen Available");
-        Require(caps.tls_dial == ln::CapabilityStatus::Available, "expected tls_dial Available");
+        Require(caps.tls_dial == expected_outbound, "expected tls_dial outbound capability status");
         Require(caps.tls_listen == ln::CapabilityStatus::Available, "expected tls_listen Available");
-        Require(caps.paired_tls_dial == ln::CapabilityStatus::Available, "expected paired_tls_dial Available");
+        Require(caps.paired_tls_dial == expected_outbound, "expected paired_tls_dial outbound capability status");
         Require(caps.paired_tls_listen == ln::CapabilityStatus::Available, "expected paired_tls_listen Available");
         Require(caps.web_bridge_host == ln::CapabilityStatus::Unsupported, "expected web_bridge_host Unsupported");
         Require(ln::IsTcpSupported(), "expected IsTcpSupported() == true");
