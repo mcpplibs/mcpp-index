@@ -1,0 +1,17 @@
+# compat.eui-neo's `plot` feature: upstream's optional scientific plotting
+# module (`modules/plot/`, 16 TUs built as `eui::module_plot` in CMake).
+#
+# Asserts link-time gating (PlotSession, Plot, WaveformBuffer, writeSvg are
+# undefined without `features = ["plot"]`) alongside positive range/mailbox/
+# buffer checks and negative invalid-scene rejection (`std::invalid_argument`).
+#
+# The `compat` index redirect is inherited from the workspace root.
+[package]
+name = "eui-neo-plot-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+eui-neo = { version = "0.6.5", features = ["plot"] }
+
+[indices]
+compat = { path = "../../.." }

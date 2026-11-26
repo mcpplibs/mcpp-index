@@ -1,0 +1,9 @@
+[package]
+name    = "utf8proc-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+utf8proc = "2.10.0"
+
+[indices]
+compat = { path = "../../.." }
