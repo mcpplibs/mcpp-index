@@ -63,7 +63,23 @@
 --     unchanged), so the template stub below stays inert on non-linux and the
 --     linux `SDL_VIDEO_DRIVER_X11` define stays a no-op in practice.
 --
--- The build recipe below tracks upstream `CMakeLists.txt` (v0.6.3): CORE_SOURCES
+-- 0.6.4: hotfix release; `CORE_SOURCES` and `VULKAN_SOURCES` are byte-identical
+-- to 0.6.3, with no descriptor, dependency, or flag changes.
+--
+-- 0.6.5: touch gestures, desktop UI components, bundled-GLFW Wayland window
+-- operations, and `modules/plot`:
+--   * `core/platform/gesture_bridge.c` joins `CORE_SOURCES` under GLFW (harmless
+--     0-match glob on <=0.6.4): Windows links `-lcomctl32` for Win32 subclassing,
+--     macOS compiles it with `-x objective-c` alongside the other Cocoa bridges.
+--   * Linux GLFW adds `core/platform/linux_touch.cpp` and `-DEUI_LINUX_TOUCH_X11=1`,
+--     riding on `compat.glfw`'s transitive `compat.x11` + `compat.xi` deps
+--     (XInput2). `EUI_LINUX_TOUCH_WAYLAND` stays off because `compat.glfw` is
+--     X11-only; bundled-GLFW Wayland patching does not apply.
+--   * `modules/plot/` (16 TUs) is exposed as the optional `plot` feature, reusing
+--     `compat.libpng`, `compat.freetype`, and `compat.glad` / `compat.vulkan`
+--     already present in the base/feature deps.
+--
+-- The build recipe below tracks upstream `CMakeLists.txt` (v0.6.5): CORE_SOURCES
 -- plus the OpenGL backend and, for the glfw window backend, `ime_bridge.c`.
 -- 0.5.5 grew a Shadertoy subsystem: render_backend.h and include/eui/types.h now
 -- include core/render/shadertoy.h unconditionally, and opengl_backend.cpp calls
@@ -312,6 +328,19 @@ package = {
                 url    = "https://github.com/sudoevolve/EUI-NEO/archive/refs/tags/v0.6.3.tar.gz",
                 sha256 = "08074e2fb72662c8a4c2f7d75dec558aed2c751545797e0ccccbdbe8f439b669",
             },
+            -- 0.6.4: hotfix release; CORE_SOURCES/VULKAN_SOURCES byte-identical
+            -- to 0.6.3. No CN mirror yet — plain-string GLOBAL url.
+            ["0.6.4"] = {
+                url    = "https://github.com/sudoevolve/EUI-NEO/archive/refs/tags/v0.6.4.tar.gz",
+                sha256 = "d99b25600b996f1a03e3b06dfa6e0f620a50f20b281c842a0b68d7a82d92e5c1",
+            },
+            -- 0.6.5: gesture_bridge.c (+ -lcomctl32 / OBJC), linux_touch.cpp +
+            -- -DEUI_LINUX_TOUCH_X11=1, and optional `plot` feature (see top note).
+            -- No CN mirror yet — plain-string GLOBAL url.
+            ["0.6.5"] = {
+                url    = "https://github.com/sudoevolve/EUI-NEO/archive/refs/tags/v0.6.5.tar.gz",
+                sha256 = "b77b40341e4f6089bc3ad19dc9be723f461a83436d3b580a7ef50c2cd4d4e587",
+            },
         },
         macosx = {
             ["0.5.3"] = {
@@ -374,6 +403,19 @@ package = {
                 url    = "https://github.com/sudoevolve/EUI-NEO/archive/refs/tags/v0.6.3.tar.gz",
                 sha256 = "08074e2fb72662c8a4c2f7d75dec558aed2c751545797e0ccccbdbe8f439b669",
             },
+            -- 0.6.4: hotfix release; CORE_SOURCES/VULKAN_SOURCES byte-identical
+            -- to 0.6.3. No CN mirror yet — plain-string GLOBAL url.
+            ["0.6.4"] = {
+                url    = "https://github.com/sudoevolve/EUI-NEO/archive/refs/tags/v0.6.4.tar.gz",
+                sha256 = "d99b25600b996f1a03e3b06dfa6e0f620a50f20b281c842a0b68d7a82d92e5c1",
+            },
+            -- 0.6.5: gesture_bridge.c (+ -lcomctl32 / OBJC), linux_touch.cpp +
+            -- -DEUI_LINUX_TOUCH_X11=1, and optional `plot` feature (see top note).
+            -- No CN mirror yet — plain-string GLOBAL url.
+            ["0.6.5"] = {
+                url    = "https://github.com/sudoevolve/EUI-NEO/archive/refs/tags/v0.6.5.tar.gz",
+                sha256 = "b77b40341e4f6089bc3ad19dc9be723f461a83436d3b580a7ef50c2cd4d4e587",
+            },
         },
         windows = {
             ["0.5.3"] = {
@@ -435,6 +477,19 @@ package = {
             ["0.6.3"] = {
                 url    = "https://github.com/sudoevolve/EUI-NEO/archive/refs/tags/v0.6.3.tar.gz",
                 sha256 = "08074e2fb72662c8a4c2f7d75dec558aed2c751545797e0ccccbdbe8f439b669",
+            },
+            -- 0.6.4: hotfix release; CORE_SOURCES/VULKAN_SOURCES byte-identical
+            -- to 0.6.3. No CN mirror yet — plain-string GLOBAL url.
+            ["0.6.4"] = {
+                url    = "https://github.com/sudoevolve/EUI-NEO/archive/refs/tags/v0.6.4.tar.gz",
+                sha256 = "d99b25600b996f1a03e3b06dfa6e0f620a50f20b281c842a0b68d7a82d92e5c1",
+            },
+            -- 0.6.5: gesture_bridge.c (+ -lcomctl32 / OBJC), linux_touch.cpp +
+            -- -DEUI_LINUX_TOUCH_X11=1, and optional `plot` feature (see top note).
+            -- No CN mirror yet — plain-string GLOBAL url.
+            ["0.6.5"] = {
+                url    = "https://github.com/sudoevolve/EUI-NEO/archive/refs/tags/v0.6.5.tar.gz",
+                sha256 = "b77b40341e4f6089bc3ad19dc9be723f461a83436d3b580a7ef50c2cd4d4e587",
             },
         },
     },
@@ -584,6 +639,7 @@ inline bool sendX11MoveResizeForWindow(W* window, int direction) {
             "*/core/render/opengl/opengl_primitives.cpp",
             "*/core/render/opengl/opengl_shadertoy.cpp",
             "*/core/render/opengl/opengl_text.cpp",
+            "*/core/platform/gesture_bridge.c",
             "*/core/platform/ime_bridge.c",
             -- Window layer
             "*/core/window/window_backend.cpp",
@@ -780,6 +836,30 @@ inline bool sendX11MoveResizeForWindow(W* window, int direction) {
             -- the termios/Win32 code. `modules/keyboard` needs no entry — it
             -- is a single header with no TU behind it.
             ["serial"] = { sources = { "*/modules/serial/serial.cpp" } },
+            -- 0.6.5: `modules/plot/` is upstream's optional scientific plotting
+            -- module (16 TUs built as `eui::module_plot` in CMake). Exposed as
+            -- a source-gated feature; reuses compat.libpng, compat.freetype, and
+            -- the active render backend (OpenGL/glad or Vulkan) already in deps.
+            ["plot"] = {
+                sources = {
+                    "*/modules/plot/data.cpp",
+                    "*/modules/plot/waveform.cpp",
+                    "*/modules/plot/axes.cpp",
+                    "*/modules/plot/field.cpp",
+                    "*/modules/plot/contour.cpp",
+                    "*/modules/plot/geometry.cpp",
+                    "*/modules/plot/vector.cpp",
+                    "*/modules/plot/export.cpp",
+                    "*/modules/plot/renderer.cpp",
+                    "*/modules/plot/vulkan_renderer.cpp",
+                    "*/modules/plot/plot.cpp",
+                    "*/modules/plot/figure.cpp",
+                    "*/modules/plot/scene3d.cpp",
+                    "*/modules/plot/volume.cpp",
+                    "*/modules/plot/plot3d.cpp",
+                    "*/modules/plot/gpu_scene3d.cpp",
+                },
+            },
         },
 
         -- ── Platform-specific ──────────────────────────────────────────────
@@ -846,15 +926,17 @@ inline bool sendX11MoveResizeForWindow(W* window, int direction) {
             -- SHCreateItemFromParsingName, whose IID_/CLSID_ GUIDs live in
             -- uuid.lib (upstream's own 0.6.3 link line grew ole32 comdlg32
             -- uuid for the same TU). ole32/comdlg32 were already here.
+            -- comctl32 joins in 0.6.5: gesture_bridge.c uses SetWindowSubclass /
+            -- GetWindowSubclass / RemoveWindowSubclass / DefSubclassProc.
             ldflags = {
                 "-lwinmm", "-lurlmon", "-lshell32",
                 "-luser32", "-limm32", "-lpdh", "-lole32",
-                "-lcomdlg32", "-luuid", "-lkernel32",
+                "-lcomdlg32", "-luuid", "-lcomctl32", "-lkernel32",
             },
         },
 
         macosx = {
-            -- Upstream `enable_language(OBJC)` + LANGUAGE OBJC on the three
+            -- Upstream `enable_language(OBJC)` + LANGUAGE OBJC on the four
             -- bridge files; the AppKit tray path is Cocoa-native and never
             -- includes tray.h.
             cflags   = { "-DEUI_TRAY_APPKIT=1" },
@@ -870,9 +952,10 @@ inline bool sendX11MoveResizeForWindow(W* window, int direction) {
                          "-framework", "CoreAudio", "-framework", "AudioToolbox",
                          "-framework", "CoreFoundation" },
             flags = {
-                { glob = "*/core/platform/native_bridge.c", cflags = { "-x", "objective-c" } },
-                { glob = "*/core/platform/tray_bridge.c",   cflags = { "-x", "objective-c" } },
-                { glob = "*/core/platform/ime_bridge.c",    cflags = { "-x", "objective-c" } },
+                { glob = "*/core/platform/native_bridge.c",  cflags = { "-x", "objective-c" } },
+                { glob = "*/core/platform/tray_bridge.c",    cflags = { "-x", "objective-c" } },
+                { glob = "*/core/platform/ime_bridge.c",     cflags = { "-x", "objective-c" } },
+                { glob = "*/core/platform/gesture_bridge.c", cflags = { "-x", "objective-c" } },
             },
         },
 
@@ -925,7 +1008,8 @@ inline bool sendX11MoveResizeForWindow(W* window, int direction) {
             -- BOTH flag lists, for the reason spelled out above the windows
             -- leg: `cflags` reaches tray_bridge.c and nothing else.
             cflags   = { "-DEUI_TRAY_SNI=1" },
-            cxxflags = { "-DEUI_TRAY_SNI=1" },
+            cxxflags = { "-DEUI_TRAY_SNI=1", "-DEUI_LINUX_TOUCH_X11=1" },
+            sources  = { "*/core/platform/linux_touch.cpp" },
             -- Where install() put glib. PRIVATE: `<gio/gio.h>` is included by
             -- tray_bridge.c and by nothing this package publishes, so a
             -- consumer must not inherit a glib header search path.
