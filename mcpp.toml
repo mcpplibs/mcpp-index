@@ -220,6 +220,7 @@ members = [
     "tests/examples/libinput",
     "tests/examples/libseat",
     "tests/examples/libudev",
+    "tests/examples/bluez",
     "tests/examples/libxkbcommon",
     "tests/examples/mtdev",
     "tests/examples/pixman",

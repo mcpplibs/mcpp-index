@@ -1,0 +1,10 @@
+[indices]
+compat = { path = "../../.." }
+
+[package]
+name     = "bluez-tests"
+version  = "0.1.0"
+standard = "c++23"
+
+[target.'cfg(linux)'.dependencies.compat]
+bluez = "5.88"
