@@ -1,0 +1,10 @@
+[indices]
+huxerui = { path = "../../.." }
+
+[package]
+name     = "huxerui-localnetwork-tests"
+version  = "0.1.0"
+standard = "c++23"
+
+[dependencies.huxerui]
+localnetwork = "0.1.0"
