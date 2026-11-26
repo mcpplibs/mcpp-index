@@ -130,6 +130,7 @@ members = [
     "tests/examples/huxerui-sqlite",
     "tests/examples/huxerui-interaction",
     "tests/examples/huxerui-jsruntime",
+    "tests/examples/huxerui-charts",
     "tests/examples/huxerui-markdown",
     "tests/examples/huxerui-pdf",
     "tests/examples/huxerui-qrcode",
