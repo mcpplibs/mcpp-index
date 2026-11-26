@@ -314,6 +314,7 @@ members = [
     "tests/examples/openlifa.openas",
     "tests/examples/openlifa.openmui",
     "tests/examples/os",
+    "tests/examples/oniguruma",
     "tests/examples/pdfium",
     "tests/examples/utf8proc",
     "tests/examples/zxing-cpp",
