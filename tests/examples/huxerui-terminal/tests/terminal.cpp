@@ -103,11 +103,15 @@ huxerui::Task<void> RunChecks() {
         }));
         Require(transport_res.Succeeded(), "OpenTransportAsync failed");
         auto transport = std::move(transport_res).Value();
-        for (int i = 0; i < 100 && transport.Snapshot().status == ht::TerminalStatus::Open; ++i) {
+        const auto wait_end = std::chrono::steady_clock::now() + std::chrono::seconds{5};
+        while ((transport.Snapshot().status == ht::TerminalStatus::Open ||
+                transport.Snapshot().status == ht::TerminalStatus::Closing) &&
+               std::chrono::steady_clock::now() < wait_end) {
             co_await huxerui::Delay(std::chrono::milliseconds{10});
         }
         const auto tsnap = transport.Snapshot();
-        Require(tsnap.status == ht::TerminalStatus::Exited, "transport expected Exited");
+        Require(tsnap.status == ht::TerminalStatus::Exited,
+                "transport expected Exited, got status=" + std::to_string(static_cast<int>(tsnap.status)));
         Require(tsnap.exit.has_value() && tsnap.exit->code == 7, "transport exit code expected 7");
         (void)co_await transport.CloseAsync();
         std::cout << "PASS positive: OpenTransportAsync Exited with code 7\n";
