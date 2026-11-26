@@ -1,0 +1,9 @@
+[package]
+name = "utfcpp-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+utfcpp = "5.0.0"
+
+[indices]
+compat = { path = "../../.." }

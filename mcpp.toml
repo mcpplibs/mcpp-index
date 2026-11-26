@@ -317,6 +317,11 @@ members = [
     "tests/examples/pdfium",
     "tests/examples/utf8proc",
     "tests/examples/zxing-cpp",
+    "tests/examples/pugixml",
+    "tests/examples/simdjson",
+    "tests/examples/simdjson-nothreads",
+    "tests/examples/utfcpp",
+    "tests/examples/iniparser",
 ]
 
 # ── The index each member tests through ─────────────────────────────────

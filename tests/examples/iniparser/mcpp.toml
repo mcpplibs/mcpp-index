@@ -1,0 +1,9 @@
+[package]
+name = "iniparser-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+iniparser = "4.3.2"
+
+[indices]
+compat = { path = "../../.." }

@@ -1,0 +1,9 @@
+[package]
+name = "pugixml-tests"
+version = "0.1.0"
+
+[dependencies.compat]
+pugixml = "1.16"
+
+[indices]
+compat = { path = "../../.." }
