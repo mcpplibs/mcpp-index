@@ -127,6 +127,7 @@ members = [
     "tests/examples/gmp",
     "tests/examples/gzip-hpp",
     "tests/examples/huxerui-module",
+    "tests/examples/huxerui-sqlite",
     "tests/examples/huxerui-interaction",
     "tests/examples/huxerui-jsruntime",
     "tests/examples/huxerui-markdown",
