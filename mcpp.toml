@@ -137,6 +137,7 @@ members = [
     "tests/examples/huxerui-pdf",
     "tests/examples/huxerui-localnetwork",
     "tests/examples/huxerui-qrcode",
+    "tests/examples/huxerui-archive",
     "tests/examples/gmp-gmpxx",
     "tests/examples/gsl",
     "tests/examples/godot-cpp",
