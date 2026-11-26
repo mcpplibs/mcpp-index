@@ -8,6 +8,7 @@
 #include <ffi.h>
 
 #include <dlfcn.h>
+#include <cstdarg>
 #include <cstdio>
 #include <cstring>
 #include <string>
@@ -25,6 +26,17 @@ void check(bool ok, const char *what)
 int add3(int a, int b, int c) { return a + b + c; }
 
 double scale(double v, float f) { return v * static_cast<double>(f); }
+
+int sumv(int n, ...)
+{
+    va_list ap;
+    va_start(ap, n);
+    int total = 0;
+    for (int i = 0; i < n; ++i)
+        total += va_arg(ap, int);
+    va_end(ap);
+    return total;
+}
 
 } // namespace
 
@@ -59,7 +71,24 @@ int main()
         check(result == 6.0, "ffi_call dispatched scale(1.5, 4.0f) == 6.0");
     }
 
-    // ── 3. It is THIS build that ran, not the ecosystem payload's ────────
+    // ── 3. Variadic call ─────────────────────────────────────────────────
+    // aarch64 keeps an `is_variadic` flag in ffi_cif and passes the variadic
+    // part on the stack; x86_64 saves the argument registers differently.
+    // Both go through ffi_prep_cif_var, not ffi_prep_cif, so this is the only
+    // test that reaches those paths.
+    {
+        ffi_cif cif{};
+        ffi_type *args[3] = { &ffi_type_sint, &ffi_type_sint, &ffi_type_sint };
+        check(ffi_prep_cif_var(&cif, FFI_DEFAULT_ABI, 1, 3, &ffi_type_sint, args) == FFI_OK,
+              "ffi_prep_cif_var on (int, ...) with two variadic ints");
+
+        int n = 2, a = 5, b = 7, result = 0;
+        void *values[3] = { &n, &a, &b };
+        ffi_call(&cif, FFI_FN(sumv), &result, values);
+        check(result == 12, "ffi_call dispatched sumv(2, 5, 7) == 12");
+    }
+
+    // ── 4. It is THIS build that ran, not the ecosystem payload's ────────
     // Same soname as `xim:libffi`, so one mapping wins silently. If the path
     // names the payload, this package compiled a library nobody loads.
     {
