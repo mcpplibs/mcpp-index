@@ -207,6 +207,7 @@ members = [
     "tests/examples/gl",
     "tests/examples/libdisplay-info",
     "tests/examples/libevdev",
+    "tests/examples/libgit2",
     "tests/examples/libinput",
     "tests/examples/libseat",
     "tests/examples/libudev",
