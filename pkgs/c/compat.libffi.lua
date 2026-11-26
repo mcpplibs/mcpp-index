@@ -39,8 +39,20 @@
 --
 -- so all of them can be listed and the preprocessor drops the ones that do not
 -- apply. The `.S` files also `#define LIBFFI_ASM` themselves, so no assembler
--- flag is needed either. This is x86/x86_64 only; another architecture needs
--- its own `src/<arch>/` files added here.
+-- flag is needed either.
+--
+-- `src/aarch64/ffi.c` guards its whole body on `__aarch64__`, so it would be
+-- safe in the common list — but `src/aarch64/sysv.S` is not fully guarded: the
+-- ELF GNU property note at its end (BTI/PAC, after `#endif /* __arm64__ */`)
+-- references macros defined inside the guard, and GNU as on x86 reports
+-- `invalid operands (*UND* and *UND*) for '|'` instead of dropping it. Both
+-- aarch64 units therefore live in `target_cfg`, selected only for an aarch64
+-- target. Unlike pixman this needs no per-file flags or defines, only the
+-- source set. `src/aarch64/win64_armasm.S` stays out — it is MSVC armasm
+-- syntax for Windows.
+--
+-- This is x86/x86_64 and aarch64 only; another architecture needs its own
+-- `src/<arch>/` files added here.
 --
 -- ─────────────────────────────────────────────────────────────────────────
 -- THE THREE GENERATED HEADERS
@@ -51,17 +63,33 @@
 -- `fficonfig.h` cannot be derived from the tarball — it is the record of what
 -- configure probed — so it is inlined below, verbatim from a real
 -- `./configure` run on x86_64-pc-linux-gnu with the host-naming lines dropped.
+-- It serves both targets unchanged: the ABI facts in it (`SIZEOF_SIZE_T`,
+-- `SIZEOF_DOUBLE`, `SIZEOF_LONG_DOUBLE`, `FFI_EXEC_STATIC_TRAMP`, which
+-- configure also enables for aarch64-linux) are identical on x86_64 and
+-- aarch64 SysV, and the x86-only probes (`HAVE_AS_X86_PCREL`,
+-- `HAVE_AS_X86_64_UNWIND_SECTION_TYPE`, `EH_FRAME_FLAGS`) are read only by
+-- x86 assembly, which is preprocessed away on aarch64.
 --
 -- The other two ARE derivable, so install() does what configure would rather
 -- than hard-coding 500 lines: `ffi.h.in` has exactly four substitutions
 -- (@TARGET@, @HAVE_LONG_DOUBLE@, @FFI_EXEC_TRAMPOLINE_TABLE@, @VERSION@) and
 -- `ffitarget.h` is a copy. Deriving them keeps this descriptor honest when the
 -- version moves.
+--
+-- ⚠ configure bakes ONE architecture into those two headers, and install()
+-- cannot: the installed tree is shared by every target the store serves, and
+-- mcpp compiles a package's sources per consumer build. So install() emits a
+-- target-neutral `ffi.h` (the @TARGET@ block becomes a dispatch on the
+-- consumer compiler's predefined macros) and installs BOTH
+-- `src/x86/ffitarget.h` and `src/aarch64/ffitarget.h` under architecture
+-- names, with a generated `ffitarget.h` that includes exactly one of them.
+-- Only the selected header is seen by a TU, so their shared `LIBFFI_TARGET_H`
+-- guard never collides.
 package = {
     spec        = "1",
     namespace   = "compat",
     name        = "libffi",
-    description = "libffi — portable foreign function interface, built from the upstream release",
+    description = "libffi — portable foreign function interface, built from the upstream release (x86/x86_64, aarch64)",
     licenses    = {"MIT"},
     repo        = "https://github.com/libffi/libffi",
     type        = "package",
@@ -81,7 +109,15 @@ package = {
     mcpp = {
         language   = "c++23",
         import_std = false,
-        c_standard = "c11",
+        -- Upstream's build sets no standard, so compilers use their default
+        -- GNU dialect. That matters here: `src/aarch64/ffi.c` keeps most of
+        -- its semantics in GCC extended inline asm (`asm ("ldp q16, …" :
+        -- … : "memory", "v16")`), and Clang in strict C11 does not treat
+        -- `asm` as a keyword — it parses the template as a function call and
+        -- stops with `expected ')'`. GCC accepts it even under `-std=c11`,
+        -- which is why the x86 backend (whose asm lives in `.S` files) never
+        -- showed this.
+        c_standard = "gnu11",
 
         -- Upstream's AM_CPPFLAGS is `-I. -I$(top_srcdir)/include -Iinclude
         -- -I$(top_srcdir)/src`; `.` is where fficonfig.h lands and
@@ -114,6 +150,17 @@ package = {
             "src/x86/sysv.S",
             "src/x86/unix64.S",
             "src/x86/win64.S",
+        },
+
+        -- The aarch64 backend. Not in the common list because sysv.S has an
+        -- unguarded ELF note at its end; see the header comment.
+        target_cfg = {
+            ["cfg(arch = \"aarch64\")"] = {
+                sources = {
+                    "src/aarch64/ffi.c",
+                    "src/aarch64/sysv.S",
+                },
+            },
         },
 
         targets = { ["ffi"] = { kind = "shared", soname = "libffi.so.8" } },
@@ -337,8 +384,28 @@ function install()
         return false
     end
 
-    text = text:gsub("@TARGET@", "X86_64")
-               :gsub("@HAVE_LONG_DOUBLE@", "1")
+    -- `@TARGET@` is configure's name for the architecture it ran on. It is not
+    -- purely decorative: `src/x86/ffitarget.h` reads `X86_64` to choose the
+    -- UNIX64 ABI, and configure writes `X86` on 32-bit x86. One installed tree
+    -- serves every target here, so nothing may be baked in: turn the
+    -- template's guard block into a dispatch on the consumer compiler's own
+    -- predefined macro, spelling the names configure would have written.
+    text = text:gsub("#ifndef @TARGET@%s*\n#define @TARGET@%s*\n#endif",
+        "#if defined(__aarch64__) || defined(__arm64__)\n"
+     .. "# ifndef AARCH64\n"
+     .. "#  define AARCH64\n"
+     .. "# endif\n"
+     .. "#elif defined(__x86_64__)\n"
+     .. "# ifndef X86_64\n"
+     .. "#  define X86_64\n"
+     .. "# endif\n"
+     .. "#elif defined(__i386__)\n"
+     .. "# ifndef X86\n"
+     .. "#  define X86\n"
+     .. "# endif\n"
+     .. "#endif")
+
+    text = text:gsub("@HAVE_LONG_DOUBLE@", "1")
                :gsub("@FFI_EXEC_TRAMPOLINE_TABLE@", "0")
                :gsub("@VERSION@", pkginfo.version())
 
@@ -349,14 +416,39 @@ function install()
     end
     io.writefile(path.join(root, "include", "ffi.h"), text)
 
-    -- configure copies the target ffitarget.h into include/; ffi.h does
-    -- `#include <ffitarget.h>` and consumers need it too.
-    local target_header = path.join(root, "src", "x86", "ffitarget.h")
-    if not os.isfile(target_header) then
-        log.error("[libffi] src/x86/ffitarget.h missing")
-        return false
+    -- configure copies the target's ffitarget.h into include/; ffi.h does
+    -- `#include <ffitarget.h>` and consumers need it too. Doing that copy
+    -- unconditionally would bind the whole installed tree to one architecture,
+    -- so install each target's header under its own name and generate a
+    -- selector. Both files share the `LIBFFI_TARGET_H` guard, which is safe
+    -- because a TU only ever includes the one the selector picks.
+    local arch_headers = {
+        { dir = "x86",     name = "ffitarget-x86.h" },
+        { dir = "aarch64", name = "ffitarget-aarch64.h" },
+    }
+    for _, arch in ipairs(arch_headers) do
+        local from = path.join(root, "src", arch.dir, "ffitarget.h")
+        if not os.isfile(from) then
+            log.error("[libffi] src/%s/ffitarget.h missing", arch.dir)
+            return false
+        end
+        os.cp(from, path.join(root, "include", arch.name))
     end
-    os.cp(target_header, path.join(root, "include", "ffitarget.h"))
+
+    io.writefile(path.join(root, "include", "ffitarget.h"),
+        "/* Generated by mcpp-index's compat.libffi descriptor, not configure.\n"
+     .. "   The installed tree is shared by every target, so the target header\n"
+     .. "   is selected by the consumer's compiler rather than copied in. */\n"
+     .. "#ifndef LIBFFI_TARGET_SELECTOR_H\n"
+     .. "#define LIBFFI_TARGET_SELECTOR_H\n"
+     .. "#if defined(__aarch64__) || defined(__arm64__)\n"
+     .. "# include <ffitarget-aarch64.h>\n"
+     .. "#elif defined(__x86_64__) || defined(__i386__)\n"
+     .. "# include <ffitarget-x86.h>\n"
+     .. "#else\n"
+     .. "# error \"compat.libffi: no ffitarget.h for this architecture (x86/x86_64 and aarch64 are packaged)\"\n"
+     .. "#endif\n"
+     .. "#endif\n")
 
     return true
 end
