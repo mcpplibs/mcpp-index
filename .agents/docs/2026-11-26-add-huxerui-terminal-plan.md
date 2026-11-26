@@ -13,4 +13,4 @@ Add `huxerui.terminal` (`pkgs/h/huxerui.terminal.lua`) at upstream tag `v0.1.0` 
 ## Verification
 
 - `mcpp xpkg parse pkgs/h/huxerui.terminal.lua`: `parse OK` (Form A).
-- Cold validation `bash tests/run_members.sh huxerui-terminal` (fresh `MCPP_HOME`): `1 passed; 0 failed` (`263.16s`).
+- Cold validation `bash tests/run_members.sh huxerui-terminal` (fresh `MCPP_HOME`): `1 passed; 0 failed` (`263.16s`); re-verified after Windows `Closing -> Exited` wall-clock wait fix in `tests/terminal.cpp`: `1 passed; 0 failed` (`110.21s`).
