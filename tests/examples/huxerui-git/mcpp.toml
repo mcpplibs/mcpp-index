@@ -1,0 +1,10 @@
+[indices]
+huxerui = { path = "../../.." }
+
+[package]
+name     = "huxerui-git-tests"
+version  = "0.1.0"
+standard = "c++23"
+
+[dependencies]
+huxerui.git = { version = "0.1.1" }
