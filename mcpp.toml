@@ -317,6 +317,7 @@ members = [
     "tests/examples/pdfium",
     "tests/examples/utf8proc",
     "tests/examples/zxing-cpp",
+    "tests/examples/utfcpp",
 ]
 
 # ── The index each member tests through ─────────────────────────────────
