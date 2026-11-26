@@ -1,0 +1,10 @@
+[indices]
+huxerui = { path = "../../.." }
+
+[package]
+name     = "huxerui-map-tests"
+version  = "0.1.0"
+standard = "c++23"
+
+[dependencies.huxerui]
+map = "0.1.0"
