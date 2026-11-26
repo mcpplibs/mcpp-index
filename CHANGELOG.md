@@ -9,6 +9,9 @@
 
 ### Added
 
+- **mcpplibs.cmdline 0.0.6.** 命令补全内建：`app.completion()` 一次调用开启，程序以自己的命令树回答（`__complete`），bash、zsh、
+  fish、PowerShell 的适配脚本只向程序询问；选项与参数可陈述可选值、文件或目录提示与候选回调，命令可隐藏。测试成员移到 0.0.6，
+  并检验补全与可选值的校验。CN 镜像是 mcpp-res/cmdline 的 0.0.6 release 资产（与 GitHub 归档同一字节，sha256 24716d49…）。
 - **mcpp.plugins 0.27.0：新成员 rules-qml（QML 应用），rules-qt 增加 `moc_json`、`moc_includes`、`i18n.extensions`、`compile_ex`（默认关闭，既有工程的指令不变）。** rules-qml 为每个 QML 模块声明 `qt_add_qml_module` 的动作链（moc --output-json、qmltyperegistrar、qmlcachegen、rcc、qsb、qmllint），把程序 import 的 Qt QML 模块放到程序旁并写 `qt.conf`；带上插件库的 `mcpp pack` 需要 mcpp 2026.11.23.1（mcpp#1011），包的下限仍是 2026.10.30.1。CN 镜像是 mcpp-res/mcpp-plugins 的 0.27.0 release 资产（与 GitHub 归档同一字节，sha256 一致）。
 - **compat.slint 依赖 compat.glx-runtime（Linux），声明 GLX 的能力：修复 NVIDIA 桌面上真窗口 abort。** compat.slint 依赖 libglvnd（GL 分发器），却没有依赖任何 GL 厂商的提供者；`compat.glfw`（经 compat.glx-runtime）、compat.libgbm、godot 等都依赖 `xim:graphics`（mesa、nvidia-gl-host-link、glvnd 的 glx-vendor 布线），Slint 没有。NVIDIA 的 X 服务器要求 GLX 厂商是 NVIDIA，glvnd 找不到 `libGLX_nvidia.so.0`，`glXChooseFBConfig` 返回 0 个配置，glutin 报 “argument does not name a valid config”，femtovg 没有回退，程序 abort；无头与软件渲染不受影响。现在 Linux 上 compat.slint 依赖 `compat.glx-runtime` 2026.09.11（与 compat.glfw 同写法），`runtime.capabilities` 补 `x11.display`、`opengl.glx.driver`，`dlopen_libs` 补 `libGLX.so.0`。在 NVIDIA 580.178.04、X11 的真机上，项目只加这一个依赖时 `mcpp run` 即可运行。原有的 `display`、`opengl.egl.driver` 暂时保留（没有任何包提供它们，Wayland 上的 EGL 路径没有提供者，也未验证）。
 - **新 lint：声明的能力必须有它依赖的包提供（`tests/check_capability_providers.lua`，警告，`--strict` 才失败）。** 索引里 14 个能力名中，当时只有 compat.slint 的 `display` 与 `opengl.egl.driver` 没有任何包提供；lint 同时报告 compat.sdl2 声明了 `x11.display` 却不依赖提供它的 compat.glx-runtime（未处理，需要在真机上确认 SDL2 的路径）。接入 `validate.yml`，测试在 `tests/test_check_capability_providers.py`。方案与证据见 `.agents/docs/2026-11-22-host-driver-link-and-display-path-plan.md`。

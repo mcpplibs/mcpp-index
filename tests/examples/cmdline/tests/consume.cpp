@@ -54,6 +54,13 @@ int main() {
           && !tree.subcommands[0].options.empty() && tree.subcommands[0].options[0].long_name == "force",
           "snapshot names each subcommand and its options");
 
+    // 0.0.6: completion answers from the tree, with the candidates an option states.
+    auto completing = cmdline::App("tool").option(cmdline::Option("color").values({"auto", "never"})).completion();
+    auto answer = cmdline::completions::complete(cmdline::snapshot(completing), std::vector<std::string>{"--color", "n"});
+    check(answer.candidates.size() == 1 && answer.candidates[0].value == "never",
+          "completion offers the values an option states");
+    check(!completing.parse_from("tool --color pink"), "a value outside the stated set is refused");
+
     if (failures == 0) std::println("cmdline: ok");
     return failures == 0 ? 0 : 1;
 }

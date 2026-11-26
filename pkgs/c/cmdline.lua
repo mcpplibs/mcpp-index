@@ -2,7 +2,8 @@
 -- 0.0.2+ ships an upstream `mcpp.toml`, but `mcpp` is a package-level field
 -- (not per-version) in xpkg.lua, so to keep 0.0.1 installable we keep the
 -- workaround table here. The src/**/*.cppm layout is the same across 0.0.1,
--- 0.0.2, 0.0.3, 0.0.4 and 0.0.5 (0.0.3 adds src/completions*.cppm, which the glob takes in),
+-- 0.0.2, 0.0.3, 0.0.4, 0.0.5 and 0.0.6 (0.0.3 adds src/completions*.cppm, which the glob takes in;
+-- 0.0.6 replaces src/completions/ with src/complete.cppm),
 -- so a single Form B block describes every version correctly.
 -- When 0.0.1 is dropped, this can be replaced with `mcpp = "*/mcpp.toml"`.
 --
@@ -55,6 +56,13 @@ package = {
                 },
                 sha256 = "a8fad9858ffaa6399f299f7b66c042cb0632d9139f8b917c5b35b9add1885abf",
             },
+            ["0.0.6"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/cmdline/archive/refs/tags/v0.0.6.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/cmdline/releases/download/0.0.6/cmdline-0.0.6.tar.gz",
+                },
+                sha256 = "24716d498f29544c56bff1015ecf8e2c06a0ae40443ee0d9edaeb8f770d8bdb5",
+            },
         },
         macosx = {
             ["0.0.1"] = {
@@ -92,6 +100,13 @@ package = {
                 },
                 sha256 = "a8fad9858ffaa6399f299f7b66c042cb0632d9139f8b917c5b35b9add1885abf",
             },
+            ["0.0.6"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/cmdline/archive/refs/tags/v0.0.6.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/cmdline/releases/download/0.0.6/cmdline-0.0.6.tar.gz",
+                },
+                sha256 = "24716d498f29544c56bff1015ecf8e2c06a0ae40443ee0d9edaeb8f770d8bdb5",
+            },
         },
         windows = {
             ["0.0.1"] = {
@@ -128,6 +143,13 @@ package = {
                     CN     = "https://gitcode.com/mcpp-res/cmdline/releases/download/0.0.5/cmdline-0.0.5.tar.gz",
                 },
                 sha256 = "a8fad9858ffaa6399f299f7b66c042cb0632d9139f8b917c5b35b9add1885abf",
+            },
+            ["0.0.6"] = {
+                url    = {
+                    GLOBAL = "https://github.com/mcpplibs/cmdline/archive/refs/tags/v0.0.6.tar.gz",
+                    CN     = "https://gitcode.com/mcpp-res/cmdline/releases/download/0.0.6/cmdline-0.0.6.tar.gz",
+                },
+                sha256 = "24716d498f29544c56bff1015ecf8e2c06a0ae40443ee0d9edaeb8f770d8bdb5",
             },
         },
     },
