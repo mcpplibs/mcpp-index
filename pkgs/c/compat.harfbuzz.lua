@@ -46,7 +46,8 @@ package = {
                 -- 1: hb-ft with FreeType's variation and transform entry points
                 -- (the HAVE_FT_* below): installed copies take them.
                 -- 2: the switch no-freetype, read in the generated config.h.
-                revision = 2,
+                -- 3: the switches no-unused-api and no-aat-vertical, read there too.
+                revision = 3,
             },
         },
         macosx = {
@@ -59,7 +60,8 @@ package = {
                 -- 1: hb-ft with FreeType's variation and transform entry points
                 -- (the HAVE_FT_* below): installed copies take them.
                 -- 2: the switch no-freetype, read in the generated config.h.
-                revision = 2,
+                -- 3: the switches no-unused-api and no-aat-vertical, read there too.
+                revision = 3,
             },
         },
         windows = {
@@ -72,7 +74,8 @@ package = {
                 -- 1: hb-ft with FreeType's variation and transform entry points
                 -- (the HAVE_FT_* below): installed copies take them.
                 -- 2: the switch no-freetype, read in the generated config.h.
-                revision = 2,
+                -- 3: the switches no-unused-api and no-aat-vertical, read there too.
+                revision = 3,
             },
         },
     },
@@ -116,12 +119,44 @@ package = {
 #define HAVE_FT_DONE_MM_VAR 1
 #define HAVE_FT_GET_TRANSFORM 1
 #endif
+/* compat.harfbuzz: parts of HarfBuzz a consumer leaves out (hb-config.hh's
+   HB_NO_*). mcpp defines MCPP_FEATURE_NO_UNUSED_API, MCPP_FEATURE_NO_AAT_VERTICAL
+   for this package's units when those switches are on. */
+#ifdef MCPP_FEATURE_NO_UNUSED_API
+#define HB_NO_BUFFER_SERIALIZE
+#define HB_NO_BUFFER_VERIFY
+#define HB_NO_BUFFER_MESSAGE
+#define HB_NO_MATH
+#define HB_NO_META
+#define HB_NO_LAYOUT_UNUSED
+#define HB_NO_OT_FONT_GLYPH_NAMES
+#define HB_NO_STYLE
+#endif
+#ifdef MCPP_FEATURE_NO_AAT_VERTICAL
+#define HB_NO_AAT
+#define HB_NO_VERTICAL
+#endif
 ]==],
         },
-        --   no-freetype  HarfBuzz without its FreeType backend (hb-ft): off by
-        --                default, the build it always was.
+        --   no-freetype      HarfBuzz without its FreeType backend (hb-ft): off by
+        --                    default, the build it always was.
+        --   no-unused-api    Without the APIs a program that shapes and draws text
+        --                    need not call: buffer serialisation, verification and
+        --                    messages, the MATH and meta tables, the layout API no
+        --                    shaper uses, glyph names, style queries. Shaping and
+        --                    drawing are unchanged; those functions answer empty.
+        --                    Measured (emsdk 6.0.9, -Oz, a program linking the 57
+        --                    hb_* functions a shaper over its own fonts calls):
+        --                    wasm 556,891 → 531,727 B, gzip 218,946 → 208,442.
+        --   no-aat-vertical  Also without Apple's AAT shaping (morx, kerx, trak)
+        --                    and vertical layout: a program whose fonts carry
+        --                    OpenType layout and that shapes horizontally only.
+        --                    With no-unused-api: 461,992 B, gzip 187,747.
+        -- All off by default: the build it always was.
         features     = {
             ["no-freetype"] = {},
+            ["no-unused-api"] = {},
+            ["no-aat-vertical"] = {},
         },
         targets      = { ["harfbuzz"] = { kind = "lib" } },
         deps         = { ["compat.freetype"] = "2.13.3" },

@@ -9,6 +9,7 @@
 
 ### Added
 
+- **compat.harfbuzz 14.3.0 的两个开关：`no-unused-api` 与 `no-aat-vertical`（修订 3）。** 与 `no-freetype` 同一种写法：mcpp 给本包的单元定义 `MCPP_FEATURE_NO_UNUSED_API`、`MCPP_FEATURE_NO_AAT_VERTICAL`，生成的 `config.h` 据此定义 HarfBuzz 自己的 `HB_NO_*`。`no-unused-api` 去掉只画字的程序不会调用的 API（缓冲区的序列化、校验与消息，MATH 与 meta 表，整形器不用的布局 API，字形名，样式查询），整形与绘制不变；`no-aat-vertical` 再去掉 Apple 的 AAT 整形（morx、kerx、trak）与竖排，给字体带 OpenType 布局、只横排的程序。默认都关，构建与以前相同。实测（emsdk 6.0.9，`-Oz`，只链接一个整形器调用的 57 个 `hb_*` 函数的程序）：wasm 556,891 → 531,727 B（gzip 218,946 → 208,442），两个都开 461,992 B（gzip 187,747）。
 - **mcpplibs.cmdline 0.0.6.** 命令补全内建：`app.completion()` 一次调用开启，程序以自己的命令树回答（`__complete`），bash、zsh、
   fish、PowerShell 的适配脚本只向程序询问；选项与参数可陈述可选值、文件或目录提示与候选回调，命令可隐藏。测试成员移到 0.0.6，
   并检验补全与可选值的校验。CN 镜像是 mcpp-res/cmdline 的 0.0.6 release 资产（与 GitHub 归档同一字节，sha256 24716d49…）。
