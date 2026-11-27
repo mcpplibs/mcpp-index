@@ -24,9 +24,12 @@ local versions = {
 -- LAYOUT. install() (below) moves the release directory `quickjs-<version>/` to be the
 -- install dir itself, so no path of this descriptor holds a version and a new release is an
 -- appended xpm entry only (extensions.autoupdate). 0.17.0 was published before install()
--- existed and stays installed with its release directory kept; the entries that name
--- `quickjs-0.17.0/` and the `#else` of the forwarder serve exactly that install, and are
--- never extended: a later release is always flat.
+-- existed and stays installed with its release directory kept; the `quickjs-0.17.0/`
+-- alternative of each source and the `#else` of the forwarder serve exactly that install, and
+-- are never extended: a later release is always flat. Each source names its two places as one
+-- pattern (`{quickjs-0.17.0/,}dtoa.c`): in any one install one place is empty, and mcpp reports
+-- an exact path that names no file on every build (2026.11.27.1), while a pattern that matches
+-- in one place is not reported (#930).
 --
 -- ONE PUBLIC HEADER. Without quickjs-libc, upstream installs quickjs.h alone
 -- (CMakeLists.txt:557, meson.build:144-146 and 263), but the tarball keeps it
@@ -120,14 +123,10 @@ package = {
         include_dirs = { "mcpp/include" },
         cflags       = { "-std=gnu11", "-funsigned-char", "-D_GNU_SOURCE", "-DQUICKJS_NG_BUILD" },
         sources      = {
-            "dtoa.c",
-            "quickjs-0.17.0/dtoa.c",
-            "libregexp.c",
-            "quickjs-0.17.0/libregexp.c",
-            "libunicode.c",
-            "quickjs-0.17.0/libunicode.c",
-            "quickjs.c",
-            "quickjs-0.17.0/quickjs.c",
+            "{quickjs-0.17.0/,}dtoa.c",
+            "{quickjs-0.17.0/,}libregexp.c",
+            "{quickjs-0.17.0/,}libunicode.c",
+            "{quickjs-0.17.0/,}quickjs.c",
         },
         generated_files = {
             ["mcpp/include/quickjs.h"] =
